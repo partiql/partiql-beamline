@@ -1,0 +1,20 @@
+
+processes::{
+    $n: UniformU8::{ low: 2, high: 10 },
+
+    sensors: $n::[
+        process::{
+            $r: Uniform::[5,10],
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $data: {
+                id: '$@n',
+                i8: UniformI8,
+                f: UniformF64,
+                sub: {
+                    o:UniformI8,
+                    f:UniformF64,
+                }
+            }
+        }
+    ],
+}
