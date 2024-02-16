@@ -58,7 +58,10 @@ impl Processes {
 }
 
 pub trait Process {
-    fn next_sample(&self, now: Tick) -> Option<Result<Sample, Box<dyn std::error::Error>>>;
+    fn next_sample(
+        &self,
+        now: Tick,
+    ) -> Option<Result<Sample, Box<dyn std::error::Error + Send + Sync + 'static>>>;
     fn children(&self) -> Option<&[&dyn Process]> {
         None
     }
@@ -546,7 +549,10 @@ pub struct SimpleProcess {
 }
 
 impl Process for SimpleProcess {
-    fn next_sample(&self, now: Tick) -> Option<Result<Sample, Box<dyn std::error::Error>>> {
+    fn next_sample(
+        &self,
+        now: Tick,
+    ) -> Option<Result<Sample, Box<dyn std::error::Error + Send + Sync + 'static>>> {
         let tick = self.arrival.next_arrival(now);
         let value = self.data.gen_value();
         Some(Ok(Sample { tick, value }))

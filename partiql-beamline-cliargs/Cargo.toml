@@ -1,0 +1,27 @@
+[package]
+name = "partiql-beamline-cliargs"
+description = "PartiQL Beamline CLI Args"
+readme.workspace = true
+authors.workspace = true
+license.workspace = true
+#homepage = TODO
+#repository = TODO
+#keywords = TODO
+#categories = TODO
+exclude.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
+
+thiserror = "1.*"
+miette = { version = "5.*", features = ["fancy"] }
+clap = { version = "4.4", features = ["derive", "wrap_help", "help", "usage", "error-context"] }
+
+time = { version = "0.3", features = ["formatting", "parsing"] }
+rand = "0.8"
+rand_chacha = "0.3"
+rand_pcg = "0.3"
+rand_distr = "0.4"
+statrs = "0.16"

@@ -1,8 +1,8 @@
 pub mod sim;
 
 pub mod gen;
-mod primitives;
-mod reader;
+pub mod primitives;
+pub mod reader;
 
 #[cfg(test)]
 mod tests {

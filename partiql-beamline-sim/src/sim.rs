@@ -30,7 +30,7 @@ pub enum SimConfigError {
     TimeError(time::error::Error),
 
     #[error("Unknown Error: {0}")]
-    UnknownError(Box<dyn Error>),
+    UnknownError(Box<dyn Error + Send + Sync + 'static>),
 }
 
 impl From<rand::Error> for SimConfigError {
@@ -51,8 +51,8 @@ impl From<ProcessConfigError> for SimConfigError {
     }
 }
 
-impl From<Box<dyn Error>> for SimConfigError {
-    fn from(e: Box<dyn Error>) -> Self {
+impl From<Box<dyn Error + Send + Sync + 'static>> for SimConfigError {
+    fn from(e: Box<dyn Error + Send + Sync + 'static>) -> Self {
         SimConfigError::UnknownError(e)
     }
 }
@@ -63,7 +63,8 @@ impl From<SimConfigError> for SimConfigBuilderError {
     }
 }
 
-type SimConfigResult<T> = Result<T, SimConfigError>;
+pub type SimConfigResult<T> = Result<T, SimConfigError>;
+pub type SimConfigBuildResult<T> = Result<T, SimConfigBuilderError>;
 
 #[derive(Builder, Clone)]
 #[builder(build_fn(skip))]
