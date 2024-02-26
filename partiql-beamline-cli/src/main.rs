@@ -37,7 +37,7 @@ fn main() -> miette::Result<()> {
             start_time,
             script,
         } => {
-            let mut cfg = parse_args(&seed, &start_time).into_diagnostic()?;
+            let cfg = parse_args(&seed, &start_time).into_diagnostic()?;
             let t0 = cfg.t0;
 
             let dt_fmt = time::format_description::well_known::Iso8601::DEFAULT;
@@ -50,10 +50,10 @@ fn main() -> miette::Result<()> {
 
 // TODO move to variable iteration as opposed to the current `100` limit
             for _ in 0..100 {
-                if let Some(Sample {
+                if let Ok(Some(Sample {
                     tick: Tick(t),
                     value,
-                }) = sim.next_sample()
+                })) = sim.next_sample()
                 {
                     let time = t0.add(Duration::milliseconds(t as i64));
                     println!("[{time}] : {value:?}");

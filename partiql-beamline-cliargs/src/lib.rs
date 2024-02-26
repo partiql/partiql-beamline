@@ -1,8 +1,7 @@
-use clap::{Args, Parser};
+use clap::Args;
 use partiql_beamline::sim::{SimConfig, SimConfigBuildResult, SimConfigBuilder};
 use std::fs;
-use std::fs::File;
-use std::io::Read;
+
 use std::num::ParseIntError;
 use std::path::PathBuf;
 use time::OffsetDateTime;
@@ -72,8 +71,8 @@ impl Seed {
 impl StartTime {
     pub fn extract(&self) -> Option<OffsetDateTime> {
         match (&self.start_epoch_ms, &self.start_iso, &self.start_auto) {
-            (Some(t0), None, false) => Some(t0.clone()),
-            (None, Some(t0), false) => Some(t0.clone()),
+            (Some(t0), None, false) => Some(*t0),
+            (None, Some(t0), false) => Some(*t0),
             (None, None, true) => None,
             _ => unreachable!(),
         }

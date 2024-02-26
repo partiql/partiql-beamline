@@ -4,8 +4,8 @@ use partiql_beamline::sim::{Sim, SimConfigBuilder};
 fn verify_repeatable(script: &[u8]) {
     let config = SimConfigBuilder::default().build().expect("auto config");
 
-    let t0 = config.t0.clone();
-    let seed = config.seed.clone();
+    let t0 = config.t0;
+    let seed = config.seed;
     let config2 = SimConfigBuilder::default()
         .t0(t0)
         .seed(seed)
@@ -16,7 +16,10 @@ fn verify_repeatable(script: &[u8]) {
     let mut sim2 = Sim::from_config(config2, script).expect("repetition sim");
 
     for _ in 0..1000 {
-        assert_eq!(sim.next_sample(), sim2.next_sample());
+        assert_eq!(
+            sim.next_sample().expect("sample"),
+            sim2.next_sample().expect("sample2")
+        );
     }
 }
 

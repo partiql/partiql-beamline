@@ -51,7 +51,7 @@ mod tests {
             let Sample {
                 tick: Tick(t),
                 value,
-            } = sim.next_sample().unwrap();
+            } = sim.next_sample().expect("next_sample").unwrap();
             let time = t0.add(Duration::milliseconds(t as i64));
             println!("[{time}] : {value:?}");
         }
@@ -63,7 +63,7 @@ mod tests {
             ("sub", tuple!(("f", -6.082133258561541), ("o", -62)))
         );
         let expected = Value::from(expected);
-        let sample_101 = sim.next_sample().unwrap();
+        let sample_101 = sim.next_sample().unwrap().unwrap();
 
         assert_eq!(expected, sample_101.value);
     }

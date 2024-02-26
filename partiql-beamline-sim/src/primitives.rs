@@ -1,19 +1,25 @@
 use partiql_value::Value;
 use std::cmp::Ordering;
 
-/// A simulation 'tick'; equivalent to 1 ms
+/// A simulation 'tick'; equivalent to 1 ms.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tick(pub u128);
 
+/// A single sample of a random process.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Sample {
     pub tick: Tick,
     pub value: Value,
 }
 
+/// A random process's id within the simulation.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ProcessId(pub usize);
 
+/// An event; a [`Sample`] for a [`Process`] (as specified by its [`ProcessId`]).
+///
+/// Events are ordered by the [`Tick`] of the [`Sample`] and ties are broken based on
+/// the [`Process`]'s [`ProcessId`].
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Event {
     pub pid: ProcessId,
@@ -22,12 +28,10 @@ pub struct Event {
 
 impl Ord for Event {
     fn cmp(&self, other: &Self) -> Ordering {
-        // Flip ordering to implemnt min-heap
-        other
-            .sample
+        self.sample
             .tick
-            .cmp(&self.sample.tick)
-            .then_with(|| other.pid.cmp(&self.pid))
+            .cmp(&other.sample.tick)
+            .then_with(|| self.pid.cmp(&other.pid))
     }
 }
 
