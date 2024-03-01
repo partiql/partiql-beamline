@@ -21,6 +21,7 @@ use rand_pcg::Pcg64Mcg;
 
 use crate::reader::util::{SymbolParser, SymbolType};
 
+use crate::sim::context::SimContext;
 use thiserror::Error;
 use time::Duration;
 
@@ -121,6 +122,7 @@ impl Env {
 pub struct ProcessParser {
     rng: Vec<Pcg64Mcg>,
     env: Env,
+    sim_context: SimContext,
 
     processes: Processes,
 }
@@ -130,6 +132,7 @@ impl ProcessParser {
         Ok(Self {
             rng: vec![Pcg64Mcg::seed_from_u64(seed)],
             env: Env::new(),
+            sim_context: Default::default(),
 
             processes: Default::default(),
         })
@@ -161,9 +164,7 @@ impl ProcessParser {
             .ok_or_else(|| ProcessConfigError::Fatal("Rng Stack Underflow".to_string()))?;
         self.env.pop()
     }
-}
 
-impl ProcessParser {
     pub fn parse(mut self, reader: &mut LazyReader) -> ProcessConfigResult<Processes> {
         let top_lvl = reader.expect_next()?;
         let config = top_lvl.read()?.expect_struct()?;
@@ -332,7 +333,7 @@ impl ProcessParser {
                 .map_err(|_e| {
                     ProcessConfigError::Other(format!("Invalid immediate type `{ion_type}`"))
                 })
-                .map(|r| r.gen_value())?,
+                .map(|r| r.gen_value(&self.sim_context))?,
 
             _ => {
                 return Err(ProcessConfigError::Other(format!(
@@ -436,7 +437,11 @@ impl ProcessParser {
                 }) as Box<dyn ValueGenerator>),
                 SymbolType::Str(s) => {
                     let crng = self.child_rng()?;
-                    SimpleRandomVariableKind::from_string(s.as_str())?.parse_generator(crng, None)
+                    SimpleRandomVariableKind::from_string(s.as_str())?.parse_generator(
+                        crng,
+                        None,
+                        &self.sim_context,
+                    )
                 }
             },
             IonType::Struct => {
@@ -462,7 +467,7 @@ impl ProcessParser {
                         }
                         SymbolType::Str(s) => {
                             let kind = SimpleRandomVariableKind::from_string(&s)?;
-                            kind.parse_generator(crng, Some(strct))
+                            kind.parse_generator(crng, Some(strct), &self.sim_context)
                         }
                     }
                 }
@@ -488,6 +493,7 @@ trait ValueGeneratorParser {
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
+        ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where
         R: Rng + Sized + 'static;
@@ -498,6 +504,7 @@ impl ValueGeneratorParser for SimpleRandomVariableKind {
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
+        _ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where
         R: Rng + Sized + 'static,

@@ -48,7 +48,7 @@ fn main() -> miette::Result<()> {
             let script = script.extract().into_diagnostic()?;
             let mut sim = Sim::from_config(cfg, script.as_bytes()).into_diagnostic()?;
 
-// TODO move to variable iteration as opposed to the current `100` limit
+            // TODO move to variable iteration as opposed to the current `100` limit
             for _ in 0..100 {
                 if let Ok(Some(Sample {
                     tick: Tick(t),

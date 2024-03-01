@@ -44,6 +44,7 @@ rand_chacha = "0.3"
 rand_pcg = "0.3"
 rand_distr = "0.4"
 statrs = "0.16"
+unicase = "2.*"
 
 [features]
 default = []

@@ -10,6 +10,7 @@ use thiserror::Error;
 use crate::gen::Processes;
 use crate::primitives::{Event, ProcessId, Sample, Tick};
 use crate::reader::ProcessParser;
+use crate::sim::context::{BindingValue, SimContext, SimContextError};
 use crate::sim::timeline::Timeline;
 use crate::sim::{SimConfig, SimConfigError, SimConfigResult};
 
@@ -26,6 +27,9 @@ pub enum SimError {
 
     #[error("Rand error: {0}")]
     TimeError(time::error::Error),
+
+    #[error("Rand error: {0}")]
+    ContextError(SimContextError),
 
     #[error("Unknown Process: {0:?}")]
     UnknownProcess(ProcessId),
@@ -64,6 +68,8 @@ pub struct Sim {
     #[allow(unused)]
     config: SimConfig,
 
+    context: SimContext,
+
     #[allow(unused)]
     root_rng: Pcg64Mcg,
 
@@ -78,6 +84,7 @@ impl Sim {
         let seed = config.seed;
         let mut sim = Sim {
             config,
+            context: Default::default(),
             root_rng: Pcg64Mcg::seed_from_u64(seed),
             time: Tick(0),
             timeline: Timeline::default(),
@@ -90,6 +97,13 @@ impl Sim {
         }
 
         Ok(sim)
+    }
+
+    pub fn add_binding_to_context(&mut self, key: &str, value: &BindingValue) -> SimResult<()> {
+        match self.context.add_binding(key, value) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(SimError::ContextError(e)),
+        }
     }
 
     fn parse_processes(seed: u64, script: &[u8]) -> SimConfigResult<Processes> {
@@ -122,7 +136,7 @@ impl Sim {
             .ok_or(SimError::UnknownProcess(pid))?;
 
         // generate its next sample
-        let next_sample = proc.next_sample(self.time).transpose()?;
+        let next_sample = proc.next_sample(self.time, &self.context).transpose()?;
 
         // add the sample to the timeline
         if let Some(sample) = next_sample {

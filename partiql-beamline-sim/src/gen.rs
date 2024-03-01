@@ -12,6 +12,8 @@ use std::ops::DerefMut;
 use thiserror::Error;
 use time::Duration;
 
+use crate::sim::context::SimContext;
+
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum RandomVariableError {
@@ -61,6 +63,7 @@ pub trait Process {
     fn next_sample(
         &self,
         now: Tick,
+        ctx: &SimContext,
     ) -> Option<Result<Sample, Box<dyn std::error::Error + Send + Sync + 'static>>>;
     fn children(&self) -> Option<&[&dyn Process]> {
         None
@@ -130,7 +133,7 @@ where
 }
 
 pub trait ValueGenerator: Debug {
-    fn gen_value(&self) -> Value;
+    fn gen_value(&self, ctx: &SimContext) -> Value;
 }
 
 pub enum SimpleRandomData {
@@ -178,11 +181,11 @@ impl From<SimpleRandomData> for Box<dyn ValueGenerator> {
 }
 
 impl ValueGenerator for SimpleRandomData {
-    fn gen_value(&self) -> Value {
+    fn gen_value(&self, ctx: &SimContext) -> Value {
         match self {
-            SimpleRandomData::Single(rv) => rv.gen_value(),
+            SimpleRandomData::Single(rv) => rv.gen_value(ctx),
             SimpleRandomData::Collection(kvs) => {
-                let it = kvs.iter().map(|(k, v)| (k, v.gen_value()));
+                let it = kvs.iter().map(|(k, v)| (k, v.gen_value(ctx)));
                 Tuple::from_iter(it).into()
             }
         }
@@ -195,7 +198,7 @@ pub struct ConstantGenerator {
 }
 
 impl ValueGenerator for ConstantGenerator {
-    fn gen_value(&self) -> Value {
+    fn gen_value(&self, _ctx: &SimContext) -> Value {
         self.constant.clone()
     }
 }
@@ -535,7 +538,7 @@ where
     R: Rng + Sized,
     F: Fn(&mut R) -> Value,
 {
-    fn gen_value(&self) -> Value {
+    fn gen_value(&self, _ctx: &SimContext) -> Value {
         let mut rng = self.rng.borrow_mut();
         let rng = rng.deref_mut();
         (self.f)(rng)
@@ -552,9 +555,10 @@ impl Process for SimpleProcess {
     fn next_sample(
         &self,
         now: Tick,
+        ctx: &SimContext,
     ) -> Option<Result<Sample, Box<dyn std::error::Error + Send + Sync + 'static>>> {
         let tick = self.arrival.next_arrival(now);
-        let value = self.data.gen_value();
+        let value = self.data.gen_value(ctx);
         Some(Ok(Sample { tick, value }))
     }
 }
