@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Added
+- Added current tick generation capability with `Tick` keyword in scripts
 - Added initial partiql-beamline data generator
 - Added CLI
 

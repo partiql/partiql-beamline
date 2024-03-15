@@ -6,7 +6,6 @@ pub mod reader;
 
 #[cfg(test)]
 mod tests {
-
     use crate::primitives::{Sample, Tick};
     use crate::sim::{Sim, SimConfigBuilder};
     use partiql_value::{tuple, Value};
@@ -18,13 +17,14 @@ mod tests {
     fn sensors() {
         let script = r#"
             processes::{
-                $n: UniformU8::{ low: 2, high: 10 },
+                $n: UniformU8::{ low: 2, high: 4 },
             
                 sensors: $n::[
                     process::{
                         $r: Uniform::[5,10],
                         $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
                         $data: {
+                            tick: Tick,
                             id: '$@n',
                             i8: UniformI8,
                             f: UniformF64,
@@ -57,14 +57,15 @@ mod tests {
         }
 
         let expected = tuple!(
-            ("id", 1),
-            ("i8", -69),
-            ("f", -42.80960192722216),
-            ("sub", tuple!(("f", -6.082133258561541), ("o", -62)))
+            ("tick", 16784637),
+            ("id", 2),
+            ("i8", -20),
+            ("f", 48.99316196491915),
+            ("sub", tuple!(("f", -77.27368934144766), ("o", -47)))
         );
-        let expected = Value::from(expected);
+
         let sample_101 = sim.next_sample().unwrap().unwrap();
 
-        assert_eq!(expected, sample_101.value);
+        assert_eq!(Value::from(expected), sample_101.value);
     }
 }

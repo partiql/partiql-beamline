@@ -7,6 +7,7 @@ processes::{
             $r: Uniform::[5,10],
             $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
             $data: {
+                tick: Tick,
                 id: '$@n',
                 i8: UniformI8,
                 f: UniformF64,

@@ -1,32 +1,36 @@
 use std::default::Default;
 use std::error::Error;
 
+use crate::gen;
 use ion_rs::lazy::reader::LazyReader;
 use miette::Diagnostic;
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
 
-use crate::gen::Processes;
+use crate::gen::{DataSamplingError, Processes};
 use crate::primitives::{Event, ProcessId, Sample, Tick};
-use crate::reader::ProcessParser;
+use crate::reader::{ProcessConfigError, ProcessParser};
 use crate::sim::context::{BindingValue, SimContext, SimContextError};
 use crate::sim::timeline::Timeline;
 use crate::sim::{SimConfig, SimConfigError, SimConfigResult};
 
 /// Error during simulation
 #[derive(Debug, Error, Diagnostic)]
-#[error("Sim Config Error")]
+#[error("Sim Error")]
 #[non_exhaustive]
 pub enum SimError {
     #[error("Config error: {0}")]
-    ConfigError(SimConfigError),
+    ConfigError(#[from] SimConfigError),
+
+    #[error("Config error: {0}")]
+    ProcessConfigError(#[from] ProcessConfigError),
 
     #[error("Rand error: {0}")]
-    RandError(rand::Error),
+    RandError(#[from] rand::Error),
 
     #[error("Rand error: {0}")]
-    TimeError(time::error::Error),
+    TimeError(#[from] time::error::Error),
 
     #[error("Rand error: {0}")]
     ContextError(SimContextError),
@@ -34,32 +38,11 @@ pub enum SimError {
     #[error("Unknown Process: {0:?}")]
     UnknownProcess(ProcessId),
 
+    #[error("Unknown Process: {0:?}")]
+    ProcessSamplingError(#[from] DataSamplingError),
+
     #[error("Unknown Error: {0}")]
-    UnknownError(Box<dyn Error + Send + Sync + 'static>),
-}
-
-impl From<rand::Error> for SimError {
-    fn from(e: rand::Error) -> Self {
-        Self::RandError(e)
-    }
-}
-
-impl From<time::error::Error> for SimError {
-    fn from(e: time::error::Error) -> Self {
-        Self::TimeError(e)
-    }
-}
-
-impl From<SimConfigError> for SimError {
-    fn from(e: SimConfigError) -> Self {
-        Self::ConfigError(e)
-    }
-}
-
-impl From<Box<dyn Error + Send + Sync + 'static>> for SimError {
-    fn from(e: Box<dyn Error + Send + Sync + 'static>) -> Self {
-        Self::UnknownError(e)
-    }
+    UnknownError(#[from] Box<dyn Error + Send + Sync + 'static>),
 }
 
 pub type SimResult<T> = Result<T, SimError>;
@@ -82,13 +65,15 @@ impl Sim {
     /// Create a [`Sim`] from the provided [`SimConfig`]
     pub fn from_config(config: SimConfig, script: &[u8]) -> SimResult<Self> {
         let seed = config.seed;
+        let ctx = SimContext::new();
+
         let mut sim = Sim {
             config,
-            context: Default::default(),
+            processes: Self::parse_processes(seed, script, &ctx)?,
+            context: ctx,
             root_rng: Pcg64Mcg::seed_from_u64(seed),
             time: Tick(0),
             timeline: Timeline::default(),
-            processes: Self::parse_processes(seed, script)?,
         };
 
         // Populate the timeline with initial events for each process
@@ -106,8 +91,8 @@ impl Sim {
         }
     }
 
-    fn parse_processes(seed: u64, script: &[u8]) -> SimConfigResult<Processes> {
-        let parser = ProcessParser::new(seed)?;
+    fn parse_processes(seed: u64, script: &[u8], ctx: &SimContext) -> SimConfigResult<Processes> {
+        let parser = ProcessParser::new(seed, ctx)?;
         let mut reader = LazyReader::new(script);
         Ok(parser.parse(&mut reader)?)
     }
@@ -135,12 +120,17 @@ impl Sim {
             .get(pid)
             .ok_or(SimError::UnknownProcess(pid))?;
 
+        let tick = proc.next_arrival(self.time, &self.context);
+        self.context
+            .overwrite_binding(gen::CURRENT_TICK, &BindingValue::Tick(tick));
+
         // generate its next sample
-        let next_sample = proc.next_sample(self.time, &self.context).transpose()?;
+        let next_sample = proc.next_sample(&self.context).transpose()?;
 
         // add the sample to the timeline
         if let Some(sample) = next_sample {
             self.timeline.push(Event { pid, sample });
+            self.time = tick;
         }
 
         Ok(())

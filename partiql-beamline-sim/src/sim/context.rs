@@ -1,3 +1,4 @@
+use crate::primitives::Tick;
 use miette::Diagnostic;
 use std::collections::HashMap;
 use thiserror::Error;
@@ -13,6 +14,7 @@ pub enum SimContextError {
     #[error("Get binding error: {0}")]
     GetBindingError(String),
 }
+
 #[derive(Default, Clone)]
 pub struct SimContext {
     bindings: HashMap<UniCase<String>, BindingValue>,
@@ -38,6 +40,12 @@ impl SimContext {
         }
     }
 
+    pub fn overwrite_binding(&mut self, key: &str, value: &BindingValue) {
+        let key = UniCase::new(key.to_string());
+        self.bindings
+            .insert(UniCase::new(key.to_string()), value.clone());
+    }
+
     pub fn get_binding(&self, key: &str) -> SimContextResult<&BindingValue> {
         Ok(self
             .bindings
@@ -46,12 +54,13 @@ impl SimContext {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum BindingValue {
     String(String),
     UInt8(u8),
     UInt64(u64),
+    Tick(Tick),
 }
 
 pub type SimContextResult<T> = Result<T, SimContextError>;

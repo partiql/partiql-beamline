@@ -1,8 +1,8 @@
 use crate::gen::{
     bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8, bounded_u16, bounded_u32,
-    bounded_u64, bounded_u8, simple_choose, ArrivalTime, ConstantGenerator, HomogeneousPoisson,
-    Process, Processes, RandomVariableError, SimpleProcess, SimpleRandomData,
-    SimpleRandomVariableKind, ValueGenerator,
+    bounded_u64, bounded_u8, simple_choose, ArrivalTime, ConstantGenerator, DataGenerationError,
+    HomogeneousPoisson, Process, Processes, SimpleProcess, SimpleRandomData,
+    SimpleScriptVariableKind, ValueGenerator,
 };
 use ion_rs::lazy::any_encoding::AnyEncoding;
 use ion_rs::lazy::r#struct::LazyStruct;
@@ -32,7 +32,7 @@ pub enum ProcessConfigError {
     ReadError(IonError),
 
     #[error("Random Variable error: `{0}`")]
-    RandomVariableError(RandomVariableError),
+    RandomVariableError(DataGenerationError),
 
     #[error("No $arrival for process")]
     NoArrival,
@@ -53,8 +53,8 @@ impl From<IonError> for ProcessConfigError {
     }
 }
 
-impl From<RandomVariableError> for ProcessConfigError {
-    fn from(err: RandomVariableError) -> Self {
+impl From<DataGenerationError> for ProcessConfigError {
+    fn from(err: DataGenerationError) -> Self {
         ProcessConfigError::RandomVariableError(err)
     }
 }
@@ -128,18 +128,16 @@ pub struct ProcessParser {
 }
 
 impl ProcessParser {
-    pub fn new(seed: u64) -> ProcessConfigResult<Self> {
+    pub fn new(seed: u64, ctx: &SimContext) -> ProcessConfigResult<Self> {
         Ok(Self {
             rng: vec![Pcg64Mcg::seed_from_u64(seed)],
             env: Env::new(),
-            sim_context: Default::default(),
+            sim_context: ctx.clone(),
 
             processes: Default::default(),
         })
     }
-}
 
-impl ProcessParser {
     fn curr_rng(&mut self) -> ProcessConfigResult<&mut Pcg64Mcg> {
         self.rng
             .last_mut()
@@ -437,7 +435,7 @@ impl ProcessParser {
                 }) as Box<dyn ValueGenerator>),
                 SymbolType::Str(s) => {
                     let crng = self.child_rng()?;
-                    SimpleRandomVariableKind::from_string(s.as_str())?.parse_generator(
+                    SimpleScriptVariableKind::from_string(s.as_str())?.parse_generator(
                         crng,
                         None,
                         &self.sim_context,
@@ -466,7 +464,7 @@ impl ProcessParser {
                             todo!("struct varref")
                         }
                         SymbolType::Str(s) => {
-                            let kind = SimpleRandomVariableKind::from_string(&s)?;
+                            let kind = SimpleScriptVariableKind::from_string(&s)?;
                             kind.parse_generator(crng, Some(strct), &self.sim_context)
                         }
                     }
@@ -499,12 +497,12 @@ trait ValueGeneratorParser {
         R: Rng + Sized + 'static;
 }
 
-impl ValueGeneratorParser for SimpleRandomVariableKind {
+impl ValueGeneratorParser for SimpleScriptVariableKind {
     fn parse_generator<R>(
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
-        _ctx: &SimContext,
+        ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where
         R: Rng + Sized + 'static,
@@ -513,43 +511,46 @@ impl ValueGeneratorParser for SimpleRandomVariableKind {
             let low = config.get_expected("low")?;
             let high = config.get_expected("high")?;
             let gen: Box<dyn ValueGenerator> = match self {
-                SimpleRandomVariableKind::String => {
+                SimpleScriptVariableKind::String => {
                     todo!("bounded string generator")
                 }
-                SimpleRandomVariableKind::UInt8 => {
+                SimpleScriptVariableKind::Tick => {
+                    todo!("bounded tick generator")
+                }
+                SimpleScriptVariableKind::UInt8 => {
                     Box::new(bounded_u8(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::UInt16 => {
+                SimpleScriptVariableKind::UInt16 => {
                     Box::new(bounded_u16(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::UInt32 => {
+                SimpleScriptVariableKind::UInt32 => {
                     Box::new(bounded_u32(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::UInt64 => {
+                SimpleScriptVariableKind::UInt64 => {
                     Box::new(bounded_u64(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::Int8 => {
+                SimpleScriptVariableKind::Int8 => {
                     Box::new(bounded_i8(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::Int16 => {
+                SimpleScriptVariableKind::Int16 => {
                     Box::new(bounded_i16(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::Int32 => {
+                SimpleScriptVariableKind::Int32 => {
                     Box::new(bounded_i32(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::Int64 => {
+                SimpleScriptVariableKind::Int64 => {
                     Box::new(bounded_i64(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
-                SimpleRandomVariableKind::Float64 => {
+                SimpleScriptVariableKind::Float64 => {
                     Box::new(bounded_f64(rng, low.expect_float()?, high.expect_float()?)?)
                 }
-                SimpleRandomVariableKind::Bool => {
+                SimpleScriptVariableKind::Bool => {
                     todo!("bounded bool generator")
                 }
             };
             Ok(gen)
         } else {
-            Ok(self.create(rng)?)
+            Ok(self.create(rng, ctx)?)
         }
     }
 }
@@ -604,6 +605,7 @@ mod tests {
                         $r: Uniform::[5,10],
                         $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
                         $data: {
+                            tick: Tick,
                             id: '$@n',
                             i8: UniformI8,
                             f: UniformF64,
@@ -620,7 +622,9 @@ mod tests {
         let mut reader = LazyReader::new(&ion_bytes);
 
         let seed = 5; // Chosen via roll of a fair die.
-        let parser = ProcessParser::new(seed)?;
+        let ctx = SimContext::new();
+
+        let parser = ProcessParser::new(seed, &ctx)?;
         let processes = parser.parse(&mut reader)?;
         assert_eq!(processes.ids().len(), 7);
 
