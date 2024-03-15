@@ -8,7 +8,7 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
 
-use crate::gen::{DataSamplingError, Processes};
+use crate::gen::{DataSamplingError, RandomProcesses};
 use crate::primitives::{Event, ProcessId, Sample, Tick};
 use crate::reader::{ProcessConfigError, ProcessParser};
 use crate::sim::context::{BindingValue, SimContext, SimContextError};
@@ -58,7 +58,7 @@ pub struct Sim {
 
     time: Tick,
     timeline: Timeline,
-    processes: Processes,
+    processes: RandomProcesses,
 }
 
 impl Sim {
@@ -91,7 +91,11 @@ impl Sim {
         }
     }
 
-    fn parse_processes(seed: u64, script: &[u8], ctx: &SimContext) -> SimConfigResult<Processes> {
+    fn parse_processes(
+        seed: u64,
+        script: &[u8],
+        ctx: &SimContext,
+    ) -> SimConfigResult<RandomProcesses> {
         let parser = ProcessParser::new(seed, ctx)?;
         let mut reader = LazyReader::new(script);
         Ok(parser.parse(&mut reader)?)

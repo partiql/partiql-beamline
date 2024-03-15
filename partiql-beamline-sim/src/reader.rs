@@ -1,7 +1,7 @@
 use crate::gen::{
     bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8, bounded_u16, bounded_u32,
     bounded_u64, bounded_u8, simple_choose, ArrivalTime, ConstantGenerator, DataGenerationError,
-    HomogeneousPoisson, Process, Processes, SimpleProcess, SimpleRandomData,
+    HomogeneousPoisson, RandomProcess, RandomProcesses, SimpleProcess, SimpleRandomData,
     SimpleScriptVariableKind, ValueGenerator,
 };
 use ion_rs::lazy::any_encoding::AnyEncoding;
@@ -34,10 +34,10 @@ pub enum ProcessConfigError {
     #[error("Random Variable error: `{0}`")]
     RandomVariableError(DataGenerationError),
 
-    #[error("No $arrival for process")]
+    #[error("No $arrival for random process")]
     NoArrival,
 
-    #[error("No data for process")]
+    #[error("No data for random process")]
     NoData,
 
     #[error("Error: `{0}`")]
@@ -124,7 +124,7 @@ pub struct ProcessParser {
     env: Env,
     sim_context: SimContext,
 
-    processes: Processes,
+    processes: RandomProcesses,
 }
 
 impl ProcessParser {
@@ -163,10 +163,10 @@ impl ProcessParser {
         self.env.pop()
     }
 
-    pub fn parse(mut self, reader: &mut LazyReader) -> ProcessConfigResult<Processes> {
+    pub fn parse(mut self, reader: &mut LazyReader) -> ProcessConfigResult<RandomProcesses> {
         let top_lvl = reader.expect_next()?;
         let config = top_lvl.read()?.expect_struct()?;
-        config.annotations().expect(["processes"])?;
+        config.annotations().expect(["rand_processes"])?;
 
         self.push_scope("^")?;
         self.parse_processes(config)?;
@@ -176,7 +176,7 @@ impl ProcessParser {
     }
 
     fn parse_processes(&mut self, processes: LazyStruct<AnyEncoding>) -> ProcessConfigResult<()> {
-        if processes.annotations().are(["process"])? {
+        if processes.annotations().are(["rand_process"])? {
             let process = self.parse_process(processes)?;
             self.processes.add(process);
         } else {
@@ -188,7 +188,7 @@ impl ProcessParser {
     fn parse_process(
         &mut self,
         processes: LazyStruct<AnyEncoding>,
-    ) -> ProcessConfigResult<Box<dyn Process>> {
+    ) -> ProcessConfigResult<Box<dyn RandomProcess>> {
         let mut data = None;
         let mut arrival = None;
         for field in processes.iter() {
@@ -597,11 +597,11 @@ mod tests {
     #[test]
     fn parse() -> ProcessConfigResult<()> {
         let ion_data = r#"
-            processes::{
+            rand_processes::{
                 $n: UniformU8::{ low: 2, high: 10 },
             
                 sensors: $n::[
-                    process::{
+                    rand_process::{
                         $r: Uniform::[5,10],
                         $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
                         $data: {

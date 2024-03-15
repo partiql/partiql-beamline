@@ -39,21 +39,21 @@ pub enum DataSamplingError {
 pub type DataGenerationResult<T> = Result<T, DataGenerationError>;
 
 #[derive(Default)]
-pub struct Processes {
-    processes: Vec<Box<dyn Process>>,
+pub struct RandomProcesses {
+    processes: Vec<Box<dyn RandomProcess>>,
 }
 
-impl Processes {
+impl RandomProcesses {
     pub fn is_empty(&self) -> bool {
         self.processes.is_empty()
     }
-    pub fn add(&mut self, p: Box<dyn Process>) -> ProcessId {
+    pub fn add(&mut self, p: Box<dyn RandomProcess>) -> ProcessId {
         let id = ProcessId(self.processes.len());
         self.processes.push(p);
         id
     }
 
-    pub fn get(&self, pid: ProcessId) -> Option<&dyn Process> {
+    pub fn get(&self, pid: ProcessId) -> Option<&dyn RandomProcess> {
         self.processes.get(pid.0).map(|b| b.as_ref())
     }
 
@@ -62,12 +62,15 @@ impl Processes {
     }
 }
 
-pub trait Process {
+/// A Random Process (or Stochastic Process) is 
+/// > a mathematical models of systems and phenomena that appear to vary in a random manner.
+///  -- from: https://en.wikipedia.org/wiki/Stochastic_process
+pub trait RandomProcess {
     fn next_sample(&self, ctx: &SimContext) -> Option<Result<Sample, DataSamplingError>>;
 
     fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Tick;
 
-    fn children(&self) -> Option<&[&dyn Process]> {
+    fn children(&self) -> Option<&[&dyn RandomProcess]> {
         None
     }
 }
@@ -579,7 +582,7 @@ pub struct SimpleProcess {
     pub data: Box<dyn ValueGenerator>,
 }
 
-impl Process for SimpleProcess {
+impl RandomProcess for SimpleProcess {
     fn next_sample(&self, ctx: &SimContext) -> Option<Result<Sample, DataSamplingError>> {
         let tick_binding_value = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
         if let &BindingValue::Tick(tick) = tick_binding_value {

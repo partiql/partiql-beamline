@@ -16,11 +16,11 @@ mod tests {
     #[test]
     fn sensors() {
         let script = r#"
-            processes::{
+            rand_processes::{
                 $n: UniformU8::{ low: 2, high: 4 },
             
                 sensors: $n::[
-                    process::{
+                    rand_process::{
                         $r: Uniform::[5,10],
                         $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
                         $data: {
