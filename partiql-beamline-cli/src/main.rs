@@ -2,9 +2,11 @@ use clap::{Parser, Subcommand};
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{Sample, Tick};
 use partiql_beamline::sim::Sim;
-use partiql_beamline_cliargs::{parse_args, Script, Seed, StartTime};
+use partiql_beamline_cliargs::{parse_args, SampleCount, Script, Seed, StartTime};
 use std::ops::Add;
 use time::Duration;
+
+const DEFAULT_SAMPLE_COUNT: u64 = 100;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -17,6 +19,9 @@ pub struct Cli {
 pub enum Commands {
     /// Run the data generator
     Gen {
+        #[command(flatten)]
+        sample_count: SampleCount,
+
         #[command(flatten)]
         seed: Seed,
 
@@ -33,6 +38,7 @@ fn main() -> miette::Result<()> {
 
     match args.command {
         Commands::Gen {
+            sample_count,
             seed,
             start_time,
             script,
@@ -48,8 +54,14 @@ fn main() -> miette::Result<()> {
             let script = script.extract().into_diagnostic()?;
             let mut sim = Sim::from_config(cfg, script.as_bytes()).into_diagnostic()?;
 
+            let sample_count = if let Some(sample_count) = sample_count.sample_count {
+                sample_count
+            } else {
+                DEFAULT_SAMPLE_COUNT
+            };
+
             // TODO move to variable iteration as opposed to the current `100` limit
-            for _ in 0..100 {
+            for _ in 0..sample_count {
                 if let Ok(Some(Sample {
                     tick: Tick(t),
                     value,

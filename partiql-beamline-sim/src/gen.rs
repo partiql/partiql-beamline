@@ -62,7 +62,7 @@ impl RandomProcesses {
     }
 }
 
-/// A Random Process (or Stochastic Process) is 
+/// A Random Process (or Stochastic Process) is
 /// > a mathematical models of systems and phenomena that appear to vary in a random manner.
 ///  -- from: https://en.wikipedia.org/wiki/Stochastic_process
 pub trait RandomProcess {
