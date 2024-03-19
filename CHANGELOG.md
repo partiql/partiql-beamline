@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Added
+- Added --output-format to the CLI with Ion, Ion Pretty, and TEXT (default) format
+- Added --sample-count to CLI along with a default value
 - Added current tick generation capability with `Tick` keyword in scripts
 - Added initial partiql-beamline data generator
 - Added CLI

@@ -1,10 +1,19 @@
-use clap::Args;
+use clap::{Args, ValueEnum};
 use partiql_beamline::sim::{SimConfig, SimConfigBuildResult, SimConfigBuilder};
 use std::fs;
 
 use std::num::ParseIntError;
 use std::path::PathBuf;
 use time::OffsetDateTime;
+
+/// Output format
+#[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum OutputFormat {
+    Ion,
+    IonPretty,
+    Text,
+}
 
 /// Number of samples to get created
 #[derive(Args, Debug, Copy, Clone, PartialEq, Eq)]
