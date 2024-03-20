@@ -17,11 +17,11 @@ pub enum OutputFormat {
 
 /// Number of samples to get created
 #[derive(Args, Debug, Copy, Clone, PartialEq, Eq)]
-#[group(required = true, multiple = false)]
+#[group(required = false, multiple = false)]
 pub struct SampleCount {
     /// Value for the number of samples
-    #[arg(long, value_name = "SAMPLE_COUNT")]
-    pub sample_count: Option<u64>,
+    #[arg(long, default_value = "10", value_name = "SAMPLE_COUNT")]
+    pub sample_count: u64,
 }
 
 /// Seed configuration for the generator.

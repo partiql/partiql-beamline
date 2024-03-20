@@ -9,7 +9,6 @@ use std::ops::Add;
 use time::format_description::well_known::Iso8601;
 use time::Duration;
 
-pub(crate) const DEFAULT_SAMPLE_COUNT: u64 = 100;
 pub(crate) const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
 pub(crate) fn execute(cfg: SimConfig, script: String, sample_count: u64) -> miette::Result<Value> {

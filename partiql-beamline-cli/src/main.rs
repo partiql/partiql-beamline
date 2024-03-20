@@ -53,11 +53,7 @@ fn main() -> miette::Result<()> {
             let script = script.extract().into_diagnostic()?;
             let t0 = cfg.t0;
 
-            let sample_count = if let Some(sample_count) = sample_count.sample_count {
-                sample_count
-            } else {
-                cli::DEFAULT_SAMPLE_COUNT
-            };
+            let sample_count = sample_count.sample_count;
 
             match output_format {
                 OutputFormat::Text => {
