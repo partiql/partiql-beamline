@@ -34,10 +34,9 @@ pub(crate) fn execute(cfg: SimConfig, script: String, sample_count: u64) -> miet
         }
     }
 
-    let seed = cfg.seed.clone();
+    let seed = cfg.seed;
     let start = cfg
         .t0
-        .clone()
         .format(&DATETIME_FORMAT)
         .expect("start datetime string");
 
