@@ -236,29 +236,10 @@ pub enum SimpleScriptVariableKind {
     Int64,
     Float64,
     Bool,
+    UUID,
 }
 
 impl SimpleScriptVariableKind {
-    pub fn from_string(s: &str) -> DataGenerationResult<Self> {
-        match s {
-            "Tick" => Ok(Self::Tick),
-            "String" => Ok(Self::String),
-            "UniformU8" => Ok(Self::UInt8),
-            "UniformU16" => Ok(Self::UInt16),
-            "UniformU32" => Ok(Self::UInt32),
-            "UniformU64" => Ok(Self::UInt64),
-            "UniformI8" => Ok(Self::Int8),
-            "UniformI16" => Ok(Self::Int16),
-            "UniformI32" => Ok(Self::Int32),
-            "UniformI64" => Ok(Self::Int64),
-            "UniformF64" => Ok(Self::Float64),
-            "Bool" => Ok(Self::Bool),
-            _ => Err(DataGenerationError::Other(format!(
-                "Unknown random variable kind `{s}`"
-            ))),
-        }
-    }
-
     pub fn named() -> DataGenerationResult<Vec<(String, SimpleScriptVariableKind)>> {
         [
             "Tick",
@@ -273,10 +254,32 @@ impl SimpleScriptVariableKind {
             "UniformI64",
             "UniformF64",
             "Bool",
+            "UUID",
         ]
             .iter()
             .map(|s| Self::from_string(s).map(|k| (s.to_string(), k)))
             .collect()
+    }
+    
+    pub fn from_string(s: &str) -> DataGenerationResult<Self> {
+        match s {
+            "Tick" => Ok(Self::Tick),
+            "String" => Ok(Self::String),
+            "UniformU8" => Ok(Self::UInt8),
+            "UniformU16" => Ok(Self::UInt16),
+            "UniformU32" => Ok(Self::UInt32),
+            "UniformU64" => Ok(Self::UInt64),
+            "UniformI8" => Ok(Self::Int8),
+            "UniformI16" => Ok(Self::Int16),
+            "UniformI32" => Ok(Self::Int32),
+            "UniformI64" => Ok(Self::Int64),
+            "UniformF64" => Ok(Self::Float64),
+            "Bool" => Ok(Self::Bool),
+            "UUID" => Ok(Self::UUID),
+            _ => Err(DataGenerationError::Other(format!(
+                "Unknown random variable kind `{s}`"
+            ))),
+        }
     }
 
     pub fn create<R>(
@@ -302,6 +305,7 @@ impl SimpleScriptVariableKind {
             SimpleScriptVariableKind::Int64 => Ok(Box::new(simple_i64(rng)?)),
             SimpleScriptVariableKind::Float64 => Ok(Box::new(simple_f64(rng)?)),
             SimpleScriptVariableKind::Bool => Ok(Box::new(simple_bool(rng)?)),
+            SimpleScriptVariableKind::UUID => Ok(Box::new(simple_uuid(rng)?)),
         }
     }
 }
@@ -341,6 +345,23 @@ pub fn simple_bool<R>(
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::Bernoulli::new(0.5)?;
     let f = move |rng: &mut R| Value::from(dist.sample(rng) > 0f64);
+    Ok(SimpleRandomVariable { name, rng, f })
+}
+
+pub fn simple_uuid<R>(
+    rng: R,
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
+    where
+        R: Rng + Sized,
+{
+    let name = "UUID".into();
+    let rng = RefCell::new(rng);
+    let f = move |rng: &mut R| {
+        let mut uuid_bytes = uuid::Bytes::default();
+        rng.fill_bytes(&mut uuid_bytes);
+        let id = uuid::Uuid::from_bytes(uuid_bytes);
+        Value::from(id.to_string())
+    };
     Ok(SimpleRandomVariable { name, rng, f })
 }
 

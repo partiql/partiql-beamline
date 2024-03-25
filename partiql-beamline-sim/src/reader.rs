@@ -610,6 +610,9 @@ impl<R> ValueGeneratorParser<R> for SimpleScriptVariableKind
                 SimpleScriptVariableKind::Bool => {
                     todo!("bounded bool generator")
                 }
+                SimpleScriptVariableKind::UUID => {
+                    todo!("bounded uuid generator")
+                }
             };
             Ok(gen)
         } else {
