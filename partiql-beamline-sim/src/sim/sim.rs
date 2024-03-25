@@ -96,7 +96,8 @@ impl Sim {
         script: &[u8],
         ctx: &SimContext,
     ) -> SimConfigResult<RandomProcesses> {
-        let parser = ProcessParser::new(seed, ctx)?;
+        let registry = Default::default();
+        let parser = ProcessParser::new(seed, registry, ctx)?;
         let mut reader = LazyReader::new(script);
         Ok(parser.parse(&mut reader)?)
     }

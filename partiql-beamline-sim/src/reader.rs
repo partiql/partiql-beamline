@@ -8,6 +8,7 @@ use ion_rs::lazy::any_encoding::AnyEncoding;
 use ion_rs::lazy::r#struct::LazyStruct;
 use ion_rs::{IonError, IonType, SymbolRef};
 use std::collections::hash_map::Entry;
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 use std::vec;
 
@@ -39,6 +40,9 @@ pub enum ProcessConfigError {
 
     #[error("No data for random process")]
     NoData,
+
+    #[error("Error: `{0}`")]
+    UnknownGenerator(String),
 
     #[error("Error: `{0}`")]
     Other(String),
@@ -120,6 +124,8 @@ impl Env {
 }
 
 pub struct ProcessParser {
+    registry: ValueGeneratorRegistry<Pcg64Mcg>,
+
     rng: Vec<Pcg64Mcg>,
     env: Env,
     sim_context: SimContext,
@@ -128,8 +134,10 @@ pub struct ProcessParser {
 }
 
 impl ProcessParser {
-    pub fn new(seed: u64, ctx: &SimContext) -> ProcessConfigResult<Self> {
+    pub fn new(seed: u64, registry: ValueGeneratorRegistry<Pcg64Mcg>, ctx: &SimContext) -> ProcessConfigResult<Self> {
         Ok(Self {
+            registry,
+
             rng: vec![Pcg64Mcg::seed_from_u64(seed)],
             env: Env::new(),
             sim_context: ctx.clone(),
@@ -215,7 +223,7 @@ impl ProcessParser {
                 SymbolType::Str(name) => {
                     return Err(ProcessConfigError::Other(format!(
                         "Unexpected scope in process `{name}`"
-                    )))
+                    )));
                 }
             }
         }
@@ -272,7 +280,7 @@ impl ProcessParser {
             _ => {
                 return Err(ProcessConfigError::Other(format!(
                     "TODO: unhandled scope type `{ion_type}`"
-                )))
+                )));
             }
         }
         Ok(())
@@ -301,7 +309,7 @@ impl ProcessParser {
                 _ => {
                     return Err(ProcessConfigError::Other(format!(
                         "Unsupported list parameterization `{list_param:?}`"
-                    )))
+                    )));
                 }
             },
             SymbolType::Str(_) => {
@@ -336,7 +344,7 @@ impl ProcessParser {
             _ => {
                 return Err(ProcessConfigError::Other(format!(
                     "TODO: unhandled immediate type `{ion_type}`"
-                )))
+                )));
             }
         };
 
@@ -355,19 +363,19 @@ impl ProcessParser {
                     other => {
                         return Err(ProcessConfigError::Other(format!(
                             "Unexpected variable type in duration `{other:?}`"
-                        )))
+                        )));
                     }
                 },
                 SymbolType::Str(name) => {
                     return Err(ProcessConfigError::Other(format!(
                         "Unexpected symbol in duration `{name}`"
-                    )))
+                    )));
                 }
             },
             _ => {
                 return Err(ProcessConfigError::Other(format!(
                     "TODO: unhandled duration type `{ion_type}`"
-                )))
+                )));
             }
         };
 
@@ -435,11 +443,7 @@ impl ProcessParser {
                 }) as Box<dyn ValueGenerator>),
                 SymbolType::Str(s) => {
                     let crng = self.child_rng()?;
-                    SimpleScriptVariableKind::from_string(s.as_str())?.parse_generator(
-                        crng,
-                        None,
-                        &self.sim_context,
-                    )
+                    self.registry.parse(&s, crng, None, &self.sim_context)
                 }
             },
             IonType::Struct => {
@@ -463,10 +467,7 @@ impl ProcessParser {
                         SymbolType::VarRef(_) => {
                             todo!("struct varref")
                         }
-                        SymbolType::Str(s) => {
-                            let kind = SimpleScriptVariableKind::from_string(&s)?;
-                            kind.parse_generator(crng, Some(strct), &self.sim_context)
-                        }
+                        SymbolType::Str(s) => self.registry.parse(&s, crng, Some(strct), &self.sim_context),
                     }
                 }
             }
@@ -486,27 +487,89 @@ impl ProcessParser {
     }
 }
 
-trait ValueGeneratorParser {
-    fn parse_generator<R>(
-        &self,
-        rng: R,
-        config: Option<LazyStruct<AnyEncoding>>,
-        ctx: &SimContext,
-    ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
-    where
-        R: Rng + Sized + 'static;
-}
-
-impl ValueGeneratorParser for SimpleScriptVariableKind {
-    fn parse_generator<R>(
-        &self,
-        rng: R,
-        config: Option<LazyStruct<AnyEncoding>>,
-        ctx: &SimContext,
-    ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
+pub struct ValueGeneratorRegistry<R>
     where
         R: Rng + Sized + 'static,
-    {
+{
+    generators: HashMap<String, Box<dyn ValueGeneratorParser<R>>>,
+}
+
+impl<R> Default for ValueGeneratorRegistry<R>
+    where
+        R: Rng + Sized + 'static,
+{
+    fn default() -> Self {
+        let mut registry = ValueGeneratorRegistry::new();
+
+        for (k, v) in SimpleScriptVariableKind::named().expect("static registry creation") {
+            registry
+                .add_parser(&k, Box::new(v))
+                .expect("static registry creation");
+        }
+
+        registry
+    }
+}
+
+impl<R> ValueGeneratorRegistry<R>
+    where
+        R: Rng + Sized + 'static,
+{
+    fn new() -> Self {
+        Self {
+            generators: Default::default(),
+        }
+    }
+
+    pub fn add_parser(
+        &mut self,
+        name: &str,
+        parser: Box<dyn ValueGeneratorParser<R>>,
+    ) -> ProcessConfigResult<&Box<dyn ValueGeneratorParser<R>>> {
+        match self.generators.entry(name.to_string()) {
+            Occupied(_) => Err(ProcessConfigError::Other(format!(
+                "`{name}` parser already exists"
+            ))),
+            Vacant(entry) => Ok(entry.insert(parser)),
+        }
+    }
+
+    pub fn parse(
+        &self,
+        name: &str,
+        rng: R,
+        config: Option<LazyStruct<AnyEncoding>>,
+        ctx: &SimContext,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        match self.generators.get(name) {
+            Some(parser) => parser.parse_generator(rng, config, ctx),
+            None => Err(ProcessConfigError::UnknownGenerator(name.to_string())),
+        }
+    }
+}
+
+pub trait ValueGeneratorParser<R>
+    where
+        R: Rng + Sized + 'static,
+{
+    fn parse_generator(
+        &self,
+        rng: R,
+        config: Option<LazyStruct<AnyEncoding>>,
+        ctx: &SimContext,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
+}
+
+impl<R> ValueGeneratorParser<R> for SimpleScriptVariableKind
+    where
+        R: Rng + Sized + 'static,
+{
+    fn parse_generator(
+        &self,
+        rng: R,
+        config: Option<LazyStruct<AnyEncoding>>,
+        ctx: &SimContext,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(config) = config {
             let low = config.get_expected("low")?;
             let high = config.get_expected("high")?;
@@ -596,35 +659,16 @@ mod tests {
 
     #[test]
     fn parse() -> ProcessConfigResult<()> {
-        let ion_data = r#"
-            rand_processes::{
-                $n: UniformU8::{ low: 2, high: 10 },
-            
-                sensors: $n::[
-                    rand_process::{
-                        $r: Uniform::[5,10],
-                        $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
-                        $data: {
-                            tick: Tick,
-                            id: '$@n',
-                            i8: UniformI8,
-                            f: UniformF64,
-                            sub: {
-                                o:UniformI8,
-                                f:UniformF64,
-                            }
-                        }
-                    }
-                ],
-            }
-        "#;
+        let ion_data = include_str!("../tests/scripts/sensors.ion");
         let ion_bytes = Element::read_one(ion_data)?.to_binary()?;
         let mut reader = LazyReader::new(&ion_bytes);
 
+        let registry = Default::default();
         let seed = 5; // Chosen via roll of a fair die.
+
         let ctx = SimContext::new();
 
-        let parser = ProcessParser::new(seed, &ctx)?;
+        let parser = ProcessParser::new(seed, registry, &ctx)?;
         let processes = parser.parse(&mut reader)?;
         assert_eq!(processes.ids().len(), 7);
 
