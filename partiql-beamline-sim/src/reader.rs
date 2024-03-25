@@ -134,7 +134,12 @@ pub struct ProcessParser {
 }
 
 impl ProcessParser {
-    pub fn new(seed: u64, registry: ValueGeneratorRegistry<Pcg64Mcg>, ctx: &SimContext) -> ProcessConfigResult<Self> {
+    pub fn new(
+        seed: u64,
+        registry: ValueGeneratorRegistry<Pcg64Mcg>,
+        ctx: &SimContext,
+    ) -> ProcessConfigResult<Self> {
+
         Ok(Self {
             registry,
 
@@ -467,7 +472,10 @@ impl ProcessParser {
                         SymbolType::VarRef(_) => {
                             todo!("struct varref")
                         }
-                        SymbolType::Str(s) => self.registry.parse(&s, crng, Some(strct), &self.sim_context),
+                        SymbolType::Str(s) => {
+                            self.registry
+                                .parse(&s, crng, Some(strct), &self.sim_context)
+                        }
                     }
                 }
             }
@@ -488,15 +496,16 @@ impl ProcessParser {
 }
 
 pub struct ValueGeneratorRegistry<R>
-    where
-        R: Rng + Sized + 'static,
+where
+    R: Rng + Sized + 'static,
+
 {
     generators: HashMap<String, Box<dyn ValueGeneratorParser<R>>>,
 }
 
 impl<R> Default for ValueGeneratorRegistry<R>
-    where
-        R: Rng + Sized + 'static,
+where
+    R: Rng + Sized + 'static,
 {
     fn default() -> Self {
         let mut registry = ValueGeneratorRegistry::new();
@@ -512,8 +521,8 @@ impl<R> Default for ValueGeneratorRegistry<R>
 }
 
 impl<R> ValueGeneratorRegistry<R>
-    where
-        R: Rng + Sized + 'static,
+where
+    R: Rng + Sized + 'static,
 {
     fn new() -> Self {
         Self {
@@ -549,8 +558,8 @@ impl<R> ValueGeneratorRegistry<R>
 }
 
 pub trait ValueGeneratorParser<R>
-    where
-        R: Rng + Sized + 'static,
+where
+    R: Rng + Sized + 'static,
 {
     fn parse_generator(
         &self,
@@ -561,8 +570,8 @@ pub trait ValueGeneratorParser<R>
 }
 
 impl<R> ValueGeneratorParser<R> for SimpleScriptVariableKind
-    where
-        R: Rng + Sized + 'static,
+where
+    R: Rng + Sized + 'static,
 {
     fn parse_generator(
         &self,
@@ -579,6 +588,9 @@ impl<R> ValueGeneratorParser<R> for SimpleScriptVariableKind
                 }
                 SimpleScriptVariableKind::Tick => {
                     todo!("bounded tick generator")
+                }
+                SimpleScriptVariableKind::Instant => {
+                    todo!("bounded Instant generator")
                 }
                 SimpleScriptVariableKind::UInt8 => {
                     Box::new(bounded_u8(rng, low.expect_i64()?, high.expect_i64()?)?)
@@ -658,6 +670,7 @@ mod util {
 mod tests {
     use super::*;
 
+    use crate::sim::SimConfigBuilder;
     use ion_rs::Element;
 
     #[test]
@@ -669,7 +682,8 @@ mod tests {
         let registry = Default::default();
         let seed = 5; // Chosen via roll of a fair die.
 
-        let ctx = SimContext::new();
+        let config = SimConfigBuilder::default().build().expect("config");
+        let ctx = SimContext::new(config);
 
         let parser = ProcessParser::new(seed, registry, &ctx)?;
         let processes = parser.parse(&mut reader)?;

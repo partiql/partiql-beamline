@@ -48,9 +48,6 @@ pub enum SimError {
 pub type SimResult<T> = Result<T, SimError>;
 
 pub struct Sim {
-    #[allow(unused)]
-    config: SimConfig,
-
     context: SimContext,
 
     #[allow(unused)]
@@ -65,10 +62,9 @@ impl Sim {
     /// Create a [`Sim`] from the provided [`SimConfig`]
     pub fn from_config(config: SimConfig, script: &[u8]) -> SimResult<Self> {
         let seed = config.seed;
-        let ctx = SimContext::new();
+        let ctx = SimContext::new(config);
 
         let mut sim = Sim {
-            config,
             processes: Self::parse_processes(seed, script, &ctx)?,
             context: ctx,
             root_rng: Pcg64Mcg::seed_from_u64(seed),

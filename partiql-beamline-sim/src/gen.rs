@@ -1,5 +1,5 @@
 use crate::primitives::{ProcessId, Sample, Tick};
-use partiql_value::{Tuple, Value};
+use partiql_value::{DateTime, Tuple, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
 use statrs::distribution::Exp;
@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use std::fmt::{Debug, Formatter};
-use std::ops::DerefMut;
+use std::ops::{Add, DerefMut};
 use thiserror::Error;
 use time::Duration;
 
@@ -47,6 +47,7 @@ impl RandomProcesses {
     pub fn is_empty(&self) -> bool {
         self.processes.is_empty()
     }
+
     pub fn add(&mut self, p: Box<dyn RandomProcess>) -> ProcessId {
         let id = ProcessId(self.processes.len());
         self.processes.push(p);
@@ -208,7 +209,8 @@ impl ValueGenerator for ConstantGenerator {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
+/// Yields the simulation's current [`Tick`] when a value is generated.
 pub struct TickGenerator {}
 
 impl ValueGenerator for TickGenerator {
@@ -223,8 +225,29 @@ impl ValueGenerator for TickGenerator {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+/// Yields the simulation's current 'Time' when a value is generated.
+///
+/// The current time is calculated by adding the current [`Tick`] to the simulation's start time (`t0`).
+pub struct InstantGenerator {}
+
+impl ValueGenerator for InstantGenerator {
+    fn gen_value(&self, ctx: &SimContext) -> Value {
+        let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
+
+        if let BindingValue::Tick(Tick(t)) = tick {
+            let t0 = ctx.t0();
+            let time = t0.add(Duration::milliseconds(*t as i64));
+            DateTime::TimestampWithTz(time).into()
+        } else {
+            todo!("handle unexpected value for Tick")
+        }
+    }
+}
+
 pub enum SimpleScriptVariableKind {
     Tick,
+    Instant,
     String,
     UInt8,
     UInt16,
@@ -243,6 +266,7 @@ impl SimpleScriptVariableKind {
     pub fn named() -> DataGenerationResult<Vec<(String, SimpleScriptVariableKind)>> {
         [
             "Tick",
+            "Instant",
             "String",
             "UniformU8",
             "UniformU16",
@@ -256,14 +280,15 @@ impl SimpleScriptVariableKind {
             "Bool",
             "UUID",
         ]
-            .iter()
-            .map(|s| Self::from_string(s).map(|k| (s.to_string(), k)))
-            .collect()
+        .iter()
+        .map(|s| Self::from_string(s).map(|k| (s.to_string(), k)))
+        .collect()
     }
-    
+
     pub fn from_string(s: &str) -> DataGenerationResult<Self> {
         match s {
             "Tick" => Ok(Self::Tick),
+            "Instant" => Ok(Self::Instant),
             "String" => Ok(Self::String),
             "UniformU8" => Ok(Self::UInt8),
             "UniformU16" => Ok(Self::UInt16),
@@ -295,6 +320,7 @@ impl SimpleScriptVariableKind {
                 todo!()
             }
             SimpleScriptVariableKind::Tick => Ok(Box::new(simple_tick())),
+            SimpleScriptVariableKind::Instant => Ok(Box::new(simple_instant())),
             SimpleScriptVariableKind::UInt8 => Ok(Box::new(simple_u8(rng)?)),
             SimpleScriptVariableKind::UInt16 => Ok(Box::new(simple_u16(rng)?)),
             SimpleScriptVariableKind::UInt32 => Ok(Box::new(simple_u32(rng)?)),
@@ -312,6 +338,10 @@ impl SimpleScriptVariableKind {
 
 pub fn simple_tick() -> TickGenerator {
     TickGenerator {}
+}
+
+pub fn simple_instant() -> InstantGenerator {
+    InstantGenerator {}
 }
 
 pub fn simple_choose<R>(

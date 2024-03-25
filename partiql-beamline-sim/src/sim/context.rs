@@ -1,7 +1,9 @@
 use crate::primitives::Tick;
+use crate::sim::SimConfig;
 use miette::Diagnostic;
 use std::collections::HashMap;
 use thiserror::Error;
+use time::OffsetDateTime;
 use unicase::UniCase;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -15,14 +17,16 @@ pub enum SimContextError {
     GetBindingError(String),
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct SimContext {
+    config: SimConfig,
     bindings: HashMap<UniCase<String>, BindingValue>,
 }
 
 impl SimContext {
-    pub fn new() -> SimContext {
+    pub fn new(config: SimConfig) -> SimContext {
         SimContext {
+            config,
             bindings: Default::default(),
         }
     }
@@ -51,6 +55,10 @@ impl SimContext {
             .bindings
             .get(&UniCase::new(key.to_string()))
             .expect("binding value"))
+    }
+
+    pub fn t0(&self) -> &OffsetDateTime {
+        &self.config.t0
     }
 }
 
