@@ -505,7 +505,7 @@ where
 
 impl<R> Default for ValueGeneratorRegistry<R>
 where
-    R: Rng + Sized + 'static,
+    R: Rng + Sized + Clone + 'static,
 {
     fn default() -> Self {
         let mut registry = ValueGeneratorRegistry::new();
@@ -571,7 +571,7 @@ where
 
 impl<R> ValueGeneratorParser<R> for SimpleScriptVariableKind
 where
-    R: Rng + Sized + 'static,
+    R: Rng + Sized + Clone + 'static,
 {
     fn parse_generator(
         &self,
