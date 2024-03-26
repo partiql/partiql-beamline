@@ -23,14 +23,13 @@ pub struct ProcessId(pub usize);
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Event {
     pub pid: ProcessId,
-    pub sample: Sample,
+    pub tick: Tick,
 }
 
 impl Ord for Event {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.sample
-            .tick
-            .cmp(&other.sample.tick)
+        self.tick
+            .cmp(&other.tick)
             .then_with(|| self.pid.cmp(&other.pid))
     }
 }

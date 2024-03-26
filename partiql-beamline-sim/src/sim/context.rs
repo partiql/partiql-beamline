@@ -20,7 +20,7 @@ pub enum SimContextError {
 #[derive(Clone)]
 pub struct SimContext {
     config: SimConfig,
-    bindings: HashMap<UniCase<String>, BindingValue>,
+    bindings: HashMap<UniCase<String>, ConstantBindingValue>,
 }
 
 impl SimContext {
@@ -31,7 +31,7 @@ impl SimContext {
         }
     }
 
-    pub fn add_binding(&mut self, key: &str, value: &BindingValue) -> SimContextResult<()> {
+    pub fn add_binding(&mut self, key: &str, value: &ConstantBindingValue) -> SimContextResult<()> {
         let key = UniCase::new(key.to_string());
         if self.bindings.contains_key(&key) {
             Err(SimContextError::AddBindingError(format!(
@@ -44,13 +44,13 @@ impl SimContext {
         }
     }
 
-    pub fn overwrite_binding(&mut self, key: &str, value: &BindingValue) {
+    pub fn overwrite_binding(&mut self, key: &str, value: &ConstantBindingValue) {
         let key = UniCase::new(key.to_string());
         self.bindings
             .insert(UniCase::new(key.to_string()), value.clone());
     }
 
-    pub fn get_binding(&self, key: &str) -> SimContextResult<&BindingValue> {
+    pub fn get_binding(&self, key: &str) -> SimContextResult<&ConstantBindingValue> {
         Ok(self
             .bindings
             .get(&UniCase::new(key.to_string()))
@@ -64,7 +64,7 @@ impl SimContext {
 
 #[derive(Clone, Debug)]
 #[non_exhaustive]
-pub enum BindingValue {
+pub enum ConstantBindingValue {
     String(String),
     UInt8(u8),
     UInt64(u64),

@@ -12,7 +12,7 @@ use std::ops::{Add, DerefMut};
 use thiserror::Error;
 use time::Duration;
 
-use crate::sim::context::{BindingValue, SimContext};
+use crate::sim::context::{ConstantBindingValue, SimContext};
 
 pub const CURRENT_TICK: &str = "current_tick";
 
@@ -84,8 +84,8 @@ pub trait ArrivalTime: Debug {
 ///
 /// see https://en.wikipedia.org/wiki/Poisson_point_process#Homogeneous_Poisson_point_process
 pub struct HomogeneousPoisson<R>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     /// The mean time between arrivals
     interarrival_time: Duration,
@@ -98,8 +98,8 @@ pub struct HomogeneousPoisson<R>
 }
 
 impl<R> Debug for HomogeneousPoisson<R>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HomogeneousPoisson")
@@ -109,8 +109,8 @@ impl<R> Debug for HomogeneousPoisson<R>
 }
 
 impl<R> HomogeneousPoisson<R>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     pub fn from_interarrival_time(rng: R, interarrival_time: Duration) -> Self {
         let rate = interarrival_time.as_seconds_f64();
@@ -126,8 +126,8 @@ impl<R> HomogeneousPoisson<R>
 }
 
 impl<R> ArrivalTime for HomogeneousPoisson<R>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     fn next_arrival(&self, now: Tick) -> Tick {
         let mut rng = self.rng.borrow_mut();
@@ -169,9 +169,9 @@ impl From<Box<dyn ValueGenerator>> for SimpleRandomData {
 }
 
 impl<const N: usize, S, V> From<[(S, V); N]> for SimpleRandomData
-    where
-        S: Into<String>,
-        V: Into<Box<dyn ValueGenerator>>,
+where
+    S: Into<String>,
+    V: Into<Box<dyn ValueGenerator>>,
 {
     #[inline]
     fn from(arr: [(S, V); N]) -> Self {
@@ -216,7 +216,7 @@ pub struct TickGenerator {}
 impl ValueGenerator for TickGenerator {
     fn gen_value(&self, ctx: &SimContext) -> Value {
         let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
-        if let BindingValue::Tick(Tick(t)) = tick {
+        if let ConstantBindingValue::Tick(Tick(t)) = tick {
             // TODO Remove `as usize` once https://github.com/partiql/partiql-lang-rust/pull/449 is released
             (*t as usize).into()
         } else {
@@ -235,7 +235,7 @@ impl ValueGenerator for InstantGenerator {
     fn gen_value(&self, ctx: &SimContext) -> Value {
         let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
 
-        if let BindingValue::Tick(Tick(t)) = tick {
+        if let ConstantBindingValue::Tick(Tick(t)) = tick {
             let t0 = ctx.t0();
             let time = t0.add(Duration::milliseconds(*t as i64));
             DateTime::TimestampWithTz(time).into()
@@ -312,8 +312,8 @@ impl SimpleScriptVariableKind {
         rng: R,
         _ctx: &SimContext,
     ) -> DataGenerationResult<Box<dyn ValueGenerator>>
-        where
-            R: Rng + Sized + 'static,
+    where
+        R: Rng + Sized + 'static,
     {
         match self {
             SimpleScriptVariableKind::String => {
@@ -348,8 +348,8 @@ pub fn simple_choose<R>(
     rng: R,
     choices: Vec<Value>,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if choices.is_empty() {
         return Err(DataGenerationError::Other(
@@ -368,8 +368,8 @@ pub fn simple_choose<R>(
 pub fn simple_bool<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     let name = "UniformBool".into();
     let rng = RefCell::new(rng);
@@ -381,8 +381,8 @@ pub fn simple_bool<R>(
 pub fn simple_uuid<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     let name = "UUID".into();
     let rng = RefCell::new(rng);
@@ -398,8 +398,8 @@ pub fn simple_uuid<R>(
 pub fn simple_u8<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_u8(rng, u8::MIN as i64, u8::MAX as i64)
 }
@@ -407,8 +407,8 @@ pub fn simple_u8<R>(
 pub fn simple_u16<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_u16(rng, u16::MIN as i64, u16::MAX as i64)
 }
@@ -416,8 +416,8 @@ pub fn simple_u16<R>(
 pub fn simple_u32<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_u32(rng, u32::MIN as i64, u32::MAX as i64)
 }
@@ -425,8 +425,8 @@ pub fn simple_u32<R>(
 pub fn simple_u64<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_u64(rng, u64::MIN as i64, i64::MAX)
 }
@@ -434,8 +434,8 @@ pub fn simple_u64<R>(
 pub fn simple_i8<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_i8(rng, i8::MIN as i64, i8::MAX as i64)
 }
@@ -443,8 +443,8 @@ pub fn simple_i8<R>(
 pub fn simple_i16<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_i16(rng, i16::MIN as i64, i16::MAX as i64)
 }
@@ -452,8 +452,8 @@ pub fn simple_i16<R>(
 pub fn simple_i32<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_i32(rng, i32::MIN as i64, i32::MAX as i64)
 }
@@ -461,8 +461,8 @@ pub fn simple_i32<R>(
 pub fn simple_i64<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_i64(rng, i64::MIN, i64::MAX)
 }
@@ -470,8 +470,8 @@ pub fn simple_i64<R>(
 pub fn simple_f64<R>(
     rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     bounded_f64(rng, i8::MIN as f64, i8::MAX as f64)
 }
@@ -481,8 +481,8 @@ pub fn bounded_u8<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if min < u8::MIN as i64 || max > u8::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
@@ -496,8 +496,8 @@ pub fn bounded_u16<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if min < u16::MIN as i64 || max > u16::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
@@ -511,8 +511,8 @@ pub fn bounded_u32<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if min < u32::MIN as i64 || max > u32::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
@@ -526,8 +526,8 @@ pub fn bounded_u64<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if min < u64::MIN as i64 {
         Err(DataGenerationError::Bounds(min, max))
@@ -541,8 +541,8 @@ pub fn bounded_i8<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if min < i8::MIN as i64 || max > i8::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
@@ -556,8 +556,8 @@ pub fn bounded_i16<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if min < i16::MIN as i64 || max > i16::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
@@ -571,8 +571,8 @@ pub fn bounded_i32<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     if min < i32::MIN as i64 || max > i32::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
@@ -586,8 +586,8 @@ pub fn bounded_i64<R>(
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     let name = format!("UniformI64::{{ low: {min}, high: {max} }}");
     let rng = RefCell::new(rng);
@@ -601,8 +601,8 @@ pub fn bounded_f64<R>(
     min: f64,
     max: f64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value>>
-    where
-        R: Rng + Sized,
+where
+    R: Rng + Sized,
 {
     let name = format!("UniformF64::{{ low: {min}, high: {max} }}");
     let rng = RefCell::new(rng);
@@ -612,9 +612,9 @@ pub fn bounded_f64<R>(
 }
 
 pub struct SimpleRandomVariable<R, F>
-    where
-        R: Rng + Sized,
-        F: Fn(&mut R) -> Value,
+where
+    R: Rng + Sized,
+    F: Fn(&mut R) -> Value,
 {
     name: String,
 
@@ -625,9 +625,9 @@ pub struct SimpleRandomVariable<R, F>
 }
 
 impl<R, F> Debug for SimpleRandomVariable<R, F>
-    where
-        R: Rng + Sized,
-        F: Fn(&mut R) -> Value,
+where
+    R: Rng + Sized,
+    F: Fn(&mut R) -> Value,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SimpleRandomVariable")
@@ -637,9 +637,9 @@ impl<R, F> Debug for SimpleRandomVariable<R, F>
 }
 
 impl<R, F> ValueGenerator for SimpleRandomVariable<R, F>
-    where
-        R: Rng + Sized,
-        F: Fn(&mut R) -> Value,
+where
+    R: Rng + Sized,
+    F: Fn(&mut R) -> Value,
 {
     fn gen_value(&self, _ctx: &SimContext) -> Value {
         let mut rng = self.rng.borrow_mut();
@@ -657,7 +657,7 @@ pub struct SimpleProcess {
 impl RandomProcess for SimpleProcess {
     fn next_sample(&self, ctx: &SimContext) -> Option<Result<Sample, DataSamplingError>> {
         let tick_binding_value = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
-        if let &BindingValue::Tick(tick) = tick_binding_value {
+        if let &ConstantBindingValue::Tick(tick) = tick_binding_value {
             let value = self.data.gen_value(ctx);
             Some(Ok(Sample { tick, value }))
         } else {

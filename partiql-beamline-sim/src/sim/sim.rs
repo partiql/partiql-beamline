@@ -8,10 +8,10 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
 
-use crate::gen::{DataSamplingError, RandomProcesses};
+use crate::gen::{DataSamplingError, RandomProcess, RandomProcesses};
 use crate::primitives::{Event, ProcessId, Sample, Tick};
 use crate::reader::{ProcessConfigError, ProcessParser};
-use crate::sim::context::{BindingValue, SimContext, SimContextError};
+use crate::sim::context::{ConstantBindingValue, SimContext, SimContextError};
 use crate::sim::timeline::Timeline;
 use crate::sim::{SimConfig, SimConfigError, SimConfigResult};
 
@@ -62,11 +62,12 @@ impl Sim {
     /// Create a [`Sim`] from the provided [`SimConfig`]
     pub fn from_config(config: SimConfig, script: &[u8]) -> SimResult<Self> {
         let seed = config.seed;
-        let ctx = SimContext::new(config);
+        let context = SimContext::new(config);
 
+        let processes = Self::parse_processes(seed, script, &context)?;
         let mut sim = Sim {
-            processes: Self::parse_processes(seed, script, &ctx)?,
-            context: ctx,
+            context,
+            processes,
             root_rng: Pcg64Mcg::seed_from_u64(seed),
             time: Tick(0),
             timeline: Timeline::default(),
@@ -74,13 +75,17 @@ impl Sim {
 
         // Populate the timeline with initial events for each process
         for pid in sim.processes.ids() {
-            sim.schedule_process(pid)?
+            sim.schedule_pid(pid)?
         }
 
         Ok(sim)
     }
 
-    pub fn add_binding_to_context(&mut self, key: &str, value: &BindingValue) -> SimResult<()> {
+    pub fn add_binding_to_context(
+        &mut self,
+        key: &str,
+        value: &ConstantBindingValue,
+    ) -> SimResult<()> {
         match self.context.add_binding(key, value) {
             Ok(_) => Ok(()),
             Err(e) => Err(SimError::ContextError(e)),
@@ -102,19 +107,33 @@ impl Sim {
     pub fn next_sample(&mut self) -> SimResult<Option<Sample>> {
         match self.timeline.pop() {
             None => Ok(None),
-            Some(Event { pid, sample }) => {
+            Some(Event { pid, tick }) => {
                 // update simulation's current tick to the tick for this event
-                self.time = sample.tick;
+                if tick > self.time {
+                    self.time = tick;
+                    self.context.overwrite_binding(
+                        gen::CURRENT_TICK,
+                        &ConstantBindingValue::Tick(self.time),
+                    );
+                }
 
-                // schedule sampling the process again
-                self.schedule_process(pid)?;
+                // find the process
+                let proc = self
+                    .processes
+                    .get(pid)
+                    .ok_or(SimError::UnknownProcess(pid))?;
 
-                Ok(Some(sample))
+                // re-schedule sampling the process again
+                let tick = proc.next_arrival(self.time, &self.context);
+                self.timeline.push(Event { pid, tick });
+
+                // generate the process's sample
+                Ok(proc.next_sample(&self.context).transpose()?)
             }
         }
     }
 
-    fn schedule_process(&mut self, pid: ProcessId) -> SimResult<()> {
+    fn schedule_pid(&mut self, pid: ProcessId) -> SimResult<()> {
         // find the process
         let proc = self
             .processes
@@ -122,18 +141,7 @@ impl Sim {
             .ok_or(SimError::UnknownProcess(pid))?;
 
         let tick = proc.next_arrival(self.time, &self.context);
-        self.context
-            .overwrite_binding(gen::CURRENT_TICK, &BindingValue::Tick(tick));
-
-        // generate its next sample
-        let next_sample = proc.next_sample(&self.context).transpose()?;
-
-        // add the sample to the timeline
-        if let Some(sample) = next_sample {
-            self.timeline.push(Event { pid, sample });
-            self.time = tick;
-        }
-
+        self.timeline.push(Event { pid, tick });
         Ok(())
     }
 }
