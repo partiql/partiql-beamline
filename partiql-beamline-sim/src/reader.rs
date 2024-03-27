@@ -30,10 +30,10 @@ use time::Duration;
 #[non_exhaustive]
 pub enum ProcessConfigError {
     #[error("Read error: `{0}`")]
-    ReadError(IonError),
+    ReadError(#[from] IonError),
 
     #[error("Random Variable error: `{0}`")]
-    RandomVariableError(DataGenerationError),
+    RandomVariableError(#[from] DataGenerationError),
 
     #[error("No $arrival for random process")]
     NoArrival,
@@ -49,18 +49,6 @@ pub enum ProcessConfigError {
 
     #[error("Fatal Internal Error: `{0}`")]
     Fatal(String),
-}
-
-impl From<IonError> for ProcessConfigError {
-    fn from(err: IonError) -> Self {
-        ProcessConfigError::ReadError(err)
-    }
-}
-
-impl From<DataGenerationError> for ProcessConfigError {
-    fn from(err: DataGenerationError) -> Self {
-        ProcessConfigError::RandomVariableError(err)
-    }
 }
 
 type ProcessConfigResult<T> = Result<T, ProcessConfigError>;

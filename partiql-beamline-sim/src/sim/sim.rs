@@ -8,7 +8,7 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
 
-use crate::gen::{DataSamplingError, RandomProcess, RandomProcesses};
+use crate::gen::{DataSamplingError, RandomProcesses};
 use crate::primitives::{Event, ProcessId, Sample, Tick};
 use crate::reader::{ProcessConfigError, ProcessParser};
 use crate::sim::context::{ConstantBindingValue, SimContext, SimContextError};
@@ -77,6 +77,10 @@ impl Sim {
         for pid in sim.processes.ids() {
             sim.schedule_pid(pid)?
         }
+
+        // Set the initial bindings
+        sim.context
+            .overwrite_binding(gen::CURRENT_TICK, &ConstantBindingValue::Tick(sim.time));
 
         Ok(sim)
     }

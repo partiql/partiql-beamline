@@ -16,14 +16,14 @@ version.workspace = true
 partiql-value = "0.7"
 partiql-extension-ion = "0.7"
 
-ion-rs = { version = "1.0.0-rc.2", features = ["experimental-reader", "experimental-lazy-reader"] }
+ion-rs = { version = "1.0.0-rc.3", features = ["experimental-reader", "experimental-lazy-reader"] }
 
 dyn-clone = "1.0"
 
 thiserror = "1.*"
-miette = { version ="5.*", features = ["fancy"] }
+miette = { version = "7.2", features = ["fancy"] }
 
-derive_builder = "0.13"
+derive_builder = "0.20"
 
 time = "0.3"
 uuid = "1.7"
