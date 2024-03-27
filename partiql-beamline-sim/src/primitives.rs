@@ -6,8 +6,12 @@ use std::cmp::Ordering;
 pub struct Tick(pub u128);
 
 /// A name for a `data set`
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct DataSetName(pub String);
+
+/// A data set's id within the simulation.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct DataSetId(pub usize);
 
 /// A single sample of a random process.
 #[derive(Debug, Clone, Eq, PartialEq)]

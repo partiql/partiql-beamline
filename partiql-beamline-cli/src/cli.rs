@@ -1,7 +1,7 @@
 use ion_rs::element::writer::TextKind;
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{Sample, Tick};
-use partiql_beamline::sim::{Sim, SimConfig};
+use partiql_beamline::sim::{Sim, SimBuilder, SimConfig};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding;
 use partiql_value::{tuple, List, Value};
@@ -12,7 +12,10 @@ use time::Duration;
 pub(crate) const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
 pub(crate) fn execute(cfg: SimConfig, script: String, sample_count: u64) -> miette::Result<Value> {
-    let mut sim = Sim::from_config(cfg.clone(), script.as_bytes()).into_diagnostic()?;
+    let mut sim = SimBuilder::from_config(cfg.clone(), script.as_bytes())
+        .into_diagnostic()?
+        .build_time_ordered()
+        .into_diagnostic()?;
     let mut values = vec![];
 
     for _ in 0..sample_count {

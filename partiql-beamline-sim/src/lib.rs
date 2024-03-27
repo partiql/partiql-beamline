@@ -7,7 +7,7 @@ pub mod reader;
 #[cfg(test)]
 mod tests {
     use crate::primitives::{Sample, Tick};
-    use crate::sim::{Sim, SimConfigBuilder};
+    use crate::sim::{Sim, SimBuilder, SimConfigBuilder};
     use partiql_value::{tuple, Value};
     use std::ops::Add;
     use time::macros::datetime;
@@ -45,7 +45,10 @@ mod tests {
             .build()
             .expect("config");
 
-        let mut sim = Sim::from_config(config, script.as_bytes()).expect("sim");
+        let mut sim = SimBuilder::from_config(config, script.as_bytes())
+            .expect("sim")
+            .build_time_ordered()
+            .expect("sim");
 
         for _ in 0..100 {
             let Sample {

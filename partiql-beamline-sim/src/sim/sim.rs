@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use std::default::Default;
 use std::error::Error;
 
@@ -9,7 +10,7 @@ use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
 
 use crate::gen::{DataSamplingError, RandomProcesses};
-use crate::primitives::{Event, ProcessId, Sample, Tick};
+use crate::primitives::{DataSetId, DataSetName, Event, ProcessId, Sample, Tick};
 use crate::reader::{ProcessConfigError, ProcessParser};
 use crate::sim::context::{ConstantBindingValue, SimContext, SimContextError};
 use crate::sim::timeline::Timeline;
@@ -47,53 +48,36 @@ pub enum SimError {
 
 pub type SimResult<T> = Result<T, SimError>;
 
-pub struct Sim {
+pub type SimIterator = dyn Iterator<Item = SimResult<Sample>>;
+
+pub struct SimBuilder {
     context: SimContext,
 
     #[allow(unused)]
     root_rng: Pcg64Mcg,
 
-    time: Tick,
-    timeline: Timeline,
+    t0: Tick,
     processes: RandomProcesses,
 }
 
-impl Sim {
-    /// Create a [`Sim`] from the provided [`SimConfig`]
+impl SimBuilder {
+    /// Create a [`SimBuilder`] from the provided [`SimConfig`]
     pub fn from_config(config: SimConfig, script: &[u8]) -> SimResult<Self> {
         let seed = config.seed;
-        let context = SimContext::new(config);
+        let root_rng = Pcg64Mcg::seed_from_u64(seed);
+        let t0 = Tick(0);
+        let mut context = SimContext::new(config);
+        // Set the initial bindings
+        context.overwrite_binding(gen::CURRENT_TICK, &ConstantBindingValue::Tick(t0));
 
         let processes = Self::parse_processes(seed, script, &context)?;
-        let mut sim = Sim {
+
+        Ok(SimBuilder {
             context,
             processes,
-            root_rng: Pcg64Mcg::seed_from_u64(seed),
-            time: Tick(0),
-            timeline: Timeline::default(),
-        };
-
-        // Populate the timeline with initial events for each process
-        for pid in sim.processes.ids() {
-            sim.schedule_pid(pid)?
-        }
-
-        // Set the initial bindings
-        sim.context
-            .overwrite_binding(gen::CURRENT_TICK, &ConstantBindingValue::Tick(sim.time));
-
-        Ok(sim)
-    }
-
-    pub fn add_binding_to_context(
-        &mut self,
-        key: &str,
-        value: &ConstantBindingValue,
-    ) -> SimResult<()> {
-        match self.context.add_binding(key, value) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(SimError::ContextError(e)),
-        }
+            root_rng,
+            t0,
+        })
     }
 
     fn parse_processes(
@@ -105,6 +89,55 @@ impl Sim {
         let parser = ProcessParser::new(seed, registry, ctx)?;
         let mut reader = LazyReader::new(script);
         Ok(parser.parse(&mut reader)?)
+    }
+
+    pub fn build_time_ordered(self) -> SimResult<Sim> {
+        Sim::from_builder(self)
+    }
+
+    pub fn build_multi_dataset(self) -> SimResult<MultiSim> {
+        MultiSim::from_builder(self)
+    }
+}
+
+pub struct Sim {
+    context: SimContext,
+
+    #[allow(unused)]
+    root_rng: Pcg64Mcg,
+
+    processes: RandomProcesses,
+
+    time: Tick,
+    timeline: Timeline,
+}
+
+impl Sim {
+    /// Create a [`Sim`] from the provided [`SimConfig`]
+    fn from_builder(builder: SimBuilder) -> SimResult<Self> {
+        let SimBuilder {
+            context,
+            processes,
+            root_rng,
+            t0: time,
+        } = builder;
+
+        // Populate the timeline with initial events for each process
+        let mut timeline = Timeline::default();
+        for pid in processes.ids() {
+            let (_dataset, proc) = processes.get(pid).ok_or(SimError::UnknownProcess(pid))?;
+
+            let tick = proc.next_arrival(time, &context);
+            timeline.push(Event { pid, tick });
+        }
+
+        Ok(Sim {
+            context,
+            root_rng,
+            processes,
+            time,
+            timeline,
+        })
     }
 
     /// Generate the next sample from this simulation
@@ -136,16 +169,64 @@ impl Sim {
             }
         }
     }
+}
 
-    fn schedule_pid(&mut self, pid: ProcessId) -> SimResult<()> {
-        // find the process
-        let (_dataset, proc) = self
-            .processes
-            .get(pid)
-            .ok_or(SimError::UnknownProcess(pid))?;
+pub struct MultiSim {
+    context: SimContext,
 
-        let tick = proc.next_arrival(self.time, &self.context);
-        self.timeline.push(Event { pid, tick });
-        Ok(())
+    #[allow(unused)]
+    root_rng: Pcg64Mcg,
+
+    datasets: Vec<DataSetName>,
+    sims: Vec<Sim>,
+}
+
+impl MultiSim {
+    /// Create a [`Sim`] from the provided [`SimConfig`]
+    fn from_builder(builder: SimBuilder) -> SimResult<Self> {
+        let SimBuilder {
+            context,
+            processes,
+            root_rng,
+            t0,
+        } = builder;
+
+        let mut processes: Vec<_> = processes.decompose().into_iter().collect();
+        processes.sort_by(|(ld, _), (rd, _)| ld.cmp(rd));
+
+        let mut datasets = Vec::default();
+        let mut sims = Vec::default();
+        for (d, p) in processes {
+            datasets.push(d);
+
+            let bld = SimBuilder {
+                context: context.clone(),
+                root_rng: root_rng.clone(),
+                t0,
+                processes: p,
+            };
+            sims.push(bld.build_time_ordered()?);
+        }
+
+        Ok(MultiSim {
+            context,
+            root_rng,
+            datasets,
+            sims,
+        })
+    }
+
+
+    pub fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
+        self.datasets
+            .iter()
+            .enumerate()
+            .map(|(i, d)| (DataSetId(i), d.clone()))
+            .collect()
+    }
+
+    /// Generate the next sample from this simulation
+    pub fn next_sample(&mut self, id: DataSetId) -> SimResult<Option<Sample>> {
+        self.sims[id.0].next_sample()
     }
 }

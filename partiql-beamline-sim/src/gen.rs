@@ -1,4 +1,4 @@
-use crate::primitives::{DataSetName, ProcessId, Sample, Tick};
+use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
 use partiql_value::{DateTime, Tuple, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -61,6 +61,19 @@ impl RandomProcesses {
 
     pub fn ids(&self) -> Vec<ProcessId> {
         (0..self.processes.len()).map(ProcessId).collect()
+    }
+
+    pub fn decompose(self) -> HashMap<DataSetName, RandomProcesses> {
+        let mut procs: HashMap<DataSetName, RandomProcesses> = HashMap::default();
+
+        for (d, p) in self.processes {
+            let rp = procs
+                .entry(d.clone())
+                .or_insert_with(|| RandomProcesses { processes: vec![] });
+            rp.processes.push((d, p));
+        }
+
+        procs
     }
 }
 

@@ -4,7 +4,7 @@ use crate::cli::{encode_ion_text, IonPrintMode, DATETIME_FORMAT};
 use clap::{Parser, Subcommand};
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{Sample, Tick};
-use partiql_beamline::sim::Sim;
+use partiql_beamline::sim::{Sim, SimBuilder};
 use partiql_beamline_cliargs::{parse_args, OutputFormat, SampleCount, Script, Seed, StartTime};
 use partiql_extension_ion::Encoding;
 use std::ops::Add;
@@ -60,7 +60,10 @@ fn main() -> miette::Result<()> {
                     println!("Seed: {}", cfg.seed);
                     println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
 
-                    let mut sim = Sim::from_config(cfg, script.as_bytes()).into_diagnostic()?;
+                    let mut sim = SimBuilder::from_config(cfg, script.as_bytes())
+                        .into_diagnostic()?
+                        .build_time_ordered()
+                        .into_diagnostic()?;
 
                     for _ in 0..sample_count {
                         if let Ok(Some(Sample {
