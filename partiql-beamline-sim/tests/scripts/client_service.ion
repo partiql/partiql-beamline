@@ -1,0 +1,49 @@
+
+rand_processes::{
+    // generate between 5 & 20 customers
+    $n: UniformU8::{ low: 5, high: 20 },
+
+    // A generator for client ids
+    $id_gen: UUID,
+
+    // A generator for request ids
+    $rid_gen: UUID,
+
+    requests: $n::[
+        // each iteration of the loop will assign an index from 1..=$n to the variable $@n
+        {
+            // customer $@n has a UUID
+            $id: $id_gen::(), // here we force the evaluation of the generator at read time with `::()` to get a single UUID
+
+            // customer $@n will arrive every $r milliseconds
+            $r: UniformU8::{low:20, high:150},
+            $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+            // customer $@n will have a success rate between 99.5% and 100%
+            $rate: UniformF64::{ low:0.995e0, high:1.0e0 },
+            $success: Bool::{ p: $rate },
+
+            service: rand_process::{
+                $data: {
+                    Request: $rid_gen,
+                    StartTime: Instant,
+                    Program: "FancyService",
+                    Operation: "GetMyData",
+
+                    Account: $id,
+                    client: Format::{pattern: "customer #{ $@n }"},
+
+                    success: $success,
+                }
+            },
+            'client_{ $@n }': rand_process::{
+                $data: {
+                    id: $id,
+                    request_time: Instant,
+                    request_id: $rid_gen,
+                    success: $success,
+                }
+            }
+        }
+    ]
+}

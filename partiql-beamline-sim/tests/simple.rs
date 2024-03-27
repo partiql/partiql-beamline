@@ -28,3 +28,15 @@ fn verify_repeatable_sensors() {
     let script = include_bytes!("scripts/sensors.ion");
     verify_repeatable(script);
 }
+
+#[test]
+fn verify_repeatable_sensors_alternate() {
+    let script = include_bytes!("scripts/sensors_alternate.ion");
+    verify_repeatable(script);
+}
+
+#[test]
+fn verify_repeatable_client_service() {
+    let script = include_bytes!("scripts/client_service.ion");
+    verify_repeatable(script);
+}

@@ -1,0 +1,28 @@
+rand_processes::{
+    $n: UniformU8::{ low: 2, high: 10 },
+
+    // each iteration of the loop will assign an index from 1..=$n to the variable $@n
+    sensors: $n::[
+        {
+            // sensor $@n will arrive every $r minutes (where $r is `5` 50% of the time, else `10`)
+            $r: Uniform::[5,10],
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+
+            // define the data-generator for sensor $@n outside of the process
+            $generator: {
+                id: '$@n',
+                tick: Tick,
+                i8: UniformI8,
+                f: UniformF64,
+                foo: {
+                    f: UniformF64,
+                }
+            },
+
+            // create a random process
+            sensor: rand_process::{
+                $data: $generator // reference the data-generator
+            }
+        }
+    ],
+}

@@ -1,12 +1,12 @@
 use crate::gen::{
-    bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8, bounded_u16, bounded_u32,
-    bounded_u64, bounded_u8, simple_choose, ArrivalTime, ConstantGenerator, DataGenerationError,
-    HomogeneousPoisson, RandomProcess, RandomProcesses, SimpleProcess, SimpleRandomData,
-    SimpleScriptVariableKind, ValueGenerator,
+    bounded_bool, bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8, bounded_u16,
+    bounded_u32, bounded_u64, bounded_u8, simple_choose, ArrivalTime, ConstantGenerator,
+    DataGenerationError, HomogeneousPoisson, RandomProcess, RandomProcesses, SimpleProcess,
+    SimpleRandomData, SimpleScriptVariableKind, ValueGenerator,
 };
 use ion_rs::lazy::any_encoding::AnyEncoding;
 use ion_rs::lazy::r#struct::LazyStruct;
-use ion_rs::{IonError, IonType, SymbolRef};
+use ion_rs::{IonError, IonResult, IonType, SymbolRef};
 use std::collections::hash_map::Entry;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
@@ -18,19 +18,28 @@ use ion_rs::lazy::value::LazyValue;
 use ion_rs::lazy::value_ref::ValueRef;
 use partiql_value::Value;
 use rand::{Rng, SeedableRng};
+use rand_distr::num_traits::ToPrimitive;
 use rand_pcg::Pcg64Mcg;
 
-use crate::reader::util::{SymbolParser, SymbolType};
-
 use crate::sim::context::SimContext;
+use regex::Regex;
+
 use thiserror::Error;
 use time::Duration;
+
+use once_cell::sync::Lazy;
+
+static FORMAT_STRING_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"([^\\])\{(.+?)\}").expect("FORMAT STRING REGEX"));
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum ProcessConfigError {
     #[error("Read error: `{0}`")]
     ReadError(#[from] IonError),
+
+    #[error("Format string error: `{0}`")]
+    FormatStringError(String),
 
     #[error("Random Variable error: `{0}`")]
     RandomVariableError(#[from] DataGenerationError),
@@ -78,6 +87,12 @@ impl From<Box<dyn ArrivalTime>> for EnvBindingValue {
     }
 }
 
+#[derive(Debug)]
+pub enum SymbolType {
+    VarRef(String),
+    Str(String),
+}
+
 type EnvBindings = HashMap<String, EnvBindingValue>;
 
 #[derive(Debug)]
@@ -85,7 +100,7 @@ struct Env {
     vars: Vec<(String, EnvBindings)>,
 }
 
-trait EnvLookup {
+pub(crate) trait EnvLookup {
     fn find(&self, name: &str) -> Option<&EnvBindingValue>;
 
     fn get(&self, name: &str) -> ProcessConfigResult<&EnvBindingValue> {
@@ -196,22 +211,65 @@ impl ProcessParser {
 
     pub fn parse(mut self, reader: &mut LazyReader) -> ProcessConfigResult<RandomProcesses> {
         let top_lvl = reader.expect_next()?;
-        let config = top_lvl.read()?.expect_struct()?;
+
+        let top_lvl = top_lvl.read()?;
+        let config = top_lvl.expect_struct()?;
         config.annotations().expect(["rand_processes"])?;
 
-        self.push_scope("^")?;
-        self.parse_processes(config)?;
-        self.pop_scope()?;
+        self.parse_scope_struct("^", config)?;
 
         Ok(self.processes)
     }
 
-    fn parse_processes(&mut self, processes: LazyStruct<AnyEncoding>) -> ProcessConfigResult<()> {
-        if processes.annotations().are(["rand_process"])? {
-            let process = self.parse_process(processes)?;
+    fn parse_scope<S: Into<String>>(
+        &mut self,
+        scope_name: S,
+        value: ValueRef<AnyEncoding>,
+    ) -> ProcessConfigResult<()> {
+        let ion_type = value.ion_type();
+        match value.ion_type() {
+            IonType::List => self.parse_scope_list(scope_name, value.expect_list()?),
+            IonType::Struct => self.parse_scope_struct(scope_name, value.expect_struct()?),
+            _ => Err(ProcessConfigError::Other(format!(
+                "TODO: unhandled scope type `{ion_type}`"
+            ))),
+        }
+    }
+
+    fn parse_scope_list<S: Into<String>>(
+        &mut self,
+        scope_name: S,
+        l: LazyList<AnyEncoding>,
+    ) -> ProcessConfigResult<()> {
+        let annot = l.annotations().collect::<Result<Vec<_>, _>>()?;
+
+        if let Some(annot) = annot.first() {
+            self.parse_list_parameterized(scope_name, l, annot)?;
+        } else {
+            self.parse_list_unparameterized(scope_name, l)?;
+        }
+        Ok(())
+    }
+
+    fn parse_scope_struct<S: Into<String>>(
+        &mut self,
+        scope_name: S,
+        s: LazyStruct<AnyEncoding>,
+    ) -> ProcessConfigResult<()> {
+        let annot = s.annotations().collect::<Result<Vec<_>, _>>()?;
+
+        if annot
+            .first()
+            .and_then(|s| s.text())
+            .filter(|s| s == &"rand_process")
+            .is_some()
+        {
+            let process = self.parse_process(s)?;
             self.processes.add(process);
         } else {
-            self.parse_bindings(processes)?;
+            self.push_scope(scope_name)?;
+            self.parse_bindings(s)?;
+            self.pop_scope()?;
         }
         Ok(())
     }
@@ -224,21 +282,21 @@ impl ProcessParser {
         let mut arrival = None;
         for field in processes.iter() {
             let field = field?;
-            let name = field.name()?.parse_symbol_type()?;
+            let name = self.parse_symbol_type(&field.name()?)?;
             let value = field.value().read()?;
 
             match name {
                 SymbolType::VarRef(name) => {
                     match name.as_str() {
                         "$arrival" => {
-                            arrival = Some(self.parse_arrival(value)?);
+                            arrival = Some(self.parse_arrival(&value)?);
                         }
                         "$data" => {
-                            data = Some(self.parse_generator(value)?);
+                            data = Some(self.parse_generator(&value)?);
                         }
                         _ => {
                             // variable definition
-                            let val = self.parse_immediate(value)?;
+                            let val = self.parse_binding_value(&value)?;
                             self.env.assign(name, val)?;
                         }
                     }
@@ -251,25 +309,35 @@ impl ProcessParser {
             }
         }
 
+        if arrival.is_none() {
+            if let Some(EnvBindingValue::Arrival(binding)) = self.env.find("$arrival") {
+                arrival = Some(binding.clone());
+            }
+        }
+
+        if data.is_none() {
+            if let Some(EnvBindingValue::Generator(binding)) = self.env.find("$data") {
+                data = Some(binding.clone());
+            }
+        }
+
         let arrival = arrival.ok_or_else(|| ProcessConfigError::NoArrival)?;
         let data = data.ok_or_else(|| ProcessConfigError::NoData)?;
 
         Ok(Box::new(SimpleProcess { arrival, data }))
     }
 
-    fn parse_bindings(
-        &mut self,
-        processes: LazyStruct<AnyEncoding>,
-    ) -> Result<(), ProcessConfigError> {
+    fn parse_bindings(&mut self, processes: LazyStruct<AnyEncoding>) -> ProcessConfigResult<()> {
         for field in processes.iter() {
             let field = field?;
-            let name = field.name()?.parse_symbol_type()?;
-            let value = field.value().read()?;
+            let name = self.parse_symbol_type(&field.name()?)?;
+            let value = field.value();
+            let value = value.read()?;
 
             match name {
                 SymbolType::VarRef(name) => {
                     // variable definition
-                    let val = self.parse_immediate(value)?;
+                    let val = self.parse_binding_value(&value)?;
                     self.env.assign(name, val)?;
                 }
                 SymbolType::Str(name) => {
@@ -280,51 +348,46 @@ impl ProcessParser {
         Ok(())
     }
 
-    fn parse_scope(
+    fn parse_binding_value(
         &mut self,
-        scope_name: String,
-        value: ValueRef<AnyEncoding>,
-    ) -> ProcessConfigResult<()> {
-        let ion_type = value.ion_type();
-        match value.ion_type() {
-            IonType::List => {
-                let l = value.expect_list()?;
-                let annot = l.annotations().collect::<Result<Vec<_>, _>>()?;
-
-                if let Some(annot) = annot.first() {
-                    self.parse_list_parameterized(scope_name, l, annot)?;
-                } else {
-                    self.parse_list_unparameterized(scope_name, l)?;
-                }
-            }
-            IonType::Struct => {
-                todo!("scope struct {:?}", &value)
-            }
-            _ => {
-                return Err(ProcessConfigError::Other(format!(
-                    "TODO: unhandled scope type `{ion_type}`"
-                )));
-            }
+        value: &ValueRef<AnyEncoding>,
+    ) -> ProcessConfigResult<EnvBindingValue> {
+        if let Ok(arrival) = self.parse_arrival(value) {
+            Ok(arrival.into())
+        } else if let Ok(generator) = self.parse_generator(value) {
+            Ok(generator.into())
+        } else if let Ok(immediate) = self.parse_immediate(value) {
+            Ok(immediate.into())
+        } else {
+            Err(ProcessConfigError::Other(format!(
+                "Unknown binding `{value:?}`"
+            )))
         }
-        Ok(())
     }
 
-    fn parse_list_parameterized(
+    fn parse_list_parameterized<S: Into<String>>(
         &mut self,
-        scope_name: String,
+        scope_name: S,
         list: LazyList<AnyEncoding>,
         parameterization: &SymbolRef,
     ) -> ProcessConfigResult<()> {
-        let list_param = self.env.get(parameterization.parse_symbol_text()?)?;
-        match parameterization.parse_symbol_type()? {
+        let list_param = self.env.get(&self.parse_symbol_text(parameterization)?)?;
+        let list_param = match list_param {
+            EnvBindingValue::Value(v) => v.clone(),
+            EnvBindingValue::Generator(g) => g.gen_value(&self.sim_context),
+            EnvBindingValue::Arrival(_) => todo!("error arrival for list param"),
+        };
+        match self.parse_symbol_type(parameterization)? {
             SymbolType::VarRef(name) => match list_param {
-                EnvBindingValue::Value(Value::Integer(n)) if *n > 0 => {
+                Value::Integer(n) if n > 0 => {
+                    let scope_name: String = scope_name.into();
                     let index = name.replace('$', "$@");
-                    for i in 0i64..*n {
+                    for i in 0i64..n {
                         self.push_scope(&scope_name)?;
-                        self.env.assign(index.as_str(), Value::from(i))?;
+                        let index = index.as_str();
+                        self.env.assign(index, Value::from(i))?;
                         for val in list.iter() {
-                            self.parse_processes(val?.read()?.expect_struct()?)?;
+                            self.parse_scope(index, val?.read()?)?;
                         }
                         self.pop_scope()?;
                     }
@@ -341,48 +404,59 @@ impl ProcessParser {
         }
         Ok(())
     }
-    fn parse_list_unparameterized(
+    fn parse_list_unparameterized<S: Into<String>>(
         &mut self,
-        _scope_name: String,
+        _scope_name: S,
         _list: LazyList<AnyEncoding>,
     ) -> ProcessConfigResult<()> {
         todo!("parse_list_unparameterized list")
     }
 
-    fn parse_immediate(&mut self, value: ValueRef<AnyEncoding>) -> ProcessConfigResult<Value> {
+    fn parse_immediate(&mut self, value: &ValueRef<AnyEncoding>) -> ProcessConfigResult<Value> {
         let ion_type = value.ion_type();
-        let val = match ion_type {
-            IonType::Bool => value.expect_bool()?.into(),
-            IonType::Int => value.expect_i64()?.into(),
-            IonType::Float => value.expect_float()?.into(),
-            IonType::String => value.expect_string()?.text().into(),
 
-            IonType::Symbol | IonType::List | IonType::SExp | IonType::Struct => self
-                .parse_generator(value)
-                .map_err(|_e| {
-                    ProcessConfigError::Other(format!("Invalid immediate type `{ion_type}`"))
-                })
-                .map(|r| r.gen_value(&self.sim_context))?,
-
-            _ => {
-                return Err(ProcessConfigError::Other(format!(
-                    "TODO: unhandled immediate type `{ion_type}`"
-                )));
+        match value {
+            ValueRef::Bool(b) => Ok((*b).into()),
+            ValueRef::Int(i) => Ok((i.as_i64().unwrap()).into()),
+            ValueRef::Float(f) => Ok((*f).into()),
+            ValueRef::String(s) => Ok((s.text()).into()),
+            ValueRef::SExp(sexp) => {
+                let annot = sexp.annotations().collect::<IonResult<Vec<_>>>()?;
+                assert_eq!(annot.len(), 1usize);
+                match self.env.get(annot.first().unwrap().text().unwrap())? {
+                    EnvBindingValue::Value(v) => Ok(v.clone()),
+                    EnvBindingValue::Generator(g) => Ok(g.gen_value(&self.sim_context)),
+                    EnvBindingValue::Arrival(_) => {
+                        todo!("arrival in immediate reference")
+                    }
+                }
             }
-        };
-
-        Ok(val)
+            _ => Err(ProcessConfigError::Other(format!(
+                "TODO: unhandled immediate type `{ion_type}`"
+            ))),
+        }
     }
 
-    fn parse_duration(&self, duration: LazyValue<AnyEncoding>) -> ProcessConfigResult<Duration> {
+    fn parse_duration(&self, duration: &LazyValue<AnyEncoding>) -> ProcessConfigResult<Duration> {
         let ion_type = duration.ion_type();
         let mut annot = duration.annotations();
         let duration = duration.read()?;
         let duration: i64 = match ion_type {
             IonType::Int => duration.expect_i64()?,
-            IonType::Symbol => match duration.expect_symbol()?.parse_symbol_type()? {
+            IonType::Symbol => match self.parse_symbol_type(&duration.expect_symbol()?)? {
                 SymbolType::VarRef(var) => match self.env.get(&var)? {
                     EnvBindingValue::Value(Value::Integer(i)) => *i,
+                    EnvBindingValue::Generator(gen) => {
+                        let v = gen.gen_value(&self.sim_context);
+                        match v {
+                            Value::Integer(i) => i,
+                            other => {
+                                return Err(ProcessConfigError::Other(format!(
+                                    "Unexpected generated variable type in duration `{other:?}`"
+                                )));
+                            }
+                        }
+                    }
                     other => {
                         return Err(ProcessConfigError::Other(format!(
                             "Unexpected variable type in duration `{other:?}`"
@@ -403,7 +477,7 @@ impl ProcessParser {
         };
 
         match annot.next() {
-            Some(Ok(duration_type)) => match duration_type.parse_symbol_text()? {
+            Some(Ok(duration_type)) => match self.parse_symbol_text(&duration_type)?.as_str() {
                 "hours" => Ok(Duration::hours(duration)),
                 "minutes" => Ok(Duration::minutes(duration)),
                 "seconds" => Ok(Duration::seconds(duration)),
@@ -419,26 +493,24 @@ impl ProcessParser {
 
     fn parse_arrival(
         &mut self,
-        value: ValueRef<AnyEncoding>,
+        value: &ValueRef<AnyEncoding>,
     ) -> ProcessConfigResult<Box<dyn ArrivalTime>> {
         let ion_type = value.ion_type();
-        match ion_type {
-            IonType::Struct => {
-                let crng = self.child_rng()?;
-                let strct = value.expect_struct()?;
+        match value {
+            ValueRef::Struct(strct) => {
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
 
                 let kind = annot
                     .first()
-                    .ok_or_else(|| ProcessConfigError::Other("No Arrival type".to_string()))?
-                    .parse_symbol_text()?;
-                match kind {
+                    .ok_or_else(|| ProcessConfigError::Other("No Arrival type".to_string()))?;
+                let kind = self.parse_symbol_text(kind)?;
+                match kind.as_str() {
                     "HomogeneousPoisson" => {
                         let interarrival =
-                            self.parse_duration(strct.find_expected("interarrival")?)?;
+                            self.parse_duration(&strct.find_expected("interarrival")?)?;
 
                         Ok(Box::new(HomogeneousPoisson::from_interarrival_time(
-                            crng,
+                            self.child_rng()?,
                             interarrival,
                         )))
                     }
@@ -455,12 +527,10 @@ impl ProcessParser {
 
     fn parse_generator(
         &mut self,
-        value: ValueRef<AnyEncoding>,
+        value: &ValueRef<AnyEncoding>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let ion_type = value.ion_type();
-
-        match ion_type {
-            IonType::Symbol => match value.expect_symbol()?.parse_symbol_type()? {
+        match value {
+            ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
                 SymbolType::VarRef(var) => {
                     let gen: Box<dyn ValueGenerator> = match self.env.get(&var)? {
                         EnvBindingValue::Value(v) => {
@@ -472,52 +542,147 @@ impl ProcessParser {
                     };
                     Ok(gen)
                 }
-                SymbolType::Str(s) => {
-                    let crng = self.child_rng()?;
-                    self.registry.parse(&s, crng, None, &self.sim_context)
+                SymbolType::Str(name) => {
+                    if !self.registry.has_parser(&name) {
+                        Err(ProcessConfigError::UnknownGenerator(name))
+                    } else {
+                        let crng = self.child_rng()?;
+                        let parser = self.registry.get_parser(&name).unwrap();
+                        parser.parse_generator(crng, None, self, &self.sim_context)
+                    }
                 }
             },
-            IonType::Struct => {
-                let strct = value.expect_struct()?;
+            ValueRef::Struct(strct) => {
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
                 if annot.is_empty() {
                     self.push_scope("data")?;
                     let mut kvs: HashMap<String, Box<_>> = Default::default();
                     for field in strct.iter() {
                         let field = field?;
-                        let name = field.name()?.parse_symbol_text()?.to_string();
-                        let value = self.parse_generator(field.value().read()?)?;
+                        let name = self.parse_symbol_text(&field.name()?)?.to_string();
+                        let value_ref = field.value().read()?;
+                        let value = self.parse_generator(&value_ref)?;
                         kvs.insert(name, value);
                     }
                     self.pop_scope()?;
                     Ok(Box::new(SimpleRandomData::Collection(kvs)) as Box<dyn ValueGenerator>)
                 } else {
-                    let crng = self.child_rng()?;
-                    let kind = annot[0].parse_symbol_type()?;
+                    let kind = self.parse_symbol_type(&annot[0])?;
                     match kind {
                         SymbolType::VarRef(_) => {
                             todo!("struct varref")
                         }
-                        SymbolType::Str(s) => {
-                            self.registry
-                                .parse(&s, crng, Some(strct), &self.sim_context)
+                        SymbolType::Str(name) => {
+                            if !self.registry.has_parser(&name) {
+                                Err(ProcessConfigError::UnknownGenerator(name))
+                            } else {
+                                let crng = self.child_rng()?;
+                                let parser = self.registry.get_parser(&name).unwrap();
+
+                                parser.parse_generator(
+                                    crng,
+                                    Some(strct.clone()),
+                                    self,
+                                    &self.sim_context,
+                                )
+                            }
                         }
                     }
                 }
             }
-            IonType::List => {
+            ValueRef::List(l) => {
                 let crng = self.child_rng()?;
-                let l = value.expect_list()?;
+
                 let mut choices = vec![];
-                for li in l.iter() {
-                    choices.push(self.parse_immediate(li?.read()?)?);
+
+                let annot = l.annotations().collect::<Result<Vec<_>, _>>()?;
+
+                let n = if let Some(SymbolType::VarRef(name)) = annot
+                    .first()
+                    .map(|param| self.parse_symbol_type(param))
+                    .transpose()?
+                {
+                    let list_param = self.env.get(&name)?;
+                    let list_param = match list_param {
+                        EnvBindingValue::Value(v) => v,
+                        EnvBindingValue::Generator(_) => {
+                            todo!("error generator for list param")
+                        }
+                        EnvBindingValue::Arrival(_) => todo!("error arrival for list param"),
+                    };
+                    match list_param {
+                        Value::Integer(n) if *n > 0 => *n,
+                        _ => {
+                            return Err(ProcessConfigError::Other(format!(
+                                "Unsupported list parameterization `{list_param:?}`"
+                            )));
+                        }
+                    }
+                } else {
+                    1
+                };
+
+                for _i in 0..n {
+                    for li in l.iter() {
+                        choices.push(self.parse_immediate(&li?.read()?)?);
+                    }
                 }
                 Ok(Box::new(simple_choose(crng, choices)?) as Box<dyn ValueGenerator>)
             }
-            _ => Err(ProcessConfigError::Other(format!(
-                "TODO: unhandled generator type `{ion_type}`"
-            ))),
+            other => {
+                let constant = self.parse_immediate(other)?;
+                Ok(Box::new(ConstantGenerator { constant }))
+            }
         }
+    }
+
+    fn parse_symbol_type(&self, sym: &SymbolRef) -> ProcessConfigResult<SymbolType> {
+        self.parse_symbol_text(sym).map(|sym| {
+            if sym.starts_with('$') {
+                SymbolType::VarRef(sym.to_string())
+            } else {
+                SymbolType::Str(sym.to_string())
+            }
+        })
+    }
+
+    fn parse_symbol_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String> {
+        let txt = sym
+            .text()
+            .ok_or_else(|| ProcessConfigError::Other("Non-text symbol".to_string()))?;
+
+        self.format_str(txt)
+    }
+
+    fn format_str(&self, pattern: &str) -> ProcessConfigResult<String> {
+        let re = &FORMAT_STRING_RE;
+        let txt = if re.is_match(pattern) {
+            let mut new = String::with_capacity(pattern.len());
+            let mut last_match = 0;
+            for caps in re.captures_iter(pattern) {
+                let total_match = caps.get(0).unwrap();
+                let look_ahead_char = caps.get(1).unwrap().as_str();
+                let variable_ref = caps.get(2).unwrap().as_str().trim();
+                new.push_str(&pattern[last_match..total_match.start()]);
+                new.push_str(look_ahead_char);
+
+                let replacement = match self.env.get(variable_ref)? {
+                    EnvBindingValue::Value(v) => {
+                        format!("{v:?}")
+                    }
+                    EnvBindingValue::Generator(_) => todo!("error: generator in format string"),
+                    EnvBindingValue::Arrival(_) => todo!("error: arrival in format string"),
+                };
+                new.push_str(&replacement);
+                last_match = total_match.end();
+            }
+            new.push_str(&pattern[last_match..]);
+            new
+        } else {
+            pattern.to_string()
+        };
+
+        Ok(txt)
     }
 }
 
@@ -540,6 +705,10 @@ where
                 .add_parser(&k, Box::new(v))
                 .expect("static registry creation");
         }
+
+        registry
+            .add_parser("Format", Box::new(Formatter {}))
+            .expect("static registry creation");
 
         registry
     }
@@ -568,17 +737,37 @@ where
         }
     }
 
-    pub fn parse(
-        &self,
-        name: &str,
-        rng: R,
-        config: Option<LazyStruct<AnyEncoding>>,
-        ctx: &SimContext,
-    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        match self.generators.get(name) {
-            Some(parser) => parser.parse_generator(rng, config, ctx),
-            None => Err(ProcessConfigError::UnknownGenerator(name.to_string())),
+    pub fn get_parser(&self, name: &str) -> Option<&Box<dyn ValueGeneratorParser<R>>> {
+        self.generators.get(name)
+    }
+
+    pub fn has_parser(&self, name: &str) -> bool {
+        self.generators.contains_key(name)
+    }
+}
+
+pub trait EnvSymbolParser {
+    fn parse_symbol(&self, sym: &SymbolRef) -> ProcessConfigResult<Value>;
+
+    fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String>;
+}
+
+impl EnvSymbolParser for ProcessParser {
+    fn parse_symbol(&self, sym: &SymbolRef) -> ProcessConfigResult<Value> {
+        match self.parse_symbol_type(sym)? {
+            SymbolType::VarRef(name) => match self.env.get(&name)? {
+                EnvBindingValue::Value(v) => Ok(v.clone()),
+                EnvBindingValue::Generator(gen) => Ok(gen.gen_value(&self.sim_context)),
+                EnvBindingValue::Arrival(_) => todo!("arrival in generator config"),
+            },
+            SymbolType::Str(_) => {
+                todo!("bare symbol in generator config")
+            }
         }
+    }
+
+    fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String> {
+        self.format_str(pattern)
     }
 }
 
@@ -590,8 +779,37 @@ where
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
+        symbol_parser: &dyn EnvSymbolParser,
         ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
+}
+
+struct Formatter {}
+
+impl<R> ValueGeneratorParser<R> for Formatter
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_generator(
+        &self,
+        _rng: R,
+        config: Option<LazyStruct<AnyEncoding>>,
+        symbol_parser: &dyn EnvSymbolParser,
+        _ctx: &SimContext,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        if let Some(config) = config {
+            if let Ok(pattern) = config.get_expected("pattern") {
+                let patt = pattern.expect_string()?;
+                let patt = patt.text();
+                let constant = Value::from(symbol_parser.format_pattern(patt)?);
+                let gen = ConstantGenerator { constant };
+                return Ok(Box::new(gen));
+            }
+        }
+        Err(ProcessConfigError::FormatStringError(
+            "no 'pattern' supplied".to_string(),
+        ))
+    }
 }
 
 impl<R> ValueGeneratorParser<R> for SimpleScriptVariableKind
@@ -602,11 +820,32 @@ where
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
+        symbol_parser: &dyn EnvSymbolParser,
         ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(config) = config {
-            let low = config.get_expected("low")?;
-            let high = config.get_expected("high")?;
+            fn to_float(
+                val: ValueRef<AnyEncoding>,
+                symbol_parser: &dyn EnvSymbolParser,
+            ) -> ProcessConfigResult<f64> {
+                Ok(match val {
+                    ValueRef::Int(i) => i.as_i64().expect("integer") as f64,
+                    ValueRef::Float(f) => f,
+                    ValueRef::Symbol(sym) => match symbol_parser.parse_symbol(&sym)? {
+                        Value::Integer(i) => i as f64,
+                        Value::Real(f) => f.0,
+                        Value::Decimal(d) => d.to_f64().unwrap(),
+                        other => todo!("non-numeric float64 param {other:?}"),
+                    },
+                    _ => todo!("non-numeric float64 param {val:?}"),
+                })
+            }
+            fn range(
+                config: LazyStruct<AnyEncoding>,
+            ) -> ProcessConfigResult<(ValueRef<AnyEncoding>, ValueRef<AnyEncoding>)> {
+                Ok((config.get_expected("low")?, config.get_expected("high")?))
+            }
+
             let gen: Box<dyn ValueGenerator> = match self {
                 SimpleScriptVariableKind::String => {
                     todo!("bounded string generator")
@@ -618,34 +857,48 @@ where
                     todo!("bounded Instant generator")
                 }
                 SimpleScriptVariableKind::UInt8 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_u8(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
+
                 SimpleScriptVariableKind::UInt16 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_u16(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
+
                 SimpleScriptVariableKind::UInt32 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_u32(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
                 SimpleScriptVariableKind::UInt64 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_u64(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
                 SimpleScriptVariableKind::Int8 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_i8(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
                 SimpleScriptVariableKind::Int16 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_i16(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
                 SimpleScriptVariableKind::Int32 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_i32(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
                 SimpleScriptVariableKind::Int64 => {
+                    let (low, high) = range(config)?;
                     Box::new(bounded_i64(rng, low.expect_i64()?, high.expect_i64()?)?)
                 }
                 SimpleScriptVariableKind::Float64 => {
-                    Box::new(bounded_f64(rng, low.expect_float()?, high.expect_float()?)?)
+                    let (low, high) = range(config)?;
+                    let low = to_float(low, symbol_parser)?;
+                    let high = to_float(high, symbol_parser)?;
+                    Box::new(bounded_f64(rng, low, high)?)
                 }
                 SimpleScriptVariableKind::Bool => {
-                    todo!("bounded bool generator")
+                    let p = to_float(config.get_expected("p")?, symbol_parser)?;
+                    Box::new(bounded_bool(rng, p)?)
                 }
                 SimpleScriptVariableKind::UUID => {
                     todo!("bounded uuid generator")
@@ -658,39 +911,6 @@ where
     }
 }
 
-mod util {
-    use crate::reader::{ProcessConfigError, ProcessConfigResult};
-
-    use ion_rs::SymbolRef;
-
-    pub enum SymbolType {
-        VarRef(String),
-        Str(String),
-    }
-
-    pub trait SymbolParser {
-        fn parse_symbol_type(&self) -> ProcessConfigResult<SymbolType>;
-        fn parse_symbol_text(&self) -> ProcessConfigResult<&str>;
-    }
-
-    impl<'a> SymbolParser for SymbolRef<'a> {
-        fn parse_symbol_type(&self) -> ProcessConfigResult<SymbolType> {
-            self.parse_symbol_text().map(|sym| {
-                if sym.starts_with('$') {
-                    SymbolType::VarRef(sym.to_string())
-                } else {
-                    SymbolType::Str(sym.to_string())
-                }
-            })
-        }
-
-        fn parse_symbol_text(&self) -> ProcessConfigResult<&str> {
-            self.text()
-                .ok_or_else(|| ProcessConfigError::Other("Non-text symbol".to_string()))
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -698,9 +918,8 @@ mod tests {
     use crate::sim::SimConfigBuilder;
     use ion_rs::Element;
 
-    #[test]
-    fn parse() -> ProcessConfigResult<()> {
-        let ion_data = include_str!("../tests/scripts/sensors.ion");
+    #[track_caller]
+    fn parse(ion_data: &str) -> ProcessConfigResult<RandomProcesses> {
         let ion_bytes = Element::read_one(ion_data)?.to_binary()?;
         let mut reader = LazyReader::new(&ion_bytes);
 
@@ -711,8 +930,32 @@ mod tests {
         let ctx = SimContext::new(config);
 
         let parser = ProcessParser::new(seed, registry, &ctx)?;
-        let processes = parser.parse(&mut reader)?;
+        parser.parse(&mut reader)
+    }
+
+    #[test]
+    fn sensors() -> ProcessConfigResult<()> {
+        let ion_data = include_str!("../tests/scripts/sensors.ion");
+        let processes = parse(ion_data)?;
         assert_eq!(processes.ids().len(), 7);
+
+        Ok(())
+    }
+
+    #[test]
+    fn sensors_alternate() -> ProcessConfigResult<()> {
+        let ion_data = include_str!("../tests/scripts/sensors_alternate.ion");
+        let processes = parse(ion_data)?;
+        assert_eq!(processes.ids().len(), 7);
+
+        Ok(())
+    }
+
+    #[test]
+    fn client_service() -> ProcessConfigResult<()> {
+        let ion_data = include_str!("../tests/scripts/client_service.ion");
+        let processes = parse(ion_data)?;
+        assert_eq!(processes.ids().len(), 10 * 2); // 10 clients; 10 instances of service
 
         Ok(())
     }
