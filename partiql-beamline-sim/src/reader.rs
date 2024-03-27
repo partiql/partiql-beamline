@@ -65,11 +65,45 @@ impl From<DataGenerationError> for ProcessConfigError {
 
 type ProcessConfigResult<T> = Result<T, ProcessConfigError>;
 
-type EnvBindings = HashMap<String, Value>;
+#[derive(Debug)]
+pub enum EnvBindingValue {
+    Value(Value),
+    Generator(Box<dyn ValueGenerator>),
+    Arrival(Box<dyn ArrivalTime>),
+}
+
+impl From<Value> for EnvBindingValue {
+    fn from(value: Value) -> Self {
+        EnvBindingValue::Value(value)
+    }
+}
+
+impl From<Box<dyn ValueGenerator>> for EnvBindingValue {
+    fn from(value: Box<dyn ValueGenerator>) -> Self {
+        EnvBindingValue::Generator(value)
+    }
+}
+
+impl From<Box<dyn ArrivalTime>> for EnvBindingValue {
+    fn from(value: Box<dyn ArrivalTime>) -> Self {
+        EnvBindingValue::Arrival(value)
+    }
+}
+
+type EnvBindings = HashMap<String, EnvBindingValue>;
 
 #[derive(Debug)]
 struct Env {
     vars: Vec<(String, EnvBindings)>,
+}
+
+trait EnvLookup {
+    fn find(&self, name: &str) -> Option<&EnvBindingValue>;
+
+    fn get(&self, name: &str) -> ProcessConfigResult<&EnvBindingValue> {
+        self.find(name)
+            .ok_or_else(|| ProcessConfigError::Other(format!("Unknown variable `{name}`")))
+    }
 }
 
 impl Env {
@@ -94,11 +128,11 @@ impl Env {
             .ok_or_else(|| ProcessConfigError::Fatal("Env Stack Underflow".to_string()))
     }
 
-    pub fn assign<S: Into<String>, V: Into<Value>>(
+    pub fn assign<S: Into<String>, V: Into<EnvBindingValue>>(
         &mut self,
         name: S,
         val: V,
-    ) -> ProcessConfigResult<&mut Value> {
+    ) -> ProcessConfigResult<&mut EnvBindingValue> {
         let name = name.into();
         let (_scope, vars) = self.curr()?;
         match vars.entry(name) {
@@ -109,17 +143,14 @@ impl Env {
             Entry::Vacant(e) => Ok(e.insert(val.into())),
         }
     }
+}
 
-    pub fn find(&self, name: &str) -> Option<&Value> {
+impl EnvLookup for Env {
+    fn find(&self, name: &str) -> Option<&EnvBindingValue> {
         self.vars
             .iter()
             .rev()
             .find_map(|(_, bindings)| bindings.get(name))
-    }
-
-    pub fn get(&self, name: &str) -> ProcessConfigResult<&Value> {
-        self.find(name)
-            .ok_or_else(|| ProcessConfigError::Other(format!("Unknown variable `{name}`")))
     }
 }
 
@@ -139,7 +170,6 @@ impl ProcessParser {
         registry: ValueGeneratorRegistry<Pcg64Mcg>,
         ctx: &SimContext,
     ) -> ProcessConfigResult<Self> {
-
         Ok(Self {
             registry,
 
@@ -300,7 +330,7 @@ impl ProcessParser {
         let list_param = self.env.get(parameterization.parse_symbol_text()?)?;
         match parameterization.parse_symbol_type()? {
             SymbolType::VarRef(name) => match list_param {
-                Value::Integer(n) if *n > 0 => {
+                EnvBindingValue::Value(Value::Integer(n)) if *n > 0 => {
                     let index = name.replace('$', "$@");
                     for i in 0i64..*n {
                         self.push_scope(&scope_name)?;
@@ -364,7 +394,7 @@ impl ProcessParser {
             IonType::Int => duration.expect_i64()?,
             IonType::Symbol => match duration.expect_symbol()?.parse_symbol_type()? {
                 SymbolType::VarRef(var) => match self.env.get(&var)? {
-                    Value::Integer(i) => *i,
+                    EnvBindingValue::Value(Value::Integer(i)) => *i,
                     other => {
                         return Err(ProcessConfigError::Other(format!(
                             "Unexpected variable type in duration `{other:?}`"
@@ -443,9 +473,17 @@ impl ProcessParser {
 
         match ion_type {
             IonType::Symbol => match value.expect_symbol()?.parse_symbol_type()? {
-                SymbolType::VarRef(var) => Ok(Box::new(ConstantGenerator {
-                    constant: self.env.get(&var)?.clone(),
-                }) as Box<dyn ValueGenerator>),
+                SymbolType::VarRef(var) => {
+                    let gen: Box<dyn ValueGenerator> = match self.env.get(&var)? {
+                        EnvBindingValue::Value(v) => {
+                            let constant = v.clone();
+                            Box::new(ConstantGenerator { constant })
+                        }
+                        EnvBindingValue::Generator(g) => g.clone(),
+                        EnvBindingValue::Arrival(_) => todo!("arrival generator reference"),
+                    };
+                    Ok(gen)
+                }
                 SymbolType::Str(s) => {
                     let crng = self.child_rng()?;
                     self.registry.parse(&s, crng, None, &self.sim_context)
@@ -498,7 +536,6 @@ impl ProcessParser {
 pub struct ValueGeneratorRegistry<R>
 where
     R: Rng + Sized + 'static,
-
 {
     generators: HashMap<String, Box<dyn ValueGeneratorParser<R>>>,
 }
