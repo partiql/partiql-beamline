@@ -27,6 +27,7 @@ use regex::Regex;
 use thiserror::Error;
 use time::Duration;
 
+use crate::primitives::DataSetName;
 use once_cell::sync::Lazy;
 
 static FORMAT_STRING_RE: Lazy<Regex> =
@@ -265,7 +266,7 @@ impl ProcessParser {
             .is_some()
         {
             let process = self.parse_process(s)?;
-            self.processes.add(process);
+            self.processes.add(DataSetName(scope_name.into()), process);
         } else {
             self.push_scope(scope_name)?;
             self.parse_bindings(s)?;
@@ -387,7 +388,7 @@ impl ProcessParser {
                         let index = index.as_str();
                         self.env.assign(index, Value::from(i))?;
                         for val in list.iter() {
-                            self.parse_scope(index, val?.read()?)?;
+                            self.parse_scope(&scope_name, val?.read()?)?;
                         }
                         self.pop_scope()?;
                     }

@@ -5,6 +5,10 @@ use std::cmp::Ordering;
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tick(pub u128);
 
+/// A name for a `data set`
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct DataSetName(pub String);
+
 /// A single sample of a random process.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Sample {

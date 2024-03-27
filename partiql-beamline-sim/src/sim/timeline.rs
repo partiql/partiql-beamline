@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::default::Default;
 
-use crate::primitives::Event;
+use crate::primitives::{Event, Tick};
 
 #[derive(Debug, Eq, PartialEq)]
 struct TimelineEvent(Event);
@@ -34,12 +34,26 @@ impl From<TimelineEvent> for Event {
     }
 }
 
+impl<'a> From<&'a TimelineEvent> for &'a Event {
+    fn from(tevt: &'a TimelineEvent) -> Self {
+        &tevt.0
+    }
+}
+
 #[derive(Default)]
 pub struct Timeline {
+    name: String,
     queue: BinaryHeap<TimelineEvent>,
 }
 
 impl Timeline {
+    pub fn next(&self) -> Option<&Tick> {
+        self.peek().map(|e| &e.tick)
+    }
+    pub fn peek(&self) -> Option<&Event> {
+        self.queue.peek().map(Into::into)
+    }
+
     pub fn pop(&mut self) -> Option<Event> {
         self.queue.pop().map(Into::into)
     }

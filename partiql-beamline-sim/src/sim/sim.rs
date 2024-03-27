@@ -122,7 +122,7 @@ impl Sim {
                 }
 
                 // find the process
-                let proc = self
+                let (_dataset, proc) = self
                     .processes
                     .get(pid)
                     .ok_or(SimError::UnknownProcess(pid))?;
@@ -139,7 +139,7 @@ impl Sim {
 
     fn schedule_pid(&mut self, pid: ProcessId) -> SimResult<()> {
         // find the process
-        let proc = self
+        let (_dataset, proc) = self
             .processes
             .get(pid)
             .ok_or(SimError::UnknownProcess(pid))?;

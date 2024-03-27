@@ -1,4 +1,4 @@
-use crate::primitives::{ProcessId, Sample, Tick};
+use crate::primitives::{DataSetName, ProcessId, Sample, Tick};
 use partiql_value::{DateTime, Tuple, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -41,7 +41,7 @@ pub type DataGenerationResult<T> = Result<T, DataGenerationError>;
 
 #[derive(Default)]
 pub struct RandomProcesses {
-    processes: Vec<Box<dyn RandomProcess>>,
+    processes: Vec<(DataSetName, Box<dyn RandomProcess>)>,
 }
 
 impl RandomProcesses {
@@ -49,14 +49,14 @@ impl RandomProcesses {
         self.processes.is_empty()
     }
 
-    pub fn add(&mut self, p: Box<dyn RandomProcess>) -> ProcessId {
+    pub fn add(&mut self, d: DataSetName, p: Box<dyn RandomProcess>) -> ProcessId {
         let id = ProcessId(self.processes.len());
-        self.processes.push(p);
+        self.processes.push((d, p));
         id
     }
 
-    pub fn get(&self, pid: ProcessId) -> Option<&dyn RandomProcess> {
-        self.processes.get(pid.0).map(|b| b.as_ref())
+    pub fn get(&self, pid: ProcessId) -> Option<(&DataSetName, &dyn RandomProcess)> {
+        self.processes.get(pid.0).map(|(d, rp)| (d, rp.as_ref()))
     }
 
     pub fn ids(&self) -> Vec<ProcessId> {
