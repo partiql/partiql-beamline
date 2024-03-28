@@ -1,4 +1,4 @@
-use partiql_beamline::sim::{Sim, SimBuilder, SimConfigBuilder};
+use partiql_beamline::sim::{SimBuilder, SimConfigBuilder};
 
 #[track_caller]
 fn verify_repeatable(script: &[u8]) {
@@ -25,7 +25,7 @@ fn verify_repeatable(script: &[u8]) {
         assert_eq!(sample1.expect("sample"), sample2.expect("sample2"));
     }
 
-    let test_final = sim.next_sample();
+    let _test_final = sim.next_sample();
 }
 
 #[track_caller]

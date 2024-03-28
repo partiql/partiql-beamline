@@ -9,7 +9,7 @@ pub mod reader;
 #[cfg(test)]
 mod tests {
     use crate::primitives::{Sample, Tick};
-    use crate::sim::{Sim, SimBuilder, SimConfigBuilder};
+    use crate::sim::{SimBuilder, SimConfigBuilder};
     use partiql_value::{tuple, Value};
     use std::ops::Add;
     use time::macros::datetime;

@@ -3,8 +3,8 @@ mod cli;
 use crate::cli::{encode_ion_text, IonPrintMode, DATETIME_FORMAT};
 use clap::{Parser, Subcommand};
 use miette::IntoDiagnostic;
-use partiql_beamline::primitives::{Sample, Tick};
-use partiql_beamline::sim::{Sim, SimBuilder};
+use partiql_beamline::primitives::{DataSetName, Sample, Tick};
+use partiql_beamline::sim::SimBuilder;
 use partiql_beamline_cliargs::{parse_args, OutputFormat, SampleCount, Script, Seed, StartTime};
 use partiql_extension_ion::Encoding;
 use std::ops::Add;
@@ -35,6 +35,9 @@ pub enum Commands {
 
         #[clap(short = 'f', long = "output-format", value_enum, default_value_t=OutputFormat::Text)]
         output_format: OutputFormat,
+
+        #[clap(short = 'd', long = "dataset")]
+        datasets: Vec<String>,
     },
 }
 
@@ -48,6 +51,7 @@ fn main() -> miette::Result<()> {
             start_time,
             script,
             output_format,
+            datasets,
         } => {
             let cfg = parse_args(&seed, &start_time).into_diagnostic()?;
             let script = script.extract().into_diagnostic()?;
@@ -60,26 +64,47 @@ fn main() -> miette::Result<()> {
                     println!("Seed: {}", cfg.seed);
                     println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
 
-                    let mut sim = SimBuilder::from_config(cfg, script.as_bytes())
-                        .into_diagnostic()?
-                        .build_time_ordered()
-                        .into_diagnostic()?;
+                    let mut sim = SimBuilder::from_config(cfg.clone(), script.clone().as_bytes())
+                        .expect("auto sim")
+                        .build_multi_dataset()
+                        .expect("auto sim");
 
-                    for _ in 0..sample_count {
-                        if let Ok(Some(Sample {
-                            tick: Tick(t),
-                            value,
-                        })) = sim.next_sample()
-                        {
-                            let time = t0.add(Duration::milliseconds(t as i64));
-                            println!("[{time}] : {value:?}");
+                    if datasets.is_empty() {
+                        let sim_datasets = sim.datasets();
+                        for (id, name) in sim_datasets {
+                            for _c in 0..sample_count {
+                                if let Ok(Some(Sample {
+                                    tick: Tick(t),
+                                    value,
+                                })) = sim.for_dataset(id).next_sample()
+                                {
+                                    let time = t0.add(Duration::milliseconds(t as i64));
+                                    let name = name.clone().0;
+                                    println!("[{time}] : {name:?} {value:?}");
+                                }
+                            }
+                        }
+                    } else {
+                        for dataset in datasets {
+                            if let Some(id) = sim.get_dataset_id(&DataSetName(dataset.clone())) {
+                                for _c in 0..sample_count {
+                                    if let Ok(Some(Sample {
+                                        tick: Tick(t),
+                                        value,
+                                    })) = sim.for_dataset(id).next_sample()
+                                    {
+                                        let time = t0.add(Duration::milliseconds(t as i64));
+                                        println!("[{time}] : {dataset:?} {value:?}");
+                                    }
+                                }
+                            }
                         }
                     }
                 }
                 OutputFormat::Ion => {
                     let res = encode_ion_text(
                         IonPrintMode::Compact,
-                        &cli::execute(cfg, script, sample_count)?,
+                        &cli::execute(cfg, script, sample_count, datasets)?,
                         Encoding::Ion,
                     );
                     match res {
@@ -90,7 +115,7 @@ fn main() -> miette::Result<()> {
                 OutputFormat::IonPretty => {
                     let res = encode_ion_text(
                         IonPrintMode::Pretty,
-                        &cli::execute(cfg, script, sample_count)?,
+                        &cli::execute(cfg, script, sample_count, datasets)?,
                         Encoding::Ion,
                     );
                     match res {

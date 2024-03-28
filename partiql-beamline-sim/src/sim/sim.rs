@@ -1,4 +1,3 @@
-use std::collections::{HashMap, HashSet};
 use std::default::Default;
 use std::error::Error;
 use std::slice;
@@ -264,13 +263,16 @@ impl MultiSim {
         })
     }
 
-
     pub fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
         self.datasets
             .iter()
             .enumerate()
             .map(|(i, d)| (DataSetId(i), d.clone()))
             .collect()
+    }
+
+    pub fn get_dataset_id(&self, name: &DataSetName) -> Option<DataSetId> {
+        self.datasets.iter().position(|d| d == name).map(DataSetId)
     }
 
     /// Generate the next sample from this simulation

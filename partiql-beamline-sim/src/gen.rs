@@ -1,4 +1,4 @@
-use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
+use crate::primitives::{DataSetName, ProcessId, Sample, Tick};
 use partiql_value::{DateTime, Tuple, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
