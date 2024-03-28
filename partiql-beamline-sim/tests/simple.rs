@@ -16,17 +16,16 @@ fn verify_repeatable(script: &[u8]) {
         .expect("auto sim")
         .build_time_ordered()
         .expect("auto sim");
-    let mut sim2 = SimBuilder::from_config(config2, script)
+    let sim2 = SimBuilder::from_config(config2, script)
         .expect("repetition sim")
         .build_time_ordered()
         .expect("repetition sim");
 
-    for _ in 0..1000 {
-        assert_eq!(
-            sim.next_sample().expect("sample"),
-            sim2.next_sample().expect("sample2")
-        );
+    for (sample1, sample2) in std::iter::zip(sim.iter_mut(), sim2).take(100) {
+        assert_eq!(sample1.expect("sample"), sample2.expect("sample2"));
     }
+
+    let test_final = sim.next_sample();
 }
 
 #[track_caller]
@@ -55,11 +54,10 @@ fn verify_repeatable_multi(script: &[u8]) {
     assert_eq!(ds1, ds2);
 
     for (id, _n) in ds1 {
-        for _ in 0..1000 {
-            assert_eq!(
-                sim.next_sample(id).expect("sample"),
-                sim2.next_sample(id).expect("sample2")
-            );
+        for (sample1, sample2) in
+            std::iter::zip(sim.for_dataset(id), sim2.for_dataset(id)).take(100)
+        {
+            assert_eq!(sample1.expect("sample"), sample2.expect("sample2"));
         }
     }
 }

@@ -1,3 +1,5 @@
+//#![deny(rust_2018_idioms)]
+
 pub mod sim;
 
 pub mod gen;
@@ -50,11 +52,11 @@ mod tests {
             .build_time_ordered()
             .expect("sim");
 
-        for _ in 0..100 {
+        for sample in sim.iter_mut().take(100) {
             let Sample {
                 tick: Tick(t),
                 value,
-            } = sim.next_sample().expect("next_sample").unwrap();
+            } = sample.expect("next_sample");
             let time = t0.add(Duration::milliseconds(t as i64));
             println!("[{time}] : {value:?}");
         }

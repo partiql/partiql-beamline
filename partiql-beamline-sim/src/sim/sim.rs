@@ -1,10 +1,12 @@
 use std::collections::{HashMap, HashSet};
 use std::default::Default;
 use std::error::Error;
+use std::slice;
 
 use crate::gen;
 use ion_rs::lazy::reader::LazyReader;
 use miette::Diagnostic;
+use partiql_value::{BagIter, Value};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
@@ -169,6 +171,52 @@ impl Sim {
             }
         }
     }
+
+    #[inline]
+    #[must_use]
+    pub fn iter_mut(&mut self) -> SimIterMut<'_> {
+        SimIterMut(self)
+    }
+}
+
+pub struct SimIterMut<'a>(&'a mut Sim);
+
+impl<'a> Iterator for SimIterMut<'a> {
+    type Item = SimResult<Sample>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next_sample().transpose()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Sim {
+    type Item = SimResult<Sample>;
+    type IntoIter = SimIterMut<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
+pub struct SimIntoIter(Sim);
+
+impl Iterator for SimIntoIter {
+    type Item = SimResult<Sample>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next_sample().transpose()
+    }
+}
+
+impl IntoIterator for Sim {
+    type Item = SimResult<Sample>;
+    type IntoIter = SimIntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        SimIntoIter(self)
+    }
 }
 
 pub struct MultiSim {
@@ -228,5 +276,9 @@ impl MultiSim {
     /// Generate the next sample from this simulation
     pub fn next_sample(&mut self, id: DataSetId) -> SimResult<Option<Sample>> {
         self.sims[id.0].next_sample()
+    }
+
+    pub fn for_dataset(&mut self, id: DataSetId) -> &mut Sim {
+        &mut self.sims[id.0]
     }
 }

@@ -16,36 +16,34 @@ pub(crate) fn execute(cfg: SimConfig, script: String, sample_count: u64) -> miet
         .into_diagnostic()?
         .build_time_ordered()
         .into_diagnostic()?;
-    let mut values = vec![];
 
-    for _ in 0..sample_count {
-        if let Ok(Some(Sample {
-            tick: Tick(t),
-            value,
-        })) = sim.next_sample()
-        {
+    let samples = sim.iter_mut().take(sample_count as usize).map(|result| {
+        result.map(|sample| {
+            //
+            let Sample {
+                tick: Tick(t),
+                value,
+            } = sample;
             let dt = cfg
                 .t0
                 .add(Duration::milliseconds(t as i64))
                 .format(&DATETIME_FORMAT)
                 .expect("datetime string");
-            values.push(partiql_value::Value::Tuple(Box::new(tuple![
-                ("datetime", format!("{dt}")),
-                ("value", value)
-            ])));
-        }
-    }
+            Value::from(tuple![("datetime", dt), ("value", value)])
+        })
+    });
 
     let seed = cfg.seed;
     let start = cfg
         .t0
         .format(&DATETIME_FORMAT)
         .expect("start datetime string");
-
+    let samples: Result<Vec<_>, _> = samples.collect();
+    let samples = samples.into_diagnostic()?;
     Ok(Value::Tuple(Box::new(tuple![
         ("seed", seed),
         ("start", start),
-        ("values", Value::List(Box::new(List::from(values))))
+        ("values", Value::from(List::from(samples)))
     ])))
 }
 
