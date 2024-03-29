@@ -71,14 +71,14 @@ fn verify_repeatable_sensors() {
 
 #[test]
 fn verify_repeatable_sensors_alternate() {
-    let script = include_bytes!("scripts/sensors_alternate.ion");
+    let script = include_bytes!("scripts/sensors-alternate.ion");
     verify_repeatable(script);
     verify_repeatable_multi(script);
 }
 
 #[test]
 fn verify_repeatable_client_service() {
-    let script = include_bytes!("scripts/client_service.ion");
+    let script = include_bytes!("scripts/client-service.ion");
     verify_repeatable(script);
     verify_repeatable_multi(script);
 }

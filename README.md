@@ -14,93 +14,102 @@ Data Generator creates reproducible pseudo-random data. Let's unpack this with a
 In the following example we generate a data-set with two records based on the `sensors.ion` script (we will cover scripts in the next section):
 
 ```
-cargo run gen --seed-auto --start-auto --sample-count 2 --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+cargo run gen \
+    --seed-auto \
+    --start-auto \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
 
-Seed: 45121008347100595
-Start: 2020-06-16T14:41:19.000000000Z
-[2020-06-16 14:42:05.13 +00:00:00] : { 'tick': 46130, 'f': -116.17177080507548, 'i8': 58 }
-[2020-06-16 14:42:24.323 +00:00:00] : { 'tick': 65323, 'i8': 88, 'f': -71.33349733660519 }
+Seed: 12328924104731257599
+Start: 2024-01-20T20:05:41.000000000Z
+[2024-01-20 20:07:46.532 +00:00:00] : "sensors" { 'f': -2.5436390152455175, 'i8': 4, 'tick': 125532 }
+[2024-01-20 20:09:19.756 +00:00:00] : "sensors" { 'f': -63.49308817145054, 'i8': 4, 'tick': 218756 }
 ```
 
 `Example 1` shows, our data-sets has three attributes `Tick`, `f`, and `i8`. It also shows that the random seed that the
 tool has created using `--seed-auto` command is `45121008347100595`; using this seed and the same script, we can re-generate the same data.
 
 ```
-cargo run gen --seed 45121008347100595 --start-auto --sample-count 2 --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+cargo run gen \
+    --seed 12328924104731257599 \
+    --start-auto \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
 
-Seed: 45121008347100595
-Start: 2020-06-16T14:41:51.000000000Z
-[2020-06-16 14:42:37.13 +00:00:00] : { 'i8': 58, 'f': -116.17177080507548, 'tick': 46130 }
-[2020-06-16 14:42:56.323 +00:00:00] : { 'tick': 65323, 'i8': 88, 'f': -71.33349733660519 }
+Seed: 12328924104731257599
+Start: 2024-01-20T20:51:02.000000000Z
+[2024-01-20 20:53:07.532 +00:00:00] : "sensors" { 'tick': 125532, 'i8': 4, 'f': -2.5436390152455175 }
+[2024-01-20 20:54:40.756 +00:00:00] : "sensors" { 'tick': 218756, 'i8': 4, 'f': -63.49308817145054 }
 ```
 
 In case you want to generate the data with the same `seed` and `start` use `--start-iso` as shown below:
 
 ```
-cargo run gen --seed 45121008347100595 --start-iso "2020-06-16T14:41:51.000000000Z" --sample-count 2 --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+cargo run gen \
+    --seed 12328924104731257599 \
+    --start-iso "2024-01-20T20:51:02.000000000Z" \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
 
-Seed: 45121008347100595
-Start: 2020-06-16T14:41:51.000000000Z
-[2020-06-16 14:42:37.13 +00:00:00] : { i8: 58, f: -116.17177080507548, tick: 46130 }
-[2020-06-16 14:42:56.323 +00:00:00] : { tick: 65323, f: -71.33349733660519, i8: 88 }
+Seed: 12328924104731257599
+Start: 2024-01-20T20:51:02.000000000Z
+[2024-01-20 20:53:07.532 +00:00:00] : "sensors" { 'tick': 125532, 'i8': 4, 'f': -2.5436390152455175 }
+[2024-01-20 20:54:40.756 +00:00:00] : "sensors" { 'tick': 218756, 'i8': 4, 'f': -63.49308817145054 }
 ```
 
 ### Example 2 — scripts
 Data Generator uses scripts as recipes for data generation. Let's first create some data using  `sensors-nested.ion` script:
 
 ```
-cargo run gen --seed-auto --start-auto --sample-count 3 --script-path partiql-beamline-sim/tests/scripts/sensors-nested.ion --output-format ion-pretty
+cargo run gen \
+    --seed-auto --start-auto \
+    --sample-count 3 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors-nested.ion \
+    --output-format ion-pretty
 
 {
-  seed: 7958511458449874628,
-  start: "2020-01-30T12:22:54.000000000Z",
-  values: [
-    {
-      datetime: "2020-01-30T12:23:15.958000000Z",
-      value: {
+  seed: 8555667609863993831,
+  start: "2023-02-18T11:47:36.000000000Z",
+  data: {
+    sensors: [
+      {
+        i8: -21,
+        tick: 9421,
+        f: 2.803799956162891e0,
         sub: {
-          o: -73,
-          f: -6.612087476014153e0
+          f: -3.4540829609160596e1,
+          o: -15
         },
-        tick: 21958,
-        i8: -16,
+        id: 1
+      },
+      {
+        i8: -70,
+        tick: 12294,
+        f: 1.7229362418585936e1,
+        sub: {
+          f: -8.237685427198443e1,
+          o: -118
+        },
+        id: 1
+      },
+      {
+        sub: {
+          o: -40,
+          f: 8.906143160040727e0
+        },
+        i8: 84,
         id: 0,
-        f: 1.1290698764718218e2
+        tick: 32697,
+        f: -2.4809825455060093e1
       }
-    },
-    {
-      datetime: "2020-01-30T12:26:16.214000000Z",
-      value: {
-        sub: {
-          o: -30,
-          f: -4.268479415322838e1
-        },
-        tick: 202214,
-        i8: -85,
-        id: 0,
-        f: 5.534157211267953e1
-      }
-    },
-    {
-      datetime: "2020-01-30T12:28:42.068000000Z",
-      value: {
-        sub: {
-          o: -56,
-          f: 1.1572697617723406e2
-        },
-        id: 1,
-        f: -7.40682211763895e1,
-        tick: 348068,
-        i8: 71
-      }
-    }
-  ]
+    ]
+  }
 }
 ```
 
 Notice the `--outputformat ion-pretty` argument; it generates data in [Amazon Ion](https://amazon-ion.github.io/ion-docs/) data format.
 
-As you can see, data for `value` in `values`, all share the same shape for the data; e.g., they all have `sub` and `tick`; this shape 
+As you can see, data for `sensors` in `data`, all share the same shape for the data; e.g., they all have `sub` and `tick`; this shape 
 along with other attributes are defined by the `sensors-nested.ion` script.
 
 Here is the contents of `sensors-nested.ion`; as the file extension suggests, the script is written in [Amazon Ion](https://amazon-ion.github.io/ion-docs/) data format:
@@ -219,6 +228,188 @@ Putting all the pieces together the scripts results in generating random data su
   ]
 }
 ```
+
+## Example 3 — Datasets
+
+In the following example we show what datasets are and how one can create data for one or more datasets. We will also introduce some new variable
+types such as `Instant` and `UUID` but first the command and its result:
+
+```
+cargo run gen \
+    --seed 45121008347100595 \
+    --start-iso '2020-06-16T14:41:51.000000000Z' \
+    --script-path partiql-beamline-sim/tests/scripts/client-service.ion \
+    --sample-count 10 \
+    --dataset service --dataset client_1 \
+    --output-format ion-pretty
+
+{
+  seed: 45121008347100595,
+  start: "2020-06-16T14:41:51.000000000Z",
+  data: {
+    service: [
+      {
+        StartTime: 2020-06-16T14:41:51.011000000+00:00,
+        Operation: "GetMyData",
+        Account: "5724d45f-d346-6a14-c1c7-654f62b58514",
+        client: "customer #3",
+        success: true,
+        Request: "acd04972-7ed6-2d31-0784-2aa6580dbe5e",
+        Program: "FancyService"
+      },
+      // output-data is elided
+      {
+        Request: "b8d27ab0-6187-c960-cc3b-606da777c5f8",
+        Account: "d8da158c-5262-0be2-9d7d-34ce3eb8d8f1",
+        success: true,
+        Program: "FancyService",
+        Operation: "GetMyData",
+        StartTime: 2020-06-16T14:41:51.055000000+00:00,
+        client: "customer #7"
+      }
+    ],
+    client_1: [
+      {
+        id: "d40b50d0-fccf-6773-3a83-06f2957eb91e",
+        request_id: "acd04972-7ed6-2d31-0784-2aa6580dbe5e",
+        request_time: 2020-06-16T14:41:51.098000000+00:00,
+        success: true
+      },
+      {
+      // output-data is elided
+      {
+        id: "d40b50d0-fccf-6773-3a83-06f2957eb91e",
+        request_id: "09aecd26-ec93-95be-b553-d864d2e8f1a9",
+        request_time: 2020-06-16T14:41:52.236000000+00:00,
+        success: true
+      }
+    ]
+  }
+}
+```
+
+Notice the `--dataset service --dataset client_1` arguments. This means that we are only interested in getting data for
+`service` and `client_1` datasets. If no dataset argument is passed (or no `--dataset`), data for all datasets will be shown.
+
+As the name suggests, datasets represents a collection of data the have a specific shape.
+
+Let's look at the `client-service.ion` file:
+
+```
+cat partiql-beamline-sim/tests/scripts/client-service.ion
+
+rand_processes::{
+    // generate between 5 & 20 customers
+    $n: UniformU8::{ low: 1, high: 3 },
+
+    // A generator for client ids
+    $id_gen: UUID,
+
+    // A generator for request ids
+    $rid_gen: UUID,
+
+    requests: $n::[
+        // each iteration of the loop will assign an index from 1..=$n to the variable $@n
+        {
+            // customer $@n has a UUID
+            // `::()` ensures that `$id_gen` gets evaluated at read time (once) as opposed to generation type, hence it yields a single value for each customer.
+            $id: $id_gen::(), 
+
+            // customer $@n will arrive every $r milliseconds
+            $r: UniformU8::{low:20, high:150},
+            $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+            // customer $@n will have a success rate between 99.5% and 100%
+            $rate: UniformF64::{ low:0.995e0, high:1.0e0 },
+            $success: Bool::{ p: $rate },
+
+            service: rand_process::{
+                $data: {
+                    Request: $rid_gen,
+                    StartTime: Instant,
+                    Program: "FancyService",
+                    Operation: "GetMyData",
+
+                    Account: $id,
+                    client: Format::{pattern: "customer #{ $@n }"},
+
+                    success: $success,
+                }
+            },
+            'client_{ $@n }': rand_process::{
+                $data: {
+                    id: $id,
+                    request_time: Instant,
+                    request_id: $rid_gen,
+                    success: $success,
+                }
+            }
+        }
+    ]
+}
+```
+
+`client-service.ion` defines a `service` dataset and `n` `client` datasets, depending on the random number selected
+between `5` and `20` (E.g., `8`). In the above you also see some new types, let's go over them:
+
+- `UUID`—yields a UUID as a unique identifier.
+- `Instant`—yields the simulation's current 'Time' when a value is generated.
+
+The above example also shows that one can reference variables across datasets. For example `$rid_gen` has been defined
+in under `rand_processes` and is referenced in `service` and `client_ {$@n }` datasets.
+
+Another point to clarify is `$id: $id_gen::()`. As you can see `$id_gen` is `UUID`. Here, `::()` means that `beamline` creates
+a UUID when reading the scripts for each customer, hence having the same `id` across all the generated data for `client_2`
+that are different from the `id`s for `client_3`:
+
+```
+   client_2: [
+      {
+        request_time: 2022-09-24T11:51:11.074000000+00:00,
+        id: "fc7f9cc8-4c11-4f08-36db-ea036df29385",
+        request_id: "0f4a7219-55e6-f6d5-a204-0b3f28700538",
+        success: true
+      },
+      {
+        request_time: 2022-09-24T11:51:11.214000000+00:00,
+        id: "fc7f9cc8-4c11-4f08-36db-ea036df29385",
+        request_id: "e6d21825-9dee-3328-9f49-ef058fd8d4b4",
+        success: true
+      },
+      {
+        request_time: 2022-09-24T11:51:11.351000000+00:00,
+        id: "fc7f9cc8-4c11-4f08-36db-ea036df29385",
+        request_id: "a0fcfd2b-26b6-d86e-18bd-a2d1d3074cff",
+        success: true
+      }
+    ],
+    client_3: [
+      {
+        success: true,
+        request_time: 2022-09-24T11:51:11.117000000+00:00,
+        id: "7e6d2342-e551-1a73-091f-1fe6f67017fc",
+        request_id: "0f4a7219-55e6-f6d5-a204-0b3f28700538"
+      },
+      {
+        success: true,
+        request_time: 2022-09-24T11:51:11.125000000+00:00,
+        id: "7e6d2342-e551-1a73-091f-1fe6f67017fc",
+        request_id: "e6d21825-9dee-3328-9f49-ef058fd8d4b4"
+      },
+      {
+        success: true,
+        request_time: 2022-09-24T11:51:11.361000000+00:00,
+        id: "7e6d2342-e551-1a73-091f-1fe6f67017fc",
+        request_id: "a0fcfd2b-26b6-d86e-18bd-a2d1d3074cff"
+      }
+    ],
+
+
+```
+
+## Pending Features Data Generator
+- Random PartiQL Query Generation Based on a Schema
+- Random Schema generation
 
 ## CLI
 `partiql-beamline-cli` is a CLI tool that enables interaction with the Beamline through command-line.

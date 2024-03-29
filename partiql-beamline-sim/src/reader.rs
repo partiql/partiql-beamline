@@ -945,7 +945,7 @@ mod tests {
 
     #[test]
     fn sensors_alternate() -> ProcessConfigResult<()> {
-        let ion_data = include_str!("../tests/scripts/sensors_alternate.ion");
+        let ion_data = include_str!("../tests/scripts/sensors-alternate.ion");
         let processes = parse(ion_data)?;
         assert_eq!(processes.ids().len(), 7);
 
@@ -954,7 +954,7 @@ mod tests {
 
     #[test]
     fn client_service() -> ProcessConfigResult<()> {
-        let ion_data = include_str!("../tests/scripts/client_service.ion");
+        let ion_data = include_str!("../tests/scripts/client-service.ion");
         let processes = parse(ion_data)?;
         assert_eq!(processes.ids().len(), 10 * 2); // 10 clients; 10 instances of service
 
