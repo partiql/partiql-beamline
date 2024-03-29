@@ -204,7 +204,7 @@ In other words the homogeneous Poisson process assumes that the rate of occurren
 With the above, variable `arrival` is a homogeneous Poisson process with `r` minutes inter-arrival which means for this
 process, time elapsed between two consecutive processes will be constant `r` minutes.
 
-### Example 2 Summary 
+#### Example 2 Summary 
 Putting all the pieces together the scripts results in generating random data such as below:
 
 ```
@@ -229,7 +229,7 @@ Putting all the pieces together the scripts results in generating random data su
 }
 ```
 
-## Example 3 — Datasets
+### Example 3 — Datasets
 
 In the following example we show what datasets are and how one can create data for one or more datasets. We will also introduce some new variable
 types such as `Instant` and `UUID` but first the command and its result:
