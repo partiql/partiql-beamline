@@ -5,7 +5,7 @@ use clap::{Parser, Subcommand};
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
 use partiql_beamline::sim::SimBuilder;
-use partiql_beamline_cliargs::{parse_args, OutputFormat, SampleCount, Script, Seed, StartTime};
+use partiql_beamline_cliargs::{parse_args, OutputFormat, SampleCount, SimSpec};
 use partiql_extension_ion::Encoding;
 use std::ops::Add;
 use time::Duration;
@@ -22,22 +22,20 @@ pub enum Commands {
     /// Run the data generator
     Gen {
         #[command(flatten)]
+        spec: SimSpec,
+
+        #[command(flatten)]
         sample_count: SampleCount,
-
-        #[command(flatten)]
-        seed: Seed,
-
-        #[command(flatten)]
-        start_time: StartTime,
-
-        #[command(flatten)]
-        script: Script,
 
         #[clap(short = 'f', long = "output-format", value_enum, default_value_t=OutputFormat::Text)]
         output_format: OutputFormat,
 
         #[clap(short = 'd', long = "dataset")]
         datasets: Vec<String>,
+    },
+    Schema {
+        #[command(flatten)]
+        spec: SimSpec,
     },
 }
 
@@ -46,10 +44,13 @@ fn main() -> miette::Result<()> {
 
     match args.command {
         Commands::Gen {
+            spec:
+                SimSpec {
+                    seed,
+                    start_time,
+                    script,
+                },
             sample_count,
-            seed,
-            start_time,
-            script,
             output_format,
             datasets,
         } => {
@@ -127,6 +128,28 @@ fn main() -> miette::Result<()> {
                     todo!("Unsupported output format")
                 }
             }
+        }
+        Commands::Schema {
+            spec:
+                SimSpec {
+                    seed,
+                    start_time,
+                    script,
+                },
+        } => {
+            let cfg = parse_args(&seed, &start_time).into_diagnostic()?;
+            let script = script.extract().into_diagnostic()?;
+            let t0 = cfg.t0;
+
+            println!("Seed: {}", cfg.seed);
+            println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
+
+            let sim = SimBuilder::from_config(cfg.clone(), script.clone().as_bytes())
+                .expect("auto sim")
+                .build_multi_dataset()
+                .expect("auto sim");
+
+            println!("{:#?}", sim.schema())
         }
     }
 

@@ -1,11 +1,12 @@
+use std::collections::BTreeMap;
 use std::default::Default;
 use std::error::Error;
-use std::slice;
 
 use crate::gen;
 use ion_rs::lazy::reader::LazyReader;
 use miette::Diagnostic;
-use partiql_value::{BagIter, Value};
+use partiql_types::PartiqlType;
+
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
@@ -141,6 +142,14 @@ impl Sim {
         })
     }
 
+    pub fn config(&self) -> &SimConfig {
+        self.context.config()
+    }
+
+    pub fn schema(&self) -> BTreeMap<String, PartiqlType> {
+        self.processes.schema()
+    }
+
     /// Generate the next sample from this simulation
     pub fn next_sample(&mut self) -> SimResult<Option<Sample>> {
         match self.timeline.pop() {
@@ -224,6 +233,8 @@ pub struct MultiSim {
     #[allow(unused)]
     root_rng: Pcg64Mcg,
 
+    schema: BTreeMap<String, PartiqlType>,
+
     datasets: Vec<DataSetName>,
     sims: Vec<Sim>,
 }
@@ -238,6 +249,7 @@ impl MultiSim {
             t0,
         } = builder;
 
+        let schema = processes.schema();
         let mut processes: Vec<_> = processes.decompose().into_iter().collect();
         processes.sort_by(|(ld, _), (rd, _)| ld.cmp(rd));
 
@@ -258,9 +270,14 @@ impl MultiSim {
         Ok(MultiSim {
             context,
             root_rng,
+            schema,
             datasets,
             sims,
         })
+    }
+
+    pub fn config(&self) -> &SimConfig {
+        self.context.config()
     }
 
     pub fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
@@ -282,5 +299,9 @@ impl MultiSim {
 
     pub fn for_dataset(&mut self, id: DataSetId) -> &mut Sim {
         &mut self.sims[id.0]
+    }
+
+    pub fn schema(&self) -> BTreeMap<String, PartiqlType> {
+        self.schema.clone()
     }
 }

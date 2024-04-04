@@ -57,6 +57,10 @@ impl SimContext {
             .expect("binding value"))
     }
 
+    pub fn config(&self) -> &SimConfig {
+        &self.config
+    }
+
     pub fn t0(&self) -> &OffsetDateTime {
         &self.config.t0
     }

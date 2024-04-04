@@ -5,9 +5,15 @@ use rand::Rng;
 use statrs::distribution::Exp;
 use statrs::StatsError;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+use std::collections::{BTreeMap, HashMap};
 
 use dyn_clone::DynClone;
+use partiql_types::{
+    ArrayType, BagType, PartiqlType, StructConstraint, StructField, StructType, TypeKind,
+    TYPE_BOOL, TYPE_DATETIME, TYPE_DECIMAL, TYPE_INT, TYPE_INT64, TYPE_MISSING, TYPE_NULL,
+    TYPE_REAL, TYPE_STRING,
+};
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, DerefMut};
 use thiserror::Error;
@@ -75,6 +81,32 @@ impl RandomProcesses {
 
         procs
     }
+
+    pub fn schema(&self) -> BTreeMap<String, PartiqlType> {
+        let mut kvs: HashMap<&str, _> = HashMap::default();
+        for (d, rp) in &self.processes {
+            match kvs.entry(&d.0) {
+                Entry::Occupied(mut e) => {
+                    let x: &mut PartiqlType = e.get_mut();
+                    let y = rp.schema();
+                    let u = x.clone().union_with(y); // todo make not need clone
+                    *x = u;
+                }
+                Entry::Vacant(e) => {
+                    e.insert(rp.schema());
+                }
+            }
+        }
+
+        kvs.into_iter()
+            .map(|(k, v)| {
+                (
+                    k.to_string(),
+                    PartiqlType::new_bag(BagType::new(Box::new(v))),
+                )
+            })
+            .collect()
+    }
 }
 
 /// A Random Process (or Stochastic Process) is
@@ -85,9 +117,7 @@ pub trait RandomProcess {
 
     fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Tick;
 
-    fn children(&self) -> Option<&[&dyn RandomProcess]> {
-        None
-    }
+    fn schema(&self) -> PartiqlType;
 }
 
 pub trait ArrivalTime: Debug + DynClone {
@@ -154,8 +184,44 @@ where
     }
 }
 
+pub trait ValueTypeInference {
+    fn infer_type(&self) -> PartiqlType;
+}
+
+impl ValueTypeInference for Value {
+    fn infer_type(&self) -> PartiqlType {
+        match self {
+            Value::Null => TYPE_NULL,
+            Value::Missing => TYPE_MISSING,
+            Value::Boolean(_) => TYPE_BOOL,
+            Value::Integer(_) => TYPE_INT,
+            Value::Real(_) => TYPE_REAL,
+            Value::Decimal(_) => TYPE_DECIMAL,
+            Value::String(_) => TYPE_STRING,
+            Value::Blob(_) => PartiqlType::new(TypeKind::Undefined), // TODO BLOB
+            Value::DateTime(_) => TYPE_DATETIME,
+            Value::List(l) => {
+                let types = l.iter().map(|v| v.infer_type());
+                PartiqlType::new_array(ArrayType::new(Box::new(PartiqlType::any_of(types))))
+            }
+            Value::Bag(b) => {
+                let types = b.iter().map(|v| v.infer_type());
+                PartiqlType::new_bag(BagType::new(Box::new(PartiqlType::any_of(types))))
+            }
+            Value::Tuple(t) => {
+                let fields = t
+                    .pairs()
+                    .map(|(k, v)| StructField::new(k, v.infer_type()))
+                    .collect();
+                PartiqlType::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
+            }
+        }
+    }
+}
+
 pub trait ValueGenerator: Debug + DynClone {
     fn gen_value(&self, ctx: &SimContext) -> Value;
+    fn value_type(&self) -> PartiqlType;
 }
 dyn_clone::clone_trait_object!(ValueGenerator);
 
@@ -214,20 +280,45 @@ impl ValueGenerator for SimpleRandomData {
             }
         }
     }
+
+    fn value_type(&self) -> PartiqlType {
+        match self {
+            SimpleRandomData::Single(rv) => rv.value_type(),
+            SimpleRandomData::Collection(kvs) => {
+                let fields = kvs
+                    .iter()
+                    .map(|(k, v)| StructField::new(k, v.value_type()))
+                    .collect();
+                PartiqlType::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct ConstantGenerator {
     pub constant: Value,
+    pub typ: PartiqlType,
+}
+
+impl ConstantGenerator {
+    pub fn new(constant: Value) -> Self {
+        let typ = constant.infer_type();
+        Self { typ, constant }
+    }
 }
 
 impl ValueGenerator for ConstantGenerator {
     fn gen_value(&self, _ctx: &SimContext) -> Value {
         self.constant.clone()
     }
+
+    fn value_type(&self) -> PartiqlType {
+        self.typ.clone()
+    }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 /// Yields the simulation's current [`Tick`] when a value is generated.
 pub struct TickGenerator {}
 
@@ -241,9 +332,13 @@ impl ValueGenerator for TickGenerator {
             todo!("handle unexpected value for Tick")
         }
     }
+
+    fn value_type(&self) -> PartiqlType {
+        TYPE_INT64
+    }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 /// Yields the simulation's current 'Time' when a value is generated.
 ///
 /// The current time is calculated by adding the current [`Tick`] to the simulation's start time (`t0`).
@@ -260,6 +355,10 @@ impl ValueGenerator for InstantGenerator {
         } else {
             todo!("handle unexpected value for Tick")
         }
+    }
+
+    fn value_type(&self) -> PartiqlType {
+        TYPE_DATETIME.clone()
     }
 }
 
@@ -378,9 +477,10 @@ where
     use rand::seq::SliceRandom;
 
     let name = "UniformChoice".into();
+    let typ = PartiqlType::any_of(choices.iter().map(|v| v.infer_type()));
     let rng = RefCell::new(rng);
     let f = move |rng: &mut R| choices.as_slice().choose(rng).unwrap().clone();
-    Ok(SimpleRandomVariable { name, rng, f })
+    Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
 pub fn simple_bool<R>(
@@ -399,6 +499,7 @@ where
     R: Rng + Sized + Clone,
 {
     let name = "UUID".into();
+    let typ = PartiqlType::new(TypeKind::String);
     let rng = RefCell::new(rng);
     let f = move |rng: &mut R| {
         let mut uuid_bytes = uuid::Bytes::default();
@@ -406,7 +507,7 @@ where
         let id = uuid::Uuid::from_bytes(uuid_bytes);
         Value::from(id.to_string())
     };
-    Ok(SimpleRandomVariable { name, rng, f })
+    Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
 pub fn simple_u8<R>(
@@ -498,10 +599,11 @@ where
     R: Rng + Sized + Clone,
 {
     let name = format!("UniformBool::{{ p: {p} }}");
+    let typ = TYPE_BOOL;
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::Bernoulli::new(p)?;
     let f = move |rng: &mut R| Value::from(dist.sample(rng) > 0f64);
-    Ok(SimpleRandomVariable { name, rng, f })
+    Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
 pub fn bounded_u8<R>(
@@ -618,10 +720,11 @@ where
     R: Rng + Sized + Clone,
 {
     let name = format!("UniformI64::{{ low: {min}, high: {max} }}");
+    let typ = PartiqlType::new(TypeKind::Int64);
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
     let f = move |rng: &mut R| Value::from(dist.sample(rng) as i64);
-    Ok(SimpleRandomVariable { name, rng, f })
+    Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
 pub fn bounded_f64<R>(
@@ -633,10 +736,11 @@ where
     R: Rng + Sized + Clone,
 {
     let name = format!("UniformF64::{{ low: {min}, high: {max} }}");
+    let typ = PartiqlType::new(TypeKind::Float64);
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::Uniform::new(min, max)?;
     let f = move |rng: &mut R| Value::from(dist.sample(rng));
-    Ok(SimpleRandomVariable { name, rng, f })
+    Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
 pub struct SimpleRandomVariable<R, F>
@@ -645,6 +749,7 @@ where
     F: Fn(&mut R) -> Value,
 {
     name: String,
+    typ: PartiqlType,
 
     /// The source of randomness
     rng: RefCell<R>,
@@ -660,6 +765,7 @@ where
     fn clone(&self) -> Self {
         Self {
             name: self.name.clone(),
+            typ: self.typ.clone(),
             rng: self.rng.clone(),
             f: self.f.clone(),
         }
@@ -688,6 +794,10 @@ where
         let rng = rng.deref_mut();
         (self.f)(rng)
     }
+
+    fn value_type(&self) -> PartiqlType {
+        self.typ.clone()
+    }
 }
 
 #[derive(Debug)]
@@ -711,5 +821,9 @@ impl RandomProcess for SimpleProcess {
 
     fn next_arrival(&self, now: Tick, _ctx: &SimContext) -> Tick {
         self.arrival.next_arrival(now)
+    }
+
+    fn schema(&self) -> PartiqlType {
+        self.data.value_type()
     }
 }

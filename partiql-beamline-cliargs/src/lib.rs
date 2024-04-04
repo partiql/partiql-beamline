@@ -66,6 +66,19 @@ pub struct Script {
     pub script: Option<String>,
 }
 
+/// Seed configuration for the generator.
+#[derive(Args, Debug, Clone, PartialEq, Eq)]
+pub struct SimSpec {
+    #[command(flatten)]
+    pub seed: Seed,
+
+    #[command(flatten)]
+    pub start_time: StartTime,
+
+    #[command(flatten)]
+    pub script: Script,
+}
+
 fn epoch_ms_parser(arg: &str) -> Result<OffsetDateTime, String> {
     let ms: i64 = arg.parse().map_err(|e: ParseIntError| e.to_string())?;
     time::OffsetDateTime::from_unix_timestamp(ms).map_err(|e| e.to_string())

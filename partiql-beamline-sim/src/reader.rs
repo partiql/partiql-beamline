@@ -534,10 +534,7 @@ impl ProcessParser {
             ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
                 SymbolType::VarRef(var) => {
                     let gen: Box<dyn ValueGenerator> = match self.env.get(&var)? {
-                        EnvBindingValue::Value(v) => {
-                            let constant = v.clone();
-                            Box::new(ConstantGenerator { constant })
-                        }
+                        EnvBindingValue::Value(v) => Box::new(ConstantGenerator::new(v.clone())),
                         EnvBindingValue::Generator(g) => g.clone(),
                         EnvBindingValue::Arrival(_) => todo!("arrival generator reference"),
                     };
@@ -632,7 +629,7 @@ impl ProcessParser {
             }
             other => {
                 let constant = self.parse_immediate(other)?;
-                Ok(Box::new(ConstantGenerator { constant }))
+                Ok(Box::new(ConstantGenerator::new(constant)))
             }
         }
     }
@@ -803,7 +800,7 @@ where
                 let patt = pattern.expect_string()?;
                 let patt = patt.text();
                 let constant = Value::from(symbol_parser.format_pattern(patt)?);
-                let gen = ConstantGenerator { constant };
+                let gen = ConstantGenerator::new(constant);
                 return Ok(Box::new(gen));
             }
         }
