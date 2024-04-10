@@ -10,6 +10,7 @@ use partiql_types::PartiqlType;
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
+use time::format_description::well_known::Iso8601;
 
 use crate::gen::{DataSamplingError, RandomProcesses};
 use crate::primitives::{DataSetId, DataSetName, Event, ProcessId, Sample, Tick};
@@ -17,6 +18,8 @@ use crate::reader::{ProcessConfigError, ProcessParser};
 use crate::sim::context::{ConstantBindingValue, SimContext, SimContextError};
 use crate::sim::timeline::Timeline;
 use crate::sim::{SimConfig, SimConfigError, SimConfigResult};
+
+pub const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
 /// Error during simulation
 #[derive(Debug, Error, Diagnostic)]
@@ -51,6 +54,8 @@ pub enum SimError {
 pub type SimResult<T> = Result<T, SimError>;
 
 pub type SimIterator = dyn Iterator<Item = SimResult<Sample>>;
+
+pub type DatasetTypeMapping = BTreeMap<String, PartiqlType>;
 
 pub struct SimBuilder {
     context: SimContext,
@@ -146,7 +151,7 @@ impl Sim {
         self.context.config()
     }
 
-    pub fn schema(&self) -> BTreeMap<String, PartiqlType> {
+    pub fn schema(&self) -> DatasetTypeMapping {
         self.processes.schema()
     }
 
@@ -233,7 +238,7 @@ pub struct MultiSim {
     #[allow(unused)]
     root_rng: Pcg64Mcg,
 
-    schema: BTreeMap<String, PartiqlType>,
+    schema: DatasetTypeMapping,
 
     datasets: Vec<DataSetName>,
     sims: Vec<Sim>,
@@ -301,7 +306,7 @@ impl MultiSim {
         &mut self.sims[id.0]
     }
 
-    pub fn schema(&self) -> BTreeMap<String, PartiqlType> {
+    pub fn schema(&self) -> DatasetTypeMapping {
         self.schema.clone()
     }
 }

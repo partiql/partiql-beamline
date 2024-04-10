@@ -6,12 +6,20 @@ use std::num::ParseIntError;
 use std::path::PathBuf;
 use time::OffsetDateTime;
 
-/// Output format
+/// Output format for the generated data
 #[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[non_exhaustive]
-pub enum OutputFormat {
+pub enum DataOutputFormat {
     Ion,
     IonPretty,
+    Text,
+}
+
+/// Output format for the generated shape of data
+#[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum ShapeOutputFormat {
+    PartiqlKollider,
     Text,
 }
 

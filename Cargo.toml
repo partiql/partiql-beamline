@@ -22,9 +22,10 @@ version = "0.1.0"
 partiql-types = { git = "https://github.com/partiql/partiql-lang-rust" }
 [workspace]
 members = [
-    "partiql-beamline-sim",
-    "partiql-beamline-cliargs",
     "partiql-beamline-cli",
+    "partiql-beamline-cliargs",
+    "partiql-beamline-sim",
+    "partiql-beamline-serde",
 ]
 resolver = "2"
 

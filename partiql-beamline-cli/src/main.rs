@@ -1,13 +1,17 @@
 mod cli;
 
-use crate::cli::{encode_ion_text, IonPrintMode, DATETIME_FORMAT};
+use crate::cli::{encode_ion_text, IonPrintMode};
 use clap::{Parser, Subcommand};
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
-use partiql_beamline::sim::SimBuilder;
-use partiql_beamline_cliargs::{parse_args, OutputFormat, SampleCount, SimSpec};
+use partiql_beamline::sim::{SimBuilder, DATETIME_FORMAT};
+use partiql_beamline_cliargs::{
+    parse_args, DataOutputFormat, SampleCount, ShapeOutputFormat, SimSpec,
+};
 use partiql_extension_ion::Encoding;
 use std::ops::Add;
+
+use partiql_beamline_serde::serde::{PartiqlKolliderEncoding, PartiqlShapeEncoding};
 use time::Duration;
 
 #[derive(Parser)]
@@ -27,8 +31,8 @@ pub enum Commands {
         #[command(flatten)]
         sample_count: SampleCount,
 
-        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=OutputFormat::Text)]
-        output_format: OutputFormat,
+        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=DataOutputFormat::Text)]
+        output_format: DataOutputFormat,
 
         #[clap(short = 'd', long = "dataset")]
         datasets: Vec<String>,
@@ -36,6 +40,8 @@ pub enum Commands {
     Schema {
         #[command(flatten)]
         spec: SimSpec,
+        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=ShapeOutputFormat::Text)]
+        output_format: ShapeOutputFormat,
     },
 }
 
@@ -61,7 +67,7 @@ fn main() -> miette::Result<()> {
             let sample_count = sample_count.sample_count;
 
             match output_format {
-                OutputFormat::Text => {
+                DataOutputFormat::Text => {
                     println!("Seed: {}", cfg.seed);
                     println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
 
@@ -102,7 +108,7 @@ fn main() -> miette::Result<()> {
                         }
                     }
                 }
-                OutputFormat::Ion => {
+                DataOutputFormat::Ion => {
                     let res = encode_ion_text(
                         IonPrintMode::Compact,
                         &cli::execute(cfg, script, sample_count, datasets)?,
@@ -113,7 +119,7 @@ fn main() -> miette::Result<()> {
                         Err(e) => println!("{:?}", e),
                     }
                 }
-                OutputFormat::IonPretty => {
+                DataOutputFormat::IonPretty => {
                     let res = encode_ion_text(
                         IonPrintMode::Pretty,
                         &cli::execute(cfg, script, sample_count, datasets)?,
@@ -136,20 +142,34 @@ fn main() -> miette::Result<()> {
                     start_time,
                     script,
                 },
+            output_format,
         } => {
             let cfg = parse_args(&seed, &start_time).into_diagnostic()?;
             let script = script.extract().into_diagnostic()?;
             let t0 = cfg.t0;
-
-            println!("Seed: {}", cfg.seed);
-            println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
 
             let sim = SimBuilder::from_config(cfg.clone(), script.clone().as_bytes())
                 .expect("auto sim")
                 .build_multi_dataset()
                 .expect("auto sim");
 
-            println!("{:#?}", sim.schema())
+            match output_format {
+                ShapeOutputFormat::PartiqlKollider => {
+                    let shape = sim.schema();
+                    let shape_encoding: &dyn PartiqlShapeEncoding =
+                        &PartiqlKolliderEncoding::default();
+                    println!("{:}", shape_encoding.print(&cfg, shape)?);
+                }
+                ShapeOutputFormat::Text => {
+                    println!("Seed: {}", cfg.seed);
+                    println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
+
+                    println!("{:#?}", sim.schema())
+                }
+                _ => {
+                    todo!("Unsupported output format")
+                }
+            }
         }
     }
 

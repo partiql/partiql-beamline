@@ -1,13 +1,10 @@
 use ion_rs::element::writer::TextKind;
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetId, DataSetName};
-use partiql_beamline::sim::{MultiSim, SimBuilder, SimConfig};
+use partiql_beamline::sim::{MultiSim, SimBuilder, SimConfig, DATETIME_FORMAT};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding;
 use partiql_value::{tuple, List, Value};
-use time::format_description::well_known::Iso8601;
-
-pub(crate) const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
 pub(crate) fn execute(
     cfg: SimConfig,

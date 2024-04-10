@@ -1,6 +1,6 @@
 [package]
-name = "partiql-beamline-cli"
-description = "PartiQL Beamline CLI"
+name = "partiql-beamline-serde"
+description = "PartiQL Beamline SerDe"
 readme.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -14,15 +14,9 @@ version.workspace = true
 
 [dependencies]
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
-partiql-beamline-cliargs = { path = "../partiql-beamline-cliargs", version = "0.1" }
-partiql-beamline-serde = { path = "../partiql-beamline-serde", version = "0.1" }
-partiql-extension-ion =  "0.7"
-partiql-value = "0.7"
 partiql-types = "^0.7.2"
 
-clap = { version = "4.4", features = ["derive", "wrap_help", "help", "usage", "error-context"] }
-miette = { version ="5.*", features = ["fancy"] }
-
 ion-rs = "0.18.1"
-
+miette = { version ="5.*", features = ["fancy"] }
+thiserror = "1.*"
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }

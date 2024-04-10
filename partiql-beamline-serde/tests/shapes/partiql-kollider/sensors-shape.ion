@@ -1,0 +1,30 @@
+{
+  seed: 1234,
+  start: 2024-04-05T23:02:57.000000000+00:00,
+  shapes: {
+    sensors: partiql::shape::v0::{
+      type: "bag",
+      items: {
+        type: "struct",
+        constraints: [
+          ordered,
+          closed
+        ],
+        fields: [
+          {
+             name: "f",
+             type: "double",
+          },
+          {
+            name: "i8",
+            type: "int8",
+          },
+          {
+            name: "tick",
+            type: "int8",
+          }
+        ],
+      }
+    }
+  }
+}
