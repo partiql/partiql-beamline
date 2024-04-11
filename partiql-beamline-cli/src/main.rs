@@ -39,7 +39,7 @@ pub enum Commands {
         #[clap(short = 'd', long = "dataset")]
         datasets: Vec<String>,
     },
-    Schema {
+    Shape {
         #[command(flatten)]
         spec: SimSpec,
         #[clap(short = 'f', long = "output-format", value_enum, default_value_t=ShapeOutputFormat::Text)]
@@ -137,7 +137,7 @@ fn main() -> miette::Result<()> {
                 }
             }
         }
-        Commands::Schema {
+        Commands::Shape {
             spec:
                 SimSpec {
                     seed,
@@ -157,7 +157,7 @@ fn main() -> miette::Result<()> {
 
             match output_format {
                 ShapeOutputFormat::PartiqlKollider => {
-                    let shape = sim.schema();
+                    let shape = sim.shape();
 
                     let mut out = stdout().lock();
                     let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
@@ -172,7 +172,7 @@ fn main() -> miette::Result<()> {
                     println!("Seed: {}", cfg.seed);
                     println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
 
-                    println!("{:#?}", sim.schema())
+                    println!("{:#?}", sim.shape())
                 }
                 _ => {
                     todo!("Unsupported output format")

@@ -91,18 +91,18 @@ mod tests {
     }
 
     #[test]
-    fn sensors_schema() {
+    fn sensors_shape() {
         let sim = sensor_sim();
         let _t0 = sim.config().t0;
 
-        dbg!(sim.schema());
+        dbg!(sim.shape());
     }
 
     #[test]
     fn sensors_shape_decimals() {
         let sim = sensor_sim();
         let _t0 = sim.config().t0;
-        let datasets_mappings = sim.schema();
+        let datasets_mappings = sim.shape();
         let sensors_shape = datasets_mappings.get("sensors").expect("sensors shape");
         assert!(sensors_shape.is_bag());
         if let TypeKind::Bag(bag) = sensors_shape.kind() {

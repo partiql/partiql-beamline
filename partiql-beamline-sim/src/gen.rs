@@ -83,18 +83,18 @@ impl RandomProcesses {
         procs
     }
 
-    pub fn schema(&self) -> BTreeMap<String, PartiqlType> {
+    pub fn shape(&self) -> BTreeMap<String, PartiqlType> {
         let mut kvs: HashMap<&str, _> = HashMap::default();
         for (d, rp) in &self.processes {
             match kvs.entry(&d.0) {
                 Entry::Occupied(mut e) => {
                     let x: &mut PartiqlType = e.get_mut();
-                    let y = rp.schema();
+                    let y = rp.shape();
                     let u = x.clone().union_with(y); // todo make not need clone
                     *x = u;
                 }
                 Entry::Vacant(e) => {
-                    e.insert(rp.schema());
+                    e.insert(rp.shape());
                 }
             }
         }
@@ -118,7 +118,7 @@ pub trait RandomProcess {
 
     fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Tick;
 
-    fn schema(&self) -> PartiqlType;
+    fn shape(&self) -> PartiqlType;
 }
 
 pub trait ArrivalTime: Debug + DynClone {
@@ -874,7 +874,7 @@ impl RandomProcess for SimpleProcess {
         self.arrival.next_arrival(now)
     }
 
-    fn schema(&self) -> PartiqlType {
+    fn shape(&self) -> PartiqlType {
         self.data.value_type()
     }
 }

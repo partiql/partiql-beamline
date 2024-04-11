@@ -19,7 +19,7 @@ pub fn verify_correct_encoding() {
         .build_multi_dataset()
         .expect("auto sim");
 
-    let shape = sim.schema();
+    let shape = sim.shape();
 
     let mut buff = vec![];
     let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)

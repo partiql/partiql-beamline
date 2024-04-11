@@ -151,8 +151,8 @@ impl Sim {
         self.context.config()
     }
 
-    pub fn schema(&self) -> DatasetTypeMapping {
-        self.processes.schema()
+    pub fn shape(&self) -> DatasetTypeMapping {
+        self.processes.shape()
     }
 
     /// Generate the next sample from this simulation
@@ -238,7 +238,7 @@ pub struct MultiSim {
     #[allow(unused)]
     root_rng: Pcg64Mcg,
 
-    schema: DatasetTypeMapping,
+    dataset_shapes: DatasetTypeMapping,
 
     datasets: Vec<DataSetName>,
     sims: Vec<Sim>,
@@ -254,7 +254,7 @@ impl MultiSim {
             t0,
         } = builder;
 
-        let schema = processes.schema();
+        let shape = processes.shape();
         let mut processes: Vec<_> = processes.decompose().into_iter().collect();
         processes.sort_by(|(ld, _), (rd, _)| ld.cmp(rd));
 
@@ -275,7 +275,7 @@ impl MultiSim {
         Ok(MultiSim {
             context,
             root_rng,
-            schema,
+            dataset_shapes: shape,
             datasets,
             sims,
         })
@@ -306,7 +306,7 @@ impl MultiSim {
         &mut self.sims[id.0]
     }
 
-    pub fn schema(&self) -> DatasetTypeMapping {
-        self.schema.clone()
+    pub fn shape(&self) -> DatasetTypeMapping {
+        self.dataset_shapes.clone()
     }
 }
