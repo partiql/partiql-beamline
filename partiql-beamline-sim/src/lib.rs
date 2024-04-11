@@ -10,6 +10,7 @@ pub mod reader;
 mod tests {
     use crate::primitives::{Sample, Tick};
     use crate::sim::{Sim, SimBuilder, SimConfigBuilder};
+    use partiql_types::{StructField, TypeKind};
     use partiql_value::{tuple, Value};
     use std::ops::Add;
     use time::macros::datetime;
@@ -24,11 +25,14 @@ mod tests {
                     rand_process::{
                         $r: Uniform::[5,10],
                         $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+                        $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
                         $data: {
                             tick: Tick,
                             id: '$@n',
                             i8: UniformI8,
                             f: UniformF64,
+                            w: $weight,
+                            d: UniformDecimal::{ low: 0d0, high: 4.2d1 },
                             sub: {
                                 o:UniformI8,
                                 f:UniformF64,
@@ -74,9 +78,11 @@ mod tests {
         let expected = tuple!(
             ("tick", 16238568),
             ("id", 1),
-            ("i8", -17),
-            ("f", 92.25197734368527),
-            ("sub", tuple!(("f", -37.74527277209394), ("o", 67)))
+            ("i8", 107),
+            ("f", -60.91545829837153),
+            ("d", 33.),
+            ("w", 4.0864),
+            ("sub", tuple!(("f", 36.91801269407276), ("o", 49)))
         );
 
         let sample_101 = sim.next_sample().unwrap().unwrap();
@@ -90,5 +96,35 @@ mod tests {
         let _t0 = sim.config().t0;
 
         dbg!(sim.schema());
+    }
+
+    #[test]
+    fn sensors_shape_decimals() {
+        let sim = sensor_sim();
+        let _t0 = sim.config().t0;
+        let datasets_mappings = sim.schema();
+        let sensors_shape = datasets_mappings.get("sensors").expect("sensors shape");
+        assert!(sensors_shape.is_bag());
+        if let TypeKind::Bag(bag) = sensors_shape.kind() {
+            if let TypeKind::Struct(struct_type) = bag.element_type().kind() {
+                let fields: Vec<StructField> = struct_type
+                    .fields()
+                    .into_iter()
+                    .filter(|f| f.name() == "w" || f.name() == "d")
+                    .collect();
+                assert_eq!(fields.len(), 2);
+                fields.into_iter().for_each(|f| {
+                    if f.name() == "w" {
+                        assert_eq!(f.ty().kind(), &TypeKind::DecimalP(5, 4));
+                    } else {
+                        assert_eq!(f.ty().kind(), &TypeKind::DecimalP(2, 0));
+                    }
+                });
+            } else {
+                panic!("not a struct type for sensors shape element")
+            }
+        } else {
+            panic!("not a bag type for sensors shape")
+        }
     }
 }

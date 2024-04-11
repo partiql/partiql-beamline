@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Added
+- Added `UniformDecimal` type to scripts.
 - Added `--partiql-kollider` that generates a [PartiQL Kollider](https://github.com/partiql/partiql-lang-kotlin/tree/main/plugins/partiql-local) schema representation.
 - Added `schema` command to the CLI that infers the schema of data that a script generates
 - Added --output-format to the CLI with Ion, Ion Pretty, and TEXT (default) format

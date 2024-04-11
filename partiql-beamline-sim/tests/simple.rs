@@ -3,7 +3,6 @@ use partiql_beamline::sim::{SimBuilder, SimConfigBuilder};
 #[track_caller]
 fn verify_repeatable(script: &[u8]) {
     let config = SimConfigBuilder::default().build().expect("auto config");
-
     let t0 = config.t0;
     let seed = config.seed;
     let config2 = SimConfigBuilder::default()
@@ -16,6 +15,7 @@ fn verify_repeatable(script: &[u8]) {
         .expect("auto sim")
         .build_time_ordered()
         .expect("auto sim");
+
     let sim2 = SimBuilder::from_config(config2, script)
         .expect("repetition sim")
         .build_time_ordered()

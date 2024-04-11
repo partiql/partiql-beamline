@@ -80,6 +80,7 @@ where
             TypeKind::Int64 => self.write_typename("int8"),
             TypeKind::Bool => self.write_typename("bool"),
             TypeKind::Decimal => self.write_typename("decimal"),
+            TypeKind::DecimalP(p, s) => self.write_typename(&format!("decimal({p}, {s})")),
             TypeKind::DateTime => self.write_typename("datetime"),
             TypeKind::Float32 => self.write_typename("real"),
             TypeKind::Float64 => self.write_typename("double"),

@@ -21,6 +21,9 @@ rand_processes::{
 
             // customer $@n will have a success rate between 99.5% and 100%
             $rate: UniformF64::{ low:0.995e0, high:1.0e0 },
+
+            $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
+
             $success: Bool::{ p: $rate },
 
             service: rand_process::{
@@ -29,10 +32,10 @@ rand_processes::{
                     StartTime: Instant,
                     Program: "FancyService",
                     Operation: "GetMyData",
-
+                    Weight: $weight,
+                    Distance: UniformDecimal::{ low: 0d0, high: 4.2d1 },
                     Account: $id,
                     client: Format::{pattern: "customer #{ $@n }"},
-
                     success: $success,
                 }
             },

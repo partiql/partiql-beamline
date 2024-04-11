@@ -2,6 +2,7 @@ use crate::primitives::{DataSetName, ProcessId, Sample, Tick};
 use partiql_value::{DateTime, Tuple, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
+use rust_decimal::prelude::FromPrimitive;
 use statrs::distribution::Exp;
 use statrs::StatsError;
 use std::cell::RefCell;
@@ -377,6 +378,7 @@ pub enum SimpleScriptVariableKind {
     Float64,
     Bool,
     UUID,
+    Decimal,
 }
 
 impl SimpleScriptVariableKind {
@@ -394,6 +396,7 @@ impl SimpleScriptVariableKind {
             "UniformI32",
             "UniformI64",
             "UniformF64",
+            "UniformDecimal",
             "Bool",
             "UUID",
         ]
@@ -416,6 +419,7 @@ impl SimpleScriptVariableKind {
             "UniformI32" => Ok(Self::Int32),
             "UniformI64" => Ok(Self::Int64),
             "UniformF64" => Ok(Self::Float64),
+            "UniformDecimal" => Ok(Self::Decimal),
             "Bool" => Ok(Self::Bool),
             "UUID" => Ok(Self::UUID),
             _ => Err(DataGenerationError::Other(format!(
@@ -447,6 +451,7 @@ impl SimpleScriptVariableKind {
             SimpleScriptVariableKind::Int32 => Ok(Box::new(simple_i32(rng)?)),
             SimpleScriptVariableKind::Int64 => Ok(Box::new(simple_i64(rng)?)),
             SimpleScriptVariableKind::Float64 => Ok(Box::new(simple_f64(rng)?)),
+            SimpleScriptVariableKind::Decimal => Ok(Box::new(simple_decimal(rng)?)),
             SimpleScriptVariableKind::Bool => Ok(Box::new(simple_bool(rng)?)),
             SimpleScriptVariableKind::UUID => Ok(Box::new(simple_uuid(rng)?)),
         }
@@ -589,6 +594,15 @@ where
     R: Rng + Sized + Clone,
 {
     bounded_f64(rng, i8::MIN as f64, i8::MAX as f64)
+}
+
+pub fn simple_decimal<R>(
+    rng: R,
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+where
+    R: Rng + Sized + Clone,
+{
+    bounded_decimal(rng, i8::MIN as f64, i8::MAX as f64)
 }
 
 pub fn bounded_bool<R>(
@@ -740,6 +754,43 @@ where
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::Uniform::new(min, max)?;
     let f = move |rng: &mut R| Value::from(dist.sample(rng));
+    Ok(SimpleRandomVariable { name, typ, rng, f })
+}
+
+pub fn bounded_decimal<R>(
+    rng: R,
+    min: f64,
+    max: f64,
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+where
+    R: Rng + Sized + Clone,
+{
+    let name = format!("UniformDecimal::{{low: {min}, high: {max} }}");
+
+    let p_max_dec = rust_decimal::Decimal::from_f64(max).unwrap();
+    let p_max_dec_precision = p_max_dec
+        .mantissa()
+        .unsigned_abs()
+        .checked_ilog10()
+        .unwrap_or_default()
+        + 1;
+
+    let p_max_scale = p_max_dec.scale();
+
+    let typ = PartiqlType::new(TypeKind::DecimalP(
+        p_max_dec_precision as usize,
+        p_max_scale as usize,
+    ));
+    let rng = RefCell::new(rng);
+
+    let dist = statrs::distribution::Uniform::new(min, max)?;
+
+    let f = move |rng: &mut R| {
+        let mut out_dec =
+            rust_decimal::Decimal::from_f64_retain(dist.sample(rng)).expect("decimal value");
+        out_dec.rescale(p_max_scale);
+        Value::Decimal(Box::new(out_dec))
+    };
     Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 

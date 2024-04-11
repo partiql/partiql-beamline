@@ -40,7 +40,7 @@ impl<'a> From<&'a TimelineEvent> for &'a Event {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Timeline {
     queue: BinaryHeap<TimelineEvent>,
 }

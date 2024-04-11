@@ -17,7 +17,7 @@ pub enum SimContextError {
     GetBindingError(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SimContext {
     config: SimConfig,
     bindings: HashMap<UniCase<String>, ConstantBindingValue>,

@@ -1,8 +1,8 @@
 use crate::gen::{
-    bounded_bool, bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8, bounded_u16,
-    bounded_u32, bounded_u64, bounded_u8, simple_choose, ArrivalTime, ConstantGenerator,
-    DataGenerationError, HomogeneousPoisson, RandomProcess, RandomProcesses, SimpleProcess,
-    SimpleRandomData, SimpleScriptVariableKind, ValueGenerator,
+    bounded_bool, bounded_decimal, bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8,
+    bounded_u16, bounded_u32, bounded_u64, bounded_u8, simple_choose, ArrivalTime,
+    ConstantGenerator, DataGenerationError, HomogeneousPoisson, RandomProcess, RandomProcesses,
+    SimpleProcess, SimpleRandomData, SimpleScriptVariableKind, ValueGenerator,
 };
 use ion_rs::lazy::any_encoding::AnyEncoding;
 use ion_rs::lazy::r#struct::LazyStruct;
@@ -826,17 +826,21 @@ where
                 val: ValueRef<AnyEncoding>,
                 symbol_parser: &dyn EnvSymbolParser,
             ) -> ProcessConfigResult<f64> {
-                Ok(match val {
-                    ValueRef::Int(i) => i.as_i64().expect("integer") as f64,
-                    ValueRef::Float(f) => f,
-                    ValueRef::Symbol(sym) => match symbol_parser.parse_symbol(&sym)? {
+                match val {
+                    ValueRef::Int(i) => Ok(i.as_i64().expect("integer") as f64),
+                    ValueRef::Float(f) => Ok(f),
+                    ValueRef::Decimal(d) => match d.to_string().parse::<f64>() {
+                        Ok(f) => Ok(f),
+                        Err(e) => Err(ProcessConfigError::Other(e.to_string())),
+                    },
+                    ValueRef::Symbol(sym) => Ok(match symbol_parser.parse_symbol(&sym)? {
                         Value::Integer(i) => i as f64,
                         Value::Real(f) => f.0,
                         Value::Decimal(d) => d.to_f64().unwrap(),
                         other => todo!("non-numeric float64 param {other:?}"),
-                    },
+                    }),
                     _ => todo!("non-numeric float64 param {val:?}"),
-                })
+                }
             }
             fn range(
                 config: LazyStruct<AnyEncoding>,
@@ -893,6 +897,13 @@ where
                     let low = to_float(low, symbol_parser)?;
                     let high = to_float(high, symbol_parser)?;
                     Box::new(bounded_f64(rng, low, high)?)
+                }
+                SimpleScriptVariableKind::Decimal => {
+                    let (low, high) = range(config.clone())?;
+                    let low = to_float(low, symbol_parser)?;
+                    let high = to_float(high, symbol_parser)?;
+
+                    Box::new(bounded_decimal(rng, low, high)?)
                 }
                 SimpleScriptVariableKind::Bool => {
                     let p = to_float(config.get_expected("p")?, symbol_parser)?;

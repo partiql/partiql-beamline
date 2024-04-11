@@ -62,7 +62,7 @@ impl From<SimConfigError> for SimConfigBuilderError {
 pub type SimConfigResult<T> = Result<T, SimConfigError>;
 pub type SimConfigBuildResult<T> = Result<T, SimConfigBuilderError>;
 
-#[derive(Builder, Clone)]
+#[derive(Builder, Clone, Debug)]
 #[builder(build_fn(skip))]
 pub struct SimConfig {
     /// Simulation root seed.
