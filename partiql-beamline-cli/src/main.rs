@@ -2,6 +2,7 @@ mod cli;
 
 use crate::cli::{encode_ion_text, IonPrintMode};
 use clap::{Parser, Subcommand};
+use ion_rs::element::writer::TextKind;
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
 use partiql_beamline::sim::{SimBuilder, DATETIME_FORMAT};
@@ -9,9 +10,10 @@ use partiql_beamline_cliargs::{
     parse_args, DataOutputFormat, SampleCount, ShapeOutputFormat, SimSpec,
 };
 use partiql_extension_ion::Encoding;
+use std::io::stdout;
 use std::ops::Add;
 
-use partiql_beamline_serde::serde::{PartiqlKolliderEncoding, PartiqlShapeEncoding};
+use partiql_beamline_serde::serde::{PartiqlDataSetsEncoder, PartiqlKolliderEncoder};
 use time::Duration;
 
 #[derive(Parser)]
@@ -156,9 +158,15 @@ fn main() -> miette::Result<()> {
             match output_format {
                 ShapeOutputFormat::PartiqlKollider => {
                     let shape = sim.schema();
-                    let shape_encoding: &dyn PartiqlShapeEncoding =
-                        &PartiqlKolliderEncoding::default();
-                    println!("{:}", shape_encoding.print(&cfg, shape)?);
+
+                    let mut out = stdout().lock();
+                    let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
+                        .build(&mut out)
+                        .expect("pretty writer");
+                    let mut encoder = PartiqlKolliderEncoder::new(&mut writer);
+                    encoder.write_datasets(&cfg, shape).expect("encoded value");
+                    drop(writer);
+                    drop(out);
                 }
                 ShapeOutputFormat::Text => {
                     println!("Seed: {}", cfg.seed);

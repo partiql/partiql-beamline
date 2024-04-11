@@ -1,9 +1,9 @@
-use ion_rs::element::writer::{ElementWriter, TextKind};
+use ion_rs::element::writer::ElementWriter;
 use ion_rs::element::Element;
-use ion_rs::{ion_struct, IonError, IonType, IonWriter};
+use ion_rs::{IonError, IonType, IonWriter};
 use miette::Diagnostic;
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig, DATETIME_FORMAT};
-use partiql_types::{PartiqlType, TypeKind};
+use partiql_types::{ArrayType, BagType, PartiqlType, StructType, TypeKind};
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -17,103 +17,181 @@ pub enum ShapeEncodingError {
     DateTimeEncodingError(#[from] time::error::Format),
 }
 
-pub trait PartiqlShapeEncoding {
-    fn print(
-        &self,
-        cfg: &SimConfig,
-        shapes: DatasetTypeMapping,
-    ) -> Result<String, ShapeEncodingError>;
+/// Result of attempts to encode to Ion.
+pub type ShapeEncodeResult = Result<(), ShapeEncodingError>;
+
+/// An encoder which will write [`DatasetTypeMapping`]s as Ion values.
+pub trait PartiqlDataSetsEncoder<W, I>
+where
+    I: IonWriter<Output = W>,
+{
+    /// A reference to the writer used by this encoder.
+    fn writer(&mut self) -> &mut I;
+
+    /// Write an Ion stream value from the given [`DatasetTypeMapping`]
+    fn write_datasets(&mut self, cfg: &SimConfig, shapes: DatasetTypeMapping) -> ShapeEncodeResult;
 }
 
-#[derive(Default, Debug)]
-pub struct PartiqlKolliderEncoding {}
+/// An encoder which will write [`PartiqlType`]s as Ion values.
+pub trait PartiqlShapeEncoder<W, I>
+where
+    I: IonWriter<Output = W>,
+{
+    /// A reference to the writer used by this encoder.
+    fn writer(&mut self) -> &mut I;
 
-impl PartiqlShapeEncoding for PartiqlKolliderEncoding {
-    fn print(
-        &self,
-        cfg: &SimConfig,
-        shapes: DatasetTypeMapping,
-    ) -> Result<String, ShapeEncodingError> {
-        let mut buff = vec![];
-        let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
-            .build(&mut buff)
-            .expect("pretty writer");
+    /// Write an Ion stream value from the given [`PartiqlType`]
+    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult;
+}
 
-        writer.step_in(IonType::Struct)?;
-        writer.set_field_name("seed");
-        writer.write_element(&(cfg.seed as i64).into())?;
-        writer.set_field_name("start");
-        writer.write_element(&Element::read_one(cfg.t0.format(&DATETIME_FORMAT)?)?)?;
-        writer.set_field_name("shapes");
-        writer.step_in(IonType::Struct)?;
-        for (dataset, ty) in shapes.into_iter() {
-            writer.set_field_name(dataset);
-            writer.set_annotations(vec!["partiql", "shape", "v0"]);
-            writer.step_in(IonType::Struct)?;
-            if let TypeKind::Bag(bag) = ty.kind() {
-                writer.set_field_name("type");
-                writer.write_element(&Element::read_one("\"bag\"")?)?;
-                writer.set_field_name("items");
-                writer.step_in(IonType::Struct)?;
-                writer.set_field_name("type");
-                writer.write_element(&Element::read_one("\"struct\"")?)?;
-                writer.set_field_name("constraints");
-                writer.step_in(IonType::List)?;
-                writer.write_element(&Element::read_one("ordered")?)?;
-                writer.write_element(&Element::read_one("closed")?)?;
-                writer.step_out()?;
-                writer.set_field_name("fields");
-                writer.step_in(IonType::List)?;
-
-                for elem in get_shape_field_names(bag.element_type()) {
-                    writer.write_element(&elem)?;
-                }
-                writer.step_out()?;
-                writer.step_out()?;
-            }
-            writer.step_out()?;
-        }
-        writer.step_out()?;
-
-        writer.step_out()?;
-        drop(writer);
-        Ok(String::from_utf8(buff).expect("from ut8"))
+#[derive(Debug)]
+pub struct PartiqlKolliderEncoder<'a, W, I>
+where
+    I: IonWriter<Output = W>,
+{
+    pub(crate) writer: &'a mut I,
+}
+impl<'a, W, I> PartiqlKolliderEncoder<'a, W, I>
+where
+    W: 'a,
+    I: IonWriter<Output = W>,
+{
+    pub fn new(writer: &'a mut I) -> Self {
+        PartiqlKolliderEncoder { writer }
     }
 }
 
-fn get_shape_field_names(ty: &PartiqlType) -> Vec<Element> {
-    if let TypeKind::Struct(struct_type) = ty.kind() {
-        let out: Vec<Element> = struct_type
-            .fields()
-            .into_iter()
-            .map(|field| {
-                let field_name = field.name();
-                let field_type = match field.ty().kind() {
-                    TypeKind::Any => "any",
-                    TypeKind::Null => "null",
-                    TypeKind::Int => "int",
-                    TypeKind::Int8 => "tinyint",
-                    TypeKind::Int16 => "smallint",
-                    TypeKind::Int32 => "integer",
-                    TypeKind::Int64 => "int8",
-                    TypeKind::Bool => "bool",
-                    TypeKind::Decimal => "decimal",
-                    TypeKind::DateTime => "datetime",
-                    TypeKind::Float32 => "real",
-                    TypeKind::Float64 => "double",
-                    TypeKind::String => "string",
-                    TypeKind::Undefined => "undefined",
-                    _ => todo!("unsupported shape element type"),
-                };
-                let row = ion_struct! {
-                    "name": field_name,
-                    "type": field_type
-                };
-                row.into()
-            })
-            .collect();
-        out
-    } else {
-        todo!("unsupported shape")
+impl<'a, W, I> PartiqlShapeEncoder<W, I> for PartiqlKolliderEncoder<'a, W, I>
+where
+    W: 'a,
+    I: IonWriter<Output = W>,
+{
+    fn writer(&mut self) -> &mut I {
+        self.writer
+    }
+    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult {
+        match shape.kind() {
+            TypeKind::Any => self.write_typename("any"),
+            TypeKind::Null => self.write_typename("null"),
+            TypeKind::Int => self.write_typename("int"),
+            TypeKind::Int8 => self.write_typename("tinyint"),
+            TypeKind::Int16 => self.write_typename("smallint"),
+            TypeKind::Int32 => self.write_typename("integer"),
+            TypeKind::Int64 => self.write_typename("int8"),
+            TypeKind::Bool => self.write_typename("bool"),
+            TypeKind::Decimal => self.write_typename("decimal"),
+            TypeKind::DateTime => self.write_typename("datetime"),
+            TypeKind::Float32 => self.write_typename("real"),
+            TypeKind::Float64 => self.write_typename("double"),
+            TypeKind::String => self.write_typename("string"),
+            TypeKind::Undefined => self.write_typename("undefined"),
+            TypeKind::Struct(s) => self.write_struct(s),
+            TypeKind::Bag(b) => self.write_bag(b),
+            TypeKind::Array(a) => self.write_list(a),
+            _ => {
+                todo!("handle type for {}", shape.kind())
+            }
+        }
+    }
+}
+impl<'a, W, I> PartiqlKolliderEncoder<'a, W, I>
+where
+    W: 'a,
+    I: IonWriter<Output = W>,
+{
+    fn write_typename(&mut self, tyn: &str) -> ShapeEncodeResult {
+        self.writer.write_string(tyn)?;
+        Ok(())
+    }
+    fn write_bag(&mut self, bag: &BagType) -> ShapeEncodeResult {
+        self.writer.step_in(IonType::Struct)?;
+        {
+            self.writer.set_field_name("type");
+            self.writer.write_string("bag")?;
+
+            self.writer.set_field_name("items");
+            self.write_shape(bag.element_type())?;
+        }
+        self.writer.step_out()?;
+        Ok(())
+    }
+
+    fn write_list(&mut self, arr: &ArrayType) -> ShapeEncodeResult {
+        self.writer.step_in(IonType::Struct)?;
+        {
+            self.writer.set_field_name("type");
+            self.writer.write_string("list")?;
+
+            self.writer.set_field_name("items");
+            self.write_shape(arr.element_type())?;
+        }
+        self.writer.step_out()?;
+        Ok(())
+    }
+
+    fn write_struct(&mut self, strct: &StructType) -> ShapeEncodeResult {
+        self.writer.step_in(IonType::Struct)?;
+        {
+            self.writer.set_field_name("type");
+            self.writer.write_string("struct")?;
+
+            self.writer.set_field_name("constraints");
+            self.writer.step_in(IonType::List)?;
+            {
+                self.writer.write_symbol("ordered")?;
+                self.writer.write_symbol("closed")?;
+            }
+            self.writer.step_out()?;
+
+            self.writer.set_field_name("fields");
+            self.writer.step_in(IonType::List)?;
+            for field in &strct.fields() {
+                self.writer.step_in(IonType::Struct)?;
+                {
+                    self.writer.set_field_name("name");
+                    self.writer.write_string(field.name())?;
+
+                    self.writer.set_field_name("type");
+                    self.write_shape(field.ty())?;
+                }
+                self.writer.step_out()?;
+            }
+            self.writer.step_out()?;
+        }
+        self.writer.step_out()?;
+        Ok(())
+    }
+}
+
+impl<'a, W, I> PartiqlDataSetsEncoder<W, I> for PartiqlKolliderEncoder<'a, W, I>
+where
+    W: 'a,
+    I: IonWriter<Output = W>,
+{
+    fn writer(&mut self) -> &mut I {
+        self.writer
+    }
+
+    fn write_datasets(&mut self, cfg: &SimConfig, shapes: DatasetTypeMapping) -> ShapeEncodeResult {
+        self.writer.step_in(IonType::Struct)?;
+        {
+            self.writer.set_field_name("seed");
+            self.writer.write_i64(cfg.seed as i64)?;
+
+            self.writer.set_field_name("start");
+            self.writer
+                .write_element(&Element::read_one(cfg.t0.format(&DATETIME_FORMAT)?)?)?;
+
+            self.writer.set_field_name("shapes");
+            self.writer.step_in(IonType::Struct)?;
+            for (dataset, ty) in shapes.into_iter() {
+                self.writer.set_field_name(dataset);
+                self.writer.set_annotations(vec!["partiql", "shape", "v0"]);
+                self.write_shape(&ty)?;
+            }
+            self.writer.step_out()?;
+        }
+        self.writer.step_out()?;
+        Ok(())
     }
 }

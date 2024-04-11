@@ -1,6 +1,7 @@
+use ion_rs::element::writer::TextKind;
 use ion_rs::element::Element;
 use partiql_beamline::sim::{SimBuilder, SimConfigBuilder};
-use partiql_beamline_serde::serde::{PartiqlKolliderEncoding, PartiqlShapeEncoding};
+use partiql_beamline_serde::serde::{PartiqlDataSetsEncoder, PartiqlKolliderEncoder};
 use time::OffsetDateTime;
 
 #[test]
@@ -19,15 +20,17 @@ pub fn verify_correct_encoding() {
         .expect("auto sim");
 
     let shape = sim.schema();
-    let shape_encoding: &dyn PartiqlShapeEncoding = &PartiqlKolliderEncoding::default();
-    let actual = format!(
-        "{:}",
-        shape_encoding.print(&cfg, shape).expect("encoded value")
-    );
 
-    let script_as_byte_array =
-        Vec::from(include_bytes!("shapes/partiql-kollider/sensors-shape.ion"));
-    let expected = String::from_utf8(script_as_byte_array).expect("utf 8");
+    let mut buff = vec![];
+    let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
+        .build(&mut buff)
+        .expect("pretty writer");
+    let mut encoder = PartiqlKolliderEncoder::new(&mut writer);
+    encoder.write_datasets(&cfg, shape).expect("encoded value");
+    drop(writer);
+
+    let expected = include_str!("shapes/partiql-kollider/sensors-shape.ion");
+    let actual = String::from_utf8(buff).expect("valid utf8");
 
     let elm1 = Element::read_one(expected).unwrap();
     let elm2 = Element::read_one(actual).unwrap();
