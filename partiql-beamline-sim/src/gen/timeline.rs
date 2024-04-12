@@ -1,0 +1,51 @@
+use crate::gen::{ValueGenerator, CURRENT_TICK};
+use crate::primitives::Tick;
+use crate::sim::context::{ConstantBindingValue, SimContext};
+use partiql_types::{PartiqlType, TYPE_DATETIME, TYPE_INT64};
+use partiql_value::{DateTime, Value};
+use std::ops::Add;
+use time::Duration;
+
+#[derive(Debug, Clone)]
+/// Yields the simulation's current [`Tick`] when a value is generated.
+pub struct TickGenerator {}
+
+impl ValueGenerator for TickGenerator {
+    fn gen_value(&self, ctx: &SimContext) -> Value {
+        let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
+        if let ConstantBindingValue::Tick(Tick(t)) = tick {
+            // TODO Remove `as usize` once https://github.com/partiql/partiql-lang-rust/pull/449 is released
+            (*t as usize).into()
+        } else {
+            todo!("handle unexpected value for Tick")
+        }
+    }
+
+    fn value_type(&self) -> PartiqlType {
+        TYPE_INT64
+    }
+}
+
+#[derive(Debug, Clone)]
+/// Yields the simulation's current 'Time' when a value is generated.
+///
+/// The current time is calculated by adding the current [`Tick`] to the simulation's start time (`t0`).
+pub struct InstantGenerator {}
+
+impl ValueGenerator for InstantGenerator {
+    fn gen_value(&self, ctx: &SimContext) -> Value {
+        let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
+
+        if let ConstantBindingValue::Tick(Tick(t)) = tick {
+            let t0 = ctx.t0();
+            let time = t0.add(Duration::milliseconds(*t as i64));
+            DateTime::TimestampWithTz(time).into()
+        } else {
+            todo!("handle unexpected value for Tick")
+        }
+    }
+
+    fn value_type(&self) -> PartiqlType {
+        TYPE_DATETIME
+    }
+}

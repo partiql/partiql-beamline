@@ -12,7 +12,8 @@ use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
 use time::format_description::well_known::Iso8601;
 
-use crate::gen::{DataSamplingError, RandomProcesses};
+use crate::gen::process::RandomProcesses;
+use crate::gen::DataSamplingError;
 use crate::primitives::{DataSetId, DataSetName, Event, ProcessId, Sample, Tick};
 use crate::reader::{ProcessConfigError, ProcessParser};
 use crate::sim::context::{ConstantBindingValue, SimContext, SimContextError};

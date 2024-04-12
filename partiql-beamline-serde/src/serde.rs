@@ -1,9 +1,10 @@
 use ion_rs::element::writer::ElementWriter;
 use ion_rs::element::Element;
-use ion_rs::{IonError, IonType, IonWriter};
+use ion_rs::{IonError, IonResult, IonType, IonWriter};
 use miette::Diagnostic;
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig, DATETIME_FORMAT};
 use partiql_types::{ArrayType, BagType, PartiqlType, StructType, TypeKind};
+use std::mem::ManuallyDrop;
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -51,6 +52,7 @@ where
 {
     pub(crate) writer: &'a mut I,
 }
+
 impl<'a, W, I> PartiqlKolliderEncoder<'a, W, I>
 where
     W: 'a,
@@ -72,7 +74,11 @@ where
     fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult {
         match shape.kind() {
             TypeKind::Any => self.write_typename("any"),
+            TypeKind::AnyOf(_) => todo!("handle type for {}", shape.kind()),
+
             TypeKind::Null => self.write_typename("null"),
+            TypeKind::Missing => todo!("handle type for {}", shape.kind()),
+
             TypeKind::Int => self.write_typename("int"),
             TypeKind::Int8 => self.write_typename("tinyint"),
             TypeKind::Int16 => self.write_typename("smallint"),
@@ -81,20 +87,26 @@ where
             TypeKind::Bool => self.write_typename("bool"),
             TypeKind::Decimal => self.write_typename("decimal"),
             TypeKind::DecimalP(p, s) => self.write_typename(&format!("decimal({p}, {s})")),
+
             TypeKind::DateTime => self.write_typename("datetime"),
             TypeKind::Float32 => self.write_typename("real"),
             TypeKind::Float64 => self.write_typename("double"),
             TypeKind::String => self.write_typename("string"),
+            TypeKind::StringFixed(_) => todo!("handle type for {}", shape.kind()),
+            TypeKind::StringVarying(_) => todo!("handle type for {}", shape.kind()),
+
             TypeKind::Undefined => self.write_typename("undefined"),
+
             TypeKind::Struct(s) => self.write_struct(s),
             TypeKind::Bag(b) => self.write_bag(b),
             TypeKind::Array(a) => self.write_list(a),
-            _ => {
-                todo!("handle type for {}", shape.kind())
-            }
+
+            // non-exhaustive catch-all
+            _ => todo!("handle type for {}", shape.kind()),
         }
     }
 }
+
 impl<'a, W, I> PartiqlKolliderEncoder<'a, W, I>
 where
     W: 'a,
@@ -104,6 +116,7 @@ where
         self.writer.write_string(tyn)?;
         Ok(())
     }
+
     fn write_bag(&mut self, bag: &BagType) -> ShapeEncodeResult {
         self.writer.step_in(IonType::Struct)?;
         {
