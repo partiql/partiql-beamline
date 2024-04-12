@@ -12,6 +12,10 @@
         ],
         fields: [
           {
+             name: "d",
+             type: "decimal(2, 0)"
+          },
+          {
              name: "f",
              type: "double",
           },
@@ -22,6 +26,10 @@
           {
             name: "tick",
             type: "int8",
+          },
+          {
+            name: "w",
+            type: "decimal(5, 4)",
           }
         ],
       }
