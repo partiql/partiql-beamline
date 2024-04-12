@@ -18,8 +18,6 @@ edition = "2021"
 version = "0.1.0"
 
 [patch.crates-io]
-# TODO Until at least 0.7.2 is released
-partiql-types = { git = "https://github.com/partiql/partiql-lang-rust" }
 [workspace]
 members = [
     "partiql-beamline-cli",

@@ -144,6 +144,4 @@ unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 # List of URLs for allowed Git repositories
 allow-git = [
-    # Until at least 0.7.2 is released
-    "https://github.com/partiql/partiql-lang-rust"
 ]

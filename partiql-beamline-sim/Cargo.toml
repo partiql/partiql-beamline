@@ -17,7 +17,7 @@ partiql-value = "0.7"
 partiql-types = "^0.7.2"
 partiql-extension-ion = "0.7"
 
-ion-rs = { version = "1.0.0-rc.3", features = ["experimental-reader", "experimental-lazy-reader"] }
+ion-rs = { version = "1.0.0-rc.3", features = ["experimental"] }
 
 dyn-clone = "1.0"
 
