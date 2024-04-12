@@ -1,5 +1,3 @@
-# PartiQL Beamline
-
 PartiQL Beamline is a tool for fast data generation for PartiQL testing and experimentation purposes. It generates reproducible
 [pseudo-random data](https://en.wikipedia.org/wiki/Pseudorandomness) using a [stochastic](https://en.wikipedia.org/wiki/Stochastic) approach.  
 
@@ -407,7 +405,196 @@ that are different from the `id`s for `client_3`:
 
 ```
 
-## Pending Features Data Generator
+### Example 4 — Shape (Schema) Inference
+CLI allows you to get the shape of your generated data (a.k.a. `Schema`); see the following example:
+
+```
+cat sensors.ion
+
+rand_processes::{
+    $n: UniformU8::{ low: 2, high: 4 },
+
+    sensors: $n::[
+        rand_process::{
+            $r: Uniform::[5,10],
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
+            $data: {
+                tick: Tick,
+                id: '$@n',
+                i8: UniformI8,
+                f: UniformF64,
+                w: $weight,
+                d: UniformDecimal::{ low: 0d0, high: 4.2d1 },
+                sub: {
+                    o:UniformI8,
+                    f:UniformF64,
+                }
+            }
+        }
+    ],
+}
+
+cargo run --release --all-features shape  \
+    --seed-auto --start-auto \
+    --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion
+
+Seed: 17685918364143248531
+Start: 2022-12-12T19:52:29.000000000Z
+{
+    "sensors": PartiqlType(
+        Bag(
+            BagType {
+                element_type: PartiqlType(
+                    Struct(
+                        StructType {
+                            constraints: {
+                                Fields(
+                                    {
+                                        StructField {
+                                            name: "d",
+                                            ty: PartiqlType(
+                                                DecimalP(
+                                                    2,
+                                                    0,
+                                                ),
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "f",
+                                            ty: PartiqlType(
+                                                Float64,
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "i8",
+                                            ty: PartiqlType(
+                                                Int64,
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "tick",
+                                            ty: PartiqlType(
+                                                Int64,
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "w",
+                                            ty: PartiqlType(
+                                                DecimalP(
+                                                    5,
+                                                    4,
+                                                ),
+                                            ),
+                                        },
+                                    },
+                                ),
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+    ),
+}
+```
+
+As you can see from the example, using the `shape` command, you can infer the shape of the data as `PartiQLType`.
+Beamline also provides different encodings for the output shape; for example you can get the output shape in PartiQL Kollider
+format which is a testing suite for PartiQL; for getting the output in a specific encoding, you can use `--output-format` as the following example shows:
+
+```
+cargo run --release --all-features shape  \
+   --seed-auto --start-auto \
+   --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion \
+   --output-format partiql-kollider
+   
+{
+  seed: -3711181901898679775,
+  start: 2022-05-22T13:49:57.000000000+00:00,
+  shapes: {
+    sensors: partiql::shape::v0::{
+      type: "bag",
+      items: {
+        type: "struct",
+        constraints: [
+          ordered,
+          closed
+        ],
+        fields: [
+          {
+            name: "d",
+            type: "decimal(2, 0)"
+          },
+          {
+            name: "f",
+            type: "double"
+          },
+          {
+            name: "i8",
+            type: "int8"
+          },
+          {
+            name: "tick",
+            type: "int8"
+          },
+          {
+            name: "w",
+            type: "decimal(5, 4)"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Data Generator Types
+
+| Type           | Description             | Has Bounded Type | PartiQL Type | PartiQL Type (Bounded) |
+|----------------|-------------------------|------------------|--------------|------------------------|
+| Bool           | Boolean                 | Y                | BOOL         | BOOL                   |
+| String         | String                  | N                | STRING       | [N/A]                  |
+| UniformU8      | Unsigned 8-bit integer  | Y                | INT8         | INT8                   |
+| UniformU16     | Unsigned 16-bit integer | Y                | INT8         | INT8                   |
+| UniformU32     | Unsigned 32-bit integer | Y                | INT8         | INT8                   |
+| UniformU64     | Unsigned 64-bit integer | Y                | INT8         | INT8                   |
+| UniformI8      | Signed 8-bit integer    | Y                | INT8         | INT8                   |
+| UniformI16     | Signed 16-bit integer   | Y                | INT8         | INT8                   |
+| UniformI32     | Signed 32-bit integer   | Y                | INT8         | INT8                   |
+| UniformI64     | Signed 64-bit integer   | Y                | INT8         | INT8                   |
+| UniformF64     | 64-bit Float (Inexact)  | Y                | DOUBLE       | DOUBLE                 |
+| UniformDecimal | Decimal (Exact)         | Y                | DECIMAL      | DECIMAL(p, s)          |
+| UUID           | UUID                    | N                | STRING       | [N/A]                  |
+
+1. For types that also have a bounded counter-part, you can define their lower and upper bounds in scripts; for example for
+bounded `UniformDecimal` you can specify `UniformDecimal::{ low: 1.995, high: 4.9999 }` which picks a random decimal 
+number from the provided boundary.
+2. The values for all the types prepended with `Uniform` will get generated using [Discrete Uniform Distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution).
+
+### Data Generator Reserved Variable
+
+| Variable       | Description                                            | PartiQL Type |
+|----------------|--------------------------------------------------------|--------------|
+| Tick           | Simulation Tick                                        | INT8         |
+| Instant        | Simulation's current 'Time' when a value is generated. | DATETIME     |
+
+### Data Generator Output Data Formats
+
+| Data Format | Description                                                                            |
+|-------------|----------------------------------------------------------------------------------------|
+| Text        | A human readable text format                                                           |
+| Ion         | [Amazon Ion](https://amazon-ion.github.io/ion-docs/) data format                       |
+| Ion Pretty  | [Amazon Ion](https://amazon-ion.github.io/ion-docs/) data format pretty-printed format |
+
+### Data Generator Output Shape Formats
+
+| Shape Format     | Description                                                                            |
+|------------------|----------------------------------------------------------------------------------------|
+| Text             | A human readable text format                                                           |
+| PartiQL Kollider | ParitQL Kollider (a testing suite for PartiQL) shape Format                            |
+
+### Pending Features For Data Generator
 - Random PartiQL Query Generation Based on a Schema
 - Random Schema generation
 

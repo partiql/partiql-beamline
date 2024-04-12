@@ -5,10 +5,13 @@ rand_processes::{
         rand_process::{
             $r: Uniform::[5,10],
             $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
             $data: {
                 tick: Tick,
                 i8: UniformI8,
                 f: UniformF64,
+                w: $weight,
+                d: UniformDecimal::{ low: 0d0, high: 4.2d1 },
             }
         }
     ],
