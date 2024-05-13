@@ -4,7 +4,7 @@ use crate::sim::context::SimContext;
 use partiql_types::{PartiqlType, TypeKind, TYPE_BOOL};
 use partiql_value::Value;
 use rand::distributions::Distribution;
-use rand::{Rng, RngCore};
+use rand::Rng;
 use rand_distr::num_traits::FromPrimitive;
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
@@ -127,10 +127,7 @@ where
     }
 
     use crate::gen::util::ValueTypeInference;
-    use crate::gen::DataGenerationError;
-    use partiql_types::PartiqlType;
     use rand::seq::SliceRandom;
-    use std::cell::RefCell;
 
     let name = "UniformChoice".into();
     let typ = PartiqlType::any_of(choices.iter().map(|v| v.infer_type()));

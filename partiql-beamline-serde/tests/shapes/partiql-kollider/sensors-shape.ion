@@ -13,7 +13,11 @@
         fields: [
           {
              name: "d",
-             type: "decimal(2, 0)"
+             type: {
+                name: "decimal",
+                precision: 2,
+                scale: 0
+             }
           },
           {
              name: "f",
@@ -29,7 +33,11 @@
           },
           {
             name: "w",
-            type: "decimal(5, 4)",
+             type: {
+                name: "decimal",
+                precision: 5,
+                scale: 4
+             }
           }
         ],
       }

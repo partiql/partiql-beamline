@@ -3,12 +3,8 @@ use crate::sim::context::SimContext;
 use dyn_clone::DynClone;
 use partiql_types::PartiqlType;
 use partiql_value::Value;
-use rand::distributions::Distribution;
-use rand::Rng;
-use rust_decimal::prelude::FromPrimitive;
 use statrs::StatsError;
 use std::fmt::Debug;
-use std::ops::{Add, DerefMut};
 use thiserror::Error;
 
 pub mod arrival;

@@ -87,6 +87,45 @@ pub struct SimSpec {
     pub script: Script,
 }
 
+/// Seed configuration for the generator.
+#[derive(Args, Debug, Clone, PartialEq, Eq)]
+pub struct KolliderDb {
+    #[command(flatten)]
+    pub seed: Seed,
+
+    #[command(flatten)]
+    pub start_time: StartTime,
+
+    #[command(flatten)]
+    pub script: Script,
+}
+
+#[derive(Args, Debug, Clone, PartialEq, Eq)]
+pub struct DbArgs {
+    #[clap(
+        short = 'c',
+        long = "output-format",
+        default_value = "beamline-catalog"
+    )]
+    pub catalog_name: String,
+
+    #[clap(short = 'p', long = "output-format", default_value = ".")]
+    pub catalog_path: String,
+
+    #[clap(long = "force", default_value = "false")]
+    pub force: bool,
+
+    #[clap(short = 'p', long = "output-format", default_value = "filesystem")]
+    pub target: DbTarget,
+}
+
+/// Output target for the generated Database
+#[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum DbTarget {
+    Filesystem,
+}
+
 fn epoch_ms_parser(arg: &str) -> Result<OffsetDateTime, String> {
     let ms: i64 = arg.parse().map_err(|e: ParseIntError| e.to_string())?;
     time::OffsetDateTime::from_unix_timestamp(ms).map_err(|e| e.to_string())

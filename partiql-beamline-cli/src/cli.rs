@@ -1,7 +1,7 @@
 use ion_rs::element::writer::TextKind;
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetId, DataSetName};
-use partiql_beamline::sim::{MultiSim, SimBuilder, SimConfig, DATETIME_FORMAT};
+use partiql_beamline::sim::{MultiSim, SimBuilder, SimConfig, SimResult, DATETIME_FORMAT};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding;
 use partiql_value::{tuple, List, Value};
@@ -91,4 +91,10 @@ pub fn get_values(
     }
 
     Ok(Value::from(tp))
+}
+
+pub(crate) fn get_multi_sim(cfg: &SimConfig, script: &str) -> SimResult<MultiSim> {
+    SimBuilder::from_config(cfg.clone(), script.as_bytes())
+        .expect("auto sim")
+        .build_multi_dataset()
 }

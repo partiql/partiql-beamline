@@ -1,5 +1,4 @@
 use crate::primitives::Tick;
-use dyn_clone::DynClone;
 use rand::Rng;
 use statrs::distribution::Exp;
 use std::cell::RefCell;

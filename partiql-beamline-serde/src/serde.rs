@@ -1,10 +1,9 @@
 use ion_rs::element::writer::ElementWriter;
 use ion_rs::element::Element;
-use ion_rs::{IonError, IonResult, IonType, IonWriter};
+use ion_rs::{IonError, IonType, IonWriter};
 use miette::Diagnostic;
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig, DATETIME_FORMAT};
 use partiql_types::{ArrayType, BagType, PartiqlType, StructType, TypeKind};
-use std::mem::ManuallyDrop;
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -86,9 +85,9 @@ where
             TypeKind::Int64 => self.write_typename("int8"),
             TypeKind::Bool => self.write_typename("bool"),
             TypeKind::Decimal => self.write_typename("decimal"),
-            TypeKind::DecimalP(p, s) => self.write_typename(&format!("decimal({p}, {s})")),
+            TypeKind::DecimalP(p, s) => self.write_constrained_decimal(p, s),
 
-            TypeKind::DateTime => self.write_typename("datetime"),
+            TypeKind::DateTime => self.write_typename("timestamp"),
             TypeKind::Float32 => self.write_typename("real"),
             TypeKind::Float64 => self.write_typename("double"),
             TypeKind::String => self.write_typename("string"),
@@ -171,6 +170,20 @@ where
                 self.writer.step_out()?;
             }
             self.writer.step_out()?;
+        }
+        self.writer.step_out()?;
+        Ok(())
+    }
+
+    fn write_constrained_decimal(&mut self, p: &usize, s: &usize) -> ShapeEncodeResult {
+        self.writer.step_in(IonType::Struct)?;
+        {
+            self.writer.set_field_name("name");
+            self.writer.write_string("decimal")?;
+            self.writer.set_field_name("precision");
+            self.writer.write_i64(*p as i64)?;
+            self.writer.set_field_name("scale");
+            self.writer.write_i64(*s as i64)?;
         }
         self.writer.step_out()?;
         Ok(())

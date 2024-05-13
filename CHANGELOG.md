@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-
+- Changed the command line hierarchy to separate data generation and shape inference.
 ### Added
+- Added `gen db kollider` for creating KolliderDB database.
 - Added `schema` to `shape` for both CLI and other constructs.
 - Added `UniformDecimal` type to scripts.
 - Added `--partiql-kollider` that generates a [PartiQL Kollider](https://github.com/partiql/partiql-lang-kotlin/tree/main/plugins/partiql-local) shape (schema) representation.

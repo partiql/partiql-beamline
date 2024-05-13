@@ -12,7 +12,7 @@ Data Generator creates reproducible pseudo-random data. Let's unpack this with a
 In the following example we generate a data-set with two records based on the `sensors.ion` script (we will cover scripts in the next section):
 
 ```
-cargo run gen \
+$ cargo run gen data \
     --seed-auto \
     --start-auto \
     --sample-count 2 \
@@ -28,7 +28,7 @@ Start: 2024-01-20T20:05:41.000000000Z
 tool has created using `--seed-auto` command is `45121008347100595`; using this seed and the same script, we can re-generate the same data.
 
 ```
-cargo run gen \
+$ cargo run gen data \
     --seed 12328924104731257599 \
     --start-auto \
     --sample-count 2 \
@@ -43,7 +43,7 @@ Start: 2024-01-20T20:51:02.000000000Z
 In case you want to generate the data with the same `seed` and `start` use `--start-iso` as shown below:
 
 ```
-cargo run gen \
+$ cargo run gen data \
     --seed 12328924104731257599 \
     --start-iso "2024-01-20T20:51:02.000000000Z" \
     --sample-count 2 \
@@ -59,7 +59,7 @@ Start: 2024-01-20T20:51:02.000000000Z
 Data Generator uses scripts as recipes for data generation. Let's first create some data using  `sensors-nested.ion` script:
 
 ```
-cargo run gen \
+$ cargo run gen data \
     --seed-auto --start-auto \
     --sample-count 3 \
     --script-path partiql-beamline-sim/tests/scripts/sensors-nested.ion \
@@ -233,7 +233,7 @@ In the following example we show what datasets are and how one can create data f
 types such as `Instant` and `UUID` but first the command and its result:
 
 ```
-cargo run gen \
+$ cargo run gen data \
     --seed 45121008347100595 \
     --start-iso '2020-06-16T14:41:51.000000000Z' \
     --script-path partiql-beamline-sim/tests/scripts/client-service.ion \
@@ -294,7 +294,7 @@ As the name suggests, datasets represents a collection of data the have a specif
 Let's look at the `client-service.ion` file:
 
 ```
-cat partiql-beamline-sim/tests/scripts/client-service.ion
+$ cat partiql-beamline-sim/tests/scripts/client-service.ion
 
 rand_processes::{
     // generate between 5 & 20 customers
@@ -409,7 +409,7 @@ that are different from the `id`s for `client_3`:
 CLI allows you to get the shape of your generated data (a.k.a. `Schema`); see the following example:
 
 ```
-cat sensors.ion
+$ cat sensors.ion
 
 rand_processes::{
     $n: UniformU8::{ low: 2, high: 4 },
@@ -435,7 +435,7 @@ rand_processes::{
     ],
 }
 
-cargo run --release --all-features shape  \
+$ cargo run --release --all-features infer-shape  \
     --seed-auto --start-auto \
     --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion
 
@@ -504,7 +504,7 @@ Beamline also provides different encodings for the output shape; for example you
 format which is a testing suite for PartiQL; for getting the output in a specific encoding, you can use `--output-format` as the following example shows:
 
 ```
-cargo run --release --all-features shape  \
+$ cargo run --release --all-features infer-shape  \
    --seed-auto --start-auto \
    --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion \
    --output-format partiql-kollider
@@ -547,6 +547,199 @@ cargo run --release --all-features shape  \
     }
   }
 }
+```
+
+### Example 5 — Database Generation
+Beamline supports creating databases that include both shapes and data. It currently supports PartiQL Kollider Database
+generation on the file system as follows in an example:
+
+```
+$ cargo run --release --all-features gen db kollider  \
+   --seed-auto --start-auto \
+   --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion
+
+command is using --force ...
+writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
+writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
+writing shape file(s)...[COMPLETED]
+writing data file(s)...[COMPLETED]
+done!
+```
+
+The above command creates the database under the `./beamline-catalog` directly. You can customize the catalog name and 
+path using `--catalog-name` and `--catalog-path` arguments. See the following for more details on the files created under
+the catalog directory:
+
+```
+$ cat ./beamline-catalog/.beamline-manifest
+{"seed": 3114525943991198161, "start": 2023-11-07T19:01:28.000000000Z }
+
+$ cat ./beamline-catalog/.beamline-script                                  
+
+rand_processes::{
+    // generate between 5 & 20 customers
+    $n: UniformU8::{ low: 5, high: 20 },
+
+    // A generator for client ids
+    $id_gen: UUID,
+
+    // A generator for request ids
+    $rid_gen: UUID,
+
+    requests: $n::[
+        // each iteration of the loop will assign an index from 1..=$n to the variable $@n
+        {
+            // customer $@n has a UUID
+            $id: $id_gen::(), // here we force the evaluation of the generator at read time with `::()` to get a single UUID
+
+            // customer $@n will arrive every $r milliseconds
+            $r: UniformU8::{low:20, high:150},
+            $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+            // customer $@n will have a success rate between 99.5% and 100%
+            $rate: UniformF64::{ low:0.995e0, high:1.0e0 },
+
+            $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
+
+            $success: Bool::{ p: $rate },
+
+            service: rand_process::{
+                $data: {
+                    Request: $rid_gen,
+                    StartTime: Instant,
+                    Program: "FancyService",
+                    Operation: "GetMyData",
+                    Weight: $weight,
+                    Distance: UniformDecimal::{ low: 0d0, high: 4.2d1 },
+                    Account: $id,
+                    client: Format::{pattern: "customer #{ $@n }"},
+                    success: $success,
+                }
+            },
+            'client_{ $@n }': rand_process::{
+                $data: {
+                    id: $id,
+                    request_time: Instant,
+                    request_id: $rid_gen,
+                    success: $success,
+                }
+            }
+        }
+    ]
+}%
+
+$ tree ./beamline-catalog
+./beamline-catalog
+├── client_0.ion
+├── client_0.shape.ion
+├── client_1.ion
+├── client_1.shape.ion
+├── client_10.ion
+├── client_10.shape.ion
+├── client_11.ion
+├── client_11.shape.ion
+├── client_12.ion
+├── client_12.shape.ion
+├── client_13.ion
+├── client_13.shape.ion
+├── client_14.ion
+├── client_14.shape.ion
+├── client_15.ion
+├── client_15.shape.ion
+├── client_16.ion
+├── client_16.shape.ion
+├── client_17.ion
+├── client_17.shape.ion
+├── client_18.ion
+├── client_18.shape.ion
+├── client_19.ion
+├── client_19.shape.ion
+├── client_2.ion
+├── client_2.shape.ion
+├── client_3.ion
+├── client_3.shape.ion
+├── client_4.ion
+├── client_4.shape.ion
+├── client_5.ion
+├── client_5.shape.ion
+├── client_6.ion
+├── client_6.shape.ion
+├── client_7.ion
+├── client_7.shape.ion
+├── client_8.ion
+├── client_8.shape.ion
+├── client_9.ion
+├── client_9.shape.ion
+├── service.ion
+└── service.shape.ion
+
+$ cat ./beamline-catalog/client_0.ion ./beamline-catalog/client_0.shape.ion
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "0de35d1e-a87c-e540-734d-6f2a4fa410c3", request_time: 2021-01-05T03:55:01.035000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "3539cdf0-6f7e-6bdc-c25a-4e0b7d8f8bac", request_time: 2021-01-05T03:55:01.182000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "c6d8ad08-ee24-33d2-50cb-e743e2b9490d", request_time: 2021-01-05T03:55:01.187000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "7b3e0cc7-ee18-148a-d64e-208de07c4bd3", request_time: 2021-01-05T03:55:01.194000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "45e9a44a-67cb-fe8e-0097-abcef70799da", request_time: 2021-01-05T03:55:01.215000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "e9b4fecc-3104-6b44-6bd5-61da0eabc26a", request_time: 2021-01-05T03:55:01.310000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "e26c5803-96ba-ceb6-5069-86f18ed87951", request_time: 2021-01-05T03:55:01.310000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "4311f491-fc4c-8f17-68c6-57ce2f35bcf0", request_time: 2021-01-05T03:55:01.324000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "1ed18755-89ce-d2b4-cc9a-01ea49939510", request_time: 2021-01-05T03:55:01.339000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "8df88397-585e-1c5d-dd5c-f3bea7990da1", request_time: 2021-01-05T03:55:01.376000000+00:00}
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [
+      ordered,
+      closed
+    ],
+    fields: [
+      {
+        name: "id",
+        type: "string"
+      },
+      {
+        name: "request_id",
+        type: "string"
+      },
+      {
+        name: "request_time",
+        type: "datetime"
+      },
+      {
+        name: "success",
+        type: "bool"
+      }
+    ]
+  }
+}%
+```
+
+The database generation is a safe operation; running the same command won't result in overwriting the created catalog:
+```
+$ cargo run --release --all-features gen db kollider  \
+   --seed-auto --start-auto \
+   --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion
+
+creating directory ./beamline-catalog/ failed with the following error:
+File exists (os error 17
+```
+
+If you need to overwrite to the same catalog, you can use `--force` argument. With this command, if the directory exists
+Beamline will backup the existing catalog and overwrite the catalog afterward:
+
+```
+$ cargo run --release --all-features gen db kollider  \
+   --seed-auto --start-auto \
+   --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion --force
+
+command is using --force ...
+Beamline catalog ./beamline-catalog/ exists, backing it up to "beamline-catalog.2024-05-10T22:15:54.019316000Z.bkp"...
+back up completed
+writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
+writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
+writing shape file(s)...[COMPLETED]
+writing data file(s)...[COMPLETED]
+done!
 ```
 
 ### Data Generator Types
@@ -605,7 +798,7 @@ number from the provided boundary.
 
 Run the following for building the library which also generates the CLI binary: // TODO add a `MAKE` file or similar
 ```
-cargo build
+$ cargo build
 ```
 
 Once ran successfully the CLI binary will be under `./target/debug/partiql-beamline-cli`.
@@ -614,23 +807,35 @@ Once ran successfully the CLI binary will be under `./target/debug/partiql-beaml
 
 Here is the snapshot of the current command-line options:
 ```
-partiql-beamline-cli --help                                                                                                                                      
+$ target/debug/partiql-beamline-cli --help    
 PartiQL Beamline CLI
 
 Usage: partiql-beamline-cli <COMMAND>
 
 Commands:
-  gen   Run the data generator
-  help  Print this message or the help of the given subcommand(s)
+  gen          Run the generator
+  infer-shape  Run the script shape inference
+  help         Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
   -V, --version  Print version
+
 ```
 
 ```
- target/debug/partiql-beamline-cli gen --help
-Run the data generator
+$ target/debug/partiql-beamline-cli gen --help
+Run the generator
+
+Usage: partiql-beamline-cli gen <COMMAND>
+
+Commands:
+  data  Run the data generator
+  db    Run the Db generator with both data and schema(s)
+  help  Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
 
 Usage: partiql-beamline-cli gen [OPTIONS] <--sample-count <SAMPLE_COUNT>> <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>>
 
