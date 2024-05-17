@@ -27,7 +27,8 @@ use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
 use crate::gen::distributions::{
     bounded_bool, bounded_decimal, bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8,
-    bounded_u16, bounded_u32, bounded_u64, bounded_u8, simple_choose, SimpleScriptVariableKind,
+    bounded_u16, bounded_u32, bounded_u64, bounded_u8, simple_choose, simple_union,
+    SimpleScriptVariableKind,
 };
 use crate::gen::process::{RandomProcesses, SimpleProcess};
 use crate::primitives::DataSetName;
@@ -163,11 +164,9 @@ impl EnvLookup for Env {
 
 pub struct ProcessParser {
     registry: ValueGeneratorRegistry<Pcg64Mcg>,
-
     rng: Vec<Pcg64Mcg>,
     env: Env,
     sim_context: SimContext,
-
     processes: RandomProcesses,
 }
 
@@ -179,11 +178,9 @@ impl ProcessParser {
     ) -> ProcessConfigResult<Self> {
         Ok(Self {
             registry,
-
             rng: vec![Pcg64Mcg::seed_from_u64(seed)],
             env: Env::new(),
             sim_context: ctx.clone(),
-
             processes: Default::default(),
         })
     }
@@ -418,12 +415,11 @@ impl ProcessParser {
 
     fn parse_immediate(&mut self, value: &ValueRef<AnyEncoding>) -> ProcessConfigResult<Value> {
         let ion_type = value.ion_type();
-
         match value {
             ValueRef::Bool(b) => Ok((*b).into()),
-            ValueRef::Int(i) => Ok((i.as_i64().unwrap()).into()),
+            ValueRef::Int(i) => Ok(i.as_i64().unwrap().into()),
             ValueRef::Float(f) => Ok((*f).into()),
-            ValueRef::String(s) => Ok((s.text()).into()),
+            ValueRef::String(s) => Ok(s.text().into()),
             ValueRef::SExp(sexp) => {
                 let annot = sexp.annotations().collect::<IonResult<Vec<_>>>()?;
                 assert_eq!(annot.len(), 1usize);
@@ -562,8 +558,8 @@ impl ProcessParser {
                         let field = field?;
                         let name = self.parse_symbol_text(&field.name()?)?.to_string();
                         let value_ref = field.value().read()?;
-                        let value = self.parse_generator(&value_ref)?;
-                        kvs.insert(name, value);
+                        let value_generator = self.parse_generator(&value_ref)?;
+                        kvs.insert(name, value_generator);
                     }
                     self.pop_scope()?;
                     Ok(Box::new(SimpleRandomData::Collection(kvs)) as Box<dyn ValueGenerator>)
@@ -577,11 +573,10 @@ impl ProcessParser {
                             if !self.registry.has_parser(&name) {
                                 Err(ProcessConfigError::UnknownGenerator(name))
                             } else {
-                                let crng = self.child_rng()?;
+                                let rng = self.child_rng()?;
                                 let parser = self.registry.get_parser(&name).unwrap();
-
                                 parser.parse_generator(
-                                    crng,
+                                    rng,
                                     Some(strct.clone()),
                                     self,
                                     &self.sim_context,
@@ -592,43 +587,67 @@ impl ProcessParser {
                 }
             }
             ValueRef::List(l) => {
-                let crng = self.child_rng()?;
-
-                let mut choices = vec![];
-
                 let annot = l.annotations().collect::<Result<Vec<_>, _>>()?;
+                let kind = self.parse_symbol_type(&annot[0])?;
+                let rng = self.child_rng()?;
+                if let SymbolType::Str(name) = kind {
+                    // TODO move to a better modelling for parsing `Uniform` and `UniformAny`
+                    match name.as_str() {
+                        "Uniform" => {
+                            let mut choices = vec![];
 
-                let n = if let Some(SymbolType::VarRef(name)) = annot
-                    .first()
-                    .map(|param| self.parse_symbol_type(param))
-                    .transpose()?
-                {
-                    let list_param = self.env.get(&name)?;
-                    let list_param = match list_param {
-                        EnvBindingValue::Value(v) => v,
-                        EnvBindingValue::Generator(_) => {
-                            todo!("error generator for list param")
+                            let n = if let Some(SymbolType::VarRef(name)) = annot
+                                .first()
+                                .map(|param| self.parse_symbol_type(param))
+                                .transpose()?
+                            {
+                                let list_param = self.env.get(&name)?;
+                                let list_param = match list_param {
+                                    EnvBindingValue::Value(v) => v,
+                                    EnvBindingValue::Generator(_) => {
+                                        todo!("error generator for list param")
+                                    }
+                                    EnvBindingValue::Arrival(_) => {
+                                        todo!("error arrival for list param")
+                                    }
+                                };
+                                match list_param {
+                                    Value::Integer(n) if *n > 0 => *n,
+                                    _ => {
+                                        return Err(ProcessConfigError::Other(format!(
+                                            "Unsupported list parameterization `{list_param:?}`"
+                                        )));
+                                    }
+                                }
+                            } else {
+                                1
+                            };
+
+                            for _i in 0..n {
+                                for li in l.iter() {
+                                    choices.push(self.parse_immediate(&li?.read()?)?);
+                                }
+                            }
+                            Ok(Box::new(simple_choose(rng, choices)?) as Box<dyn ValueGenerator>)
                         }
-                        EnvBindingValue::Arrival(_) => todo!("error arrival for list param"),
-                    };
-                    match list_param {
-                        Value::Integer(n) if *n > 0 => *n,
-                        _ => {
-                            return Err(ProcessConfigError::Other(format!(
-                                "Unsupported list parameterization `{list_param:?}`"
-                            )));
+                        "UniformAnyOf" => {
+                            let mut generators = vec![];
+                            for script_value in l.iter() {
+                                let script_value = script_value?;
+                                let generator = self.parse_generator(&script_value.read()?)?;
+                                generators.push(generator);
+                            }
+                            Ok(
+                                // TODO remove clone() for SimContext
+                                Box::new(simple_union(rng, generators, self.sim_context.clone())?)
+                                    as Box<dyn ValueGenerator>,
+                            )
                         }
+                        _ => todo!("Add support for other `List` script annotations"),
                     }
                 } else {
-                    1
-                };
-
-                for _i in 0..n {
-                    for li in l.iter() {
-                        choices.push(self.parse_immediate(&li?.read()?)?);
-                    }
+                    todo!("Add support for other SymbolType variant in Script List values")
                 }
-                Ok(Box::new(simple_choose(crng, choices)?) as Box<dyn ValueGenerator>)
             }
             other => {
                 let constant = self.parse_immediate(other)?;
@@ -748,23 +767,27 @@ where
 }
 
 pub trait EnvSymbolParser {
-    fn parse_symbol(&self, sym: &SymbolRef) -> ProcessConfigResult<Value>;
+    fn parse_symbol_as_value(&self, sym: &SymbolRef) -> ProcessConfigResult<Value>;
+
+    fn parse_symbol_as_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String>;
 
     fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String>;
 }
 
 impl EnvSymbolParser for ProcessParser {
-    fn parse_symbol(&self, sym: &SymbolRef) -> ProcessConfigResult<Value> {
+    fn parse_symbol_as_value(&self, sym: &SymbolRef) -> ProcessConfigResult<Value> {
         match self.parse_symbol_type(sym)? {
             SymbolType::VarRef(name) => match self.env.get(&name)? {
                 EnvBindingValue::Value(v) => Ok(v.clone()),
                 EnvBindingValue::Generator(gen) => Ok(gen.gen_value(&self.sim_context)),
                 EnvBindingValue::Arrival(_) => todo!("arrival in generator config"),
             },
-            SymbolType::Str(_) => {
-                todo!("bare symbol in generator config")
-            }
+            SymbolType::Str(s) => Ok(Value::String(Box::new(s))),
         }
+    }
+
+    fn parse_symbol_as_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String> {
+        self.parse_symbol_text(sym)
     }
 
     fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String> {
@@ -836,12 +859,14 @@ where
                         Ok(f) => Ok(f),
                         Err(e) => Err(ProcessConfigError::Other(e.to_string())),
                     },
-                    ValueRef::Symbol(sym) => Ok(match symbol_parser.parse_symbol(&sym)? {
-                        Value::Integer(i) => i as f64,
-                        Value::Real(f) => f.0,
-                        Value::Decimal(d) => d.to_f64().unwrap(),
-                        other => todo!("non-numeric float64 param {other:?}"),
-                    }),
+                    ValueRef::Symbol(sym) => {
+                        Ok(match symbol_parser.parse_symbol_as_value(&sym)? {
+                            Value::Integer(i) => i as f64,
+                            Value::Real(f) => f.0,
+                            Value::Decimal(d) => d.to_f64().unwrap(),
+                            other => todo!("non-numeric float64 param {other:?}"),
+                        })
+                    }
                     _ => todo!("non-numeric float64 param {val:?}"),
                 }
             }
@@ -939,7 +964,7 @@ mod tests {
         let seed = 5; // Chosen via roll of a fair die.
 
         let config = SimConfigBuilder::default().build().expect("config");
-        let ctx = SimContext::new(config);
+        let mut ctx = SimContext::new(config);
 
         let parser = ProcessParser::new(seed, registry, &ctx)?;
         parser.parse(&mut reader)

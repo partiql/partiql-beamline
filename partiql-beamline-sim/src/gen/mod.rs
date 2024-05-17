@@ -56,6 +56,7 @@ pub trait ValueGenerator: Debug + DynClone {
     fn gen_value(&self, ctx: &SimContext) -> Value;
     fn value_type(&self) -> PartiqlType;
 }
+
 dyn_clone::clone_trait_object!(ValueGenerator);
 
 pub trait ArrivalTime: Debug + DynClone {

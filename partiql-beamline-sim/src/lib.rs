@@ -26,6 +26,7 @@ mod tests {
                         $r: Uniform::[5,10],
                         $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
                         $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
+                        $anyof: UniformAnyOf::[UUID, Tick, UniformDecimal::{ low: 32.2, high: 43.5 }, UniformI8],
                         $data: {
                             tick: Tick,
                             id: '$@n',
@@ -33,6 +34,7 @@ mod tests {
                             f: UniformF64,
                             w: $weight,
                             d: UniformDecimal::{ low: 0d0, high: 4.2d1 },
+                            variant: $anyof,
                             sub: {
                                 o:UniformI8,
                                 f:UniformF64,
@@ -78,15 +80,15 @@ mod tests {
         let expected = tuple!(
             ("tick", 16238568),
             ("id", 1),
-            ("i8", 107),
-            ("f", -60.91545829837153),
-            ("d", 33.),
+            ("i8", 22),
+            ("f", 50.413553531513344),
+            ("d", 12),
             ("w", 4.0864),
-            ("sub", tuple!(("f", 36.91801269407276), ("o", 49)))
+            ("sub", tuple!(("f", 19.607894119636057), ("o", 64))),
+            ("variant", 26),
         );
 
         let sample_101 = sim.next_sample().unwrap().unwrap();
-
         assert_eq!(Value::from(expected), sample_101.value);
     }
 

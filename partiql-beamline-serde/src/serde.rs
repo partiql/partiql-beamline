@@ -3,7 +3,7 @@ use ion_rs::element::Element;
 use ion_rs::{IonError, IonType, IonWriter};
 use miette::Diagnostic;
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig, DATETIME_FORMAT};
-use partiql_types::{ArrayType, BagType, PartiqlType, StructType, TypeKind};
+use partiql_types::{AnyOf, ArrayType, BagType, PartiqlType, StructType, TypeKind};
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -73,8 +73,7 @@ where
     fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult {
         match shape.kind() {
             TypeKind::Any => self.write_typename("any"),
-            TypeKind::AnyOf(_) => todo!("handle type for {}", shape.kind()),
-
+            TypeKind::AnyOf(any_of) => self.write_union(any_of),
             TypeKind::Null => self.write_typename("null"),
             TypeKind::Missing => todo!("handle type for {}", shape.kind()),
 
@@ -184,6 +183,26 @@ where
             self.writer.write_i64(*p as i64)?;
             self.writer.set_field_name("scale");
             self.writer.write_i64(*s as i64)?;
+        }
+        self.writer.step_out()?;
+        Ok(())
+    }
+
+    fn write_union(&mut self, any_of: &AnyOf) -> ShapeEncodeResult {
+        self.writer.step_in(IonType::Struct)?;
+        {
+            self.writer.set_field_name("name");
+            self.writer.write_string("union")?;
+            self.writer.set_field_name("types");
+            self.writer.step_in(IonType::List)?;
+            let types = any_of.types();
+            for t in types.into_iter() {
+                match self.write_shape(t) {
+                    Ok(_) => {}
+                    Err(e) => return Err(e),
+                }
+            }
+            self.writer.step_out()?;
         }
         self.writer.step_out()?;
         Ok(())

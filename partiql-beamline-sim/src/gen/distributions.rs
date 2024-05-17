@@ -113,6 +113,28 @@ pub fn simple_instant() -> InstantGenerator {
     InstantGenerator {}
 }
 
+pub fn simple_union<R>(
+    rng: R,
+    generators: Vec<Box<dyn ValueGenerator>>,
+    ctx: SimContext,
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+where
+    R: Rng + Sized + Clone,
+{
+    let types: Vec<PartiqlType> = generators.iter().map(|gen| gen.value_type()).collect();
+
+    let name = format!("UniformUnion::[ {:?} ]", types);
+    let typ = PartiqlType::any_of(types);
+    let rng = RefCell::new(rng);
+    let dist = statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?;
+    let f = move |rng: &mut R| {
+        let idx = dist.sample(rng) as i64;
+        let generator = &generators[idx as usize];
+        generator.gen_value(&ctx)
+    };
+    Ok(SimpleRandomVariable { name, typ, rng, f })
+}
+
 pub fn simple_choose<R>(
     rng: R,
     choices: Vec<Value>,

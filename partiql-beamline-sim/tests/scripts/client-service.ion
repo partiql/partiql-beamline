@@ -24,6 +24,8 @@ rand_processes::{
 
             $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
 
+            $anyof: UniformAnyOf::[Tick, UniformDecimal::{ low: 1.995, high: 4.9999 }, UniformI8],
+
             $success: Bool::{ p: $rate },
 
             service: rand_process::{
@@ -37,6 +39,7 @@ rand_processes::{
                     Account: $id,
                     client: Format::{pattern: "customer #{ $@n }"},
                     success: $success,
+                    anyof: $anyof,
                 }
             },
             'client_{ $@n }': rand_process::{

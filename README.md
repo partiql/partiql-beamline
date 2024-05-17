@@ -558,7 +558,6 @@ $ cargo run --release --all-features gen db kollider  \
    --seed-auto --start-auto \
    --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion
 
-command is using --force ...
 writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
 writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
 writing shape file(s)...[COMPLETED]
@@ -744,21 +743,23 @@ done!
 
 ### Data Generator Types
 
-| Type           | Description             | Has Bounded Type | PartiQL Type | PartiQL Type (Bounded) |
-|----------------|-------------------------|------------------|--------------|------------------------|
-| Bool           | Boolean                 | Y                | BOOL         | BOOL                   |
-| String         | String                  | N                | STRING       | [N/A]                  |
-| UniformU8      | Unsigned 8-bit integer  | Y                | INT8         | INT8                   |
-| UniformU16     | Unsigned 16-bit integer | Y                | INT8         | INT8                   |
-| UniformU32     | Unsigned 32-bit integer | Y                | INT8         | INT8                   |
-| UniformU64     | Unsigned 64-bit integer | Y                | INT8         | INT8                   |
-| UniformI8      | Signed 8-bit integer    | Y                | INT8         | INT8                   |
-| UniformI16     | Signed 16-bit integer   | Y                | INT8         | INT8                   |
-| UniformI32     | Signed 32-bit integer   | Y                | INT8         | INT8                   |
-| UniformI64     | Signed 64-bit integer   | Y                | INT8         | INT8                   |
-| UniformF64     | 64-bit Float (Inexact)  | Y                | DOUBLE       | DOUBLE                 |
-| UniformDecimal | Decimal (Exact)         | Y                | DECIMAL      | DECIMAL(p, s)          |
-| UUID           | UUID                    | N                | STRING       | [N/A]                  |
+| Type           | Description                              | Has Bounded Type | PartiQL Type | PartiQL Type (Bounded) |
+|----------------|------------------------------------------|------------------|--------------|------------------------|
+| Bool           | Boolean                                  | Y                | BOOL         | BOOL                   |
+| String         | String                                   | N                | STRING       | [N/A]                  |
+| Uniform        | Uniform distribution over literal values | N                | Union        | [N/A]                  |
+| UniformAnyOf   | Uniform distribution over types          | N                | Union        | [N/A]                  |
+| UniformU8      | Unsigned 8-bit integer                   | Y                | INT8         | INT8                   |
+| UniformU16     | Unsigned 16-bit integer                  | Y                | INT8         | INT8                   |
+| UniformU32     | Unsigned 32-bit integer                  | Y                | INT8         | INT8                   |
+| UniformU64     | Unsigned 64-bit integer                  | Y                | INT8         | INT8                   |
+| UniformI8      | Signed 8-bit integer                     | Y                | INT8         | INT8                   |
+| UniformI16     | Signed 16-bit integer                    | Y                | INT8         | INT8                   |
+| UniformI32     | Signed 32-bit integer                    | Y                | INT8         | INT8                   |
+| UniformI64     | Signed 64-bit integer                    | Y                | INT8         | INT8                   |
+| UniformF64     | 64-bit Float (Inexact)                   | Y                | DOUBLE       | DOUBLE                 |
+| UniformDecimal | Decimal (Exact)                          | Y                | DECIMAL      | DECIMAL(p, s)          |
+| UUID           | UUID                                     | N                | STRING       | [N/A]                  |
 
 1. For types that also have a bounded counter-part, you can define their lower and upper bounds in scripts; for example for
 bounded `UniformDecimal` you can specify `UniformDecimal::{ low: 1.995, high: 4.9999 }` which picks a random decimal 
