@@ -76,6 +76,7 @@ pub enum Db {
     },
 }
 
+// TODO rather than all the `.expect`s below, we should use miette errors/diagnostics for better error reporting
 fn main() -> miette::Result<()> {
     let args = Cli::parse();
 

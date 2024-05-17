@@ -34,6 +34,10 @@ use crate::gen::process::{RandomProcesses, SimpleProcess};
 use crate::primitives::DataSetName;
 use once_cell::sync::Lazy;
 
+const PROCESS_KEY_ARRIVAL: &'static str = "$arrival";
+const PROCESS_KEY_DATA: &'static str = "$data";
+const SCRIPT_SECTION_PROCESSES: &'static str = "rand_processes";
+const SCRIPT_SECTION_PROCESS: &'static str = "rand_process";
 static FORMAT_STRING_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"([^\\])\{(.+?)\}").expect("FORMAT STRING REGEX"));
 
@@ -215,7 +219,7 @@ impl ProcessParser {
 
         let top_lvl = top_lvl.read()?;
         let config = top_lvl.expect_struct()?;
-        config.annotations().expect(["rand_processes"])?;
+        config.annotations().expect([SCRIPT_SECTION_PROCESSES])?;
 
         self.parse_scope_struct("^", config)?;
 
@@ -259,19 +263,22 @@ impl ProcessParser {
     ) -> ProcessConfigResult<()> {
         let annot = s.annotations().collect::<Result<Vec<_>, _>>()?;
 
-        if annot
-            .first()
-            .and_then(|s| s.text())
-            .filter(|s| s == &"rand_process")
-            .is_some()
-        {
-            let process = self.parse_process(s)?;
-            self.processes.add(DataSetName(scope_name.into()), process);
-        } else {
-            self.push_scope(scope_name)?;
-            self.parse_bindings(s)?;
-            self.pop_scope()?;
+        if let Some(annot) = annot.first().and_then(|s| s.text()) {
+            match annot {
+                SCRIPT_SECTION_PROCESS => {
+                    let process = self.parse_process(s)?;
+                    self.processes.add(DataSetName(scope_name.into()), process);
+                    return Ok(());
+                }
+                SCRIPT_SECTION_PROCESSES => (), // fall through
+                _ => todo!("unrecognized annotation {}", annot),
+            }
         }
+
+        self.push_scope(scope_name)?;
+        self.parse_bindings(s)?;
+        self.pop_scope()?;
+
         Ok(())
     }
 
@@ -289,10 +296,10 @@ impl ProcessParser {
             match name {
                 SymbolType::VarRef(name) => {
                     match name.as_str() {
-                        "$arrival" => {
+                        PROCESS_KEY_ARRIVAL => {
                             arrival = Some(self.parse_arrival(&value)?);
                         }
-                        "$data" => {
+                        PROCESS_KEY_DATA => {
                             data = Some(self.parse_generator(&value)?);
                         }
                         _ => {
@@ -311,13 +318,13 @@ impl ProcessParser {
         }
 
         if arrival.is_none() {
-            if let Some(EnvBindingValue::Arrival(binding)) = self.env.find("$arrival") {
+            if let Some(EnvBindingValue::Arrival(binding)) = self.env.find(PROCESS_KEY_ARRIVAL) {
                 arrival = Some(binding.clone());
             }
         }
 
         if data.is_none() {
-            if let Some(EnvBindingValue::Generator(binding)) = self.env.find("$data") {
+            if let Some(EnvBindingValue::Generator(binding)) = self.env.find(PROCESS_KEY_DATA) {
                 data = Some(binding.clone());
             }
         }
@@ -361,7 +368,7 @@ impl ProcessParser {
             Ok(immediate.into())
         } else {
             Err(ProcessConfigError::Other(format!(
-                "Unknown binding `{value:?}`"
+                "Unknown binding `{value:?}`" // TODO Can panic here due to https://github.com/amazon-ion/ion-rust/issues/770
             )))
         }
     }
@@ -478,6 +485,8 @@ impl ProcessParser {
 
         match annot.next() {
             Some(Ok(duration_type)) => match self.parse_symbol_text(&duration_type)?.as_str() {
+                "weeks" => Ok(Duration::weeks(duration)),
+                "days" => Ok(Duration::days(duration)),
                 "hours" => Ok(Duration::hours(duration)),
                 "minutes" => Ok(Duration::minutes(duration)),
                 "seconds" => Ok(Duration::seconds(duration)),
