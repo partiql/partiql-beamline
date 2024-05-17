@@ -190,7 +190,7 @@ the random process. `id` is a string that its values comes from variable `n`.
 
 We are defining variable `arrival` with reference to variable `r`. Arrival defines the data sampling model; 
 in other words, in defines how random samples arrive for collection. In this case, we are using 
-[Homogeneous] [Poisson process](https://en.wikipedia.org/wiki/Poisson_point_process):
+Homogeneous [Poisson process](https://en.wikipedia.org/wiki/Poisson_point_process):
 
 > For the homogeneous Poisson point process, the derivative of the intensity measure is simply a constant λ > 0 
 > which can be referred to as the rate, usually when the underlying space is the real line,
@@ -201,6 +201,7 @@ In other words the homogeneous Poisson process assumes that the rate of occurren
 
 With the above, variable `arrival` is a homogeneous Poisson process with `r` minutes inter-arrival which means for this
 process, time elapsed between two consecutive processes will be constant `r` minutes.
+
 
 #### Example 2 Summary 
 Putting all the pieces together the scripts results in generating random data such as below:
@@ -354,7 +355,7 @@ between `5` and `20` (E.g., `8`). In the above you also see some new types, let'
 - `Instant`—yields the simulation's current 'Time' when a value is generated.
 
 The above example also shows that one can reference variables across datasets. For example `$rid_gen` has been defined
-in under `rand_processes` and is referenced in `service` and `client_ {$@n }` datasets.
+under `rand_processes` and is referenced in `service` and `client_ {$@n }` datasets.
 
 Another point to clarify is `$id: $id_gen::()`. As you can see `$id_gen` is `UUID`. Here, `::()` means that `beamline` creates
 a UUID when reading the scripts for each customer, hence having the same `id` across all the generated data for `client_2`
@@ -739,6 +740,131 @@ writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
 writing shape file(s)...[COMPLETED]
 writing data file(s)...[COMPLETED]
 done!
+```
+
+
+### Example 6 — static data
+
+In many cases, it is useful to have some _static_ data: data that is generated 'before' the first arrival time.
+
+
+#### 'Static' data generation
+To generate static data, we can write a script as we have been doing, but use `static_data` where we would have used 
+`rand_process`. Sampling of `static_data` will occur only once at the very beginning of data generation, thus no 
+`arrival` is specified. The `data` section of `static_data` is specified the exact same way as `rand_process`, but note
+that any time- or tick- related generators will take place at _time 0_.
+
+```
+static_data::{  
+  $data: {
+    // Attributes are elided
+  }
+  // No $arrival is specified
+}
+```
+
+Here is the contents of `orders.ion`; In addition to the now-familiar `rand_process` specification, it also contains a
+`static_data` generator.
+
+```
+rand_processes::{
+    // generate between 5 & 20 customers
+    $n: UniformU8::{ low: 5, high: 20 },
+
+    // generate between 20 & 100 items
+    $item: UniformU8::{ low: 20, high: 100 },
+
+    // A generator for customer ids
+    $id_gen: UUID,
+
+    // A generator for order ids
+    $oid_gen: UUID,
+
+    customers: $n::[
+        // each iteration of the loop will assign an index from 1..=$n to the variable $@n
+        {
+            // customer $@n has a UUID
+            $id: $id_gen::(), // here we force the evaluation of the generator at read time with `::()` to get a single UUID
+
+            // some 'static' data (i.e., generated before simulation starts, thus with no arrivals during simulation)
+            // the table has $n 'data row's (1 per $@n)
+            customer_table: static_data::{
+                $data: {
+                    id: $id,
+                    address: Format::{pattern: "{ $@n } Foo Bar Ave"},
+                }
+            },
+
+            // customer $@n will order every $r days
+            $r: UniformU8::{low:1, high:150},
+            $arrival: HomogeneousPoisson:: { interarrival: days::$r },
+
+            orders: rand_process::{
+                $data: {
+                    Order: $oid_gen,
+                    Customer: $id,
+                }
+            },
+        }
+    ],
+}
+```
+
+As with many of the scripts we've seen in previous examples, here we generate `n` customers and create generators for 
+each `@n`. The new bit here is the `customer_table` dataset using the `static_data` specification.
+
+We can execute the `orders.ion` script and request 30 samples:
+```
+$ cargo run gen data \
+    --seed 1234 \
+    --start-iso "2019-08-01T00:00:01-07:00" \
+    --script-path ./partiql-beamline-sim/tests/scripts/orders.ion \
+    --sample-count 30 \
+    --output=format text
+```
+
+Notice that the output generates 5 customers (and thus 5 entries in the `customer_table`), and then the requested 30 
+samples of the `orders` generator. As in previous examples the `id` of each customer is shaed across both the `orders`
+generator and the `customer_table` generator.
+
+```
+Seed: 1234
+Start: 2019-08-01T00:00:01.000000000-07:00
+[2019-08-01 0:00:01.0 -07:00:00] : "customer_table" { 'id': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'address': '0 Foo Bar Ave' }
+[2019-08-01 0:00:01.0 -07:00:00] : "customer_table" { 'id': '179e600a-c1c5-8ac2-05b6-15b20f8fe740', 'address': '1 Foo Bar Ave' }
+[2019-08-01 0:00:01.0 -07:00:00] : "customer_table" { 'address': '2 Foo Bar Ave', 'id': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0' }
+[2019-08-01 0:00:01.0 -07:00:00] : "customer_table" { 'address': '3 Foo Bar Ave', 'id': '0730b612-ec93-a2b1-b079-125d57321028' }
+[2019-08-01 0:00:01.0 -07:00:00] : "customer_table" { 'address': '4 Foo Bar Ave', 'id': '117ca090-b1c3-21e0-f2ca-a11c15fb812b' }
+[2019-08-01 7:26:21.964 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '4c579e42-8c70-93f4-b99b-cc45c50197ed' }
+[2019-08-10 5:46:15.24 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '38900593-e9cc-994a-98d9-0becf77d9144' }
+[2019-08-11 7:27:49.565 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'b2aa0efc-dac3-b391-f4c2-3c298e0c99f4' }
+[2019-08-13 0:23:44.083 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': '4c579e42-8c70-93f4-b99b-cc45c50197ed' }
+[2019-08-13 5:22:32.466 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': '38900593-e9cc-994a-98d9-0becf77d9144' }
+[2019-08-17 7:59:26.777 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'cf601354-032f-9f74-7547-e4ad25e23ee1' }
+[2019-08-20 21:37:07.454 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '736b1863-12d3-0c04-e895-2d3062225171' }
+[2019-08-30 9:47:02.759 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '47e4fd27-11e8-ea4c-ac3a-4254922dbdd1' }
+[2019-09-05 11:57:24.427 -07:00:00] : "orders" { 'Customer': '0730b612-ec93-a2b1-b079-125d57321028', 'Order': '4c579e42-8c70-93f4-b99b-cc45c50197ed' }
+[2019-09-05 20:40:28.682 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': 'b2aa0efc-dac3-b391-f4c2-3c298e0c99f4' }
+[2019-09-08 12:34:18.015 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '4c77e699-c643-ef60-0a15-e9a6e0bc8bad' }
+[2019-09-09 10:01:08.932 -07:00:00] : "orders" { 'Customer': '0730b612-ec93-a2b1-b079-125d57321028', 'Order': '38900593-e9cc-994a-98d9-0becf77d9144' }
+[2019-09-23 23:04:21.425 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': 'cf601354-032f-9f74-7547-e4ad25e23ee1' }
+[2019-09-28 9:00:52.046 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'c7bc7140-c38c-15d5-f08b-00dade39da6e' }
+[2019-09-28 20:39:05.331 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '4e5424f6-d436-8de8-d43a-8c31777c3161' }
+[2019-10-02 14:36:02.158 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'bad7dda0-4bfb-52af-d805-e7fedc53b1af' }
+[2019-10-06 18:47:40.54 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': '736b1863-12d3-0c04-e895-2d3062225171' }
+[2019-10-10 5:47:40.428 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '32c687bb-01d6-2b44-415a-4a0ffb34a34f' }
+[2019-10-12 22:31:48.082 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': '47e4fd27-11e8-ea4c-ac3a-4254922dbdd1' }
+[2019-10-13 3:54:28.68 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': '4c77e699-c643-ef60-0a15-e9a6e0bc8bad' }
+[2019-10-14 9:52:46.512 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'f1fee644-1c5c-f2eb-a9ab-86306950c9ee' }
+[2019-10-17 11:57:39.337 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '50962d64-0b88-fc26-8cb6-7ac160630908' }
+[2019-10-20 15:51:21.192 -07:00:00] : "orders" { 'Customer': '0730b612-ec93-a2b1-b079-125d57321028', 'Order': 'b2aa0efc-dac3-b391-f4c2-3c298e0c99f4' }
+[2019-10-23 13:57:15.716 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '1ebf70bd-e4fc-a382-14af-6593e83aeb77' }
+[2019-10-26 18:24:47.649 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'd864f1ec-a454-8479-3960-a7be57f13aae' }
+[2019-10-28 3:51:28.407 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'ac56efa6-b1ae-b1a2-d742-775fceddd0ea' }
+[2019-11-02 16:12:24.104 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'bfcd53c3-3f9f-f4a1-9b16-04ecd3393c56' }
+[2019-11-04 6:43:42.527 -07:00:00] : "orders" { 'Customer': 'd858b1e7-7327-7c40-1698-0e0e4fe89ecc', 'Order': 'c7bc7140-c38c-15d5-f08b-00dade39da6e' }
+[2019-11-06 15:21:28.125 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '996e847a-39c1-8a88-12e4-c66576067b30' }
+[2019-11-07 15:33:31.942 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'c20ecc3b-f3dd-5977-0cec-ed542ccb7ff7' }
 ```
 
 ### Data Generator Types

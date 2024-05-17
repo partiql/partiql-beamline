@@ -1,0 +1,42 @@
+rand_processes::{
+    // generate between 5 & 20 customers
+    $n: UniformU8::{ low: 5, high: 20 },
+
+    // generate between 20 & 100 items
+    $item: UniformU8::{ low: 20, high: 100 },
+
+    // A generator for customer ids
+    $id_gen: UUID,
+
+    // A generator for order ids
+    $oid_gen: UUID,
+
+    customers: $n::[
+        // each iteration of the loop will assign an index from 1..=$n to the variable $@n
+        {
+            // customer $@n has a UUID
+            $id: $id_gen::(), // here we force the evaluation of the generator at read time with `::()` to get a single UUID
+
+            // some 'static' data (i.e., generated before simulation starts, thus with no arrivals during simulation)
+            // the table has $n 'data row's (1 per $@n)
+            customer_table: static_data::{
+                $data: {
+                    id: $id,
+                    address: Format::{pattern: "{ $@n } Foo Bar Ave"},
+                }
+            },
+
+            // customer $@n will order every $r days
+            $r: UniformU8::{low:1, high:150},
+            $arrival: HomogeneousPoisson:: { interarrival: days::$r },
+
+            orders: rand_process::{
+                $data: {
+                    Order: $oid_gen,
+                    Time: Instant,
+                    Customer: $id,
+                }
+            },
+        }
+    ],
+}

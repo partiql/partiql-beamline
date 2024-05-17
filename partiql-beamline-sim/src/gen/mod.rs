@@ -68,3 +68,17 @@ pub trait ArrivalTime: Debug + DynClone {
     fn next_arrival(&self, now: Tick) -> Option<Tick>;
 }
 dyn_clone::clone_trait_object!(ArrivalTime);
+
+pub trait ArrivalBoxed: ArrivalTime
+where
+    Self: 'static,
+{
+    fn boxed(self) -> Box<dyn ArrivalTime>
+    where
+        Self: Sized,
+    {
+        Box::new(self)
+    }
+}
+
+impl<T> ArrivalBoxed for T where T: ArrivalTime + 'static {}
