@@ -59,11 +59,11 @@ impl<R> ArrivalTime for HomogeneousPoisson<R>
 where
     R: Rng + Sized + Clone,
 {
-    fn next_arrival(&self, now: Tick) -> Tick {
+    fn next_arrival(&self, now: Tick) -> Option<Tick> {
         let mut rng = self.rng.borrow_mut();
         let rng = rng.deref_mut();
         let next = self.exp.sample(rng);
         let millis = Duration::seconds_f64(next).whole_milliseconds() as u128;
-        Tick(now.0 + millis)
+        Some(Tick(now.0 + millis))
     }
 }

@@ -39,13 +39,15 @@ pub enum DataSamplingError {
 
 pub type DataSamplingResult<T> = Result<T, DataSamplingError>;
 
-/// A Random Process (or Stochastic Process) is
+/// A Random Process (aka Stochastic Process) is
 /// > a mathematical models of systems and phenomena that appear to vary in a random manner.
 ///  -- from: https://en.wikipedia.org/wiki/Stochastic_process
-pub trait RandomProcess {
+pub trait RandomProcess: Debug {
     fn next_sample(&self, ctx: &SimContext) -> Option<DataSamplingResult<Sample>>;
 
-    fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Tick;
+    /// Returns [`Some(Tick)`] representing the next arrival tick for this process's samples
+    /// Returns [`None`] when the process is 'finished'.
+    fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Option<Tick>;
 
     fn shape(&self) -> PartiqlType;
 }
@@ -59,7 +61,10 @@ pub trait ValueGenerator: Debug + DynClone {
 
 dyn_clone::clone_trait_object!(ValueGenerator);
 
+/// A 'generator' of arrival times for the events from a Random Process (aka Stochastic Process)
 pub trait ArrivalTime: Debug + DynClone {
-    fn next_arrival(&self, now: Tick) -> Tick;
+    /// Returns [`Some(Tick)`] representing the next arrival tick for this process's samples
+    /// Returns [`None`] when the process is 'finished'.
+    fn next_arrival(&self, now: Tick) -> Option<Tick>;
 }
 dyn_clone::clone_trait_object!(ArrivalTime);
