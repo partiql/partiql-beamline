@@ -123,7 +123,7 @@ impl Env {
         Self { vars: vec![] }
     }
 
-    pub fn push<S: Into<String>>(&mut self, name: S) {
+    pub fn push_scope<S: Into<String>>(&mut self, name: S) {
         self.vars.push((name.into(), Default::default()));
     }
 
@@ -168,8 +168,8 @@ impl EnvLookup for Env {
 
 pub struct ProcessParser {
     registry: ValueGeneratorRegistry<Pcg64Mcg>,
-    rng: Vec<Pcg64Mcg>,
-    env: Env,
+    rng_stack: Vec<Pcg64Mcg>,
+    env_stack: Env,
     sim_context: SimContext,
     processes: RandomProcesses,
 }
@@ -182,15 +182,15 @@ impl ProcessParser {
     ) -> ProcessConfigResult<Self> {
         Ok(Self {
             registry,
-            rng: vec![Pcg64Mcg::seed_from_u64(seed)],
-            env: Env::new(),
+            rng_stack: vec![Pcg64Mcg::seed_from_u64(seed)],
+            env_stack: Env::new(),
             sim_context: ctx.clone(),
             processes: Default::default(),
         })
     }
 
     fn curr_rng(&mut self) -> ProcessConfigResult<&mut Pcg64Mcg> {
-        self.rng
+        self.rng_stack
             .last_mut()
             .ok_or_else(|| ProcessConfigError::Fatal("RNG underflow".to_string()))
     }
@@ -200,18 +200,18 @@ impl ProcessParser {
             .map_err(|_e| ProcessConfigError::Fatal("Error allocation RNG".to_string()))
     }
     fn push_scope<S: Into<String>>(&mut self, name: S) -> ProcessConfigResult<()> {
-        self.env.push(name);
+        self.env_stack.push_scope(name);
         let scope_rng = self.child_rng()?;
-        self.rng.push(scope_rng);
+        self.rng_stack.push(scope_rng);
 
         Ok(())
     }
 
     pub fn pop_scope(&mut self) -> ProcessConfigResult<String> {
-        self.rng
+        self.rng_stack
             .pop()
             .ok_or_else(|| ProcessConfigError::Fatal("Rng Stack Underflow".to_string()))?;
-        self.env.pop()
+        self.env_stack.pop()
     }
 
     pub fn parse(mut self, reader: &mut LazyReader) -> ProcessConfigResult<RandomProcesses> {
@@ -305,7 +305,7 @@ impl ProcessParser {
                         _ => {
                             // variable definition
                             let val = self.parse_binding_value(&value)?;
-                            self.env.assign(name, val)?;
+                            self.env_stack.assign(name, val)?;
                         }
                     }
                 }
@@ -318,13 +318,16 @@ impl ProcessParser {
         }
 
         if arrival.is_none() {
-            if let Some(EnvBindingValue::Arrival(binding)) = self.env.find(PROCESS_KEY_ARRIVAL) {
+            if let Some(EnvBindingValue::Arrival(binding)) =
+                self.env_stack.find(PROCESS_KEY_ARRIVAL)
+            {
                 arrival = Some(binding.clone());
             }
         }
 
         if data.is_none() {
-            if let Some(EnvBindingValue::Generator(binding)) = self.env.find(PROCESS_KEY_DATA) {
+            if let Some(EnvBindingValue::Generator(binding)) = self.env_stack.find(PROCESS_KEY_DATA)
+            {
                 data = Some(binding.clone());
             }
         }
@@ -346,7 +349,7 @@ impl ProcessParser {
                 SymbolType::VarRef(name) => {
                     // variable definition
                     let val = self.parse_binding_value(&value)?;
-                    self.env.assign(name, val)?;
+                    self.env_stack.assign(name, val)?;
                 }
                 SymbolType::Str(name) => {
                     self.parse_scope(name, value)?;
@@ -379,7 +382,9 @@ impl ProcessParser {
         list: LazyList<AnyEncoding>,
         parameterization: &SymbolRef,
     ) -> ProcessConfigResult<()> {
-        let list_param = self.env.get(&self.parse_symbol_text(parameterization)?)?;
+        let list_param = self
+            .env_stack
+            .get(&self.parse_symbol_text(parameterization)?)?;
         let list_param = match list_param {
             EnvBindingValue::Value(v) => v.clone(),
             EnvBindingValue::Generator(g) => g.gen_value(&self.sim_context),
@@ -393,7 +398,7 @@ impl ProcessParser {
                     for i in 0i64..n {
                         self.push_scope(&scope_name)?;
                         let index = index.as_str();
-                        self.env.assign(index, Value::from(i))?;
+                        self.env_stack.assign(index, Value::from(i))?;
                         for val in list.iter() {
                             self.parse_scope(&scope_name, val?.read()?)?;
                         }
@@ -430,7 +435,7 @@ impl ProcessParser {
             ValueRef::SExp(sexp) => {
                 let annot = sexp.annotations().collect::<IonResult<Vec<_>>>()?;
                 assert_eq!(annot.len(), 1usize);
-                match self.env.get(annot.first().unwrap().text().unwrap())? {
+                match self.env_stack.get(annot.first().unwrap().text().unwrap())? {
                     EnvBindingValue::Value(v) => Ok(v.clone()),
                     EnvBindingValue::Generator(g) => Ok(g.gen_value(&self.sim_context)),
                     EnvBindingValue::Arrival(_) => {
@@ -451,7 +456,7 @@ impl ProcessParser {
         let duration: i64 = match ion_type {
             IonType::Int => duration.expect_i64()?,
             IonType::Symbol => match self.parse_symbol_type(&duration.expect_symbol()?)? {
-                SymbolType::VarRef(var) => match self.env.get(&var)? {
+                SymbolType::VarRef(var) => match self.env_stack.get(&var)? {
                     EnvBindingValue::Value(Value::Integer(i)) => *i,
                     EnvBindingValue::Generator(gen) => {
                         let v = gen.gen_value(&self.sim_context);
@@ -541,7 +546,7 @@ impl ProcessParser {
         match value {
             ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
                 SymbolType::VarRef(var) => {
-                    let gen: Box<dyn ValueGenerator> = match self.env.get(&var)? {
+                    let gen: Box<dyn ValueGenerator> = match self.env_stack.get(&var)? {
                         EnvBindingValue::Value(v) => Box::new(ConstantGenerator::new(v.clone())),
                         EnvBindingValue::Generator(g) => g.clone(),
                         EnvBindingValue::Arrival(_) => todo!("arrival generator reference"),
@@ -610,7 +615,7 @@ impl ProcessParser {
                                 .map(|param| self.parse_symbol_type(param))
                                 .transpose()?
                             {
-                                let list_param = self.env.get(&name)?;
+                                let list_param = self.env_stack.get(&name)?;
                                 let list_param = match list_param {
                                     EnvBindingValue::Value(v) => v,
                                     EnvBindingValue::Generator(_) => {
@@ -695,7 +700,7 @@ impl ProcessParser {
                 new.push_str(&pattern[last_match..total_match.start()]);
                 new.push_str(look_ahead_char);
 
-                let replacement = match self.env.get(variable_ref)? {
+                let replacement = match self.env_stack.get(variable_ref)? {
                     EnvBindingValue::Value(v) => {
                         format!("{v:?}")
                     }
@@ -786,7 +791,7 @@ pub trait EnvSymbolParser {
 impl EnvSymbolParser for ProcessParser {
     fn parse_symbol_as_value(&self, sym: &SymbolRef) -> ProcessConfigResult<Value> {
         match self.parse_symbol_type(sym)? {
-            SymbolType::VarRef(name) => match self.env.get(&name)? {
+            SymbolType::VarRef(name) => match self.env_stack.get(&name)? {
                 EnvBindingValue::Value(v) => Ok(v.clone()),
                 EnvBindingValue::Generator(gen) => Ok(gen.gen_value(&self.sim_context)),
                 EnvBindingValue::Arrival(_) => todo!("arrival in generator config"),
