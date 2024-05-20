@@ -135,8 +135,11 @@ impl Sim {
         for pid in processes.ids() {
             let (_dataset, proc) = processes.get(pid).ok_or(SimError::UnknownProcess(pid))?;
 
-            let tick = proc.next_arrival(time, &context);
-            timeline.push(Event { pid, tick });
+            if let Some(tick) = proc.next_arrival(time, &context) {
+                timeline.push(Event { pid, tick })
+            } else {
+                todo!("No initial arrival for process")
+            }
         }
 
         Ok(Sim {
@@ -177,8 +180,9 @@ impl Sim {
                     .ok_or(SimError::UnknownProcess(pid))?;
 
                 // re-schedule sampling the process again
-                let tick = proc.next_arrival(self.time, &self.context);
-                self.timeline.push(Event { pid, tick });
+                if let Some(tick) = proc.next_arrival(self.time, &self.context) {
+                    self.timeline.push(Event { pid, tick });
+                }
 
                 // generate the process's sample
                 Ok(proc.next_sample(&self.context).transpose()?)
