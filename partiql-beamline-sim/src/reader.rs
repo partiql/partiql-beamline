@@ -1,4 +1,4 @@
-use crate::gen::{ArrivalTime, DataGenerationError, RandomProcess, ValueGenerator};
+use crate::gen::{ArrivalBoxed, ArrivalTime, DataGenerationError, RandomProcess, ValueGenerator};
 use ion_rs::lazy::any_encoding::AnyEncoding;
 use ion_rs::lazy::r#struct::LazyStruct;
 use ion_rs::{IonError, IonResult, IonType, SymbolRef};
@@ -22,7 +22,7 @@ use regex::Regex;
 use thiserror::Error;
 use time::Duration;
 
-use crate::gen::arrival::HomogeneousPoisson;
+use crate::gen::arrival::{HomogeneousPoisson, OnceArrival};
 use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
 use crate::gen::distributions::{
@@ -31,15 +31,17 @@ use crate::gen::distributions::{
     SimpleScriptVariableKind,
 };
 use crate::gen::process::{RandomProcesses, SimpleProcess};
-use crate::primitives::DataSetName;
+use crate::primitives::{DataSetName, Tick};
 use once_cell::sync::Lazy;
 
 const PROCESS_KEY_ARRIVAL: &'static str = "$arrival";
 const PROCESS_KEY_DATA: &'static str = "$data";
 const SCRIPT_SECTION_PROCESSES: &'static str = "rand_processes";
 const SCRIPT_SECTION_PROCESS: &'static str = "rand_process";
+const SCRIPT_SECTION_STATICDATA: &'static str = "static_data";
+
 static FORMAT_STRING_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"([^\\])\{(.+?)\}").expect("FORMAT STRING REGEX"));
+    Lazy::new(|| Regex::new(r"(^|[^\\])\{(.+?)\}").expect("FORMAT STRING REGEX"));
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -268,6 +270,17 @@ impl ProcessParser {
                 SCRIPT_SECTION_PROCESS => {
                     let process = self.parse_process(s)?;
                     self.processes.add(DataSetName(scope_name.into()), process);
+                    return Ok(());
+                }
+                SCRIPT_SECTION_STATICDATA => {
+                    self.push_scope(SCRIPT_SECTION_STATICDATA)?;
+                    {
+                        self.env_stack
+                            .assign(PROCESS_KEY_ARRIVAL, OnceArrival::new(Tick(0)).boxed())?;
+                        let process = self.parse_process(s)?;
+                        self.processes.add(DataSetName(scope_name.into()), process);
+                    }
+                    self.pop_scope()?;
                     return Ok(());
                 }
                 SCRIPT_SECTION_PROCESSES => (), // fall through

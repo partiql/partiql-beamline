@@ -9,6 +9,35 @@ use time::Duration;
 use crate::gen::ArrivalTime;
 use rand_distr::Distribution;
 
+/// A stochastic process arrival time generator for a single constant Tick arrival
+///
+/// This is generally used to schedule creation of 'static' lifetime data at Tick `0`
+#[derive(Clone, Debug)]
+pub struct OnceArrival {
+    tick: Tick,
+    seen: RefCell<bool>,
+}
+
+impl OnceArrival {
+    pub fn new(tick: Tick) -> Self {
+        Self {
+            tick,
+            seen: RefCell::new(false),
+        }
+    }
+}
+
+impl ArrivalTime for OnceArrival {
+    fn next_arrival(&self, now: Tick) -> Option<Tick> {
+        let seen = self.seen.replace(true);
+        if !seen {
+            Some(self.tick)
+        } else {
+            None
+        }
+    }
+}
+
 /// A stochastic process arrival time generator for homogenenously distributed arrivals.
 ///
 /// see https://en.wikipedia.org/wiki/Poisson_point_process#Homogeneous_Poisson_point_process
