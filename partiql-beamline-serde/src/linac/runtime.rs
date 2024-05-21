@@ -141,8 +141,12 @@ impl<'a> RidlReader<'a> {
     }
 }
 
-pub struct RidlWriter<W> {
-    writer: W,
+pub struct RidlWriter<'a, W, I>
+where
+    W: 'a,
+    I: IonWriter<Output = W>,
+{
+    writer: &'a mut I,
 }
 
 #[inline]
@@ -150,10 +154,14 @@ fn write_err<T>(description: &str) -> RidlResult<T> {
     return Err(RidlError::WriteError(description.to_string()));
 }
 
-impl<W: IonWriter> RidlWriter<W> {
+impl<'a, W, I> RidlWriter<'a, W, I>
+where
+    W: 'a,
+    I: IonWriter<Output = W>,
+{
 
-    pub fn new(w: W) -> RidlWriter<W> {
-        RidlWriter { writer: w }
+    pub fn new(writer: &'a mut I) -> RidlWriter<'a, W, I> {
+        RidlWriter { writer: writer }
     }
 
     pub fn set_tag(&mut self, tag: &str) {

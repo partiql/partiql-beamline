@@ -20,6 +20,7 @@ pub enum DataOutputFormat {
 #[non_exhaustive]
 pub enum ShapeOutputFormat {
     PartiqlKollider,
+    Linac,
     Text,
 }
 

@@ -10,6 +10,7 @@ use partiql_beamline::sim::{SimBuilder, DATETIME_FORMAT};
 use partiql_beamline_cliargs::{
     parse_args, DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat, SimSpec,
 };
+use partiql_beamline_serde::linac::serde::LinacShapeEncoder;
 use partiql_extension_ion::Encoding;
 use std::io::stdout;
 use std::ops::Add;
@@ -18,7 +19,7 @@ use crate::kolliderdb::{
     catalog_full_path, create_catalog_dir, create_kollider_db, create_manifest_file,
     create_script_file,
 };
-use partiql_beamline_serde::serde::{PartiqlDataSetsEncoder, PartiqlKolliderEncoder};
+use partiql_beamline_serde::serde::{PartiqlDataSetsEncoder, PartiqlKolliderEncoder, PartiqlShapeEncoder};
 use time::Duration;
 
 #[derive(Parser)]
@@ -248,6 +249,18 @@ fn main() -> miette::Result<()> {
 
                     println!("{:#?}", sim.shape())
                 }
+                ShapeOutputFormat::Linac => {
+                    let shape = sim.shape();
+
+                    let mut out = stdout().lock();
+                    let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
+                        .build(&mut out)
+                        .expect("pretty writer");
+                    let mut encoder = LinacShapeEncoder::new(&mut writer);
+                    encoder.write_datasets(&cfg, shape).expect("encoded value");
+                    drop(writer);
+                    drop(out);
+                },
                 _ => {
                     todo!("Unsupported output format")
                 }
