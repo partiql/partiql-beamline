@@ -1,6 +1,6 @@
 use ion_rs::{Decimal, IonType, IonWriter};
 
-use crate::result::{RidlError, RidlResult};
+use super::result::{RidlError, RidlResult};
 
 pub struct RidlWriter<W> {
     writer: W,

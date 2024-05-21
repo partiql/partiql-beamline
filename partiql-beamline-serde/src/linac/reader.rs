@@ -1,8 +1,8 @@
 use ion_rs::{Decimal, IonReader, IonType, Reader, Str, Symbol};
 use ion_rs::types::Bytes;
 
-use crate::result::{RidlError, RidlResult};
-use crate::result::RidlError::ReadError;
+use super::result::RidlResult;
+use super::result::RidlError;
 
 pub struct RidlReader<'a> {
     pub reader: Reader<'a>,
@@ -10,7 +10,7 @@ pub struct RidlReader<'a> {
 
 #[inline]
 pub fn read_err<T>(description: &str) -> RidlResult<T> {
-    return Err(ReadError(description.to_string()));
+    return Err(RidlError::ReadError(description.to_string()));
 }
 
 impl<'a> RidlReader<'a> {
@@ -20,7 +20,7 @@ impl<'a> RidlReader<'a> {
     }
 
     pub fn assert_type(&self, ion_type: IonType) -> RidlResult<()> {
-        let actual = self.reader.ion_type().ok_or(ReadError("Unexpected end of value.".to_string()))?;
+        let actual = self.reader.ion_type().ok_or(RidlError::ReadError("Unexpected end of value.".to_string()))?;
         if actual != ion_type {
             return read_err("Unexpected type");
         }
@@ -47,7 +47,7 @@ impl<'a> RidlReader<'a> {
         if annotations.len() != 1 {
             return read_err("Expected a type annotation, but found none.");
         }
-        let actual = annotations[0].text().ok_or(ReadError("Failed to read annotation".to_string()))?;
+        let actual = annotations[0].text().ok_or(RidlError::ReadError("Failed to read annotation".to_string()))?;
         if actual != tag {
             return read_err("Type annotation did not match expected value.");
         }

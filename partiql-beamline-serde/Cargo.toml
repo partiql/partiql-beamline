@@ -20,3 +20,6 @@ ion-rs = "0.18.1"
 miette = { version ="5.*", features = ["fancy"] }
 thiserror = "1.*"
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
+
+bumpalo = "3.10"
+derive-new = "0.5"

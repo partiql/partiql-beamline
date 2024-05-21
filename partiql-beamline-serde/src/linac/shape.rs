@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![allow(unused_imports)]
-use crate::arena::Arena;
-use crate::reader::RidlReader;
-use crate::result::RidlResult;
-use crate::writer::RidlWriter;
+use super::arena::Arena;
+use super::reader::RidlReader;
+use super::result::RidlResult;
+use super::writer::RidlWriter;
 use derive_new::new;
 use ion_rs::data_source::ToIonDataSource;
 use ion_rs::element::*;
@@ -71,11 +71,11 @@ pub struct ShapeTArray<'a> {
     pub items: &'a Shape<'a>,
 }
 #[derive(new, Debug, PartialEq)]
-pub struct ShapeTStruct {
+pub struct ShapeTStruct<'a> {
     pub fields: Vec<Field<'a>>,
 }
 #[derive(new, Debug, PartialEq)]
-pub struct ShapeTUnion {
+pub struct ShapeTUnion<'a> {
     pub variants: Vec<Shape<'a>>,
 }
 
@@ -104,8 +104,8 @@ pub enum Shape<'a> {
     TTimestampTz(ShapeTTimestampTz),
     TBag(ShapeTBag<'a>),
     TArray(ShapeTArray<'a>),
-    TStruct(ShapeTStruct),
-    TUnion(ShapeTUnion),
+    TStruct(ShapeTStruct<'a>),
+    TUnion(ShapeTUnion<'a>),
 }
 #[derive(new, Debug, PartialEq)]
 pub struct Field<'a> {
@@ -203,37 +203,37 @@ impl<W: IonWriter> LinacWriter for LinacWriterText<W> {
         }
     }
 
-    fn write_shape_t_bool<'a>(&mut self, value: &'a ShapeTBool) -> RidlResult<()> {
+    fn write_shape_t_bool<'a>(&mut self, _value: &'a ShapeTBool) -> RidlResult<()> {
         self.writer.set_tag("shape.t_bool");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int8<'a>(&mut self, value: &'a ShapeTInt8) -> RidlResult<()> {
+    fn write_shape_t_int8<'a>(&mut self, _value: &'a ShapeTInt8) -> RidlResult<()> {
         self.writer.set_tag("shape.t_int8");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int16<'a>(&mut self, value: &'a ShapeTInt16) -> RidlResult<()> {
+    fn write_shape_t_int16<'a>(&mut self, _value: &'a ShapeTInt16) -> RidlResult<()> {
         self.writer.set_tag("shape.t_int16");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int32<'a>(&mut self, value: &'a ShapeTInt32) -> RidlResult<()> {
+    fn write_shape_t_int32<'a>(&mut self, _value: &'a ShapeTInt32) -> RidlResult<()> {
         self.writer.set_tag("shape.t_int32");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int64<'a>(&mut self, value: &'a ShapeTInt64) -> RidlResult<()> {
+    fn write_shape_t_int64<'a>(&mut self, _value: &'a ShapeTInt64) -> RidlResult<()> {
         self.writer.set_tag("shape.t_int64");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int<'a>(&mut self, value: &'a ShapeTInt) -> RidlResult<()> {
+    fn write_shape_t_int<'a>(&mut self, _value: &'a ShapeTInt) -> RidlResult<()> {
         self.writer.set_tag("shape.t_int");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_decimal<'a>(&mut self, value: &'a ShapeTDecimal) -> RidlResult<()> {
+    fn write_shape_t_decimal<'a>(&mut self, _value: &'a ShapeTDecimal) -> RidlResult<()> {
         self.writer.set_tag("shape.t_decimal");
         self.writer.write_symbol("unit")
     }
@@ -248,12 +248,12 @@ impl<W: IonWriter> LinacWriter for LinacWriterText<W> {
         self.writer.step_out()
     }
 
-    fn write_shape_t_float32<'a>(&mut self, value: &'a ShapeTFloat32) -> RidlResult<()> {
+    fn write_shape_t_float32<'a>(&mut self, _value: &'a ShapeTFloat32) -> RidlResult<()> {
         self.writer.set_tag("shape.t_float32");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_float64<'a>(&mut self, value: &'a ShapeTFloat64) -> RidlResult<()> {
+    fn write_shape_t_float64<'a>(&mut self, _value: &'a ShapeTFloat64) -> RidlResult<()> {
         self.writer.set_tag("shape.t_float64");
         self.writer.write_symbol("unit")
     }
@@ -266,7 +266,7 @@ impl<W: IonWriter> LinacWriter for LinacWriterText<W> {
         self.writer.step_out()
     }
 
-    fn write_shape_t_string<'a>(&mut self, value: &'a ShapeTString) -> RidlResult<()> {
+    fn write_shape_t_string<'a>(&mut self, _value: &'a ShapeTString) -> RidlResult<()> {
         self.writer.set_tag("shape.t_string");
         self.writer.write_symbol("unit")
     }
@@ -290,17 +290,17 @@ impl<W: IonWriter> LinacWriter for LinacWriterText<W> {
         self.writer.step_out()
     }
 
-    fn write_shape_t_blob<'a>(&mut self, value: &'a ShapeTBlob) -> RidlResult<()> {
+    fn write_shape_t_blob<'a>(&mut self, _value: &'a ShapeTBlob) -> RidlResult<()> {
         self.writer.set_tag("shape.t_blob");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_clob<'a>(&mut self, value: &'a ShapeTClob) -> RidlResult<()> {
+    fn write_shape_t_clob<'a>(&mut self, _value: &'a ShapeTClob) -> RidlResult<()> {
         self.writer.set_tag("shape.t_clob");
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_date<'a>(&mut self, value: &'a ShapeTDate) -> RidlResult<()> {
+    fn write_shape_t_date<'a>(&mut self, _value: &'a ShapeTDate) -> RidlResult<()> {
         self.writer.set_tag("shape.t_date");
         self.writer.write_symbol("unit")
     }
@@ -508,31 +508,31 @@ impl<W: IonWriter> LinacWriter for LinacWriterPacked<W> {
         self.writer.step_out()
     }
 
-    fn write_shape_t_bool<'a>(&mut self, value: &'a ShapeTBool) -> RidlResult<()> {
+    fn write_shape_t_bool<'a>(&mut self, _value: &'a ShapeTBool) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int8<'a>(&mut self, value: &'a ShapeTInt8) -> RidlResult<()> {
+    fn write_shape_t_int8<'a>(&mut self, _value: &'a ShapeTInt8) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int16<'a>(&mut self, value: &'a ShapeTInt16) -> RidlResult<()> {
+    fn write_shape_t_int16<'a>(&mut self, _value: &'a ShapeTInt16) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int32<'a>(&mut self, value: &'a ShapeTInt32) -> RidlResult<()> {
+    fn write_shape_t_int32<'a>(&mut self, _value: &'a ShapeTInt32) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int64<'a>(&mut self, value: &'a ShapeTInt64) -> RidlResult<()> {
+    fn write_shape_t_int64<'a>(&mut self, _value: &'a ShapeTInt64) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_int<'a>(&mut self, value: &'a ShapeTInt) -> RidlResult<()> {
+    fn write_shape_t_int<'a>(&mut self, _value: &'a ShapeTInt) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_decimal<'a>(&mut self, value: &'a ShapeTDecimal) -> RidlResult<()> {
+    fn write_shape_t_decimal<'a>(&mut self, _value: &'a ShapeTDecimal) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
@@ -545,11 +545,11 @@ impl<W: IonWriter> LinacWriter for LinacWriterPacked<W> {
         self.writer.step_out()
     }
 
-    fn write_shape_t_float32<'a>(&mut self, value: &'a ShapeTFloat32) -> RidlResult<()> {
+    fn write_shape_t_float32<'a>(&mut self, _value: &'a ShapeTFloat32) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_float64<'a>(&mut self, value: &'a ShapeTFloat64) -> RidlResult<()> {
+    fn write_shape_t_float64<'a>(&mut self, _value: &'a ShapeTFloat64) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
@@ -560,7 +560,7 @@ impl<W: IonWriter> LinacWriter for LinacWriterPacked<W> {
         self.writer.step_out()
     }
 
-    fn write_shape_t_string<'a>(&mut self, value: &'a ShapeTString) -> RidlResult<()> {
+    fn write_shape_t_string<'a>(&mut self, _value: &'a ShapeTString) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
@@ -581,15 +581,15 @@ impl<W: IonWriter> LinacWriter for LinacWriterPacked<W> {
         self.writer.step_out()
     }
 
-    fn write_shape_t_blob<'a>(&mut self, value: &'a ShapeTBlob) -> RidlResult<()> {
+    fn write_shape_t_blob<'a>(&mut self, _value: &'a ShapeTBlob) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_clob<'a>(&mut self, value: &'a ShapeTClob) -> RidlResult<()> {
+    fn write_shape_t_clob<'a>(&mut self, _value: &'a ShapeTClob) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
-    fn write_shape_t_date<'a>(&mut self, value: &'a ShapeTDate) -> RidlResult<()> {
+    fn write_shape_t_date<'a>(&mut self, _value: &'a ShapeTDate) -> RidlResult<()> {
         self.writer.write_symbol("unit")
     }
 
