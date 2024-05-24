@@ -63,6 +63,13 @@ fn verify_repeatable_multi(script: &[u8]) {
 }
 
 #[test]
+fn verify_repeatable_transactions() {
+    let script = include_bytes!("scripts/transactions.ion");
+    verify_repeatable(script);
+    verify_repeatable_multi(script);
+}
+
+#[test]
 fn verify_repeatable_orders() {
     let script = include_bytes!("scripts/orders.ion");
     verify_repeatable(script);

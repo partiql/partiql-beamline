@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Changed the command line hierarchy to separate data generation and shape inference.
 ### Added
+- Added `LoremIpsum`, `LoremIpsumTitle`, and `Regex` generators.
 - Added `static_data` generation.
 - Added `UniformAnyOf` for generating values with Union type.
 - Added `gen db kollider` for creating KolliderDB database.
