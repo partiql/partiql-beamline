@@ -7,13 +7,22 @@ rand_processes::{
             $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
             $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
             $anyof: UniformAnyOf::[Tick, UniformF64, UUID, UniformDecimal::{ low: 1.995, high: 4.9999 }],
+            $array: UniformArray::{
+                min_size: 3,
+                max_size: 3,
+                element_type: UniformDecimal::{ low: 0.5, high: 1.5 }
+            },
             $data: {
                 tick: Tick,
                 i8: UniformI8,
                 f: UniformF64,
                 w: $weight,
                 d: UniformDecimal::{ low: 0d0, high: 4.2d1 },
-                a: $anyof
+                a: $anyof,
+                ar1: $array,
+                ar2: UniformArray::{ min_size: 2, max_size: 4, element_type: UUID },
+                ar3: UniformArray::{ min_size: 2, max_size: 4, element_type: $weight },
+                ar4: UniformArray::{ min_size: 2, max_size: 4, element_type: UniformI8::{ low: 2, high: 10 } }
             }
         }
     ],

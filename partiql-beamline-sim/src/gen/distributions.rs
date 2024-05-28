@@ -1,8 +1,8 @@
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
-use partiql_types::{PartiqlType, TypeKind, TYPE_BOOL};
-use partiql_value::Value;
+use partiql_types::{ArrayType, PartiqlType, TypeKind, TYPE_BOOL};
+use partiql_value::{List, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
 use rand_distr::num_traits::FromPrimitive;
@@ -11,6 +11,7 @@ use std::fmt::{Debug, Formatter};
 use std::ops::DerefMut;
 
 pub enum SimpleScriptVariableKind {
+    Array,
     Tick,
     Instant,
     String,
@@ -34,6 +35,7 @@ impl SimpleScriptVariableKind {
             "Tick",
             "Instant",
             "String",
+            "UniformArray",
             "UniformU8",
             "UniformU16",
             "UniformU32",
@@ -57,6 +59,7 @@ impl SimpleScriptVariableKind {
             "Tick" => Ok(Self::Tick),
             "Instant" => Ok(Self::Instant),
             "String" => Ok(Self::String),
+            "UniformArray" => Ok(Self::Array),
             "UniformU8" => Ok(Self::UInt8),
             "UniformU16" => Ok(Self::UInt16),
             "UniformU32" => Ok(Self::UInt32),
@@ -75,11 +78,7 @@ impl SimpleScriptVariableKind {
         }
     }
 
-    pub fn create<R>(
-        &self,
-        rng: R,
-        _ctx: &SimContext,
-    ) -> DataGenerationResult<Box<dyn ValueGenerator>>
+    pub fn create<R>(&self, rng: R) -> DataGenerationResult<Box<dyn ValueGenerator>>
     where
         R: Rng + Sized + Clone + 'static,
     {
@@ -87,6 +86,7 @@ impl SimpleScriptVariableKind {
             SimpleScriptVariableKind::String => {
                 todo!()
             }
+            SimpleScriptVariableKind::Array => Ok(Box::new(simple_array(rng)?)),
             SimpleScriptVariableKind::Tick => Ok(Box::new(simple_tick())),
             SimpleScriptVariableKind::Instant => Ok(Box::new(simple_instant())),
             SimpleScriptVariableKind::UInt8 => Ok(Box::new(simple_u8(rng)?)),
@@ -105,6 +105,20 @@ impl SimpleScriptVariableKind {
     }
 }
 
+pub fn simple_array<R>(
+    rng: R,
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
+where
+    R: Rng + Sized + Clone,
+{
+    bounded_array(
+        rng,
+        2i64,
+        10i64,
+        Box::new(simple_tick()) as Box<dyn ValueGenerator>,
+    )
+}
+
 pub fn simple_tick() -> TickGenerator {
     TickGenerator {}
 }
@@ -116,8 +130,8 @@ pub fn simple_instant() -> InstantGenerator {
 pub fn simple_union<R>(
     rng: R,
     generators: Vec<Box<dyn ValueGenerator>>,
-    ctx: SimContext,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+    _ctx: SimContext,
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -127,7 +141,7 @@ where
     let typ = PartiqlType::any_of(types);
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?;
-    let f = move |rng: &mut R| {
+    let f = move |rng: &mut R, ctx: &SimContext| {
         let idx = dist.sample(rng) as i64;
         let generator = &generators[idx as usize];
         generator.gen_value(&ctx)
@@ -138,7 +152,7 @@ where
 pub fn simple_choose<R>(
     rng: R,
     choices: Vec<Value>,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -154,13 +168,13 @@ where
     let name = "UniformChoice".into();
     let typ = PartiqlType::any_of(choices.iter().map(|v| v.infer_type()));
     let rng = RefCell::new(rng);
-    let f = move |rng: &mut R| choices.as_slice().choose(rng).unwrap().clone();
+    let f = move |rng: &mut R, _ctx: &SimContext| choices.as_slice().choose(rng).unwrap().clone();
     Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
 pub fn simple_bool<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -169,14 +183,14 @@ where
 
 pub fn simple_uuid<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
     let name = "UUID".into();
     let typ = PartiqlType::new(TypeKind::String);
     let rng = RefCell::new(rng);
-    let f = move |rng: &mut R| {
+    let f = move |rng: &mut R, _ctx: &SimContext| {
         let mut uuid_bytes = uuid::Bytes::default();
         rng.fill_bytes(&mut uuid_bytes);
         let id = uuid::Uuid::from_bytes(uuid_bytes);
@@ -187,7 +201,7 @@ where
 
 pub fn simple_u8<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -196,7 +210,7 @@ where
 
 pub fn simple_u16<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -205,7 +219,7 @@ where
 
 pub fn simple_u32<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -214,7 +228,7 @@ where
 
 pub fn simple_u64<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -223,7 +237,7 @@ where
 
 pub fn simple_i8<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -232,7 +246,7 @@ where
 
 pub fn simple_i16<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -241,7 +255,7 @@ where
 
 pub fn simple_i32<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -250,7 +264,7 @@ where
 
 pub fn simple_i64<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -259,7 +273,7 @@ where
 
 pub fn simple_f64<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -268,17 +282,50 @@ where
 
 pub fn simple_decimal<R>(
     rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
     bounded_decimal(rng, i8::MIN as f64, i8::MAX as f64)
 }
 
+pub fn bounded_array<R>(
+    rng: R,
+    min: i64,
+    max: i64,
+    elem: Box<dyn ValueGenerator>,
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
+where
+    R: Rng + Sized + Clone,
+{
+    if min > max {
+        Err(DataGenerationError::Bounds(min, max))
+    } else {
+        let elem_type = elem.value_type();
+
+        let name = format!(
+            "UniformArray::{{ min_size: {min}, max_size: {max}, element_type: {elem_type:?} }}"
+        );
+
+        let rng = RefCell::new(rng);
+        let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
+        let typ = PartiqlType::new_array(ArrayType::new(Box::new(elem_type.clone())));
+        let f = move |rng: &mut R, ctx: &SimContext| {
+            let array_length = dist.sample(rng) as i64;
+            let mut array = vec![];
+            for _n in 0..array_length {
+                array.push(elem.gen_value(&ctx));
+            }
+            Value::List(Box::new(List::from(array)))
+        };
+        Ok(SimpleRandomVariable { name, typ, rng, f })
+    }
+}
+
 pub fn bounded_bool<R>(
     rng: R,
     p: f64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -286,7 +333,7 @@ where
     let typ = TYPE_BOOL;
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::Bernoulli::new(p)?;
-    let f = move |rng: &mut R| Value::from(dist.sample(rng) > 0f64);
+    let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng) > 0f64);
     Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
@@ -294,7 +341,7 @@ pub fn bounded_u8<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -309,7 +356,7 @@ pub fn bounded_u16<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -324,7 +371,7 @@ pub fn bounded_u32<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -339,7 +386,7 @@ pub fn bounded_u64<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -354,7 +401,7 @@ pub fn bounded_i8<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -369,7 +416,7 @@ pub fn bounded_i16<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -384,7 +431,7 @@ pub fn bounded_i32<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -399,7 +446,7 @@ pub fn bounded_i64<R>(
     rng: R,
     min: i64,
     max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -407,7 +454,7 @@ where
     let typ = PartiqlType::new(TypeKind::Int64);
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
-    let f = move |rng: &mut R| Value::from(dist.sample(rng) as i64);
+    let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng) as i64);
     Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
@@ -415,7 +462,7 @@ pub fn bounded_f64<R>(
     rng: R,
     min: f64,
     max: f64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -423,7 +470,7 @@ where
     let typ = PartiqlType::new(TypeKind::Float64);
     let rng = RefCell::new(rng);
     let dist = statrs::distribution::Uniform::new(min, max)?;
-    let f = move |rng: &mut R| Value::from(dist.sample(rng));
+    let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng));
     Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
@@ -431,7 +478,7 @@ pub fn bounded_decimal<R>(
     rng: R,
     min: f64,
     max: f64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R) -> Value + Clone>>
+) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
@@ -455,7 +502,7 @@ where
 
     let dist = statrs::distribution::Uniform::new(min, max)?;
 
-    let f = move |rng: &mut R| {
+    let f = move |rng: &mut R, _ctx: &SimContext| {
         let mut out_dec =
             rust_decimal::Decimal::from_f64_retain(dist.sample(rng)).expect("decimal value");
         out_dec.rescale(p_max_scale);
@@ -467,7 +514,7 @@ where
 pub struct SimpleRandomVariable<R, F>
 where
     R: Rng + Sized + Clone,
-    F: Fn(&mut R) -> Value,
+    F: Fn(&mut R, &SimContext) -> Value,
 {
     name: String,
     typ: PartiqlType,
@@ -481,7 +528,7 @@ where
 impl<R, F> Clone for SimpleRandomVariable<R, F>
 where
     R: Rng + Sized + Clone,
-    F: Fn(&mut R) -> Value + Clone,
+    F: Fn(&mut R, &SimContext) -> Value + Clone,
 {
     fn clone(&self) -> Self {
         Self {
@@ -496,7 +543,7 @@ where
 impl<R, F> Debug for SimpleRandomVariable<R, F>
 where
     R: Rng + Sized + Clone,
-    F: Fn(&mut R) -> Value,
+    F: Fn(&mut R, &SimContext) -> Value,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SimpleRandomVariable")
@@ -508,12 +555,12 @@ where
 impl<R, F> ValueGenerator for SimpleRandomVariable<R, F>
 where
     R: Rng + Sized + Clone,
-    F: Fn(&mut R) -> Value + Clone,
+    F: Fn(&mut R, &SimContext) -> Value + Clone,
 {
-    fn gen_value(&self, _ctx: &SimContext) -> Value {
+    fn gen_value(&self, ctx: &SimContext) -> Value {
         let mut rng = self.rng.borrow_mut();
         let rng = rng.deref_mut();
-        (self.f)(rng)
+        (self.f)(rng, ctx)
     }
 
     fn value_type(&self) -> PartiqlType {

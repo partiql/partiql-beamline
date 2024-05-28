@@ -11,7 +11,7 @@ mod tests {
     use crate::primitives::{Sample, Tick};
     use crate::sim::{Sim, SimBuilder, SimConfigBuilder};
     use partiql_types::{StructField, TypeKind};
-    use partiql_value::{tuple, Value};
+    use partiql_value::{list, tuple, Value};
     use std::ops::Add;
     use time::macros::datetime;
     use time::Duration;
@@ -19,29 +19,70 @@ mod tests {
     fn sensor_script() -> &'static str {
         r#"
             rand_processes::{
-                $n: UniformU8::{ low: 2, high: 4 },
+              $n:UniformU8::{
 
-                sensors: $n::[
-                    rand_process::{
-                        $r: Uniform::[5,10],
-                        $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
-                        $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
-                        $anyof: UniformAnyOf::[UUID, Tick, UniformDecimal::{ low: 32.2, high: 43.5 }, UniformI8],
-                        $data: {
-                            tick: Tick,
-                            id: '$@n',
-                            i8: UniformI8,
-                            f: UniformF64,
-                            w: $weight,
-                            d: UniformDecimal::{ low: 0d0, high: 4.2d1 },
-                            variant: $anyof,
-                            sub: {
-                                o:UniformI8,
-                                f:UniformF64,
-                            }
-                        }
+                low:2,
+                high:4
+              },
+              sensors:$n::[
+                rand_process::{
+                  $r:Uniform::[
+                    5,
+                    10
+                  ],
+                  $arrival:HomogeneousPoisson::{
+                    interarrival:minutes::$r
+                  },
+                  $weight:UniformDecimal::{
+                    low:1.995,
+                    high:4.9999
+                  },
+                  $anyof:UniformAnyOf::[
+                    UUID,
+                    Tick,
+                    UniformDecimal::{
+                      low:32.2,
+                      high:43.5
+                    },
+                    UniformI8
+                  ],
+                  $tick_array:UniformArray::{
+                    min_size:2,
+                    max_size:5,
+                    element_type:Tick
+                  },
+                  $data:{
+                    tick:Tick,
+                    id:'$@n',
+                    i8:UniformI8,
+                    f:UniformF64,
+                    sub:{
+                      o:UniformI8,
+                      f:UniformF64
+                    },
+                    w:$weight,
+                    d:UniformDecimal::{
+                      low:0.,
+                      high:42.
+                    },
+                    variant:$anyof,
+                    tick_array:$tick_array,
+                    weight_array:UniformArray::{
+                      min_size:3,
+                      max_size:3,
+                      element_type:$weight
+                    },
+                    decimal_array:UniformArray::{
+                      min_size:2,
+                      max_size:2,
+                      element_type:UniformDecimal::{
+                        low:1.995,
+                        high:4.9999
+                      }
                     }
-                ],
+                  }
+                }
+              ]
             }
         "#
     }
@@ -78,14 +119,17 @@ mod tests {
         }
 
         let expected = tuple!(
-            ("tick", 16238568),
+            ("tick", 9902089),
             ("id", 1),
-            ("i8", 22),
-            ("f", 50.413553531513344),
-            ("d", 12),
-            ("w", 4.0864),
-            ("sub", tuple!(("f", 19.607894119636057), ("o", 64))),
-            ("variant", 26),
+            ("i8", 49),
+            ("f", -81.7290705652406),
+            ("d", 8),
+            ("sub", tuple!(("f", -30.417077694899604), ("o", 69))),
+            ("w", 3.0690),
+            ("variant", 9902089),
+            ("tick_array", list!(9902089, 9902089, 9902089)),
+            ("weight_array", list!(4.0550, 2.0066, 4.7051)),
+            ("decimal_array", list!(3.9918, 4.4656)),
         );
 
         let sample_101 = sim.next_sample().unwrap().unwrap();
