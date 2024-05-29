@@ -1,11 +1,13 @@
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
+use crate::reader::ProcessConfigError;
 use crate::sim::context::SimContext;
 use partiql_types::{ArrayType, PartiqlType, TypeKind, TYPE_BOOL};
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 use rand_distr::num_traits::FromPrimitive;
+use rand_pcg::{Mcg128Xsl64, Pcg64Mcg};
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::ops::DerefMut;
@@ -106,13 +108,13 @@ impl SimpleScriptVariableKind {
 }
 
 pub fn simple_array<R>(
-    rng: R,
+    mut rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
 {
     bounded_array(
-        rng,
+        rng.clone(),
         2i64,
         10i64,
         Box::new(simple_tick()) as Box<dyn ValueGenerator>,
@@ -293,7 +295,7 @@ pub fn bounded_array<R>(
     rng: R,
     min: i64,
     max: i64,
-    elem: Box<dyn ValueGenerator>,
+    elem_generator: Box<dyn ValueGenerator>,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
@@ -301,7 +303,7 @@ where
     if min > max {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        let elem_type = elem.value_type();
+        let elem_type = elem_generator.value_type();
 
         let name = format!(
             "UniformArray::{{ min_size: {min}, max_size: {max}, element_type: {elem_type:?} }}"
@@ -311,11 +313,10 @@ where
         let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
         let typ = PartiqlType::new_array(ArrayType::new(Box::new(elem_type.clone())));
         let f = move |rng: &mut R, ctx: &SimContext| {
-            let array_length = dist.sample(rng) as i64;
-            let mut array = vec![];
-            for _n in 0..array_length {
-                array.push(elem.gen_value(ctx));
-            }
+            let array_length = dist.sample(rng) as usize;
+            let array: Vec<_> = std::iter::repeat_with(|| elem_generator.gen_value(&ctx))
+                .take(array_length)
+                .collect();
             Value::List(Box::new(List::from(array)))
         };
         Ok(SimpleRandomVariable { name, typ, rng, f })
