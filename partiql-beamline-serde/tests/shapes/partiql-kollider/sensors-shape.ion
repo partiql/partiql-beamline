@@ -28,6 +28,42 @@
              }
           },
           {
+            name: "ar1",
+            type: {
+                type: "list",
+                items: {
+                    name: "decimal",
+                    precision: 2,
+                    scale: 1
+                }
+            }
+          },
+          {
+            name: "ar2",
+            type: {
+                type: "list",
+                items: "string"
+            }
+          },
+          {
+            name: "ar3",
+            type: {
+                type: "list",
+                items: {
+                    name: "decimal",
+                    precision: 5,
+                    scale: 4
+                }
+            }
+          },
+          {
+            name: "ar4",
+            type: {
+                type: "list",
+                items: "int8"
+            }
+          },
+          {
              name: "d",
              type: {
                 name: "decimal",
@@ -49,11 +85,11 @@
           },
           {
             name: "w",
-             type: {
+            type: {
                 name: "decimal",
                 precision: 5,
                 scale: 4
-             }
+            }
           }
         ],
       }

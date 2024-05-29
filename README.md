@@ -877,6 +877,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 | Regex           | String                                   | N                | STRING       | [N/A]                  |
 | String          | String                                   | N                | STRING       | [N/A]                  |
 | Uniform         | Uniform distribution over literal values | N                | Union        | [N/A]                  |
+| UniformArray    | Uniform array type                       | Y                | Array        | Array                  |
 | UniformAnyOf    | Uniform distribution over types          | N                | Union        | [N/A]                  |
 | UniformU8       | Unsigned 8-bit integer                   | Y                | INT8         | INT8                   |
 | UniformU16      | Unsigned 16-bit integer                  | Y                | INT8         | INT8                   |
@@ -894,6 +895,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 bounded `UniformDecimal` you can specify `UniformDecimal::{ low: 1.995, high: 4.9999 }` which picks a random decimal 
 number from the provided boundary.
 2. The values for all the types prepended with `Uniform` will get generated using [Discrete Uniform Distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution).
+3. The current implementation does not support `UniformArray` of `UniformAnyOf` and `Uniform`. I will look into this further in a separate PR as I suspect it requires some further refactoring.
 
 #### String Generator Configuration
 

@@ -2,9 +2,11 @@ use crate::gen::{ArrivalBoxed, ArrivalTime, DataGenerationError, RandomProcess, 
 use ion_rs::lazy::any_encoding::AnyEncoding;
 use ion_rs::lazy::r#struct::LazyStruct;
 use ion_rs::{IonError, IonResult, IonType, SymbolRef};
+use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::vec;
 
 use ion_rs::lazy::reader::LazyReader;
@@ -26,9 +28,9 @@ use crate::gen::arrival::{HomogeneousPoisson, OnceArrival};
 use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
 use crate::gen::distributions::{
-    bounded_bool, bounded_decimal, bounded_f64, bounded_i16, bounded_i32, bounded_i64, bounded_i8,
-    bounded_u16, bounded_u32, bounded_u64, bounded_u8, simple_choose, simple_union,
-    SimpleScriptVariableKind,
+    bounded_array, bounded_bool, bounded_decimal, bounded_f64, bounded_i16, bounded_i32,
+    bounded_i64, bounded_i8, bounded_u16, bounded_u32, bounded_u64, bounded_u8, simple_choose,
+    simple_union, SimpleScriptVariableKind,
 };
 use crate::gen::process::{RandomProcesses, SimpleProcess};
 use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGenerator};
@@ -64,6 +66,9 @@ pub enum ProcessConfigError {
 
     #[error("Error: `{0}`")]
     UnknownGenerator(String),
+
+    #[error("Error: `{0}`")]
+    UnknownParser(String),
 
     #[error("Error: `{0}`")]
     Other(String),
@@ -171,7 +176,7 @@ impl EnvLookup for Env {
 
 pub struct ProcessParser {
     registry: ValueGeneratorRegistry<Pcg64Mcg>,
-    rng_stack: Vec<Pcg64Mcg>,
+    rng_stack: Rc<RefCell<Vec<Pcg64Mcg>>>,
     env_stack: Env,
     sim_context: SimContext,
     processes: RandomProcesses,
@@ -185,33 +190,36 @@ impl ProcessParser {
     ) -> ProcessConfigResult<Self> {
         Ok(Self {
             registry,
-            rng_stack: vec![Pcg64Mcg::seed_from_u64(seed)],
+            rng_stack: Rc::new(RefCell::new(vec![Pcg64Mcg::seed_from_u64(seed)])),
             env_stack: Env::new(),
             sim_context: ctx.clone(),
             processes: Default::default(),
         })
     }
 
-    fn curr_rng(&mut self) -> ProcessConfigResult<&mut Pcg64Mcg> {
-        self.rng_stack
-            .last_mut()
-            .ok_or_else(|| ProcessConfigError::Fatal("RNG underflow".to_string()))
+    fn curr_rng(&self) -> ProcessConfigResult<RefCell<Pcg64Mcg>> {
+        let mut rng = self.rng_stack.borrow_mut();
+        Ok(RefCell::new(rng.last_mut().cloned().ok_or_else(|| {
+            ProcessConfigError::Fatal("RNG underflow".to_string())
+        })?))
     }
 
-    fn child_rng(&mut self) -> ProcessConfigResult<Pcg64Mcg> {
-        Pcg64Mcg::from_rng(self.curr_rng()?)
+    fn child_rng(&self) -> ProcessConfigResult<Pcg64Mcg> {
+        let curr = self.curr_rng()?;
+        Pcg64Mcg::from_rng(curr.into_inner())
             .map_err(|_e| ProcessConfigError::Fatal("Error allocation RNG".to_string()))
     }
     fn push_scope<S: Into<String>>(&mut self, name: S) -> ProcessConfigResult<()> {
         self.env_stack.push_scope(name);
         let scope_rng = self.child_rng()?;
-        self.rng_stack.push(scope_rng);
+        self.rng_stack.borrow_mut().push(scope_rng);
 
         Ok(())
     }
 
     pub fn pop_scope(&mut self) -> ProcessConfigResult<String> {
         self.rng_stack
+            .borrow_mut()
             .pop()
             .ok_or_else(|| ProcessConfigError::Fatal("Rng Stack Underflow".to_string()))?;
         self.env_stack.pop()
@@ -568,12 +576,15 @@ impl ProcessParser {
                     Ok(gen)
                 }
                 SymbolType::Str(name) => {
-                    if !self.registry.has_parser(&name) {
-                        Err(ProcessConfigError::UnknownGenerator(name))
-                    } else {
+                    if self.registry.has_parser(&name) {
                         let crng = self.child_rng()?;
-                        let parser = self.registry.get_parser(&name).unwrap();
-                        parser.parse_generator(crng, None, self, &self.sim_context)
+                        if let Some(parser) = self.registry.get_parser(&name) {
+                            parser.parse_generator(crng, None, self)
+                        } else {
+                            Err(ProcessConfigError::UnknownParser(name))
+                        }
+                    } else {
+                        Err(ProcessConfigError::UnknownGenerator(name))
                     }
                 }
             },
@@ -598,17 +609,12 @@ impl ProcessParser {
                             todo!("struct varref")
                         }
                         SymbolType::Str(name) => {
-                            if !self.registry.has_parser(&name) {
-                                Err(ProcessConfigError::UnknownGenerator(name))
-                            } else {
+                            if self.registry.has_parser(&name) {
                                 let rng = self.child_rng()?;
                                 let parser = self.registry.get_parser(&name).unwrap();
-                                parser.parse_generator(
-                                    rng,
-                                    Some(strct.clone()),
-                                    self,
-                                    &self.sim_context,
-                                )
+                                parser.parse_generator(rng, Some(strct.clone()), self)
+                            } else {
+                                Err(ProcessConfigError::UnknownGenerator(name))
                             }
                         }
                     }
@@ -666,7 +672,6 @@ impl ProcessParser {
                                 generators.push(generator);
                             }
                             Ok(
-                                // TODO remove clone() for SimContext
                                 Box::new(simple_union(rng, generators, self.sim_context.clone())?)
                                     as Box<dyn ValueGenerator>,
                             )
@@ -803,6 +808,12 @@ where
 pub trait EnvSymbolParser {
     fn parse_symbol_as_value(&self, sym: &SymbolRef) -> ProcessConfigResult<Value>;
 
+    fn parse_symbol_as_generator(
+        &self,
+        sym: &SymbolRef,
+        cfg: Option<LazyStruct<AnyEncoding>>,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
+
     fn parse_symbol_as_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String>;
 
     fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String>;
@@ -817,6 +828,30 @@ impl EnvSymbolParser for ProcessParser {
                 EnvBindingValue::Arrival(_) => todo!("arrival in generator config"),
             },
             SymbolType::Str(s) => Ok(Value::String(Box::new(s))),
+        }
+    }
+    fn parse_symbol_as_generator(
+        &self,
+        sym: &SymbolRef,
+        cfg: Option<LazyStruct<AnyEncoding>>,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        match self.parse_symbol_type(sym)? {
+            SymbolType::VarRef(name) => match self.env_stack.get(&name)? {
+                EnvBindingValue::Generator(gen) => Ok(gen.clone()),
+                _ => todo!(),
+            },
+            SymbolType::Str(name) => {
+                if self.registry.has_parser(&name) {
+                    let crng = self.child_rng()?;
+                    if let Some(parser) = self.registry.get_parser(&name) {
+                        parser.parse_generator(crng, cfg, self)
+                    } else {
+                        Err(ProcessConfigError::UnknownParser(name))
+                    }
+                } else {
+                    Err(ProcessConfigError::UnknownGenerator(name))
+                }
+            }
         }
     }
 
@@ -838,7 +873,6 @@ where
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
-        ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
 }
 
@@ -853,7 +887,6 @@ where
         _rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
-        _ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(config) = config {
             if let Ok(pattern) = config.get_expected("pattern") {
@@ -881,7 +914,6 @@ where
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
         _symbol_parser: &dyn EnvSymbolParser,
-        _ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(config) = config {
             if let Ok(pattern) = config.get_expected("pattern") {
@@ -908,7 +940,6 @@ where
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
         _symbol_parser: &dyn EnvSymbolParser,
-        _ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(config) = config {
             let min = config.get_expected("min_words");
@@ -938,7 +969,6 @@ where
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
         _symbol_parser: &dyn EnvSymbolParser,
-        _ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(_config) = config {
             Err(ProcessConfigError::Other(
@@ -959,7 +989,6 @@ where
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
-        ctx: &SimContext,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(config) = config {
             fn to_float(
@@ -991,6 +1020,43 @@ where
             }
 
             let gen: Box<dyn ValueGenerator> = match self {
+                SimpleScriptVariableKind::Array => {
+                    let min_size = config.get_expected("min_size")?;
+                    let max_size = config.get_expected("max_size")?;
+
+                    let get_generator =
+                        |sym: &SymbolRef,
+                         cfg: Option<LazyStruct<AnyEncoding>>|
+                         -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+                            let gen = symbol_parser.parse_symbol_as_generator(sym, cfg)?;
+
+                            Ok(Box::new(bounded_array(
+                                rng,
+                                min_size.expect_i64()?,
+                                max_size.expect_i64()?,
+                                gen,
+                            )?) as Box<dyn ValueGenerator>)
+                        };
+
+                    let elem_type = config.get_expected("element_type")?;
+
+                    match elem_type {
+                        ValueRef::Symbol(sym) => get_generator(&sym, None)?,
+                        ValueRef::Struct(strct) => {
+                            let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
+                            if annot.is_empty() {
+                                Err(ProcessConfigError::Other(format!(
+                                    "Unsupported type for {strct:?}"
+                                )))?
+                            } else {
+                                get_generator(&annot[0], Some(strct))?
+                            }
+                        }
+                        _ => Err(ProcessConfigError::Other(format!(
+                            "Unsupported `element_type` {elem_type:?} in `UniformArray` definition"
+                        )))?,
+                    }
+                }
                 SimpleScriptVariableKind::String => {
                     todo!("bounded string generator")
                 }
@@ -1057,7 +1123,7 @@ where
             };
             Ok(gen)
         } else {
-            Ok(self.create(rng, ctx)?)
+            Ok(self.create(rng)?)
         }
     }
 }

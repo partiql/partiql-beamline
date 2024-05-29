@@ -225,7 +225,7 @@ impl ReGen for ReStrategyLit {
         R: Rng + Sized + Clone,
         W: Write,
     {
-        out.write(self.bytes.as_slice()).expect("write");
+        out.write_all(self.bytes.as_slice()).expect("write");
     }
 }
 
@@ -317,11 +317,11 @@ impl ReGen for ReStrategyRange {
                 let mut bytes = [0; 4];
                 let x = range.clone().nth(draw - offset).unwrap();
                 let b = x.encode_utf8(&mut bytes);
-                out.write(b.as_bytes()).expect("unicode byte write");
+                out.write_all(b.as_bytes()).expect("unicode byte write");
             }
             ReStrategyRangeClass::Bytes(range) => {
                 let b = range.clone().nth(draw - offset).unwrap();
-                out.write(&[b]).expect("byte write");
+                out.write_all(&[b]).expect("byte write");
             }
         }
     }
