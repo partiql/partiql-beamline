@@ -1,13 +1,11 @@
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
-use crate::reader::ProcessConfigError;
 use crate::sim::context::SimContext;
 use partiql_types::{ArrayType, PartiqlType, TypeKind, TYPE_BOOL};
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
-use rand::{Rng, SeedableRng};
+use rand::Rng;
 use rand_distr::num_traits::FromPrimitive;
-use rand_pcg::{Mcg128Xsl64, Pcg64Mcg};
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::ops::DerefMut;
@@ -108,7 +106,7 @@ impl SimpleScriptVariableKind {
 }
 
 pub fn simple_array<R>(
-    mut rng: R,
+    rng: R,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,

@@ -611,7 +611,7 @@ impl ProcessParser {
                         SymbolType::Str(name) => {
                             if self.registry.has_parser(&name) {
                                 let rng = self.child_rng()?;
-                                let mut parser = self.registry.get_parser(&name).unwrap();
+                                let parser = self.registry.get_parser(&name).unwrap();
                                 parser.parse_generator(rng, Some(strct.clone()), self)
                             } else {
                                 Err(ProcessConfigError::UnknownGenerator(name))
