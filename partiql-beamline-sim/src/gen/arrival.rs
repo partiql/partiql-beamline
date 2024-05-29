@@ -28,7 +28,7 @@ impl OnceArrival {
 }
 
 impl ArrivalTime for OnceArrival {
-    fn next_arrival(&self, now: Tick) -> Option<Tick> {
+    fn next_arrival(&self, _now: Tick) -> Option<Tick> {
         let seen = self.seen.replace(true);
         if !seen {
             Some(self.tick)

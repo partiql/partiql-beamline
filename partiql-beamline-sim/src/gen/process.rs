@@ -24,7 +24,7 @@ impl RandomProcess for SimpleProcess {
         }
     }
 
-    fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Option<Tick> {
+    fn next_arrival(&self, now: Tick, _ctx: &SimContext) -> Option<Tick> {
         self.arrival.next_arrival(now)
     }
 

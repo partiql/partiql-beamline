@@ -1,0 +1,42 @@
+rand_processes::{
+
+    test_data: rand_process::{
+        $r: Uniform::[5,10],
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+        $data: {
+            transaction_id: UUID,
+            marketplace_id: UniformU8,
+            country_code: Regex::{ pattern: "[A-Z]{2}" },
+            created_at: Instant,
+            test_address: Regex::{ pattern: "[1-9][[:digit:]]{1,4} (?:(?:[A-Z][a-z]{2,8})(?:[ -](?:[A-Z][a-z]{2,8})){0,3}) (?:Ave|St|Pl|Way)(?: (?:N|S|E|W|NE|NW|SE|SW))?"},
+            completed: Bool,
+            description: LoremIpsum::{ min_words:10, max_words:200 },
+            price: UniformAnyOf::[
+                UniformDecimal::{ low: 2.99, high: 9.99 },
+                UniformDecimal::{ low: 5.99, high: 25 },
+                UniformDecimal::{ low: 9.99, high: 54.99 },
+                UniformDecimal::{ low: 34.99, high: 999.99 },
+            ],
+            test_struct: {
+                test_decimal: UniformDecimal,
+                test_string: LoremIpsumTitle,
+            },
+            // test_list: [], // TODO list
+            test_nest_struct: {
+                nested_struct: {
+                    nested_struct: {
+                        nested_struct: {
+                            nested_struct: {
+                                nested_struct: {
+                                    test_int: UniformI8::{ low: 0, high: 5 }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
