@@ -33,14 +33,15 @@ use crate::gen::distributions::{
     simple_union, SimpleScriptVariableKind,
 };
 use crate::gen::process::{RandomProcesses, SimpleProcess};
+use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGenerator};
 use crate::primitives::{DataSetName, Tick};
 use once_cell::sync::Lazy;
 
-const PROCESS_KEY_ARRIVAL: &'static str = "$arrival";
-const PROCESS_KEY_DATA: &'static str = "$data";
-const SCRIPT_SECTION_PROCESSES: &'static str = "rand_processes";
-const SCRIPT_SECTION_PROCESS: &'static str = "rand_process";
-const SCRIPT_SECTION_STATICDATA: &'static str = "static_data";
+const PROCESS_KEY_ARRIVAL: &str = "$arrival";
+const PROCESS_KEY_DATA: &str = "$data";
+const SCRIPT_SECTION_PROCESSES: &str = "rand_processes";
+const SCRIPT_SECTION_PROCESS: &str = "rand_process";
+const SCRIPT_SECTION_STATICDATA: &str = "static_data";
 
 static FORMAT_STRING_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(^|[^\\])\{(.+?)\}").expect("FORMAT STRING REGEX"));
@@ -758,9 +759,15 @@ where
                 .expect("static registry creation");
         }
 
-        registry
-            .add_parser("Format", Box::new(Formatter {}))
-            .expect("static registry creation");
+        let ps: [(&str, Box<dyn ValueGeneratorParser<R>>); 4] = [
+            ("Format", Box::new(Formatter {})),
+            ("Regex", Box::new(RegexFormatter {})),
+            ("LoremIpsum", Box::new(LoremIpsum {})),
+            ("LoremIpsumTitle", Box::new(LoremIpsumTitle {})),
+        ];
+        for (k, v) in ps {
+            registry.add_parser(k, v).expect("static registry creation");
+        }
 
         registry
     }
@@ -893,6 +900,83 @@ where
         Err(ProcessConfigError::FormatStringError(
             "no 'pattern' supplied".to_string(),
         ))
+    }
+}
+
+struct RegexFormatter {}
+
+impl<R> ValueGeneratorParser<R> for RegexFormatter
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_generator(
+        &self,
+        rng: R,
+        config: Option<LazyStruct<AnyEncoding>>,
+        _symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        if let Some(config) = config {
+            if let Ok(pattern) = config.get_expected("pattern") {
+                let patt = pattern.expect_string()?;
+                let patt = patt.text();
+                let gen = RegexGenerator::new(rng, patt)?;
+                return Ok(Box::new(gen));
+            }
+        }
+        Err(ProcessConfigError::FormatStringError(
+            "no 'pattern' supplied".to_string(),
+        ))
+    }
+}
+
+struct LoremIpsum {}
+
+impl<R> ValueGeneratorParser<R> for crate::reader::LoremIpsum
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_generator(
+        &self,
+        rng: R,
+        config: Option<LazyStruct<AnyEncoding>>,
+        _symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        if let Some(config) = config {
+            let min = config.get_expected("min_words");
+            let max = config.get_expected("max_words");
+
+            if let (Ok(min), Ok(max)) = (min, max) {
+                let min = min.expect_i64()? as u8;
+                let max = max.expect_i64()? as u8;
+                return Ok(Box::new(LoremIpsumGenerator::new(rng, min, max)?));
+            }
+        }
+
+        Err(ProcessConfigError::Other(
+            "Configuration error for LoremIpsum".to_string(),
+        ))
+    }
+}
+
+struct LoremIpsumTitle {}
+
+impl<R> ValueGeneratorParser<R> for LoremIpsumTitle
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_generator(
+        &self,
+        rng: R,
+        config: Option<LazyStruct<AnyEncoding>>,
+        _symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        if let Some(_config) = config {
+            Err(ProcessConfigError::Other(
+                "Configuration error for LoremIpsumTitle".to_string(),
+            ))
+        } else {
+            Ok(Box::new(LoremIpsumTitleGenerator::new(rng)?))
+        }
     }
 }
 

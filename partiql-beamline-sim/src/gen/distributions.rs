@@ -144,7 +144,7 @@ where
     let f = move |rng: &mut R, ctx: &SimContext| {
         let idx = dist.sample(rng) as i64;
         let generator = &generators[idx as usize];
-        generator.gen_value(&ctx)
+        generator.gen_value(ctx)
     };
     Ok(SimpleRandomVariable { name, typ, rng, f })
 }
@@ -314,7 +314,7 @@ where
             let array_length = dist.sample(rng) as i64;
             let mut array = vec![];
             for _n in 0..array_length {
-                array.push(elem.gen_value(&ctx));
+                array.push(elem.gen_value(ctx));
             }
             Value::List(Box::new(List::from(array)))
         };

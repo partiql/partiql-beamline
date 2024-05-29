@@ -869,30 +869,82 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 
 ### Data Generator Types
 
-| Type           | Description                              | Has Bounded Type | PartiQL Type | PartiQL Type (Bounded) |
-|----------------|------------------------------------------|------------------|--------------|------------------------|
-| Bool           | Boolean                                  | Y                | BOOL         | BOOL                   |
-| String         | String                                   | N                | STRING       | [N/A]                  |
-| Uniform        | Uniform distribution over literal values | N                | Union        | [N/A]                  |
-| UniformAnyOf   | Uniform distribution over types          | N                | Union        | [N/A]                  |
-| UniformArray   | Uniform array type                       | Y                | Array        | Array                  |
-| UniformU8      | Unsigned 8-bit integer                   | Y                | INT8         | INT8                   |
-| UniformU16     | Unsigned 16-bit integer                  | Y                | INT8         | INT8                   |
-| UniformU32     | Unsigned 32-bit integer                  | Y                | INT8         | INT8                   |
-| UniformU64     | Unsigned 64-bit integer                  | Y                | INT8         | INT8                   |
-| UniformI8      | Signed 8-bit integer                     | Y                | INT8         | INT8                   |
-| UniformI16     | Signed 16-bit integer                    | Y                | INT8         | INT8                   |
-| UniformI32     | Signed 32-bit integer                    | Y                | INT8         | INT8                   |
-| UniformI64     | Signed 64-bit integer                    | Y                | INT8         | INT8                   |
-| UniformF64     | 64-bit Float (Inexact)                   | Y                | DOUBLE       | DOUBLE                 |
-| UniformDecimal | Decimal (Exact)                          | Y                | DECIMAL      | DECIMAL(p, s)          |
-| UUID           | UUID                                     | N                | STRING       | [N/A]                  |
+| Type            | Description                              | Has Bounded Type | PartiQL Type | PartiQL Type (Bounded) |
+|-----------------|------------------------------------------|------------------|--------------|------------------------|
+| Bool            | Boolean                                  | Y                | BOOL         | BOOL                   |
+| LoremIpsum      | String                                   | N                | STRING       | [N/A]                  |
+| LoremIpsumTitle | String                                   | N                | STRING       | [N/A]                  |
+| Regex           | String                                   | N                | STRING       | [N/A]                  |
+| String          | String                                   | N                | STRING       | [N/A]                  |
+| Uniform         | Uniform distribution over literal values | N                | Union        | [N/A]                  |
+| UniformArray    | Uniform array type                       | Y                | Array        | Array                  |
+| UniformAnyOf    | Uniform distribution over types          | N                | Union        | [N/A]                  |
+| UniformU8       | Unsigned 8-bit integer                   | Y                | INT8         | INT8                   |
+| UniformU16      | Unsigned 16-bit integer                  | Y                | INT8         | INT8                   |
+| UniformU32      | Unsigned 32-bit integer                  | Y                | INT8         | INT8                   |
+| UniformU64      | Unsigned 64-bit integer                  | Y                | INT8         | INT8                   |
+| UniformI8       | Signed 8-bit integer                     | Y                | INT8         | INT8                   |
+| UniformI16      | Signed 16-bit integer                    | Y                | INT8         | INT8                   |
+| UniformI32      | Signed 32-bit integer                    | Y                | INT8         | INT8                   |
+| UniformI64      | Signed 64-bit integer                    | Y                | INT8         | INT8                   |
+| UniformF64      | 64-bit Float (Inexact)                   | Y                | DOUBLE       | DOUBLE                 |
+| UniformDecimal  | Decimal (Exact)                          | Y                | DECIMAL      | DECIMAL(p, s)          |
+| UUID            | UUID                                     | N                | STRING       | [N/A]                  |
 
 1. For types that also have a bounded counter-part, you can define their lower and upper bounds in scripts; for example for
 bounded `UniformDecimal` you can specify `UniformDecimal::{ low: 1.995, high: 4.9999 }` which picks a random decimal 
 number from the provided boundary.
 2. The values for all the types prepended with `Uniform` will get generated using [Discrete Uniform Distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution).
 3. The current implementation does not support `UniformArray` of `UniformAnyOf` and `Uniform`. I will look into this further in a separate PR as I suspect it requires some further refactoring.
+
+#### String Generator Configuration
+
+##### LoremIpsum
+Will generate a given number of words based on required parameterization: `LoremIpsum::{ min_words:10, max_words:200 }`
+
+Example configuration:
+```
+LoremIpsum::{ min_words:10, max_words:200 }
+```          
+
+Example output:
+```
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+ Ut enim ad sapientiam perveniri potest, non paranda nobis solum ea, sed fruenda etiam sapientia est; sive hoc difficile est, 
+ tamen nec modus est ullus investigandi veri, nisi inveneris, et quaerendi defatigatio turpis est, cum esset accusata et 
+ vituperata ab Hortensio. Qui liber cum et mortem contemnit, qua qui est imbutus quietus esse numquam potest. Praeterea
+  bona praeterita non."
+```
+
+##### LoremIpsumTitle
+Will generate between 3 and 8 words title cased.
+
+Example configuration:
+```
+LoremIpsumTitle
+```          
+
+Example output: 
+```
+"Importari Putant Quae Autem Tanta"
+```
+
+##### Regex
+Will generate strings based on a regular expression (unicode-aware).
+
+There are two things to note when using an escape sequence in your regex (e.g. `\d` for digit or `\w` for word):
+1. You will need to double-escape the code (e.g., `\\d`); the first `\` is for the Ion string escaping
+2. The character classes are unicode-aware. So, for example, `\d` will generate not just ASCII arabic numerals, but anything that unicode considers to be a digit
+
+Example configuration:
+```
+Regex::{ pattern: "[1-9][[:digit:]]{1,4} (?:(?:[A-Z][a-z]{2,8})(?:[ -](?:[A-Z][a-z]{2,8})){0,3}) (?:Ave|St|Pl|Way)(?: (?:N|S|E|W|NE|NW|SE|SW))?"},
+```          
+
+Example output:
+```
+"939 Pug-Upefpht Wvpiuidh Lvsrquv Pl W"
+```
 
 ### Data Generator Reserved Variable
 

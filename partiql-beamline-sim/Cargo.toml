@@ -39,6 +39,9 @@ rust_decimal = "1.35.0"
 rust_decimal_macros = "1.34.2"
 unicase = "2.*"
 
+lipsum = "0.9"
+regex-syntax = "0.8"
+
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
 
 [features]
