@@ -897,6 +897,21 @@ number from the provided boundary.
 2. The values for all the types prepended with `Uniform` will get generated using [Discrete Uniform Distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution).
 3. The current implementation does not support `UniformArray` of `UniformAnyOf` and `Uniform`. I will look into this further in a separate PR as I suspect it requires some further refactoring.
 
+#### Data Generator Type Examples
+
+| Type            | Example Input                                                       | Example Output                         |
+|-----------------|---------------------------------------------------------------------|----------------------------------------|
+| Bool            | Bool                                                                | True                                   |
+| LoremIpsum      | LoremIpsum::{ min_words:2, max_words:3 }                            | "Lorem ipsum dolor"                    |
+| LoremIpsumTitle | LoremIpsumTitle                                                     | "Importari Putant Quae Autem Tanta"    |
+| Regex           | Regex::{ pattern: "[A-Z]{2}" }                                      | "US"                                   |
+| Uniform         | [1, 3]                                                              | 2                                      |
+| UniformAnyOf    | UniformAnyOf::[Tick, UUID, UniformU8]                               | "402ed5c7-9c17-3b80-042b-078691a5ae58" |
+| UniformArray    | UniformArray::{ min_size: 2, max_size: 4, element_type: UniformU8 } | [23, 24, 5433]                         |
+| UniformU8       | UniformI8::{ low: 10, high: 30 }                                    | 2234                                   |
+| UniformF64      | UniformF64::{ low:0.995e0, high:1.0e0 }                             | 0.995                                  |
+| UniformDecimal  | UniformDecimal::{ low: 1.995, high: 4.9999 })                       | 3.564                                  |
+
 #### String Generator Configuration
 
 ##### LoremIpsum
