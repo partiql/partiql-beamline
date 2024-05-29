@@ -111,6 +111,9 @@ pub fn simple_array<R>(
 where
     R: Rng + Sized + Clone,
 {
+    // TODO try changing `simple_tick()` to a more useful generator such as `simple_i8(rng)`.
+    // This in non-trivial with the current code b/c of `R`s required trait bound such as
+    // `SeadableRng`.
     bounded_array(
         rng.clone(),
         2i64,
