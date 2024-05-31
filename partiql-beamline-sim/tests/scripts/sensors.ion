@@ -3,10 +3,10 @@ rand_processes::{
 
     sensors: $n::[
         rand_process::{
-            $r: Uniform::[5,10],
+            $r: Uniform::{ choices: [5,10] },
             $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
             $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
-            $anyof: UniformAnyOf::[Tick, UniformF64, UUID, UniformDecimal::{ low: 1.995, high: 4.9999 }],
+            $anyof: UniformAnyOf::{ types: [Tick, UniformF64, UUID, UniformDecimal::{ low: 1.995, high: 4.9999 }] },
             $array: UniformArray::{
                 min_size: 3,
                 max_size: 3,
@@ -22,7 +22,8 @@ rand_processes::{
                 ar1: $array,
                 ar2: UniformArray::{ min_size: 2, max_size: 4, element_type: UUID },
                 ar3: UniformArray::{ min_size: 2, max_size: 4, element_type: $weight },
-                ar4: UniformArray::{ min_size: 2, max_size: 4, element_type: UniformI8::{ low: 2, high: 10 } }
+                ar4: UniformArray::{ min_size: 2, max_size: 4, element_type: UniformI8::{ low: 2, high: 10 } },
+                ar5: UniformArray::{ min_size: 1, max_size: 1, element_type: $anyof }
             }
         }
     ],

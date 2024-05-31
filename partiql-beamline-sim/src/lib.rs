@@ -20,16 +20,12 @@ mod tests {
         r#"
             rand_processes::{
               $n:UniformU8::{
-
                 low:2,
                 high:4
               },
               sensors:$n::[
                 rand_process::{
-                  $r:Uniform::[
-                    5,
-                    10
-                  ],
+                  $r:Uniform::{ choices: [2, 3] },
                   $arrival:HomogeneousPoisson::{
                     interarrival:minutes::$r
                   },
@@ -37,7 +33,7 @@ mod tests {
                     low:1.995,
                     high:4.9999
                   },
-                  $anyof:UniformAnyOf::[
+                  $anyof:UniformAnyOf::{ types: [
                     UUID,
                     Tick,
                     UniformDecimal::{
@@ -45,7 +41,7 @@ mod tests {
                       high:43.5
                     },
                     UniformI8
-                  ],
+                  ]},
                   $tick_array:UniformArray::{
                     min_size:2,
                     max_size:5,
@@ -119,15 +115,15 @@ mod tests {
         }
 
         let expected = tuple!(
-            ("tick", 9902089),
+            ("tick", 3960823),
             ("id", 1),
             ("i8", 49),
             ("f", -81.7290705652406),
             ("d", 8),
             ("sub", tuple!(("f", -30.417077694899604), ("o", 69))),
             ("w", 3.0690),
-            ("variant", 9902089),
-            ("tick_array", list!(9902089, 9902089, 9902089)),
+            ("variant", 3960823),
+            ("tick_array", list!(3960823, 3960823, 3960823)),
             ("weight_array", list!(4.0550, 2.0066, 4.7051)),
             ("decimal_array", list!(3.9918, 4.4656)),
         );

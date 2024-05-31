@@ -10,11 +10,14 @@ use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::ops::DerefMut;
 
+#[derive(Debug)]
 pub enum SimpleScriptVariableKind {
+    AnyOf,
     Array,
     Tick,
     Instant,
     String,
+    Choice,
     UInt8,
     UInt16,
     UInt32,
@@ -35,6 +38,8 @@ impl SimpleScriptVariableKind {
             "Tick",
             "Instant",
             "String",
+            "Uniform",
+            "UniformAnyOf",
             "UniformArray",
             "UniformU8",
             "UniformU16",
@@ -59,6 +64,8 @@ impl SimpleScriptVariableKind {
             "Tick" => Ok(Self::Tick),
             "Instant" => Ok(Self::Instant),
             "String" => Ok(Self::String),
+            "Uniform" => Ok(Self::Choice),
+            "UniformAnyOf" => Ok(Self::AnyOf),
             "UniformArray" => Ok(Self::Array),
             "UniformU8" => Ok(Self::UInt8),
             "UniformU16" => Ok(Self::UInt16),
@@ -83,10 +90,6 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         match self {
-            SimpleScriptVariableKind::String => {
-                todo!()
-            }
-            SimpleScriptVariableKind::Array => Ok(Box::new(simple_array(rng)?)),
             SimpleScriptVariableKind::Tick => Ok(Box::new(simple_tick())),
             SimpleScriptVariableKind::Instant => Ok(Box::new(simple_instant())),
             SimpleScriptVariableKind::UInt8 => Ok(Box::new(simple_u8(rng)?)),
@@ -101,25 +104,11 @@ impl SimpleScriptVariableKind {
             SimpleScriptVariableKind::Decimal => Ok(Box::new(simple_decimal(rng)?)),
             SimpleScriptVariableKind::Bool => Ok(Box::new(simple_bool(rng)?)),
             SimpleScriptVariableKind::UUID => Ok(Box::new(simple_uuid(rng)?)),
+            _ => Err(DataGenerationError::NoConfig(format!(
+                "Usage of {self:?} with no config is unsupported"
+            ))),
         }
     }
-}
-
-pub fn simple_array<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    // TODO try changing `simple_tick()` to a more useful generator such as `simple_i8(rng)`.
-    // This in non-trivial with the current code b/c of `R`s required trait bound such as
-    // `SeadableRng`.
-    bounded_array(
-        rng.clone(),
-        2i64,
-        10i64,
-        Box::new(simple_tick()) as Box<dyn ValueGenerator>,
-    )
 }
 
 pub fn simple_tick() -> TickGenerator {
@@ -130,10 +119,9 @@ pub fn simple_instant() -> InstantGenerator {
     InstantGenerator {}
 }
 
-pub fn simple_union<R>(
+pub fn bounded_union<R>(
     rng: R,
     generators: Vec<Box<dyn ValueGenerator>>,
-    _ctx: SimContext,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
@@ -152,7 +140,7 @@ where
     Ok(SimpleRandomVariable { name, typ, rng, f })
 }
 
-pub fn simple_choose<R>(
+pub fn bounded_choose<R>(
     rng: R,
     choices: Vec<Value>,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>

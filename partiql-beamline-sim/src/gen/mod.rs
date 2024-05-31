@@ -27,6 +27,9 @@ pub enum DataGenerationError {
     #[error("Bounds Error: `{0}-{0}`")]
     Bounds(i64, i64),
 
+    #[error("Error: {0}")]
+    NoConfig(String),
+
     #[error("Error: `{0}`")]
     Other(String),
 }
