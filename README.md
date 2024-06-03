@@ -905,7 +905,7 @@ number from the provided boundary.
 | LoremIpsumTitle | LoremIpsumTitle                                                     | "Importari Putant Quae Autem Tanta"    |
 | Regex           | Regex::{ pattern: "[A-Z]{2}" }                                      | "US"                                   |
 | Uniform         | Uniform::{ choices: [1, 3] }                                        | 2                                      |
-| UniformAnyOf    | UniformAnyOf::{ types: [Tick, UUID, UniformU8] }                     | "402ed5c7-9c17-3b80-042b-078691a5ae58" |
+| UniformAnyOf    | UniformAnyOf::{ types: [Tick, UUID, UniformU8] }                    | "402ed5c7-9c17-3b80-042b-078691a5ae58" |
 | UniformArray    | UniformArray::{ min_size: 2, max_size: 4, element_type: UniformU8 } | [23, 24, 5433]                         |
 | UniformU8       | UniformI8::{ low: 10, high: 30 }                                    | 2234                                   |
 | UniformF64      | UniformF64::{ low:0.995e0, high:1.0e0 }                             | 0.995                                  |

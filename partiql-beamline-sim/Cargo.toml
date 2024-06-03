@@ -17,6 +17,7 @@ partiql-value = "0.7"
 partiql-types = "^0.7.2"
 partiql-extension-ion = "0.7"
 
+# TODO: move to stable `ion-rs` once available
 ion-rs = { version = "=1.0.0-rc.3", features = ["experimental"] }
 
 dyn-clone = "1.0"

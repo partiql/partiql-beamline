@@ -18,7 +18,8 @@ use crate::kolliderdb::{
     catalog_full_path, create_catalog_dir, create_kollider_db, create_manifest_file,
     create_script_file,
 };
-use partiql_beamline_serde::serde::{PartiqlDataSetsEncoder, PartiqlKolliderEncoder};
+use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
+use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use time::Duration;
 
 #[derive(Parser)]
