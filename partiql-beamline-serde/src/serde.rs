@@ -1,4 +1,4 @@
-use ion_rs::{IonError, IonType, IonWriter};
+use ion_rs::{IonError, IonWriter};
 use miette::Diagnostic;
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig};
 use partiql_types::PartiqlType;

@@ -3,7 +3,7 @@ use std::default::Default;
 use std::error::Error;
 
 use crate::gen;
-use ion_rs::lazy::reader::LazyReader;
+use ion_rs::{AnyEncoding, Reader};
 use miette::Diagnostic;
 use partiql_types::PartiqlType;
 
@@ -95,7 +95,7 @@ impl SimBuilder {
     ) -> SimConfigResult<RandomProcesses> {
         let registry = Default::default();
         let parser = ProcessParser::new(seed, registry, ctx)?;
-        let mut reader = LazyReader::new(script);
+        let mut reader = Reader::new(AnyEncoding, script)?;
         Ok(parser.parse(&mut reader)?)
     }
 
