@@ -64,6 +64,25 @@
             }
           },
           {
+            name: "ar5",
+            type: {
+                type: "list",
+                items: {
+                    name: "union",
+                    types: [
+                        "int8",
+                        {
+                            name: "decimal",
+                            precision: 5,
+                            scale: 4
+                        },
+                        "double",
+                        "string"
+                    ]
+                }
+            }
+          },
+          {
              name: "d",
              type: {
                 name: "decimal",

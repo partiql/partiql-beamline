@@ -28,9 +28,9 @@ use crate::gen::arrival::{HomogeneousPoisson, OnceArrival};
 use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
 use crate::gen::distributions::{
-    bounded_array, bounded_bool, bounded_decimal, bounded_f64, bounded_i16, bounded_i32,
-    bounded_i64, bounded_i8, bounded_u16, bounded_u32, bounded_u64, bounded_u8, simple_choose,
-    simple_union, SimpleScriptVariableKind,
+    bounded_array, bounded_bool, bounded_choose, bounded_decimal, bounded_f64, bounded_i16,
+    bounded_i32, bounded_i64, bounded_i8, bounded_u16, bounded_u32, bounded_u64, bounded_u8,
+    bounded_union, SimpleScriptVariableKind,
 };
 use crate::gen::process::{RandomProcesses, SimpleProcess};
 use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGenerator};
@@ -620,68 +620,9 @@ impl ProcessParser {
                     }
                 }
             }
-            ValueRef::List(l) => {
-                let annot = l.annotations().collect::<Result<Vec<_>, _>>()?;
-                let kind = self.parse_symbol_type(&annot[0])?;
-                let rng = self.child_rng()?;
-                if let SymbolType::Str(name) = kind {
-                    // TODO move to a better modelling for parsing `Uniform` and `UniformAny`
-                    match name.as_str() {
-                        "Uniform" => {
-                            let mut choices = vec![];
-
-                            let n = if let Some(SymbolType::VarRef(name)) = annot
-                                .first()
-                                .map(|param| self.parse_symbol_type(param))
-                                .transpose()?
-                            {
-                                let list_param = self.env_stack.get(&name)?;
-                                let list_param = match list_param {
-                                    EnvBindingValue::Value(v) => v,
-                                    EnvBindingValue::Generator(_) => {
-                                        todo!("error generator for list param")
-                                    }
-                                    EnvBindingValue::Arrival(_) => {
-                                        todo!("error arrival for list param")
-                                    }
-                                };
-                                match list_param {
-                                    Value::Integer(n) if *n > 0 => *n,
-                                    _ => {
-                                        return Err(ProcessConfigError::Other(format!(
-                                            "Unsupported list parameterization `{list_param:?}`"
-                                        )));
-                                    }
-                                }
-                            } else {
-                                1
-                            };
-
-                            for _i in 0..n {
-                                for li in l.iter() {
-                                    choices.push(self.parse_immediate(&li?.read()?)?);
-                                }
-                            }
-                            Ok(Box::new(simple_choose(rng, choices)?) as Box<dyn ValueGenerator>)
-                        }
-                        "UniformAnyOf" => {
-                            let mut generators = vec![];
-                            for script_value in l.iter() {
-                                let script_value = script_value?;
-                                let generator = self.parse_generator(&script_value.read()?)?;
-                                generators.push(generator);
-                            }
-                            Ok(
-                                Box::new(simple_union(rng, generators, self.sim_context.clone())?)
-                                    as Box<dyn ValueGenerator>,
-                            )
-                        }
-                        _ => todo!("Add support for other `List` script annotations"),
-                    }
-                } else {
-                    todo!("Add support for other SymbolType variant in Script List values")
-                }
-            }
+            ValueRef::List(lst) => Err(ProcessConfigError::Other(format!(
+                "Unable to parse `{lst:?}`"
+            ))),
             other => {
                 let constant = self.parse_immediate(other)?;
                 Ok(Box::new(ConstantGenerator::new(constant)))
@@ -1020,6 +961,59 @@ where
             }
 
             let gen: Box<dyn ValueGenerator> = match self {
+                SimpleScriptVariableKind::AnyOf => {
+                    let lst = config.get_expected("types")?.expect_list()?;
+
+                    let mut generators = vec![];
+                    for gen in lst.into_iter() {
+                        let gen_value = gen?.read()?;
+
+                        let gen = match gen_value {
+                            ValueRef::Symbol(sym) => {
+                                symbol_parser.parse_symbol_as_generator(&sym, None)?
+                            }
+                            ValueRef::Struct(strct) => {
+                                let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
+                                if annot.is_empty() {
+                                    Err(ProcessConfigError::Other(format!(
+                                        "Unsupported type for {strct:?}"
+                                    )))?
+                                } else {
+                                    symbol_parser
+                                        .parse_symbol_as_generator(&annot[0], Some(strct))?
+                                }
+                            }
+                            _ => Err(ProcessConfigError::Other(format!(
+                                "Unsupported `type` {gen_value:?} in `UniformAnyOf` definition"
+                            )))?,
+                        };
+
+                        generators.push(gen);
+                    }
+
+                    Box::new(bounded_union(rng, generators)?)
+                }
+                SimpleScriptVariableKind::Choice => {
+                    let choices = config.get_expected("choices")?.expect_list()?;
+                    let mut choice_values = vec![];
+                    for choice in choices.iter() {
+                        let choice = choice?.read()?;
+                        let ion_type = choice.ion_type();
+                        let value: Value = match choice {
+                            ValueRef::Bool(b) => Ok(b.into()),
+                            ValueRef::Int(i) => Ok(i.as_i64().unwrap().into()),
+                            ValueRef::Float(f) => Ok(f.into()),
+                            ValueRef::String(s) => Ok(s.text().into()),
+                            _ => Err(ProcessConfigError::Other(format!(
+                                "Unsupported Type for `Uniform` `{ion_type}`"
+                            ))),
+                        }?;
+
+                        choice_values.push(value);
+                    }
+
+                    Box::new(bounded_choose(rng, choice_values)?)
+                }
                 SimpleScriptVariableKind::Array => {
                     let min_size = config.get_expected("min_size")?;
                     let max_size = config.get_expected("max_size")?;

@@ -5,7 +5,7 @@ rand_processes::{
     sensors: $n::[
         {
             // sensor $@n will arrive every $r minutes (where $r is `5` 50% of the time, else `10`)
-            $r: Uniform::[5,10],
+            $r: Uniform::{ choices: [5,10] },
             $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
 
             // define the data-generator for sensor $@n outside of the process

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Changed the command line hierarchy to separate data generation and shape inference.
 ### Added
+- Added `UniformAnyOf` support for `UniformArray`
 - Added `UniformArray` for generating values with Array type.
 - Added `LoremIpsum`, `LoremIpsumTitle`, and `Regex` generators.
 - Added `static_data` generation.
