@@ -303,7 +303,7 @@ where
         let typ = PartiqlType::new_array(ArrayType::new(Box::new(elem_type.clone())));
         let f = move |rng: &mut R, ctx: &SimContext| {
             let array_length = dist.sample(rng) as usize;
-            let array: Vec<_> = std::iter::repeat_with(|| elem_generator.gen_value(&ctx))
+            let array: Vec<_> = std::iter::repeat_with(|| elem_generator.gen_value(ctx))
                 .take(array_length)
                 .collect();
             Value::List(Box::new(List::from(array)))

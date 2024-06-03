@@ -1,7 +1,8 @@
 use crate::gen::{ArrivalBoxed, ArrivalTime, DataGenerationError, RandomProcess, ValueGenerator};
-use ion_rs::lazy::any_encoding::AnyEncoding;
-use ion_rs::lazy::r#struct::LazyStruct;
-use ion_rs::{IonError, IonResult, IonType, SymbolRef};
+use ion_rs::{
+    AnyEncoding, IonError, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef,
+    ValueRef,
+};
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
@@ -9,10 +10,6 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::vec;
 
-use ion_rs::lazy::reader::LazyReader;
-use ion_rs::lazy::sequence::LazyList;
-use ion_rs::lazy::value::LazyValue;
-use ion_rs::lazy::value_ref::ValueRef;
 use partiql_value::Value;
 use rand::{Rng, SeedableRng};
 use rand_distr::num_traits::ToPrimitive;
@@ -225,7 +222,10 @@ impl ProcessParser {
         self.env_stack.pop()
     }
 
-    pub fn parse(mut self, reader: &mut LazyReader) -> ProcessConfigResult<RandomProcesses> {
+    pub fn parse(
+        mut self,
+        reader: &mut Reader<AnyEncoding, &[u8]>,
+    ) -> ProcessConfigResult<RandomProcesses> {
         let top_lvl = reader.expect_next()?;
 
         let top_lvl = top_lvl.read()?;
@@ -612,7 +612,7 @@ impl ProcessParser {
                             if self.registry.has_parser(&name) {
                                 let rng = self.child_rng()?;
                                 let parser = self.registry.get_parser(&name).unwrap();
-                                parser.parse_generator(rng, Some(strct.clone()), self)
+                                parser.parse_generator(rng, Some(*strct), self)
                             } else {
                                 Err(ProcessConfigError::UnknownGenerator(name))
                             }
@@ -1101,7 +1101,7 @@ where
                     Box::new(bounded_f64(rng, low, high)?)
                 }
                 SimpleScriptVariableKind::Decimal => {
-                    let (low, high) = range(config.clone())?;
+                    let (low, high) = range(config)?;
                     let low = to_float(low, symbol_parser)?;
                     let high = to_float(high, symbol_parser)?;
 
@@ -1131,8 +1131,9 @@ mod tests {
 
     #[track_caller]
     fn parse(ion_data: &str) -> ProcessConfigResult<RandomProcesses> {
-        let ion_bytes = Element::read_one(ion_data)?.to_binary()?;
-        let mut reader = LazyReader::new(&ion_bytes);
+        let mut ion_bytes: Vec<u8> = vec![];
+        Element::read_one(ion_data)?.encode_to(&mut ion_bytes, ion_rs::v1_0::Binary)?;
+        let mut reader = Reader::new(AnyEncoding, ion_bytes.as_slice())?;
 
         let registry = Default::default();
         let seed = 5; // Chosen via roll of a fair die.
