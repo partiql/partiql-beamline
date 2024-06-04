@@ -1,11 +1,12 @@
 use crate::cli::{encode_ion_text, get_multi_sim, IonPrintMode};
 use ion_rs::element::writer::TextKind;
 use partiql_beamline::sim::{SimConfig, DATETIME_FORMAT};
+use partiql_beamline_serde::ddl::PartiqlDdlEncoder;
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;
 use partiql_extension_ion::Encoding;
 use std::fs;
-use std::io::Write;
+use std::io::{LineWriter, Write};
 use std::path::Path;
 use std::process::exit;
 use time::OffsetDateTime;
@@ -23,21 +24,31 @@ pub(crate) fn create_kollider_db(
     print!("writing shape file(s)...");
     let shapes = sim.shape();
     for (dataset, ty) in shapes.into_iter() {
-        let mut out: Vec<u8> = Vec::new();
-        let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
-            .build(&mut out)
+        let mut ion_out: Vec<u8> = Vec::new();
+        let mut ion_shape_writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
+            .build(&mut ion_out)
             .expect("pretty writer");
-        let mut encoder = PartiqlKolliderEncoder::new(&mut writer);
-        encoder.write_shape(&ty).expect("write shape");
-        drop(writer);
+        let mut ion_shape_encoder = PartiqlKolliderEncoder::new(&mut ion_shape_writer);
+        ion_shape_encoder.write_shape(&ty).expect("write shape");
+        drop(ion_shape_writer);
 
-        let mut dataset_shape_file =
+        let mut dataset_shape_ion_file =
             fs::File::create(format!("{:}/{dataset}.shape.ion", &catalog_full_path))
                 .expect("dataset file");
-        dataset_shape_file
-            .write_all(out.as_slice())
+        dataset_shape_ion_file
+            .write_all(ion_out.as_slice())
             .expect("write data set file");
-        drop(out)
+        drop(ion_out);
+
+        let mut ddl_shape_encoder = PartiqlDdlEncoder::new();
+        ddl_shape_encoder.write_shape(&ty, true).expect("write shape");
+
+        let mut dataset_shape_ddl_file =
+            fs::File::create(format!("{:}/{dataset}.shape.sql", &catalog_full_path))
+                .expect("dataset file");
+        dataset_shape_ddl_file
+            .write_all(ddl_shape_encoder.output().as_bytes())
+            .expect("write data set file");
     }
 
     println!("[COMPLETED]");
