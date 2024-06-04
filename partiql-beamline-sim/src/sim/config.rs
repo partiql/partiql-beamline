@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use derive_builder::Builder;
+use ion_rs::IonError;
 use miette::Diagnostic;
 use rand::{thread_rng, Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -44,6 +45,13 @@ impl From<time::error::Error> for SimConfigError {
 impl From<ProcessConfigError> for SimConfigError {
     fn from(e: ProcessConfigError) -> Self {
         SimConfigError::ProcessConfig(e)
+    }
+}
+
+impl From<IonError> for SimConfigError {
+    fn from(e: IonError) -> Self {
+        let pce: ProcessConfigError = e.into();
+        pce.into()
     }
 }
 

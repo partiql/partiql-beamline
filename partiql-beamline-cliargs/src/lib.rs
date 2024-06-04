@@ -21,6 +21,7 @@ pub enum DataOutputFormat {
 pub enum ShapeOutputFormat {
     PartiqlKollider,
     Text,
+    BasicDdl,
 }
 
 /// Number of samples to get created

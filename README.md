@@ -502,9 +502,25 @@ Start: 2022-12-12T19:52:29.000000000Z
 
 As you can see from the example, using the `shape` command, you can infer the shape of the data as `PartiQLType`.
 Beamline also provides different encodings for the output shape; for example you can get the output shape in PartiQL Kollider
-format which is a testing suite for PartiQL; for getting the output in a specific encoding, you can use `--output-format` as the following example shows:
+format (a testing suite for PartiQL) or SQL-like DDL; for getting the output in a specific encoding, you can use `--output-format` as the following examples show:
 
 ```
+$ cargo run infer-shape \       
+      --seed 7844265201457918498 \
+      --start-auto \
+      --script-path partiql-beamline-sim/tests/scripts/sensors-nested.ion \
+      --output-format basic-ddl
+
+-- Seed: 7844265201457918498
+-- Start: 2024-01-01T06:53:06.000000000Z
+-- Syntax: partiql_datatype_syntax.0.1
+-- Dataset: sensors
+"f" DOUBLE,
+"i8" INT8,
+"id" INT,
+"sub" STRUCT<"f": DOUBLE,"o": INT8>,
+"tick" INT8
+
 $ cargo run --release --all-features infer-shape  \
    --seed-auto --start-auto \
    --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion \
@@ -571,8 +587,8 @@ path using `--catalog-name` and `--catalog-path` arguments. See the following fo
 the catalog directory:
 
 ```
-$ cat ./beamline-catalog/.beamline-manifest
-{"seed": 3114525943991198161, "start": 2023-11-07T19:01:28.000000000Z }
+$ cat beamline-catalog/.beamline-manifest
+{"seed": "949665520117506306", "start": "2023-02-06T12:52:29.000000000Z" }, "ddl_syntax.version": "partiql_datatype_syntax.0.1" }%
 
 $ cat ./beamline-catalog/.beamline-script                                  
 
@@ -712,6 +728,20 @@ $ cat ./beamline-catalog/client_0.ion ./beamline-catalog/client_0.shape.ion
     ]
   }
 }%
+
+$ cat beamline-catalog/service.shape.sql
+
+"Account" VARCHAR,
+"Distance" DECIMAL(2, 0),
+"Operation" VARCHAR,
+"Program" VARCHAR,
+"Request" VARCHAR,
+"StartTime" TIMESTAMP,
+"Weight" DECIMAL(5, 4),
+"anyof" UNION<INT8,DECIMAL(5, 4)>,
+"array" ARRAY<INT8>,
+"client" VARCHAR,
+"success" BOOL
 ```
 
 The database generation is a safe operation; running the same command won't result in overwriting the created catalog:

@@ -18,6 +18,7 @@ use crate::kolliderdb::{
     catalog_full_path, create_catalog_dir, create_kollider_db, create_manifest_file,
     create_script_file,
 };
+use partiql_beamline_serde::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use time::Duration;
@@ -196,7 +197,10 @@ fn main() -> miette::Result<()> {
                             let catalog_full_path = catalog_full_path(&catalog_name, &catalog_path);
 
                             create_catalog_dir(force, &catalog_name, &catalog_path)?;
-                            create_manifest_file(&cfg, &catalog_full_path)?;
+
+                            let ddl_encoder = PartiqlBasicDdlEncoder::new(DdlFormat::Pretty);
+                            create_manifest_file(&cfg, &catalog_full_path, &ddl_encoder.syntax())?;
+
                             create_script_file(&catalog_full_path, &script)?;
                             create_kollider_db(
                                 &cfg,
@@ -204,6 +208,7 @@ fn main() -> miette::Result<()> {
                                 &catalog_path,
                                 &script,
                                 sample_count,
+                                &ddl_encoder,
                             )?
                         } else {
                             todo!("Generating database on a target other than filesystem is unsupported")
@@ -248,6 +253,20 @@ fn main() -> miette::Result<()> {
                     println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
 
                     println!("{:#?}", sim.shape())
+                }
+                ShapeOutputFormat::BasicDdl => {
+                    println!("-- Seed: {}", cfg.seed);
+                    println!(
+                        "-- Start: {}",
+                        t0.format(&DATETIME_FORMAT).expect("t0 print")
+                    );
+
+                    let basic_ddl_encoder = PartiqlBasicDdlEncoder::new(DdlFormat::Pretty);
+                    println!("-- Syntax: {}", basic_ddl_encoder.syntax());
+                    for (k, t) in sim.shape() {
+                        println!("-- Dataset: {k}");
+                        println!("{}", basic_ddl_encoder.ddl(&t)?)
+                    }
                 }
                 _ => {
                     todo!("Unsupported output format")

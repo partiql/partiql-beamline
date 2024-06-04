@@ -1,12 +1,12 @@
 use crate::cli::{encode_ion_text, get_multi_sim, IonPrintMode};
 use ion_rs::element::writer::TextKind;
 use partiql_beamline::sim::{SimConfig, DATETIME_FORMAT};
-use partiql_beamline_serde::ddl::PartiqlDdlEncoder;
+use partiql_beamline_serde::ddl::{DdlSyntax, PartiqlDdlEncoder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;
 use partiql_extension_ion::Encoding;
 use std::fs;
-use std::io::{LineWriter, Write};
+use std::io::Write;
 use std::path::Path;
 use std::process::exit;
 use time::OffsetDateTime;
@@ -17,6 +17,7 @@ pub(crate) fn create_kollider_db(
     catalog_path: &str,
     script: &str,
     sample_count: u64,
+    ddl_shape_encoder: &dyn PartiqlDdlEncoder<Output = String>,
 ) -> miette::Result<()> {
     let catalog_full_path = format!("{catalog_path}/{catalog_name}/");
     let mut sim = get_multi_sim(cfg, script).expect("sim");
@@ -40,14 +41,13 @@ pub(crate) fn create_kollider_db(
             .expect("write data set file");
         drop(ion_out);
 
-        let mut ddl_shape_encoder = PartiqlDdlEncoder::new();
-        ddl_shape_encoder.write_shape(&ty, true).expect("write shape");
+        let ddl = ddl_shape_encoder.ddl(&ty).expect("write shape");
 
         let mut dataset_shape_ddl_file =
             fs::File::create(format!("{:}/{dataset}.shape.sql", &catalog_full_path))
                 .expect("dataset file");
         dataset_shape_ddl_file
-            .write_all(ddl_shape_encoder.output().as_bytes())
+            .write_all(ddl.as_bytes())
             .expect("write data set file");
     }
 
@@ -124,16 +124,21 @@ pub(crate) fn create_catalog_dir(
     }
 }
 
-pub(crate) fn create_manifest_file(cfg: &SimConfig, catalog_full_path: &str) -> miette::Result<()> {
+pub(crate) fn create_manifest_file(
+    cfg: &SimConfig,
+    catalog_full_path: &str,
+    ddl_encoder_syntax: &DdlSyntax,
+) -> miette::Result<()> {
     let manifest_filename = format!("{:}.beamline-manifest", catalog_full_path);
     print!("writing manifest file {:} ...", &manifest_filename);
     let mut manifest_file = fs::File::create(&manifest_filename).expect("manifest file");
     manifest_file
         .write_all(
             format!(
-                "{{\"seed\": \"{:}\", \"start\": \"{:}\" }}",
+                "{{\"seed\": \"{:}\", \"start\": \"{:}\" }}, \"ddl_syntax.version\": \"{}\" }}",
                 &cfg.seed,
                 &cfg.t0.format(&DATETIME_FORMAT).expect("format"),
+                ddl_encoder_syntax
             )
             .as_bytes(),
         )

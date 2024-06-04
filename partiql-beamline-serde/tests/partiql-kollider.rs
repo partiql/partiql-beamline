@@ -1,6 +1,7 @@
 use ion_rs::element::writer::TextKind;
 use ion_rs::element::Element;
 use partiql_beamline::sim::{SimBuilder, SimConfigBuilder};
+use partiql_beamline_serde::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use time::OffsetDateTime;
@@ -27,7 +28,9 @@ pub fn verify_correct_encoding() {
         .build(&mut buff)
         .expect("pretty writer");
     let mut encoder = PartiqlKolliderEncoder::new(&mut writer);
-    encoder.write_datasets(&cfg, shape).expect("encoded value");
+    encoder
+        .write_datasets(&cfg, shape.clone())
+        .expect("encoded value");
     drop(writer);
 
     let expected = include_str!("shapes/partiql-kollider/sensors-shape.ion");
@@ -43,4 +46,15 @@ pub fn verify_correct_encoding() {
     println!("{:}", &actual_struct);
 
     assert_eq!(expected_struct, actual_struct);
+
+    let (_, sensors_ty) = shape.get_key_value("sensors").expect("sensors_type");
+
+    let ddl_compact = PartiqlBasicDdlEncoder::new(DdlFormat::Compact);
+    let ddl_expected = r#""a" UNION<INT8,DECIMAL(5, 4),DOUBLE,VARCHAR>,"ar1" ARRAY<DECIMAL(2, 1)>,"ar2" ARRAY<VARCHAR>,"ar3" ARRAY<DECIMAL(5, 4)>,"ar4" ARRAY<INT8>,"ar5" ARRAY<UNION<INT8,DECIMAL(5, 4),DOUBLE,VARCHAR>>,"d" DECIMAL(2, 0),"f" DOUBLE,"i8" INT8,"tick" INT8,"w" DECIMAL(5, 4)"#;
+    let ddl_actual = ddl_compact.ddl(sensors_ty).expect("ddl_output");
+
+    println!("{:}", &ddl_expected);
+    println!("{:}", &ddl_actual);
+
+    assert_eq!(ddl_actual, ddl_expected);
 }

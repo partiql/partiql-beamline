@@ -28,10 +28,12 @@ where
     W: 'a,
     I: IonWriter<Output = W>,
 {
+    type Output = ();
+
     fn writer(&mut self) -> &mut I {
         self.writer
     }
-    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult {
+    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult<()> {
         match shape.kind() {
             TypeKind::Any => self.write_typename("any"),
             TypeKind::AnyOf(any_of) => self.write_union(any_of),
@@ -71,12 +73,12 @@ where
     W: 'a,
     I: IonWriter<Output = W>,
 {
-    fn write_typename(&mut self, tyn: &str) -> ShapeEncodeResult {
+    fn write_typename(&mut self, tyn: &str) -> ShapeEncodeResult<()> {
         self.writer.write_string(tyn)?;
         Ok(())
     }
 
-    fn write_bag(&mut self, bag: &BagType) -> ShapeEncodeResult {
+    fn write_bag(&mut self, bag: &BagType) -> ShapeEncodeResult<()> {
         self.writer.step_in(IonType::Struct)?;
         {
             self.writer.set_field_name("type");
@@ -89,7 +91,7 @@ where
         Ok(())
     }
 
-    fn write_list(&mut self, arr: &ArrayType) -> ShapeEncodeResult {
+    fn write_list(&mut self, arr: &ArrayType) -> ShapeEncodeResult<()> {
         self.writer.step_in(IonType::Struct)?;
         {
             self.writer.set_field_name("type");
@@ -102,7 +104,7 @@ where
         Ok(())
     }
 
-    fn write_struct(&mut self, strct: &StructType) -> ShapeEncodeResult {
+    fn write_struct(&mut self, strct: &StructType) -> ShapeEncodeResult<()> {
         self.writer.step_in(IonType::Struct)?;
         {
             self.writer.set_field_name("type");
@@ -135,7 +137,7 @@ where
         Ok(())
     }
 
-    fn write_constrained_decimal(&mut self, p: &usize, s: &usize) -> ShapeEncodeResult {
+    fn write_constrained_decimal(&mut self, p: &usize, s: &usize) -> ShapeEncodeResult<()> {
         self.writer.step_in(IonType::Struct)?;
         {
             self.writer.set_field_name("name");
@@ -149,7 +151,7 @@ where
         Ok(())
     }
 
-    fn write_union(&mut self, any_of: &AnyOf) -> ShapeEncodeResult {
+    fn write_union(&mut self, any_of: &AnyOf) -> ShapeEncodeResult<()> {
         self.writer.step_in(IonType::Struct)?;
         {
             self.writer.set_field_name("name");
@@ -175,11 +177,17 @@ where
     W: 'a,
     I: IonWriter<Output = W>,
 {
+    type Output = ();
+
     fn writer(&mut self) -> &mut I {
         self.writer
     }
 
-    fn write_datasets(&mut self, cfg: &SimConfig, shapes: DatasetTypeMapping) -> ShapeEncodeResult {
+    fn write_datasets(
+        &mut self,
+        cfg: &SimConfig,
+        shapes: DatasetTypeMapping,
+    ) -> ShapeEncodeResult<()> {
         self.writer.step_in(IonType::Struct)?;
         {
             self.writer.set_field_name("seed");

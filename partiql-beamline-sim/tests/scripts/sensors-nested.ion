@@ -3,7 +3,7 @@ rand_processes::{
 
     sensors: $n::[
         rand_process::{
-            $r: Uniform::[5,10],
+            $r: Uniform::{ choices: [5,10] },
             $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
             $data: {
                 tick: Tick,

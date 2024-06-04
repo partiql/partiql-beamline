@@ -17,7 +17,6 @@ partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
 partiql-types = "^0.7.2"
 
 ion-rs = "0.18.1"
-#ion-rs = "1.0.0-rc.5"
 miette = { version ="5.*", features = ["fancy"] }
 thiserror = "1.*"
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
