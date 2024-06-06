@@ -28,8 +28,6 @@ where
     W: 'a,
     I: IonWriter<Output = W>,
 {
-    type Output = ();
-
     fn writer(&mut self) -> &mut I {
         self.writer
     }

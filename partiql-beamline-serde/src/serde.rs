@@ -41,10 +41,9 @@ pub trait PartiqlShapeEncoder<W, I>
 where
     I: IonWriter<Output = W>,
 {
-    type Output;
     /// A reference to the writer used by this encoder.
     fn writer(&mut self) -> &mut I;
 
     /// Write an Ion stream value from the given [`PartiqlType`]
-    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult<Self::Output>;
+    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult<()>;
 }

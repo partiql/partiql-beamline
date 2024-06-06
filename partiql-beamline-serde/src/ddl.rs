@@ -110,11 +110,11 @@ impl PartiqlBasicDdlEncoder {
             struct_out.push_str(&format!("\"{}\": ", field.name()));
             struct_out.push_str(&self.write_shape(field.ty())?);
             if fields.peek().is_some() {
-                struct_out.push_str(",");
+                struct_out.push(',');
             }
         }
 
-        struct_out.push_str(">");
+        struct_out.push('>');
         Ok(struct_out)
     }
 
@@ -124,10 +124,10 @@ impl PartiqlBasicDdlEncoder {
         while let Some(ty) = types.next() {
             union_out.push_str(&self.write_shape(ty)?);
             if types.peek().is_some() {
-                union_out.push_str(",");
+                union_out.push(',');
             }
         }
-        union_out.push_str(">");
+        union_out.push('>');
         Ok(union_out)
     }
 
@@ -154,7 +154,7 @@ impl PartiqlDdlEncoder for PartiqlBasicDdlEncoder {
                     output.push_str(&format!("\"{}\" ", field.name()));
                     output.push_str(&self.write_shape(field.ty())?);
                     if fields.peek().is_some() {
-                        output.push_str(",");
+                        output.push(',');
                         output.push_str(&self.write_line()?);
                     }
                 }
