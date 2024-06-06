@@ -1,6 +1,7 @@
 use crate::cli::{encode_ion_text, get_multi_sim, IonPrintMode};
 use ion_rs::element::writer::TextKind;
 use partiql_beamline::sim::{SimConfig, DATETIME_FORMAT};
+use partiql_beamline_serde::ddl::{DdlSyntax, PartiqlDdlEncoder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;
 use partiql_extension_ion::Encoding;
@@ -16,6 +17,7 @@ pub(crate) fn create_kollider_db(
     catalog_path: &str,
     script: &str,
     sample_count: u64,
+    ddl_shape_encoder: &dyn PartiqlDdlEncoder<Output = String>,
 ) -> miette::Result<()> {
     let catalog_full_path = format!("{catalog_path}/{catalog_name}/");
     let mut sim = get_multi_sim(cfg, script).expect("sim");
@@ -23,21 +25,30 @@ pub(crate) fn create_kollider_db(
     print!("writing shape file(s)...");
     let shapes = sim.shape();
     for (dataset, ty) in shapes.into_iter() {
-        let mut out: Vec<u8> = Vec::new();
-        let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
-            .build(&mut out)
+        let mut ion_out: Vec<u8> = Vec::new();
+        let mut ion_shape_writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
+            .build(&mut ion_out)
             .expect("pretty writer");
-        let mut encoder = PartiqlKolliderEncoder::new(&mut writer);
-        encoder.write_shape(&ty).expect("write shape");
-        drop(writer);
+        let mut ion_shape_encoder = PartiqlKolliderEncoder::new(&mut ion_shape_writer);
+        ion_shape_encoder.write_shape(&ty).expect("write shape");
+        drop(ion_shape_writer);
 
-        let mut dataset_shape_file =
+        let mut dataset_shape_ion_file =
             fs::File::create(format!("{:}/{dataset}.shape.ion", &catalog_full_path))
                 .expect("dataset file");
-        dataset_shape_file
-            .write_all(out.as_slice())
+        dataset_shape_ion_file
+            .write_all(ion_out.as_slice())
             .expect("write data set file");
-        drop(out)
+        drop(ion_out);
+
+        let ddl = ddl_shape_encoder.ddl(&ty).expect("write shape");
+
+        let mut dataset_shape_ddl_file =
+            fs::File::create(format!("{:}/{dataset}.shape.sql", &catalog_full_path))
+                .expect("dataset file");
+        dataset_shape_ddl_file
+            .write_all(ddl.as_bytes())
+            .expect("write data set file");
     }
 
     println!("[COMPLETED]");
@@ -113,16 +124,21 @@ pub(crate) fn create_catalog_dir(
     }
 }
 
-pub(crate) fn create_manifest_file(cfg: &SimConfig, catalog_full_path: &str) -> miette::Result<()> {
+pub(crate) fn create_manifest_file(
+    cfg: &SimConfig,
+    catalog_full_path: &str,
+    ddl_encoder_syntax: &DdlSyntax,
+) -> miette::Result<()> {
     let manifest_filename = format!("{:}.beamline-manifest", catalog_full_path);
     print!("writing manifest file {:} ...", &manifest_filename);
     let mut manifest_file = fs::File::create(&manifest_filename).expect("manifest file");
     manifest_file
         .write_all(
             format!(
-                "{{\"seed\": \"{:}\", \"start\": \"{:}\" }}",
+                "{{\"seed\": \"{:}\", \"start\": \"{:}\" }}, \"ddl_syntax.version\": \"{}\" }}",
                 &cfg.seed,
                 &cfg.t0.format(&DATETIME_FORMAT).expect("format"),
+                ddl_encoder_syntax
             )
             .as_bytes(),
         )
