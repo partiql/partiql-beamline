@@ -20,7 +20,6 @@ partiql-extension-ion = "0.7"
 # TODO: move to stable `ion-rs` once available
 ion-rs = { version = "1.0.0-rc.5", features = ["experimental"] }
 
-
 dyn-clone = "1.0"
 
 thiserror = "1.*"
