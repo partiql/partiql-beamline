@@ -472,22 +472,28 @@ pub fn bounded_decimal<R>(
 where
     R: Rng + Sized + Clone,
 {
+    let p_and_s = |n| {
+        let dec = rust_decimal::Decimal::from_f64(n).unwrap();
+        let precision = dec
+            .mantissa()
+            .unsigned_abs()
+            .checked_ilog10()
+            .unwrap_or_default()
+            + 1;
+
+        let scale = dec.scale();
+        (precision, scale)
+    };
+
     let name = format!("UniformDecimal::{{low: {min}, high: {max} }}");
 
-    let p_max_dec = rust_decimal::Decimal::from_f64(max).unwrap();
-    let p_max_dec_precision = p_max_dec
-        .mantissa()
-        .unsigned_abs()
-        .checked_ilog10()
-        .unwrap_or_default()
-        + 1;
+    let (p_max_dec_precision, p_max_scale) = p_and_s(max);
+    let (p_min_dec_precision, p_min_scale) = p_and_s(min);
 
-    let p_max_scale = p_max_dec.scale();
+    let precision = p_max_dec_precision.max(p_min_dec_precision);
+    let scale = p_max_scale.max(p_min_scale);
 
-    let typ = PartiqlType::new(TypeKind::DecimalP(
-        p_max_dec_precision as usize,
-        p_max_scale as usize,
-    ));
+    let typ = PartiqlType::new(TypeKind::DecimalP(precision as usize, scale as usize));
     let rng = RefCell::new(rng);
 
     let dist = statrs::distribution::Uniform::new(min, max)?;
@@ -495,7 +501,7 @@ where
     let f = move |rng: &mut R, _ctx: &SimContext| {
         let mut out_dec =
             rust_decimal::Decimal::from_f64_retain(dist.sample(rng)).expect("decimal value");
-        out_dec.rescale(p_max_scale);
+        out_dec.rescale(scale);
         Value::Decimal(Box::new(out_dec))
     };
     Ok(SimpleRandomVariable { name, typ, rng, f })
