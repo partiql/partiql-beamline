@@ -12,6 +12,7 @@ pub mod constant;
 pub mod data;
 pub mod distributions;
 pub mod process;
+pub mod simple;
 pub mod text;
 pub mod timeline;
 mod util;

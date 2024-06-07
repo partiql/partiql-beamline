@@ -1,4 +1,5 @@
-use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
+use crate::gen::distributions::{InnerValueGenerator, RandomVariable};
+use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::context::SimContext;
 use lipsum::{lipsum_title_with_rng, lipsum_with_rng};
 use partiql_types::{PartiqlType, TYPE_STRING};
@@ -8,78 +9,9 @@ use rand::Rng;
 use regex_syntax::hir::{Class, Hir, HirKind, Repetition};
 use regex_syntax::ParserBuilder;
 use statrs::distribution::DiscreteUniform;
-use std::cell::RefCell;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 use std::io::Write;
-use std::ops::{DerefMut, RangeInclusive};
-
-pub trait InnerValueGenerator<R>: Debug + Clone
-where
-    R: Rng + Sized + Clone,
-{
-    fn gen_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
-    fn value_type(&self) -> PartiqlType;
-}
-
-pub struct RandomVariable<R, Inner>
-where
-    R: Rng + Sized + Clone,
-    Inner: InnerValueGenerator<R>,
-{
-    /// The source of randomness
-    rng: RefCell<R>,
-    inner: Inner,
-}
-
-impl<R, Inner> RandomVariable<R, Inner>
-where
-    R: Rng + Sized + Clone,
-    Inner: InnerValueGenerator<R>,
-{
-    pub(crate) fn create(rng: R, inner: Inner) -> DataGenerationResult<Self> {
-        let rng = RefCell::new(rng);
-        Ok(RandomVariable { rng, inner })
-    }
-}
-
-impl<R, Impl> Clone for RandomVariable<R, Impl>
-where
-    R: Rng + Sized + Clone,
-    Impl: InnerValueGenerator<R> + Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            rng: self.rng.clone(),
-            inner: self.inner.clone(),
-        }
-    }
-}
-
-impl<R, Impl> Debug for RandomVariable<R, Impl>
-where
-    R: Rng + Sized + Clone,
-    Impl: InnerValueGenerator<R>,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.inner.fmt(f)
-    }
-}
-
-impl<R, Impl> ValueGenerator for RandomVariable<R, Impl>
-where
-    R: Rng + Sized + Clone,
-    Impl: InnerValueGenerator<R>,
-{
-    fn gen_value(&self, ctx: &SimContext) -> Value {
-        let mut rng = self.rng.borrow_mut();
-        let rng = rng.deref_mut();
-        self.inner.gen_value(rng, ctx)
-    }
-
-    fn value_type(&self) -> PartiqlType {
-        self.inner.value_type()
-    }
-}
+use std::ops::RangeInclusive;
 
 #[derive(Debug, Clone)]
 pub struct LoremIpsumImpl {

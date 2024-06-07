@@ -146,7 +146,6 @@ fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
     println!("{}", encode_ion_text(&value).expect("encode"));
     let data = value.as_tuple_ref();
 
-    let exemplar_s = std::str::from_utf8(exemplar).into_diagnostic()?;
     let exemplar = decode_ion(exemplar).into_diagnostic()?;
     let exemplar = exemplar.as_tuple_ref();
 
@@ -183,7 +182,7 @@ fn verify_repeatable_transactions() {
     let (script, exemplar) = test_data!("transactions");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar);
+    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
@@ -191,7 +190,7 @@ fn verify_repeatable_orders() {
     let (script, exemplar) = test_data!("orders");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar);
+    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
@@ -199,7 +198,7 @@ fn verify_repeatable_sensors() {
     let (script, exemplar) = test_data!("sensors");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar);
+    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
@@ -207,7 +206,7 @@ fn verify_repeatable_sensors_alternate() {
     let (script, exemplar) = test_data!("sensors-alternate");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar);
+    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
@@ -215,5 +214,5 @@ fn verify_repeatable_client_service() {
     let (script, exemplar) = test_data!("client-service");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar);
+    verify_exemplar(script, exemplar).expect("exemplar");
 }

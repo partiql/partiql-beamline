@@ -24,12 +24,12 @@ use time::Duration;
 use crate::gen::arrival::{HomogeneousPoisson, OnceArrival};
 use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
-use crate::gen::distributions::{
+use crate::gen::process::{RandomProcesses, SimpleProcess};
+use crate::gen::simple::{
     bounded_array, bounded_bool, bounded_choose, bounded_decimal, bounded_f64, bounded_i16,
     bounded_i32, bounded_i64, bounded_i8, bounded_u16, bounded_u32, bounded_u64, bounded_u8,
     bounded_union, SimpleScriptVariableKind,
 };
-use crate::gen::process::{RandomProcesses, SimpleProcess};
 use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGenerator};
 use crate::primitives::{DataSetName, Tick};
 use once_cell::sync::Lazy;
