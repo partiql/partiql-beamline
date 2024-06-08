@@ -77,7 +77,7 @@ impl<R> InnerValueGenerator<R> for SimpleRandomDataImpl
 where
     R: Rng + Sized + Clone,
 {
-    fn gen_value(&self, _rng: &mut R, ctx: &SimContext) -> Value {
+    fn present_value(&self, _rng: &mut R, ctx: &SimContext) -> Value {
         match self {
             SimpleRandomDataImpl::Single(rv) => rv.gen_value(ctx),
             SimpleRandomDataImpl::Collection(kvs) => {

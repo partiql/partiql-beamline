@@ -81,7 +81,7 @@ pub trait InnerValueGenerator<R>: Debug + Clone
 where
     R: Rng + Sized + Clone,
 {
-    fn gen_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
+    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
     fn value_type(&self) -> PartiqlType;
 }
 
@@ -125,7 +125,7 @@ where
         // Always draw from *both* density and the actual value generator.
         // This assures that values are stable across differing 'density' configurations.
         let presence = self.density.sample(rng);
-        let value = self.inner.gen_value(rng, ctx);
+        let value = self.inner.present_value(rng, ctx);
         (presence, value)
     }
 }
@@ -235,7 +235,7 @@ where
     R: Rng + Sized + Clone,
     F: Fn(&mut R, &SimContext) -> Value + Clone,
 {
-    fn gen_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
+    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
         (self.f)(rng, ctx)
     }
 

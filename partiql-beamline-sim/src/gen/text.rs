@@ -34,7 +34,7 @@ impl<R> InnerValueGenerator<R> for LoremIpsumImpl
 where
     R: Rng + Sized + Clone,
 {
-    fn gen_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
+    fn present_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
         let n = self.len.sample(rng) as usize;
         Value::from(lipsum_with_rng(rng, n))
     }
@@ -62,7 +62,7 @@ impl<R> InnerValueGenerator<R> for LoremIpsumTitleImpl
 where
     R: Rng + Sized + Clone,
 {
-    fn gen_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
+    fn present_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
         Value::from(lipsum_title_with_rng(rng))
     }
 
@@ -105,7 +105,7 @@ impl<R> InnerValueGenerator<R> for RegexImpl
 where
     R: Rng + Sized + Clone,
 {
-    fn gen_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
+    fn present_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
         let mut out: Vec<u8> = vec![];
         self.re_strategy.write_to(rng, &mut out);
         Value::from(String::from_utf8(out).expect("valid utf-8"))
