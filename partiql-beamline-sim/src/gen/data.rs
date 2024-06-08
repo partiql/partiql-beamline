@@ -51,7 +51,7 @@ impl From<SimpleRandomData> for Box<dyn ValueGenerator> {
 }
 
 impl ValueGenerator for SimpleRandomData {
-    fn gen_value(&self, ctx: &SimContext) -> Value {
+    fn present_value(&self, ctx: &SimContext) -> Value {
         match self {
             SimpleRandomData::Single(rv) => rv.gen_value(ctx),
             SimpleRandomData::Collection(kvs) => {

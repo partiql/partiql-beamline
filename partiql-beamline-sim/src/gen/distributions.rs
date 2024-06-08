@@ -117,6 +117,17 @@ where
             inner,
         })
     }
+
+    pub fn presence_and_value(&self, ctx: &SimContext) -> (Presence, Value) {
+        let mut rng = self.rng.borrow_mut();
+        let rng = rng.deref_mut();
+
+        // Always draw from *both* density and the actual value generator.
+        // This assures that values are stable across differing 'density' configurations.
+        let presence = self.density.sample(rng);
+        let value = self.inner.gen_value(rng, ctx);
+        (presence, value)
+    }
 }
 
 impl<R, Impl> Clone for RandomVariable<R, Impl>
@@ -149,14 +160,13 @@ where
     Impl: InnerValueGenerator<R>,
 {
     fn gen_value(&self, ctx: &SimContext) -> Value {
-        let mut rng = self.rng.borrow_mut();
-        let rng = rng.deref_mut();
+        let (presence, value) = self.presence_and_value(ctx);
+        presence.to_value(value)
+    }
 
-        // Always draw from *both* density and the actual value generator.
-        // This assures that values are stable across differing 'density' configurations.
-        let presence = self.density.sample(rng);
-        let present = self.inner.gen_value(rng, ctx);
-        presence.to_value(present)
+    fn present_value(&self, ctx: &SimContext) -> Value {
+        let (_, value) = self.presence_and_value(ctx);
+        value
     }
 
     fn value_type(&self) -> PartiqlType {

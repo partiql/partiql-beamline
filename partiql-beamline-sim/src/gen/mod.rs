@@ -60,7 +60,10 @@ pub trait RandomProcess: Debug {
 pub type DataGenerationResult<T> = Result<T, DataGenerationError>;
 
 pub trait ValueGenerator: Debug + DynClone {
-    fn gen_value(&self, ctx: &SimContext) -> Value;
+    fn gen_value(&self, ctx: &SimContext) -> Value {
+        self.present_value(ctx)
+    }
+    fn present_value(&self, ctx: &SimContext) -> Value;
     fn value_type(&self) -> PartiqlType;
 }
 
