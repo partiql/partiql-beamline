@@ -1167,7 +1167,7 @@ mod tests {
     fn client_service() -> ProcessConfigResult<()> {
         let ion_data = include_str!("../tests/scripts/client-service.ion");
         let processes = parse(ion_data)?;
-        assert_eq!(processes.ids().len(), 10 * 2); // 10 clients; 10 instances of service
+        assert_eq!(processes.ids().len(), 14 * 2); // 14 clients; 14 instances of service
 
         Ok(())
     }
