@@ -601,7 +601,8 @@ impl ProcessParser {
                         kvs.insert(name, value_generator);
                     }
                     self.pop_scope()?;
-                    Ok(Box::new(SimpleRandomData::Collection(kvs)) as Box<dyn ValueGenerator>)
+                    let rng = self.child_rng()?;
+                    Ok(Box::new(SimpleRandomData::new(rng, kvs)?) as Box<dyn ValueGenerator>)
                 } else {
                     let kind = self.parse_symbol_type(&annot[0])?;
                     match kind {
