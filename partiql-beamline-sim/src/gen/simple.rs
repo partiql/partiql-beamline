@@ -1,4 +1,4 @@
-use crate::gen::distributions::SimpleRandomVariable;
+use crate::gen::distributions::{InnerValueGenerator, RandomVariable};
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
@@ -7,106 +7,76 @@ use partiql_value::{List, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
 use rand_distr::num_traits::FromPrimitive;
-use std::fmt::Debug;
+use std::fmt::{Debug, Formatter};
+use std::marker::PhantomData;
 
-#[derive(Debug)]
-pub enum SimpleScriptVariableKind {
-    AnyOf,
-    Array,
-    Tick,
-    Instant,
-    String,
-    Choice,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    Float64,
-    Bool,
-    UUID,
-    Decimal,
+pub struct SimpleRandomVariableImpl<R, F>
+where
+    R: Rng + Sized + Clone,
+    F: Fn(&mut R, &SimContext) -> Value,
+{
+    pub(crate) name: String,
+    pub(crate) typ: PartiqlType,
+    pub(crate) f: F,
+    rng: PhantomData<R>,
 }
 
-impl SimpleScriptVariableKind {
-    pub fn named() -> DataGenerationResult<Vec<(String, SimpleScriptVariableKind)>> {
-        [
-            "Tick",
-            "Instant",
-            "String",
-            "Uniform",
-            "UniformAnyOf",
-            "UniformArray",
-            "UniformU8",
-            "UniformU16",
-            "UniformU32",
-            "UniformU64",
-            "UniformI8",
-            "UniformI16",
-            "UniformI32",
-            "UniformI64",
-            "UniformF64",
-            "UniformDecimal",
-            "Bool",
-            "UUID",
-        ]
-        .iter()
-        .map(|s| Self::from_string(s).map(|k| (s.to_string(), k)))
-        .collect()
-    }
+pub type SimpleRandomVariable<R, F> = RandomVariable<R, SimpleRandomVariableImpl<R, F>>;
 
-    pub fn from_string(s: &str) -> DataGenerationResult<Self> {
-        match s {
-            "Tick" => Ok(Self::Tick),
-            "Instant" => Ok(Self::Instant),
-            "String" => Ok(Self::String),
-            "Uniform" => Ok(Self::Choice),
-            "UniformAnyOf" => Ok(Self::AnyOf),
-            "UniformArray" => Ok(Self::Array),
-            "UniformU8" => Ok(Self::UInt8),
-            "UniformU16" => Ok(Self::UInt16),
-            "UniformU32" => Ok(Self::UInt32),
-            "UniformU64" => Ok(Self::UInt64),
-            "UniformI8" => Ok(Self::Int8),
-            "UniformI16" => Ok(Self::Int16),
-            "UniformI32" => Ok(Self::Int32),
-            "UniformI64" => Ok(Self::Int64),
-            "UniformF64" => Ok(Self::Float64),
-            "UniformDecimal" => Ok(Self::Decimal),
-            "Bool" => Ok(Self::Bool),
-            "UUID" => Ok(Self::UUID),
-            _ => Err(DataGenerationError::Other(format!(
-                "Unknown random variable kind `{s}`"
-            ))),
+impl<R, F> SimpleRandomVariable<R, F>
+where
+    R: Rng + Sized + Clone,
+    F: Fn(&mut R, &SimContext) -> Value + Clone,
+{
+    pub fn new(rng: R, name: String, typ: PartiqlType, f: F) -> DataGenerationResult<Self> {
+        let inner = SimpleRandomVariableImpl {
+            name,
+            typ,
+            f,
+            rng: PhantomData,
+        };
+        RandomVariable::create(rng, inner)
+    }
+}
+
+impl<R, F> Clone for SimpleRandomVariableImpl<R, F>
+where
+    R: Rng + Sized + Clone,
+    F: Fn(&mut R, &SimContext) -> Value + Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            typ: self.typ.clone(),
+            f: self.f.clone(),
+            rng: self.rng,
         }
     }
+}
 
-    pub fn create<R>(&self, rng: R) -> DataGenerationResult<Box<dyn ValueGenerator>>
-    where
-        R: Rng + Sized + Clone + 'static,
-    {
-        match self {
-            SimpleScriptVariableKind::Tick => Ok(Box::new(simple_tick())),
-            SimpleScriptVariableKind::Instant => Ok(Box::new(simple_instant())),
-            SimpleScriptVariableKind::UInt8 => Ok(Box::new(simple_u8(rng)?)),
-            SimpleScriptVariableKind::UInt16 => Ok(Box::new(simple_u16(rng)?)),
-            SimpleScriptVariableKind::UInt32 => Ok(Box::new(simple_u32(rng)?)),
-            SimpleScriptVariableKind::UInt64 => Ok(Box::new(simple_u64(rng)?)),
-            SimpleScriptVariableKind::Int8 => Ok(Box::new(simple_i8(rng)?)),
-            SimpleScriptVariableKind::Int16 => Ok(Box::new(simple_i16(rng)?)),
-            SimpleScriptVariableKind::Int32 => Ok(Box::new(simple_i32(rng)?)),
-            SimpleScriptVariableKind::Int64 => Ok(Box::new(simple_i64(rng)?)),
-            SimpleScriptVariableKind::Float64 => Ok(Box::new(simple_f64(rng)?)),
-            SimpleScriptVariableKind::Decimal => Ok(Box::new(simple_decimal(rng)?)),
-            SimpleScriptVariableKind::Bool => Ok(Box::new(simple_bool(rng)?)),
-            SimpleScriptVariableKind::UUID => Ok(Box::new(simple_uuid(rng)?)),
-            _ => Err(DataGenerationError::NoConfig(format!(
-                "Usage of {self:?} with no config is unsupported"
-            ))),
-        }
+impl<R, F> Debug for SimpleRandomVariableImpl<R, F>
+where
+    R: Rng + Sized + Clone,
+    F: Fn(&mut R, &SimContext) -> Value,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SimpleRandomVariable")
+            .field("name", &self.name)
+            .finish()
+    }
+}
+
+impl<R, F> InnerValueGenerator<R> for SimpleRandomVariableImpl<R, F>
+where
+    R: Rng + Sized + Clone,
+    F: Fn(&mut R, &SimContext) -> Value + Clone,
+{
+    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
+        (self.f)(rng, ctx)
+    }
+
+    fn value_type(&self) -> PartiqlType {
+        self.typ.clone()
     }
 }
 
