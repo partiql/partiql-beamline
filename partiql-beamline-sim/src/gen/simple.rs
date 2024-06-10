@@ -1,4 +1,4 @@
-use crate::gen::distributions::{InnerValueGenerator, RandomVariable};
+use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
@@ -28,14 +28,20 @@ where
     R: Rng + Sized + Clone,
     F: Fn(&mut R, &SimContext) -> Value + Clone,
 {
-    pub fn new(rng: R, name: String, typ: PartiqlType, f: F) -> DataGenerationResult<Self> {
+    pub fn new(
+        rng: R,
+        density: Density,
+        name: String,
+        typ: PartiqlType,
+        f: F,
+    ) -> DataGenerationResult<Self> {
         let inner = SimpleRandomVariableImpl {
             name,
             typ,
             f,
             rng: PhantomData,
         };
-        RandomVariable::create(rng, inner)
+        RandomVariable::create(rng, density, inner)
     }
 }
 
@@ -80,16 +86,9 @@ where
     }
 }
 
-pub fn simple_tick() -> TickGenerator {
-    TickGenerator {}
-}
-
-pub fn simple_instant() -> InstantGenerator {
-    InstantGenerator {}
-}
-
 pub fn bounded_union<R>(
     rng: R,
+    density: Density,
     generators: Vec<Box<dyn ValueGenerator>>,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
@@ -106,11 +105,12 @@ where
         let generator = &generators[idx as usize];
         generator.gen_value(ctx)
     };
-    SimpleRandomVariable::new(rng, name, typ, f)
+    SimpleRandomVariable::new(rng, density, name, typ, f)
 }
 
 pub fn bounded_choose<R>(
     rng: R,
+    density: Density,
     choices: Vec<Value>,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
@@ -129,20 +129,12 @@ where
     let typ = PartiqlType::any_of(choices.iter().map(|v| v.infer_type()));
 
     let f = move |rng: &mut R, _ctx: &SimContext| choices.as_slice().choose(rng).unwrap().clone();
-    SimpleRandomVariable::new(rng, name, typ, f)
-}
-
-pub fn simple_bool<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_bool(rng, 0.5)
+    SimpleRandomVariable::new(rng, density, name, typ, f)
 }
 
 pub fn simple_uuid<R>(
     rng: R,
+    density: Density,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
     R: Rng + Sized + Clone,
@@ -156,101 +148,12 @@ where
         let id = uuid::Uuid::from_bytes(uuid_bytes);
         Value::from(id.to_string())
     };
-    SimpleRandomVariable::new(rng, name, typ, f)
-}
-
-pub fn simple_u8<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_u8(rng, u8::MIN as i64, u8::MAX as i64)
-}
-
-pub fn simple_u16<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_u16(rng, u16::MIN as i64, u16::MAX as i64)
-}
-
-pub fn simple_u32<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_u32(rng, u32::MIN as i64, u32::MAX as i64)
-}
-
-pub fn simple_u64<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_u64(rng, u64::MIN as i64, i64::MAX)
-}
-
-pub fn simple_i8<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_i8(rng, i8::MIN as i64, i8::MAX as i64)
-}
-
-pub fn simple_i16<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_i16(rng, i16::MIN as i64, i16::MAX as i64)
-}
-
-pub fn simple_i32<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_i32(rng, i32::MIN as i64, i32::MAX as i64)
-}
-
-pub fn simple_i64<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_i64(rng, i64::MIN, i64::MAX)
-}
-
-pub fn simple_f64<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_f64(rng, i8::MIN as f64, i8::MAX as f64)
-}
-
-pub fn simple_decimal<R>(
-    rng: R,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    bounded_decimal(rng, i8::MIN as f64, i8::MAX as f64)
+    SimpleRandomVariable::new(rng, density, name, typ, f)
 }
 
 pub fn bounded_array<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
     elem_generator: Box<dyn ValueGenerator>,
@@ -276,12 +179,13 @@ where
                 .collect();
             Value::List(Box::new(List::from(array)))
         };
-        SimpleRandomVariable::new(rng, name, typ, f)
+        SimpleRandomVariable::new(rng, density, name, typ, f)
     }
 }
 
 pub fn bounded_bool<R>(
     rng: R,
+    density: Density,
     p: f64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
 where
@@ -292,11 +196,12 @@ where
 
     let dist = statrs::distribution::Bernoulli::new(p)?;
     let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng) > 0f64);
-    SimpleRandomVariable::new(rng, name, typ, f)
+    SimpleRandomVariable::new(rng, density, name, typ, f)
 }
 
 pub fn bounded_u8<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -306,12 +211,13 @@ where
     if min < u8::MIN as i64 || max > u8::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        bounded_i64(rng, min, max)
+        bounded_i64(rng, density, min, max)
     }
 }
 
 pub fn bounded_u16<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -321,12 +227,13 @@ where
     if min < u16::MIN as i64 || max > u16::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        bounded_i64(rng, min, max)
+        bounded_i64(rng, density, min, max)
     }
 }
 
 pub fn bounded_u32<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -336,12 +243,13 @@ where
     if min < u32::MIN as i64 || max > u32::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        bounded_i64(rng, min, max)
+        bounded_i64(rng, density, min, max)
     }
 }
 
 pub fn bounded_u64<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -351,12 +259,13 @@ where
     if min < u64::MIN as i64 {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        bounded_i64(rng, min, max)
+        bounded_i64(rng, density, min, max)
     }
 }
 
 pub fn bounded_i8<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -366,12 +275,13 @@ where
     if min < i8::MIN as i64 || max > i8::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        bounded_i64(rng, min, max)
+        bounded_i64(rng, density, min, max)
     }
 }
 
 pub fn bounded_i16<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -381,12 +291,13 @@ where
     if min < i16::MIN as i64 || max > i16::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        bounded_i64(rng, min, max)
+        bounded_i64(rng, density, min, max)
     }
 }
 
 pub fn bounded_i32<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -396,12 +307,13 @@ where
     if min < i32::MIN as i64 || max > i32::MAX as i64 {
         Err(DataGenerationError::Bounds(min, max))
     } else {
-        bounded_i64(rng, min, max)
+        bounded_i64(rng, density, min, max)
     }
 }
 
 pub fn bounded_i64<R>(
     rng: R,
+    density: Density,
     min: i64,
     max: i64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -413,11 +325,12 @@ where
 
     let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
     let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng) as i64);
-    SimpleRandomVariable::new(rng, name, typ, f)
+    SimpleRandomVariable::new(rng, density, name, typ, f)
 }
 
 pub fn bounded_f64<R>(
     rng: R,
+    density: Density,
     min: f64,
     max: f64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -429,11 +342,12 @@ where
 
     let dist = statrs::distribution::Uniform::new(min, max)?;
     let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng));
-    SimpleRandomVariable::new(rng, name, typ, f)
+    SimpleRandomVariable::new(rng, density, name, typ, f)
 }
 
 pub fn bounded_decimal<R>(
     rng: R,
+    density: Density,
     min: f64,
     max: f64,
 ) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
@@ -471,5 +385,5 @@ where
         out_dec.rescale(scale);
         Value::Decimal(Box::new(out_dec))
     };
-    SimpleRandomVariable::new(rng, name, typ, f)
+    SimpleRandomVariable::new(rng, density, name, typ, f)
 }

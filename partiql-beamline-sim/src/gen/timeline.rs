@@ -1,17 +1,34 @@
-use crate::gen::{ValueGenerator, CURRENT_TICK};
+use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
+use crate::gen::text::{LoremIpsumTitleGenerator, LoremIpsumTitleImpl};
+use crate::gen::{DataGenerationResult, ValueGenerator, CURRENT_TICK};
 use crate::primitives::Tick;
 use crate::sim::context::{ConstantBindingValue, SimContext};
 use partiql_types::{PartiqlType, TYPE_DATETIME, TYPE_INT64};
 use partiql_value::{DateTime, Value};
+use rand::Rng;
 use std::ops::Add;
 use time::Duration;
 
-#[derive(Debug, Clone)]
 /// Yields the simulation's current [`Tick`] when a value is generated.
-pub struct TickGenerator {}
+pub type TickGenerator<R> = RandomVariable<R, TickGeneratorImpl>;
 
-impl ValueGenerator for TickGenerator {
-    fn present_value(&self, ctx: &SimContext) -> Value {
+impl<R> TickGenerator<R>
+where
+    R: Rng + Sized + Clone,
+{
+    pub fn new(rng: R, density: Density) -> DataGenerationResult<Self> {
+        RandomVariable::create(rng, density, TickGeneratorImpl {})
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TickGeneratorImpl {}
+
+impl<R> InnerValueGenerator<R> for TickGeneratorImpl
+where
+    R: Rng + Sized + Clone,
+{
+    fn present_value(&self, _rng: &mut R, ctx: &SimContext) -> Value {
         let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
         if let ConstantBindingValue::Tick(Tick(t)) = tick {
             // TODO Remove `as usize` once https://github.com/partiql/partiql-lang-rust/pull/449 is released
@@ -26,14 +43,27 @@ impl ValueGenerator for TickGenerator {
     }
 }
 
-#[derive(Debug, Clone)]
 /// Yields the simulation's current 'Time' when a value is generated.
 ///
 /// The current time is calculated by adding the current [`Tick`] to the simulation's start time (`t0`).
-pub struct InstantGenerator {}
+pub type InstantGenerator<R> = RandomVariable<R, InstantGeneratorImpl>;
+impl<R> InstantGenerator<R>
+where
+    R: Rng + Sized + Clone,
+{
+    pub fn new(rng: R, density: Density) -> DataGenerationResult<Self> {
+        RandomVariable::create(rng, density, InstantGeneratorImpl {})
+    }
+}
 
-impl ValueGenerator for InstantGenerator {
-    fn present_value(&self, ctx: &SimContext) -> Value {
+#[derive(Debug, Clone)]
+pub struct InstantGeneratorImpl {}
+
+impl<R> InnerValueGenerator<R> for InstantGeneratorImpl
+where
+    R: Rng + Sized + Clone,
+{
+    fn present_value(&self, _rng: &mut R, ctx: &SimContext) -> Value {
         let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
 
         if let ConstantBindingValue::Tick(Tick(t)) = tick {

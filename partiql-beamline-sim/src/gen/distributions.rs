@@ -31,8 +31,8 @@ impl Presence {
 
 #[derive(Clone, Debug)]
 pub struct Density {
-    null: f64,
-    missing: f64,
+    null: Option<f64>,
+    missing: Option<f64>,
     present: f64,
 
     dist: Categorical,
@@ -40,26 +40,23 @@ pub struct Density {
 
 impl Density {
     pub fn new(
-        null_prob_mass: f64,
-        missing_prob_mass: f64,
+        null_prob_mass: Option<f64>,
+        missing_prob_mass: Option<f64>,
         present_prob_mass: f64,
     ) -> DataGenerationResult<Self> {
-        let sum = null_prob_mass + missing_prob_mass + present_prob_mass;
+        let sum =
+            null_prob_mass.unwrap_or(0.0) + missing_prob_mass.unwrap_or(0.0) + present_prob_mass;
 
-        let null = null_prob_mass / sum;
-        let missing = missing_prob_mass / sum;
+        let null = null_prob_mass.map(|n| n / sum);
+        let missing = missing_prob_mass.map(|n| n / sum);
         let present = present_prob_mass / sum;
-        let dist = Categorical::new(&[null, missing, present])?;
+        let dist = Categorical::new(&[null.unwrap_or(0.0), missing.unwrap_or(0.0), present])?;
         Ok(Self {
             null,
             missing,
             present,
             dist,
         })
-    }
-
-    fn prob_mass(&self) -> [f64; 3] {
-        [self.null, self.missing, self.present]
     }
 
     fn sample<R>(&self, rng: &mut R) -> Presence
@@ -104,12 +101,8 @@ where
     R: Rng + Sized + Clone,
     Inner: InnerValueGenerator<R>,
 {
-    pub(crate) fn create(rng: R, inner: Inner) -> DataGenerationResult<Self> {
+    pub(crate) fn create(rng: R, density: Density, inner: Inner) -> DataGenerationResult<Self> {
         let rng = RefCell::new(rng);
-
-        // TODO: allow configuring null & missing probability
-        let density = Density::new(0.0, 0.0, 1.0)?;
-
         Ok(RandomVariable {
             rng,
             density,
@@ -164,6 +157,7 @@ where
     }
 
     fn present_value(&self, ctx: &SimContext) -> Value {
+        // Deliberately disregard Null and Missing, as a non-absent value was requested.
         let (_, value) = self.presence_and_value(ctx);
         value
     }

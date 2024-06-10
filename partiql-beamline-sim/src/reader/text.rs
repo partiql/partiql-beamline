@@ -3,7 +3,7 @@ use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGener
 use crate::gen::ValueGenerator;
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
-use crate::reader::{ProcessConfigError, ProcessConfigResult};
+use crate::reader::{parse_density, ProcessConfigError, ProcessConfigResult};
 use ion_rs::{AnyEncoding, LazyStruct};
 use partiql_value::Value;
 use rand::Rng;
@@ -49,13 +49,14 @@ where
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
-        _symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let density = parse_density(config, symbol_parser)?;
         if let Some(config) = config {
             if let Ok(pattern) = config.get_expected("pattern") {
                 let patt = pattern.expect_string()?;
                 let patt = patt.text();
-                let gen = RegexGenerator::new(rng, patt)?;
+                let gen = RegexGenerator::new(rng, density, patt)?;
                 return Ok(Box::new(gen));
             }
         }
@@ -73,8 +74,9 @@ where
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
-        _symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let density = parse_density(config, symbol_parser)?;
         if let Some(config) = config {
             let min = config.get_expected("min_words");
             let max = config.get_expected("max_words");
@@ -82,7 +84,7 @@ where
             if let (Ok(min), Ok(max)) = (min, max) {
                 let min = min.expect_i64()? as u8;
                 let max = max.expect_i64()? as u8;
-                return Ok(Box::new(LoremIpsumGenerator::new(rng, min, max)?));
+                return Ok(Box::new(LoremIpsumGenerator::new(rng, density, min, max)?));
             }
         }
 
@@ -100,14 +102,10 @@ where
         &self,
         rng: R,
         config: Option<LazyStruct<AnyEncoding>>,
-        _symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        if let Some(_config) = config {
-            Err(ProcessConfigError::Other(
-                "Configuration error for LoremIpsumTitle".to_string(),
-            ))
-        } else {
-            Ok(Box::new(LoremIpsumTitleGenerator::new(rng)?))
-        }
+        let density = parse_density(config, symbol_parser)?;
+
+        Ok(Box::new(LoremIpsumTitleGenerator::new(rng, density)?))
     }
 }

@@ -179,40 +179,65 @@ macro_rules! test_data {
 
 #[test]
 fn verify_repeatable_transactions() {
-    let (script, exemplar) = test_data!("transactions");
+    let (script, _) = test_data!("transactions");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
 fn verify_repeatable_orders() {
-    let (script, exemplar) = test_data!("orders");
+    let (script, _) = test_data!("orders");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
 fn verify_repeatable_sensors() {
-    let (script, exemplar) = test_data!("sensors");
+    let (script, _) = test_data!("sensors");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
 fn verify_repeatable_sensors_alternate() {
-    let (script, exemplar) = test_data!("sensors-alternate");
+    let (script, _) = test_data!("sensors-alternate");
     verify_repeatable(script);
     verify_repeatable_multi(script);
-    verify_exemplar(script, exemplar).expect("exemplar");
 }
 
 #[test]
 fn verify_repeatable_client_service() {
-    let (script, exemplar) = test_data!("client-service");
+    let (script, _) = test_data!("client-service");
     verify_repeatable(script);
     verify_repeatable_multi(script);
+}
+
+#[test]
+fn verify_exemplar_transactions() {
+    let (script, exemplar) = test_data!("transactions");
+    verify_exemplar(script, exemplar).expect("exemplar");
+}
+
+#[test]
+fn verify_exemplar_orders() {
+    let (script, exemplar) = test_data!("orders");
+    verify_exemplar(script, exemplar).expect("exemplar");
+}
+
+#[test]
+fn verify_exemplar_sensors() {
+    let (script, exemplar) = test_data!("sensors");
+    verify_exemplar(script, exemplar).expect("exemplar");
+}
+
+#[test]
+fn verify_exemplar_sensors_alternate() {
+    let (script, exemplar) = test_data!("sensors-alternate");
+    verify_exemplar(script, exemplar).expect("exemplar");
+}
+
+#[test]
+fn verify_exemplar_client_service() {
+    let (script, exemplar) = test_data!("client-service");
     verify_exemplar(script, exemplar).expect("exemplar");
 }

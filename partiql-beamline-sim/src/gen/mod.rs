@@ -60,9 +60,17 @@ pub trait RandomProcess: Debug {
 pub type DataGenerationResult<T> = Result<T, DataGenerationError>;
 
 pub trait ValueGenerator: Debug + DynClone {
+    /// Generates a [`Value`].
+    ///
+    /// The value may be [`Value::Null`] or [`Value::Missing`] depending on the scripted nullability
+    /// and optionality.
+    ///
+    /// For only non-absent values, see [`Self::present_value`].
     fn gen_value(&self, ctx: &SimContext) -> Value {
         self.present_value(ctx)
     }
+
+    /// Generates non-absent [`Value`] (i.e., not [`Value::Null`] and not [`Value::Missing`]).
     fn present_value(&self, ctx: &SimContext) -> Value;
     fn value_type(&self) -> PartiqlType;
 }

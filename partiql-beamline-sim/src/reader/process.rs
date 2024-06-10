@@ -1,6 +1,7 @@
 use crate::gen::arrival::{HomogeneousPoisson, OnceArrival};
 use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
+use crate::gen::distributions::Density;
 use crate::gen::process::{RandomProcesses, SimpleProcess};
 use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
@@ -8,7 +9,9 @@ use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
-use crate::reader::{ProcessConfigError, ProcessConfigResult};
+use crate::reader::{
+    ProcessConfigError, ProcessConfigResult, DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY,
+};
 use crate::sim::context::SimContext;
 use ion_rs::{
     AnyEncoding, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef, ValueRef,
@@ -450,6 +453,10 @@ impl ProcessParser {
                 }
             },
             ValueRef::Struct(strct) => {
+                // TODO density
+                let density = Density::new(DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY, 1.0)
+                    .expect("todo fix density for structs");
+
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
                 if annot.is_empty() {
                     self.push_scope("data")?;
@@ -463,7 +470,8 @@ impl ProcessParser {
                     }
                     self.pop_scope()?;
                     let rng = self.child_rng()?;
-                    Ok(Box::new(SimpleRandomData::new(rng, kvs)?) as Box<dyn ValueGenerator>)
+                    Ok(Box::new(SimpleRandomData::new(rng, density, kvs)?)
+                        as Box<dyn ValueGenerator>)
                 } else {
                     let kind = self.parse_symbol_type(&annot[0])?;
                     match kind {
