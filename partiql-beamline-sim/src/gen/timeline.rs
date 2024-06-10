@@ -11,7 +11,7 @@ use time::Duration;
 pub struct TickGenerator {}
 
 impl ValueGenerator for TickGenerator {
-    fn gen_value(&self, ctx: &SimContext) -> Value {
+    fn present_value(&self, ctx: &SimContext) -> Value {
         let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
         if let ConstantBindingValue::Tick(Tick(t)) = tick {
             // TODO Remove `as usize` once https://github.com/partiql/partiql-lang-rust/pull/449 is released
@@ -33,7 +33,7 @@ impl ValueGenerator for TickGenerator {
 pub struct InstantGenerator {}
 
 impl ValueGenerator for InstantGenerator {
-    fn gen_value(&self, ctx: &SimContext) -> Value {
+    fn present_value(&self, ctx: &SimContext) -> Value {
         let tick = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
 
         if let ConstantBindingValue::Tick(Tick(t)) = tick {

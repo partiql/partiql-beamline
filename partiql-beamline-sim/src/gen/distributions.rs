@@ -3,16 +3,85 @@ use crate::sim::context::SimContext;
 use partiql_types::PartiqlType;
 use partiql_value::Value;
 use rand::Rng;
+use rand_distr::Distribution;
+use statrs::distribution::Categorical;
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::ops::DerefMut;
 
+#[derive(Copy, Clone, Debug)]
+pub enum Presence {
+    Null,
+    Missing,
+    Present,
+}
+
+impl Presence {
+    pub fn to_value<V>(self, present: V) -> Value
+    where
+        V: Into<Value>,
+    {
+        match self {
+            Presence::Null => Value::Null,
+            Presence::Missing => Value::Missing,
+            Presence::Present => present.into(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Density {
+    null: f64,
+    missing: f64,
+    present: f64,
+
+    dist: Categorical,
+}
+
+impl Density {
+    pub fn new(
+        null_prob_mass: f64,
+        missing_prob_mass: f64,
+        present_prob_mass: f64,
+    ) -> DataGenerationResult<Self> {
+        let sum = null_prob_mass + missing_prob_mass + present_prob_mass;
+
+        let null = null_prob_mass / sum;
+        let missing = missing_prob_mass / sum;
+        let present = present_prob_mass / sum;
+        let dist = Categorical::new(&[null, missing, present])?;
+        Ok(Self {
+            null,
+            missing,
+            present,
+            dist,
+        })
+    }
+
+    fn prob_mass(&self) -> [f64; 3] {
+        [self.null, self.missing, self.present]
+    }
+
+    fn sample<R>(&self, rng: &mut R) -> Presence
+    where
+        R: Rng + Sized + Clone,
+    {
+        let i = self.dist.sample(rng) as u8;
+        match i {
+            0 => Presence::Null,
+            1 => Presence::Missing,
+            2 => Presence::Present,
+            _ => unreachable!(),
+        }
+    }
+}
+
 pub trait InnerValueGenerator<R>: Debug + Clone
 where
     R: Rng + Sized + Clone,
 {
-    fn gen_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
+    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
     fn value_type(&self) -> PartiqlType;
 }
 
@@ -23,6 +92,11 @@ where
 {
     /// The source of randomness
     rng: RefCell<R>,
+
+    /// The source of Null | Missing
+    density: Density,
+
+    /// The value generator
     inner: Inner,
 }
 
@@ -33,7 +107,26 @@ where
 {
     pub(crate) fn create(rng: R, inner: Inner) -> DataGenerationResult<Self> {
         let rng = RefCell::new(rng);
-        Ok(RandomVariable { rng, inner })
+
+        // TODO: allow configuring null & missing probability
+        let density = Density::new(0.0, 0.0, 1.0)?;
+
+        Ok(RandomVariable {
+            rng,
+            density,
+            inner,
+        })
+    }
+
+    pub fn presence_and_value(&self, ctx: &SimContext) -> (Presence, Value) {
+        let mut rng = self.rng.borrow_mut();
+        let rng = rng.deref_mut();
+
+        // Always draw from *both* density and the actual value generator.
+        // This assures that values are stable across differing 'density' configurations.
+        let presence = self.density.sample(rng);
+        let value = self.inner.present_value(rng, ctx);
+        (presence, value)
     }
 }
 
@@ -45,6 +138,7 @@ where
     fn clone(&self) -> Self {
         Self {
             rng: self.rng.clone(),
+            density: self.density.clone(),
             inner: self.inner.clone(),
         }
     }
@@ -66,9 +160,13 @@ where
     Impl: InnerValueGenerator<R>,
 {
     fn gen_value(&self, ctx: &SimContext) -> Value {
-        let mut rng = self.rng.borrow_mut();
-        let rng = rng.deref_mut();
-        self.inner.gen_value(rng, ctx)
+        let (presence, value) = self.presence_and_value(ctx);
+        presence.to_value(value)
+    }
+
+    fn present_value(&self, ctx: &SimContext) -> Value {
+        let (_, value) = self.presence_and_value(ctx);
+        value
     }
 
     fn value_type(&self) -> PartiqlType {
@@ -137,7 +235,7 @@ where
     R: Rng + Sized + Clone,
     F: Fn(&mut R, &SimContext) -> Value + Clone,
 {
-    fn gen_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
+    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
         (self.f)(rng, ctx)
     }
 

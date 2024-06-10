@@ -409,7 +409,7 @@ impl ProcessParser {
             .get(&self.parse_symbol_text(parameterization)?)?;
         let list_param = match list_param {
             EnvBindingValue::Value(v) => v.clone(),
-            EnvBindingValue::Generator(g) => g.gen_value(&self.sim_context),
+            EnvBindingValue::Generator(g) => g.present_value(&self.sim_context),
             EnvBindingValue::Arrival(_) => todo!("error arrival for list param"),
         };
         match self.parse_symbol_type(parameterization)? {
@@ -459,7 +459,7 @@ impl ProcessParser {
                 assert_eq!(annot.len(), 1usize);
                 match self.env_stack.get(annot.first().unwrap().text().unwrap())? {
                     EnvBindingValue::Value(v) => Ok(v.clone()),
-                    EnvBindingValue::Generator(g) => Ok(g.gen_value(&self.sim_context)),
+                    EnvBindingValue::Generator(g) => Ok(g.present_value(&self.sim_context)),
                     EnvBindingValue::Arrival(_) => {
                         todo!("arrival in immediate reference")
                     }
@@ -481,7 +481,7 @@ impl ProcessParser {
                 SymbolType::VarRef(var) => match self.env_stack.get(&var)? {
                     EnvBindingValue::Value(Value::Integer(i)) => *i,
                     EnvBindingValue::Generator(gen) => {
-                        let v = gen.gen_value(&self.sim_context);
+                        let v = gen.present_value(&self.sim_context);
                         match v {
                             Value::Integer(i) => i,
                             other => {
@@ -601,7 +601,8 @@ impl ProcessParser {
                         kvs.insert(name, value_generator);
                     }
                     self.pop_scope()?;
-                    Ok(Box::new(SimpleRandomData::Collection(kvs)) as Box<dyn ValueGenerator>)
+                    let rng = self.child_rng()?;
+                    Ok(Box::new(SimpleRandomData::new(rng, kvs)?) as Box<dyn ValueGenerator>)
                 } else {
                     let kind = self.parse_symbol_type(&annot[0])?;
                     match kind {
@@ -765,7 +766,7 @@ impl EnvSymbolParser for ProcessParser {
         match self.parse_symbol_type(sym)? {
             SymbolType::VarRef(name) => match self.env_stack.get(&name)? {
                 EnvBindingValue::Value(v) => Ok(v.clone()),
-                EnvBindingValue::Generator(gen) => Ok(gen.gen_value(&self.sim_context)),
+                EnvBindingValue::Generator(gen) => Ok(gen.present_value(&self.sim_context)),
                 EnvBindingValue::Arrival(_) => todo!("arrival in generator config"),
             },
             SymbolType::Str(s) => Ok(Value::String(Box::new(s))),
@@ -1167,7 +1168,7 @@ mod tests {
     fn client_service() -> ProcessConfigResult<()> {
         let ion_data = include_str!("../tests/scripts/client-service.ion");
         let processes = parse(ion_data)?;
-        assert_eq!(processes.ids().len(), 10 * 2); // 10 clients; 10 instances of service
+        assert_eq!(processes.ids().len(), 14 * 2); // 14 clients; 14 instances of service
 
         Ok(())
     }

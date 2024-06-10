@@ -117,18 +117,19 @@ mod tests {
         let expected = tuple!(
             ("tick", 3960823),
             ("id", 1),
-            ("i8", 49),
-            ("f", -81.7290705652406),
-            ("d", 8),
-            ("sub", tuple!(("f", -30.417077694899604), ("o", 69))),
-            ("w", 3.0690),
-            ("variant", 3960823),
-            ("tick_array", list!(3960823, 3960823, 3960823)),
-            ("weight_array", list!(4.0550, 2.0066, 4.7051)),
-            ("decimal_array", list!(3.9918, 4.4656)),
+            ("i8", 113),
+            ("f", 81.65777117537067),
+            ("d", 35),
+            ("sub", tuple!(("f", 119.14662526189088), ("o", -23))),
+            ("w", 2.5932),
+            ("variant", "a06a5f14-b622-63ef-29ae-1cd5fdacc829"),
+            ("tick_array", list!(3960823, 3960823)),
+            ("weight_array", list!(4.2710, 3.9625, 4.9851)),
+            ("decimal_array", list!(3.6373, 2.5320)),
         );
 
         let sample_101 = sim.next_sample().unwrap().unwrap();
+        println!("{:?}", sample_101);
         assert_eq!(Value::from(expected), sample_101.value);
     }
 
