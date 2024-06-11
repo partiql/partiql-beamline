@@ -8,7 +8,8 @@ use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
 use partiql_beamline::sim::{SimBuilder, DATETIME_FORMAT};
 use partiql_beamline_cliargs::{
-    parse_args, DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat, SimSpec,
+    parse_args, DataOutputFormat, DbArgs, DbTarget, Nullability, Optionality, SampleCount,
+    ShapeOutputFormat, SimSpec,
 };
 use partiql_extension_ion::Encoding;
 use std::io::stdout;
@@ -90,12 +91,15 @@ fn main() -> miette::Result<()> {
                         seed,
                         start_time,
                         script,
+                        nullability,
+                        optionality,
                     },
                 sample_count,
                 output_format,
                 datasets,
             } => {
-                let cfg = parse_args(&seed, &start_time).into_diagnostic()?;
+                let cfg =
+                    parse_args(&seed, &start_time, nullability, optionality).into_diagnostic()?;
                 let script = script.extract().into_diagnostic()?;
                 let t0 = cfg.t0;
 
@@ -180,6 +184,8 @@ fn main() -> miette::Result<()> {
                                 seed,
                                 start_time,
                                 script,
+                                nullability,
+                                optionality,
                             },
                         db_args:
                             DbArgs {
@@ -191,7 +197,8 @@ fn main() -> miette::Result<()> {
                         sample_count,
                     } => {
                         if let DbTarget::Filesystem = target {
-                            let cfg = parse_args(&seed, &start_time).into_diagnostic()?;
+                            let cfg = parse_args(&seed, &start_time, nullability, optionality)
+                                .into_diagnostic()?;
                             let script = script.extract().into_diagnostic()?;
                             let sample_count = sample_count.sample_count;
                             let catalog_full_path = catalog_full_path(&catalog_name, &catalog_path);
@@ -223,10 +230,12 @@ fn main() -> miette::Result<()> {
                     seed,
                     start_time,
                     script,
+                    nullability,
+                    optionality,
                 },
             output_format,
         } => {
-            let cfg = parse_args(&seed, &start_time).into_diagnostic()?;
+            let cfg = parse_args(&seed, &start_time, nullability, optionality).into_diagnostic()?;
             let script = script.extract().into_diagnostic()?;
             let t0 = cfg.t0;
 
