@@ -897,31 +897,58 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 [2019-11-07 15:33:31.942 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'c20ecc3b-f3dd-5977-0cec-ed542ccb7ff7' }
 ```
 
-### Data Generator Types
+### Data Generators
 
-| Type            | Description                     | PartiQL Type | Configuration               | Defaults                                                       |
-|-----------------|---------------------------------|--------------|-----------------------------|----------------------------------------------------------------|
-| Bool            | Boolean                         | BOOL         | p: f64                      | p: 0.5                                                         |
-| LoremIpsum      | String                          | STRING       | min_words:10, max_words:200 | [N/A]                                                          |
-| LoremIpsumTitle | String                          | STRING       | [N/A]                       | [N/A]                                                          |
-| Regex           | String                          | STRING       | pattern: String             | [N/A]                                                          |
-| Uniform         | Uniform over literal values     | Union        | [TODO]                      | [TODO]                                                         |
-| UniformArray    | Uniform array type              | Array        | [TODO]                      | [TODO]                                                         |
-| UniformAnyOf    | Uniform distribution over types | Union        | [TODO]                      | [TODO]                                                         |
-| UniformU8       | Unsigned 8-bit integer          | Int64        | low: u8, high: u8           | low:0, high:255                                                |
-| UniformU16      | Unsigned 16-bit integer         | Int64        | low: u16, high: u16         | low:0, high:65,535                                             |
-| UniformU32      | Unsigned 32-bit integer         | Int64        | low: u32, high: u32         | low:0, high:4,294,967,295                                      |
-| UniformU64      | Unsigned 64-bit integer         | Int64        | low: u64, high: u64         | low:0, high:9,223,372,036,854,775,807                          |
-| UniformI8       | Signed 8-bit integer            | Int64        | low: i8, high: i8           | low:-127, high:127                                             |
-| UniformI16      | Signed 16-bit integer           | Int64        | low: i16, high: i16         | low:-32,767, high:32,767                                       |
-| UniformI32      | Signed 32-bit integer           | Int64        | low: i32, high: i32         | low:-2,147,483,647, high:2,147,483,647                         |
-| UniformI64      | Signed 64-bit integer           | Int64        | low: i64, high: i64         | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
-| UniformF64      | 64-bit Float (Inexact)          | DOUBLE       | low: f64, high: f64         | low:-127, high:127                                             |
-| UniformDecimal  | Decimal (Exact)                 | DECIMAL(p,s) | low: f64, high: f64         | low:-127, high:127                                             |
-| UUID            | UUID                            | STRING       | [N/A]                       | [N/A]                                                          |
+| Name            | Description                     | PartiQL Type | Generation Characteristics & Probability                                                                               |
+|-----------------|---------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------|
+| Bool            | Boolean                         | BOOL         | [Bernoulli]                                                                                                            |
+| Instant         | Current Simulation Time         | DATETIME     | The current simulation time as a `TIMESTAMP WITH TIMEZONE`                                                             |
+| LoremIpsum      | String                          | STRING       | Uses a [Discrete Uniform] to generate a length and generates that many words of 'Lorem Ipsum'-type text.               |
+| LoremIpsumTitle | String                          | STRING       | Generates between 3 & 8 (drawn from a [Discrete Uniform]) title-cased 'Lorem Ipsum'-type words.                        | 
+| Regex           | String                          | STRING       | Builds text matching a regex by using a [Discrete Uniform] over character classes, quantified ranges, and alternatives |
+| Instant         | Current Simulation Time         | Int64        | The current simulation tick as an Int64                                                                                |
+| Uniform         | Uniform over literal values     | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst literals                                      |
+| UniformArray    | Uniform array type              | Array        | Uses a [Discrete Uniform] to generate a length and uses the inner generator for each element                           | 
+| UniformAnyOf    | Uniform distribution over types | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst inner generators                              |
+| UniformU8       | Unsigned 8-bit integer          | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformU16      | Unsigned 16-bit integer         | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformU32      | Unsigned 32-bit integer         | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformU64      | Unsigned 64-bit integer         | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI8       | Signed 8-bit integer            | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI16      | Signed 16-bit integer           | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI32      | Signed 32-bit integer           | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI64      | Signed 64-bit integer           | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformF64      | 64-bit Float (Inexact)          | DOUBLE       | [Continuous Uniform]                                                                                                   |
+| UniformDecimal  | Decimal (Exact)                 | DECIMAL(p,s) | [Continuous Uniform]                                                                                                   |
+| UUID            | UUID                            | STRING       | Generates random bytes and parses them as a [Version 4 UUID]                                                           |
 
-**NOTE**:
-1. The values for all the types prepended with `Uniform` will get generated using [Discrete Uniform Distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution).
+[Bernoulli]: https://en.wikipedia.org/wiki/Bernoulli_distribution "Bernoulli Distribution"
+[Discrete Uniform]: https://en.wikipedia.org/wiki/Discrete_uniform_distribution "Discrete Uniform Distribution"
+[Continuous Uniform]: https://en.wikipedia.org/wiki/Continuous_uniform_distribution "Continuous Uniform"
+[Version 4 UUID]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4 "Version 4 UUID"
+
+#### Data Generator Configuration
+
+| Name            | Configuration               | Defaults                                                       |
+|-----------------|-----------------------------|----------------------------------------------------------------|
+| Bool            | p: f64                      | p: 0.5                                                         |
+| LoremIpsum      | min_words:10, max_words:200 | [N/A]                                                          |
+| LoremIpsumTitle | [N/A]                       | [N/A]                                                          |
+| Regex           | pattern: String             | [N/A]                                                          |
+| Uniform         | [TODO]                      | [TODO]                                                         |
+| UniformArray    | [TODO]                      | [TODO]                                                         |
+| UniformAnyOf    | [TODO]                      | [TODO]                                                         |
+| UniformU8       | low: u8, high: u8           | low:0, high:255                                                |
+| UniformU16      | low: u16, high: u16         | low:0, high:65,535                                             |
+| UniformU32      | low: u32, high: u32         | low:0, high:4,294,967,295                                      |
+| UniformU64      | low: u64, high: u64         | low:0, high:9,223,372,036,854,775,807                          |
+| UniformI8       | low: i8, high: i8           | low:-127, high:127                                             |
+| UniformI16      | low: i16, high: i16         | low:-32,767, high:32,767                                       |
+| UniformI32      | low: i32, high: i32         | low:-2,147,483,647, high:2,147,483,647                         |
+| UniformI64      | low: i64, high: i64         | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
+| UniformF64      | low: f64, high: f64         | low:-127, high:127                                             |
+| UniformDecimal  | low: f64, high: f64         | low:-127, high:127                                             |
+| UUID            | [N/A]                       | [N/A]                                                          |
 
 
 #### Nullabilty and Optionality
@@ -946,7 +973,7 @@ densities of `NULL` and/or `MISSING` data.
 
 #### Data Generator Type Examples
 
-| Type            | Example Input                                                       | Example Output                         |
+| Name            | Example Input                                                       | Example Output                         |
 |-----------------|---------------------------------------------------------------------|----------------------------------------|
 | Bool            | Bool                                                                | True                                   |
 | Bool            | Bool::{nullable: 1.0}                                               | Null                                   |

@@ -144,7 +144,7 @@ where
     let f = move |rng: &mut R, _ctx: &SimContext| {
         let mut uuid_bytes = uuid::Bytes::default();
         rng.fill_bytes(&mut uuid_bytes);
-        let id = uuid::Uuid::from_bytes(uuid_bytes);
+        let id = uuid::Builder::from_random_bytes(uuid_bytes).into_uuid();
         Value::from(id.to_string())
     };
     SimpleRandomVariable::new(rng, density, name, typ, f)
