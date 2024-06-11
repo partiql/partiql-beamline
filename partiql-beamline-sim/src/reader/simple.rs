@@ -234,7 +234,6 @@ impl SimpleScriptVariableKind {
     where
         R: Rng + Sized + Clone + 'static,
     {
-        // TODO density
         let config = config.ok_or_else(|| {
             ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
         })?;
@@ -277,7 +276,6 @@ impl SimpleScriptVariableKind {
     where
         R: Rng + Sized + Clone + 'static,
     {
-        // TODO density
         let config = config.ok_or_else(|| {
             ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
         })?;
@@ -312,7 +310,6 @@ impl SimpleScriptVariableKind {
     where
         R: Rng + Sized + Clone + 'static,
     {
-        // TODO density
         let config = config.ok_or_else(|| {
             ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
         })?;

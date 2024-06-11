@@ -118,7 +118,7 @@ where
         })
     }
 
-    pub fn presence_and_value(&self, ctx: &SimContext) -> (Presence, Value) {
+    fn presence_and_value(&self, ctx: &SimContext) -> (Presence, Value) {
         let mut rng = self.rng.borrow_mut();
         let rng = rng.deref_mut();
 

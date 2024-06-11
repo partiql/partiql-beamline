@@ -68,11 +68,11 @@ pub struct StartTime {
 #[derive(Args, Debug, Clone, PartialEq)]
 #[group(required = false, multiple = false)]
 pub struct Nullability {
-    /// If false, value types will be non-nullable by default
-    #[arg(long, default_value = "false")]
-    pub default_not_null: bool,
+    /// If true, value types will be nullable by default; Else if false, not-nullable by default.
+    #[arg(long)]
+    pub default_nullable: Option<bool>,
 
-    /// If specifed, value types are nullable by default and will generate `NULL` at the given percentage.
+    /// If specified, value types are nullable by default and will generate `NULL` at the given percentage.
     #[arg(long, value_parser=pct_parser)]
     pub pct_null: Option<f64>,
 }
@@ -81,12 +81,12 @@ pub struct Nullability {
 #[derive(Args, Debug, Clone, PartialEq)]
 #[group(required = false, multiple = false)]
 pub struct Optionality {
-    /// If false, value types will be non-nullable by default
-    #[arg(long, default_value = "true")]
-    pub default_not_optional: bool,
+    /// If true, value types will be optional by default; Else if false, not-optional by default.
+    #[arg(long)]
+    pub default_optional: Option<bool>,
 
-    /// If specifed, value types are nullable by default and will generate `MISSING` at the given percentage.
-    #[arg(long,  value_parser=pct_parser)]
+    /// If specified, value types are optional by default and will generate `MISSING` at the given percentage.
+    #[arg(long, value_parser=pct_parser)]
     pub pct_optional: Option<f64>,
 }
 
@@ -225,14 +225,14 @@ pub fn parse_args(
         cfg.t0(t0);
     }
 
-    if null.default_not_null {
-        cfg.nullability(None);
+    if let Some(nullable) = null.default_nullable {
+        cfg.nullability(if nullable { Some(0.0) } else { None });
     } else if let Some(null) = null.pct_null {
         cfg.nullability(Some(null));
     }
 
-    if opt.default_not_optional {
-        cfg.optionality(None);
+    if let Some(optional) = opt.default_optional {
+        cfg.optionality(if optional { Some(0.0) } else { None });
     } else if let Some(opt) = opt.pct_optional {
         cfg.optionality(Some(opt));
     }
