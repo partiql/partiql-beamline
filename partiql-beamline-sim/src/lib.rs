@@ -122,7 +122,7 @@ mod tests {
             ("d", 35),
             ("sub", tuple!(("f", 119.14662526189088), ("o", -23))),
             ("w", 2.5932),
-            ("variant", "a06a5f14-b622-63ef-29ae-1cd5fdacc829"),
+            ("variant", "a06a5f14-b622-43ef-a9ae-1cd5fdacc829"),
             ("tick_array", list!(3960823, 3960823)),
             ("weight_array", list!(4.2710, 3.9625, 4.9851)),
             ("decimal_array", list!(3.6373, 2.5320)),
