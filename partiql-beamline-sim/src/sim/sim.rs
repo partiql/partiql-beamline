@@ -3,7 +3,7 @@ use std::default::Default;
 use std::error::Error;
 
 use crate::gen;
-use ion_rs::{AnyEncoding, Reader};
+use ion_rs::{AnyEncoding, IonError, Reader};
 use miette::Diagnostic;
 use partiql_types::PartiqlType;
 
@@ -13,7 +13,7 @@ use thiserror::Error;
 use time::format_description::well_known::Iso8601;
 
 use crate::gen::process::RandomProcesses;
-use crate::gen::DataSamplingError;
+use crate::gen::{DataGenerationError, DataSamplingError};
 use crate::primitives::{DataSetId, DataSetName, Event, ProcessId, Sample, Tick};
 use crate::reader::ProcessConfigError;
 use crate::reader::ProcessParser;
@@ -28,6 +28,9 @@ pub const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 #[error("Sim Error")]
 #[non_exhaustive]
 pub enum SimError {
+    #[error("Read error: `{0}`")]
+    ReadError(#[from] IonError),
+
     #[error("Config error: {0}")]
     ConfigError(#[from] SimConfigError),
 
@@ -75,7 +78,7 @@ impl SimBuilder {
         let seed = config.seed;
         let root_rng = Pcg64Mcg::seed_from_u64(seed);
         let t0 = Tick(0);
-        let mut context = SimContext::new(config);
+        let mut context = SimContext::new(config)?;
         // Set the initial bindings
         context.overwrite_binding(gen::CURRENT_TICK, &ConstantBindingValue::Tick(t0));
 

@@ -158,7 +158,7 @@ where
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let density = reader::parse_density(config, symbol_parser)?;
+        let density = reader::parse_density(config.as_ref(), symbol_parser)?;
 
         let gen: Box<dyn ValueGenerator> = match self {
             SimpleScriptVariableKind::AnyOf => {

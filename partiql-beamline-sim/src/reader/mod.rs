@@ -58,7 +58,7 @@ use crate::reader::symbol::EnvSymbolParser;
 pub use process::ProcessParser;
 
 pub(crate) fn parse_density(
-    config: Option<LazyStruct<AnyEncoding>>,
+    config: Option<&LazyStruct<AnyEncoding>>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Density> {
     let nullable_config = config
@@ -68,22 +68,24 @@ pub(crate) fn parse_density(
         .and_then(|c| c.get("optional").transpose())
         .transpose()?;
 
+    let null = symbol_parser.default_nullability()?;
+    let opt = symbol_parser.default_optionality()?;
+
     let nullable = if let Some(nullable) = nullable_config {
         to_pct(nullable, symbol_parser)?
     } else {
-        DEFAULT_NULLABILITY
+        null
     };
     let optional = if let Some(optional) = optional_config {
         to_pct(optional, symbol_parser)?
     } else {
-        DEFAULT_OPTIONALITY
+        opt
     };
 
-    let present = 1.0 - nullable.unwrap_or(0.0) - optional.unwrap_or(0.0);
+    let mut present = 1.0 - nullable.unwrap_or(0.0) - optional.unwrap_or(0.0);
+
     if present < 0.0 || present > 1.0 {
-        Err(ProcessConfigError::Other(
-            "Sum of `nullable` and `optional` must be between 0.0 and 1.0".to_string(),
-        ))?
+        present = 0.0;
     }
 
     Ok(Density::new(nullable, optional, present)?)
@@ -149,11 +151,11 @@ mod tests {
     use crate::gen::process::RandomProcesses;
     use crate::reader::process::ProcessParser;
     use crate::sim::context::SimContext;
-    use crate::sim::SimConfigBuilder;
+    use crate::sim::{SimConfigBuilder, SimConfigResult, SimResult};
     use ion_rs::{AnyEncoding, Element, Reader};
 
     #[track_caller]
-    fn parse(ion_data: &str) -> ProcessConfigResult<RandomProcesses> {
+    fn parse(ion_data: &str) -> SimConfigResult<RandomProcesses> {
         let mut ion_bytes: Vec<u8> = vec![];
         Element::read_one(ion_data)?.encode_to(&mut ion_bytes, ion_rs::v1_0::Binary)?;
         let mut reader = Reader::new(AnyEncoding, ion_bytes.as_slice())?;
@@ -162,14 +164,14 @@ mod tests {
         let seed = 5; // Chosen via roll of a fair die.
 
         let config = SimConfigBuilder::default().build().expect("config");
-        let ctx = SimContext::new(config);
+        let ctx = SimContext::new(config)?;
 
         let parser = ProcessParser::new(seed, registry, &ctx)?;
-        parser.parse(&mut reader)
+        Ok(parser.parse(&mut reader)?)
     }
 
     #[test]
-    fn sensors() -> ProcessConfigResult<()> {
+    fn sensors() -> SimConfigResult<()> {
         let ion_data = include_str!("../..//tests/scripts/sensors.ion");
         let processes = parse(ion_data)?;
         assert_eq!(processes.ids().len(), 7);
@@ -178,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn sensors_alternate() -> ProcessConfigResult<()> {
+    fn sensors_alternate() -> SimConfigResult<()> {
         let ion_data = include_str!("../../tests/scripts/sensors-alternate.ion");
         let processes = parse(ion_data)?;
         assert_eq!(processes.ids().len(), 7);
@@ -187,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn client_service() -> ProcessConfigResult<()> {
+    fn client_service() -> SimConfigResult<()> {
         let ion_data = include_str!("../../tests/scripts/client-service.ion");
         let processes = parse(ion_data)?;
         assert_eq!(processes.ids().len(), 14 * 2); // 14 clients; 14 instances of service

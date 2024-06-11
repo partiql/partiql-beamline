@@ -10,7 +10,8 @@ use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
 use crate::reader::{
-    ProcessConfigError, ProcessConfigResult, DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY,
+    parse_density, ProcessConfigError, ProcessConfigResult, DEFAULT_NULLABILITY,
+    DEFAULT_OPTIONALITY,
 };
 use crate::sim::context::SimContext;
 use ion_rs::{
@@ -56,6 +57,14 @@ impl ProcessParser {
             sim_context: ctx.clone(),
             processes: Default::default(),
         })
+    }
+
+    fn curr_nullability(&self) -> ProcessConfigResult<Option<f64>> {
+        Ok(self.sim_context.density().nullability())
+    }
+
+    fn curr_optionality(&self) -> ProcessConfigResult<Option<f64>> {
+        Ok(self.sim_context.density().optionality())
     }
 
     fn curr_rng(&self) -> ProcessConfigResult<RefCell<Pcg64Mcg>> {
@@ -453,11 +462,10 @@ impl ProcessParser {
                 }
             },
             ValueRef::Struct(strct) => {
-                // TODO density
-                let density = Density::new(DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY, 1.0)
-                    .expect("todo fix density for structs");
+                let density = parse_density(Some(strct), self)?;
 
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
+
                 if annot.is_empty() {
                     self.push_scope("data")?;
                     let mut kvs: HashMap<String, Box<_>> = Default::default();
@@ -592,5 +600,13 @@ impl EnvSymbolParser for ProcessParser {
 
     fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String> {
         self.format_str(pattern)
+    }
+
+    fn default_nullability(&self) -> ProcessConfigResult<Option<f64>> {
+        self.curr_nullability()
+    }
+
+    fn default_optionality(&self) -> ProcessConfigResult<Option<f64>> {
+        self.curr_optionality()
     }
 }

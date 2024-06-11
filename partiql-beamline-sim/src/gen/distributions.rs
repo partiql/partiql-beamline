@@ -59,7 +59,15 @@ impl Density {
         })
     }
 
-    fn sample<R>(&self, rng: &mut R) -> Presence
+    pub fn nullability(&self) -> Option<f64> {
+        self.null
+    }
+
+    pub fn optionality(&self) -> Option<f64> {
+        self.missing
+    }
+
+    pub fn sample<R>(&self, rng: &mut R) -> Presence
     where
         R: Rng + Sized + Clone,
     {

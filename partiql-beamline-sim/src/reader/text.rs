@@ -51,7 +51,7 @@ where
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let density = parse_density(config, symbol_parser)?;
+        let density = parse_density(config.as_ref(), symbol_parser)?;
         if let Some(config) = config {
             if let Ok(pattern) = config.get_expected("pattern") {
                 let patt = pattern.expect_string()?;
@@ -76,7 +76,7 @@ where
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let density = parse_density(config, symbol_parser)?;
+        let density = parse_density(config.as_ref(), symbol_parser)?;
         if let Some(config) = config {
             let min = config.get_expected("min_words");
             let max = config.get_expected("max_words");
@@ -104,7 +104,7 @@ where
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let density = parse_density(config, symbol_parser)?;
+        let density = parse_density(config.as_ref(), symbol_parser)?;
 
         Ok(Box::new(LoremIpsumTitleGenerator::new(rng, density)?))
     }
