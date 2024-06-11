@@ -899,38 +899,57 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 
 ### Data Generator Types
 
-| Type            | Description                              | Has Bounded Type | PartiQL Type | PartiQL Type (Bounded) |
-|-----------------|------------------------------------------|------------------|--------------|------------------------|
-| Bool            | Boolean                                  | Y                | BOOL         | BOOL                   |
-| LoremIpsum      | String                                   | N                | STRING       | [N/A]                  |
-| LoremIpsumTitle | String                                   | N                | STRING       | [N/A]                  |
-| Regex           | String                                   | N                | STRING       | [N/A]                  |
-| String          | String                                   | N                | STRING       | [N/A]                  |
-| Uniform         | Uniform distribution over literal values | N                | Union        | [N/A]                  |
-| UniformArray    | Uniform array type                       | Y                | Array        | Array                  |
-| UniformAnyOf    | Uniform distribution over types          | N                | Union        | [N/A]                  |
-| UniformU8       | Unsigned 8-bit integer                   | Y                | INT8         | INT8                   |
-| UniformU16      | Unsigned 16-bit integer                  | Y                | INT8         | INT8                   |
-| UniformU32      | Unsigned 32-bit integer                  | Y                | INT8         | INT8                   |
-| UniformU64      | Unsigned 64-bit integer                  | Y                | INT8         | INT8                   |
-| UniformI8       | Signed 8-bit integer                     | Y                | INT8         | INT8                   |
-| UniformI16      | Signed 16-bit integer                    | Y                | INT8         | INT8                   |
-| UniformI32      | Signed 32-bit integer                    | Y                | INT8         | INT8                   |
-| UniformI64      | Signed 64-bit integer                    | Y                | INT8         | INT8                   |
-| UniformF64      | 64-bit Float (Inexact)                   | Y                | DOUBLE       | DOUBLE                 |
-| UniformDecimal  | Decimal (Exact)                          | Y                | DECIMAL      | DECIMAL(p, s)          |
-| UUID            | UUID                                     | N                | STRING       | [N/A]                  |
+| Type            | Description                     | PartiQL Type | Configuration               | Defaults                                                       |
+|-----------------|---------------------------------|--------------|-----------------------------|----------------------------------------------------------------|
+| Bool            | Boolean                         | BOOL         | p: f64                      | p: 0.5                                                         |
+| LoremIpsum      | String                          | STRING       | min_words:10, max_words:200 | [N/A]                                                          |
+| LoremIpsumTitle | String                          | STRING       | [N/A]                       | [N/A]                                                          |
+| Regex           | String                          | STRING       | pattern: String             | [N/A]                                                          |
+| Uniform         | Uniform over literal values     | Union        | [TODO]                      | [TODO]                                                         |
+| UniformArray    | Uniform array type              | Array        | [TODO]                      | [TODO]                                                         |
+| UniformAnyOf    | Uniform distribution over types | Union        | [TODO]                      | [TODO]                                                         |
+| UniformU8       | Unsigned 8-bit integer          | Int64        | low: u8, high: u8           | low:0, high:255                                                |
+| UniformU16      | Unsigned 16-bit integer         | Int64        | low: u16, high: u16         | low:0, high:65,535                                             |
+| UniformU32      | Unsigned 32-bit integer         | Int64        | low: u32, high: u32         | low:0, high:4,294,967,295                                      |
+| UniformU64      | Unsigned 64-bit integer         | Int64        | low: u64, high: u64         | low:0, high:9,223,372,036,854,775,807                          |
+| UniformI8       | Signed 8-bit integer            | Int64        | low: i8, high: i8           | low:-127, high:127                                             |
+| UniformI16      | Signed 16-bit integer           | Int64        | low: i16, high: i16         | low:-32,767, high:32,767                                       |
+| UniformI32      | Signed 32-bit integer           | Int64        | low: i32, high: i32         | low:-2,147,483,647, high:2,147,483,647                         |
+| UniformI64      | Signed 64-bit integer           | Int64        | low: i64, high: i64         | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
+| UniformF64      | 64-bit Float (Inexact)          | DOUBLE       | low: f64, high: f64         | low:-127, high:127                                             |
+| UniformDecimal  | Decimal (Exact)                 | DECIMAL(p,s) | low: f64, high: f64         | low:-127, high:127                                             |
+| UUID            | UUID                            | STRING       | [N/A]                       | [N/A]                                                          |
 
-1. For types that also have a bounded counter-part, you can define their lower and upper bounds in scripts; for example for
-bounded `UniformDecimal` you can specify `UniformDecimal::{ low: 1.995, high: 4.9999 }` which picks a random decimal 
-number from the provided boundary.
-2. The values for all the types prepended with `Uniform` will get generated using [Discrete Uniform Distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution).
+**NOTE**:
+1. The values for all the types prepended with `Uniform` will get generated using [Discrete Uniform Distribution](https://en.wikipedia.org/wiki/Discrete_uniform_distribution).
+
+
+#### Nullabilty and Optionality
+
+All generators allow configuration of both nullability (i.e., `NULL` values) and optionality (i.e., `MISSING` values). 
+An important aspect of both `NULL` and `MISSING` generation is that the value that would have been generated if not absent
+is still generated, it is just discarded. This ensures that value generation is stable even across runs with different
+densities of `NULL` and/or `MISSING` data.
+
+- Nullability can be scripted with:
+    - **DEFAULT** - `{nullable: true}`:  Type is nullable, but there is a 0% chance to generate `NULL` values
+    - `{nullable: false}`: Type is not-nullable
+    - `{nullable: <float>}`: Type is nullable, the float must be between 0.0 and 1.0 and specifies the percent change of a `NULL` value.
+- Optionality can be scripted with:
+    - **DEFAULT** - `{optional: false}`: Type is not-optional
+    - `{optional: true}`: Type is optional, but there is a 0% chance to generate `MISSING` values
+    - `{optional: <float>}`: Type is optional, the float must be between 0.0 and 1.0 and specifies the percent change of a `MISSING` value.
+
+**NOTE**: The `NULL` and `MISSING` defaults can be changed with simulation parameterization via the CLI.
+
+
 
 #### Data Generator Type Examples
 
 | Type            | Example Input                                                       | Example Output                         |
 |-----------------|---------------------------------------------------------------------|----------------------------------------|
 | Bool            | Bool                                                                | True                                   |
+| Bool            | Bool::{nullable: 1.0}                                               | Null                                   |
 | LoremIpsum      | LoremIpsum::{ min_words:2, max_words:3 }                            | "Lorem ipsum dolor"                    |
 | LoremIpsumTitle | LoremIpsumTitle                                                     | "Importari Putant Quae Autem Tanta"    |
 | Regex           | Regex::{ pattern: "[A-Z]{2}" }                                      | "US"                                   |
@@ -1061,18 +1080,28 @@ Commands:
 
 Options:
   -h, --help  Print help
+```
 
-Usage: partiql-beamline-cli gen [OPTIONS] <--sample-count <SAMPLE_COUNT>> <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>>
+```
+$ target/debug/partiql-beamline-cli gen data --help
+Run the data generator
+
+Usage: partiql-beamline-cli gen data [OPTIONS] <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>>
 
 Options:
-      --sample-count <SAMPLE_COUNT>    Value for the number of samples
       --seed-auto                      Use the local machine's entropy to generate a 'random' seed
       --seed <SEED>                    (Re)play from a specified seed
       --start-auto                     Use the local machine's entropy to generate a 'random' start time
       --start-epoch-ms <EPOCH_MS>      (Re)play from a specified start time (specified in ms since the unix epoch)
       --start-iso <ISO_8601>           (Re)play from a specified start time (specified in ms since the unix epoch)
-      --script-path <PATH/TO/SCRIPT>   
+      --script-path <PATH/TO/SCRIPT>
       --script <SCRIPT_DATA>           (Re)play from a specified seed
+      --default-not-null               If false, value types will be non-nullable by default
+      --pct-null <PCT_NULL>            If specifed, value types are nullable by default and will generate `NULL` at the given percentage
+      --default-not-optional           If false, value types will be non-nullable by default
+      --pct-optional <PCT_OPTIONAL>    If specifed, value types are nullable by default and will generate `MISSING` at the given percentage
+      --sample-count <SAMPLE_COUNT>    Value for the number of samples [default: 10]
   -f, --output-format <OUTPUT_FORMAT>  [default: text] [possible values: ion, ion-pretty, text]
-  -h, --help      
+  -d, --dataset <DATASETS>
+  -h, --help
 ```

@@ -33,7 +33,6 @@ pub enum SimpleScriptVariableKind {
     Array,
     Tick,
     Instant,
-    String,
     Choice,
     UInt8,
     UInt16,
@@ -54,7 +53,6 @@ impl SimpleScriptVariableKind {
         [
             "Tick",
             "Instant",
-            "String",
             "Uniform",
             "UniformAnyOf",
             "UniformArray",
@@ -80,7 +78,6 @@ impl SimpleScriptVariableKind {
         match s {
             "Tick" => Ok(Self::Tick),
             "Instant" => Ok(Self::Instant),
-            "String" => Ok(Self::String),
             "Uniform" => Ok(Self::Choice),
             "UniformAnyOf" => Ok(Self::AnyOf),
             "UniformArray" => Ok(Self::Array),
@@ -169,9 +166,6 @@ where
             }
             SimpleScriptVariableKind::Array => {
                 self.parse_array(rng, density, symbol_parser, config)?
-            }
-            SimpleScriptVariableKind::String => {
-                todo!("string generator")
             }
             SimpleScriptVariableKind::Tick => Box::new(TickGenerator::new(rng, density)?),
             SimpleScriptVariableKind::Instant => Box::new(InstantGenerator::new(rng, density)?),
