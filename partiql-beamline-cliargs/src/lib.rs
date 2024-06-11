@@ -172,7 +172,7 @@ fn iso_parser(arg: &str) -> Result<time::OffsetDateTime, String> {
 
 fn pct_parser(arg: &str) -> Result<f64, String> {
     let pct = f64::from_str(arg).map_err(|e| e.to_string())?;
-    if pct < 0.0 || 1.0 < pct {
+    if !(0.0..=1.0).contains(&pct) {
         Err(format!("Percents must be between 0 and 1: `{pct}`"))
     } else {
         Ok(pct)

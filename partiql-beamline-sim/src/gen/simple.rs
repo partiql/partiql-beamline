@@ -1,5 +1,4 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
-use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
 use partiql_types::{ArrayType, PartiqlType, TypeKind, TYPE_BOOL};

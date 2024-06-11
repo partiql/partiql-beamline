@@ -13,7 +13,7 @@ use thiserror::Error;
 use time::format_description::well_known::Iso8601;
 
 use crate::gen::process::RandomProcesses;
-use crate::gen::{DataGenerationError, DataSamplingError};
+use crate::gen::DataSamplingError;
 use crate::primitives::{DataSetId, DataSetName, Event, ProcessId, Sample, Tick};
 use crate::reader::ProcessConfigError;
 use crate::reader::ProcessParser;

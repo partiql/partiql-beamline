@@ -1,6 +1,5 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
-use crate::gen::text::{LoremIpsumTitleGenerator, LoremIpsumTitleImpl};
-use crate::gen::{DataGenerationResult, ValueGenerator, CURRENT_TICK};
+use crate::gen::{DataGenerationResult, CURRENT_TICK};
 use crate::primitives::Tick;
 use crate::sim::context::{ConstantBindingValue, SimContext};
 use partiql_types::{PartiqlType, TYPE_DATETIME, TYPE_INT64};

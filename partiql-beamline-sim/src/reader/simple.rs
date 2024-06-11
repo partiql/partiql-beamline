@@ -11,19 +11,17 @@ use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
 use crate::reader::{to_f64, to_i64, ProcessConfigError, ProcessConfigResult};
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
-use ion_rs_old::external::bigdecimal::ToPrimitive;
-use ion_rs_old::IonReader;
 use partiql_value::Value;
 use rand::Rng;
 
 pub(crate) const DEFAULT_UINT8: (i64, i64) = (u8::MIN as i64, u8::MAX as i64);
 pub(crate) const DEFAULT_UINT16: (i64, i64) = (u16::MIN as i64, u16::MAX as i64);
 pub(crate) const DEFAULT_UINT32: (i64, i64) = (u32::MIN as i64, u32::MAX as i64);
-pub(crate) const DEFAULT_UINT64: (i64, i64) = (u64::MIN as i64, i64::MAX as i64);
+pub(crate) const DEFAULT_UINT64: (i64, i64) = (u64::MIN as i64, i64::MAX);
 pub(crate) const DEFAULT_INT8: (i64, i64) = (i8::MIN as i64, i8::MAX as i64);
 pub(crate) const DEFAULT_INT16: (i64, i64) = (i16::MIN as i64, i16::MAX as i64);
 pub(crate) const DEFAULT_INT32: (i64, i64) = (i32::MIN as i64, i32::MAX as i64);
-pub(crate) const DEFAULT_INT64: (i64, i64) = (i64::MIN as i64, i64::MAX as i64);
+pub(crate) const DEFAULT_INT64: (i64, i64) = (i64::MIN, i64::MAX);
 pub(crate) const DEFAULT_FLOAT: (f64, f64) = (i8::MIN as f64, i8::MAX as f64);
 pub(crate) const DEFAULT_BOOL: f64 = 0.5;
 

@@ -1,18 +1,13 @@
 use crate::gen::arrival::{HomogeneousPoisson, OnceArrival};
 use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
-use crate::gen::distributions::Density;
 use crate::gen::process::{RandomProcesses, SimpleProcess};
 use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
-use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
-use crate::reader::{
-    parse_density, ProcessConfigError, ProcessConfigResult, DEFAULT_NULLABILITY,
-    DEFAULT_OPTIONALITY,
-};
+use crate::reader::{parse_density, ProcessConfigError, ProcessConfigResult};
 use crate::sim::context::SimContext;
 use ion_rs::{
     AnyEncoding, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef, ValueRef,

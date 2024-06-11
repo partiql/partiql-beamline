@@ -12,7 +12,6 @@ use time::macros::datetime;
 use time::OffsetDateTime;
 
 use crate::reader::{ProcessConfigError, DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY};
-use crate::sim::SimError;
 
 /// Error in simulation configuration.
 #[derive(Debug, Error, Diagnostic)]
@@ -107,11 +106,11 @@ impl SimConfigBuilder {
             None => auto_t0(seed)?,
         };
 
-        let nullability = self.nullability.unwrap_or_else(|| DEFAULT_NULLABILITY);
-        let optionality = self.optionality.unwrap_or_else(|| DEFAULT_OPTIONALITY);
+        let nullability = self.nullability.unwrap_or(DEFAULT_NULLABILITY);
+        let optionality = self.optionality.unwrap_or(DEFAULT_OPTIONALITY);
 
         let sum = nullability.unwrap_or(0.0) + optionality.unwrap_or(0.0);
-        if sum < 0.0 || 1.0 < sum {
+        if !(0.0..=1.0).contains(&sum) {
             return Err(SimConfigBuilderError::ValidationError(
                 "sum of nullability and optionality must be between 0 and 1".to_string(),
             ));

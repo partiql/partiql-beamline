@@ -84,7 +84,7 @@ pub(crate) fn parse_density(
 
     let mut present = 1.0 - nullable.unwrap_or(0.0) - optional.unwrap_or(0.0);
 
-    if present < 0.0 || present > 1.0 {
+    if !(0.0..=1.0).contains(&present) {
         present = 0.0;
     }
 
@@ -96,10 +96,10 @@ pub(crate) fn to_pct(
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Option<f64>> {
     match val {
-        ValueRef::Bool(b) => Ok(b.then(|| 0.0)),
+        ValueRef::Bool(b) => Ok(b.then_some(0.0)),
         other => {
             let pct = to_f64(other, symbol_parser)?;
-            if 0.0 <= pct && pct <= 1.0 {
+            if (0.0..=1.0).contains(&pct) {
                 Ok(Some(pct))
             } else {
                 Err(ProcessConfigError::Other(
@@ -115,9 +115,9 @@ pub(crate) fn to_i64(
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<i64> {
     match val {
-        ValueRef::Int(i) => Ok(i.as_i64().expect("integer") as i64),
+        ValueRef::Int(i) => Ok(i.as_i64().expect("integer")),
         ValueRef::Symbol(sym) => Ok(match symbol_parser.parse_symbol_as_value(&sym)? {
-            Value::Integer(i) => i as i64,
+            Value::Integer(i) => i,
             other => todo!("non-numeric i64 param {other:?}"),
         }),
         _ => todo!("non-numeric float64 param {val:?}"),
@@ -146,12 +146,11 @@ pub(crate) fn to_f64(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     use crate::gen::process::RandomProcesses;
     use crate::reader::process::ProcessParser;
     use crate::sim::context::SimContext;
-    use crate::sim::{SimConfigBuilder, SimConfigResult, SimResult};
+    use crate::sim::{SimConfigBuilder, SimConfigResult};
     use ion_rs::{AnyEncoding, Element, Reader};
 
     #[track_caller]

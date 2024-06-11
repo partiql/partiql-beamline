@@ -236,7 +236,6 @@ fn verify_exemplar_partial(
 
 fn compare_present(data: &Value, exemplar: &Value) {
     if data.is_absent() && !exemplar.is_absent() {
-        return;
     } else {
         match (data, exemplar) {
             (Value::Tuple(data), Value::Tuple(exemplar)) => {
@@ -252,15 +251,13 @@ fn compare_present(data: &Value, exemplar: &Value) {
             }
             (Value::List(data), Value::List(exemplar)) => {
                 assert_eq!(data.len(), exemplar.len());
-                for (i, (data, exemplar)) in data.iter().zip(exemplar.iter()).enumerate() {
-                    //println!("{}", i);
+                for (data, exemplar) in data.iter().zip(exemplar.iter()) {
                     compare_present(data, exemplar);
                 }
             }
             (Value::Bag(data), Value::Bag(exemplar)) => {
                 assert_eq!(data.len(), exemplar.len());
-                for (i, (data, exemplar)) in data.iter().zip(exemplar.iter()).enumerate() {
-                    //println!("{}", i);
+                for (data, exemplar) in data.iter().zip(exemplar.iter()) {
                     compare_present(data, exemplar);
                 }
             }

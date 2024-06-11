@@ -8,8 +8,7 @@ use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
 use partiql_beamline::sim::{SimBuilder, DATETIME_FORMAT};
 use partiql_beamline_cliargs::{
-    parse_args, DataOutputFormat, DbArgs, DbTarget, Nullability, Optionality, SampleCount,
-    ShapeOutputFormat, SimSpec,
+    parse_args, DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat, SimSpec,
 };
 use partiql_extension_ion::Encoding;
 use std::io::stdout;
