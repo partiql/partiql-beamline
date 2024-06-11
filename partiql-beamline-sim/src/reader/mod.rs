@@ -26,6 +26,9 @@ pub enum ProcessConfigError {
     #[error("Format string error: `{0}`")]
     FormatStringError(String),
 
+    #[error("Nullability/Optionality config error: `{0}`")]
+    DensityError(String),
+
     #[error("Random Variable error: `{0}`")]
     RandomVariableError(#[from] DataGenerationError),
 
@@ -38,11 +41,14 @@ pub enum ProcessConfigError {
     #[error("Error: `{0}`")]
     UnknownGenerator(String),
 
-    #[error("Error: {0}")]
-    NoConfig(String),
+    #[error("Error: `{0}`")]
+    UnknownArrival(String),
 
     #[error("Error: `{0}`")]
-    UnknownParser(String),
+    UnknownImmediate(String),
+
+    #[error("Error: {0}")]
+    NoConfig(String),
 
     #[error("Error: `{0}`")]
     Other(String),
@@ -71,24 +77,43 @@ pub(crate) fn parse_density(
     let null = symbol_parser.default_nullability()?;
     let opt = symbol_parser.default_optionality()?;
 
-    let nullable = if let Some(nullable) = nullable_config {
-        to_pct(nullable, symbol_parser)?
+    let (nullable, nullable_default) = if let Some(nullable) = nullable_config {
+        (to_pct(nullable, symbol_parser)?, false)
     } else {
-        null
+        (null, true)
     };
-    let optional = if let Some(optional) = optional_config {
-        to_pct(optional, symbol_parser)?
+    let (optional, optional_default) = if let Some(optional) = optional_config {
+        (to_pct(optional, symbol_parser)?, false)
     } else {
-        opt
+        (opt, true)
     };
 
-    let mut present = 1.0 - nullable.unwrap_or(0.0) - optional.unwrap_or(0.0);
+    let pct_absent = nullable.unwrap_or(0.0) + optional.unwrap_or(0.0);
+    let present = 1.0 - pct_absent;
 
     if !(0.0..=1.0).contains(&present) {
-        present = 0.0;
+        let fmt_msg = |name: &str, val: Option<f64>, default: bool| {
+            format!(
+                "{}: `{}`{}",
+                name,
+                val.unwrap_or(0.0),
+                if default {
+                    "(from simulation default)"
+                } else {
+                    ""
+                }
+            )
+        };
+        let nullability = fmt_msg("Nullable", nullable, nullable_default);
+        let optionality = fmt_msg("Optionality", optional, optional_default);
+        let msg = format!(
+            "Combined Nullability and Optionality Percents must be between 0.0 and 1.0; {}; {}.",
+            nullability, optionality
+        );
+        Err(ProcessConfigError::DensityError(msg))?
+    } else {
+        Ok(Density::new(nullable, optional, present)?)
     }
-
-    Ok(Density::new(nullable, optional, present)?)
 }
 
 pub(crate) fn to_pct(

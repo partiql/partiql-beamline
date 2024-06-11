@@ -112,7 +112,8 @@ impl SimConfigBuilder {
         let sum = nullability.unwrap_or(0.0) + optionality.unwrap_or(0.0);
         if !(0.0..=1.0).contains(&sum) {
             return Err(SimConfigBuilderError::ValidationError(
-                "sum of nullability and optionality must be between 0 and 1".to_string(),
+                "Sum of simulation default nullability and optionality must be between 0 and 1"
+                    .to_string(),
             ));
         }
 

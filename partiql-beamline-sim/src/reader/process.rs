@@ -253,17 +253,45 @@ impl ProcessParser {
         &mut self,
         value: &ValueRef<AnyEncoding>,
     ) -> ProcessConfigResult<EnvBindingValue> {
-        if let Ok(arrival) = self.parse_arrival(value) {
-            Ok(arrival.into())
-        } else if let Ok(generator) = self.parse_generator(value) {
-            Ok(generator.into())
-        } else if let Ok(immediate) = self.parse_immediate(value) {
-            Ok(immediate.into())
-        } else {
-            Err(ProcessConfigError::Other(format!(
-                "Unknown binding `{value:?}`" // TODO Can panic here due to https://github.com/amazon-ion/ion-rust/issues/770
-            )))
+        match self.parse_arrival(value) {
+            Err(ProcessConfigError::UnknownArrival(_)) => {
+                // continue to try Generator
+            }
+            Ok(arrival) => {
+                return Ok(arrival.into());
+            }
+            Err(e) => {
+                return Err(e);
+            }
         }
+
+        match self.parse_generator(value) {
+            Err(ProcessConfigError::UnknownGenerator(_)) => {
+                // continue to try immediate
+            }
+            Ok(gen) => {
+                return Ok(gen.into());
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        }
+
+        match self.parse_immediate(value) {
+            Err(ProcessConfigError::UnknownImmediate(_)) => {
+                // continue to error at end
+            }
+            Ok(immediate) => {
+                return Ok(immediate.into());
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        }
+
+        Err(ProcessConfigError::Other(format!(
+            "Unknown binding `{value:?}`" // TODO This debug-print can panic here due to https://github.com/amazon-ion/ion-rust/issues/770
+        )))
     }
 
     fn parse_list_parameterized<S: Into<String>>(
@@ -333,9 +361,7 @@ impl ProcessParser {
                     }
                 }
             }
-            _ => Err(ProcessConfigError::Other(format!(
-                "TODO: unhandled immediate type `{ion_type}`"
-            ))),
+            _ => Err(ProcessConfigError::UnknownImmediate(ion_type.to_string())),
         }
     }
 
@@ -404,9 +430,9 @@ impl ProcessParser {
             ValueRef::Struct(strct) => {
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
 
-                let kind = annot
-                    .first()
-                    .ok_or_else(|| ProcessConfigError::Other("No Arrival type".to_string()))?;
+                let kind = annot.first().ok_or_else(|| {
+                    ProcessConfigError::UnknownArrival("No Arrival type".to_string())
+                })?;
                 let kind = self.parse_symbol_text(kind)?;
                 match kind.as_str() {
                     "HomogeneousPoisson" => {
@@ -418,13 +444,12 @@ impl ProcessParser {
                             interarrival,
                         )))
                     }
-                    _ => Err(ProcessConfigError::Other(format!(
-                        "Unknown arrival type `{kind}`"
-                    ))),
+                    _ => Err(ProcessConfigError::UnknownArrival(kind.to_string())),
                 }
             }
-            _ => Err(ProcessConfigError::Other(format!(
-                "TODO: unhandled arrival type `{ion_type}`"
+            _ => Err(ProcessConfigError::UnknownArrival(format!(
+                "ion type: {}",
+                ion_type
             ))),
         }
     }
@@ -444,13 +469,9 @@ impl ProcessParser {
                     Ok(gen)
                 }
                 SymbolType::Str(name) => {
-                    if self.registry.has_parser(&name) {
+                    if let Some(parser) = self.registry.get_parser(&name) {
                         let crng = self.child_rng()?;
-                        if let Some(parser) = self.registry.get_parser(&name) {
-                            parser.parse_generator(crng, None, self)
-                        } else {
-                            Err(ProcessConfigError::UnknownParser(name))
-                        }
+                        parser.parse_generator(crng, None, self)
                     } else {
                         Err(ProcessConfigError::UnknownGenerator(name))
                     }
@@ -575,13 +596,9 @@ impl EnvSymbolParser for ProcessParser {
                 _ => todo!(),
             },
             SymbolType::Str(name) => {
-                if self.registry.has_parser(&name) {
+                if let Some(parser) = self.registry.get_parser(&name) {
                     let crng = self.child_rng()?;
-                    if let Some(parser) = self.registry.get_parser(&name) {
-                        parser.parse_generator(crng, cfg, self)
-                    } else {
-                        Err(ProcessConfigError::UnknownParser(name))
-                    }
+                    parser.parse_generator(crng, cfg, self)
                 } else {
                     Err(ProcessConfigError::UnknownGenerator(name))
                 }

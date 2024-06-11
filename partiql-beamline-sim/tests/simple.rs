@@ -160,14 +160,20 @@ fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
 }
 
 #[track_caller]
-fn verify_exemplar_partials(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
+fn verify_exemplar_partials(
+    script: &[u8],
+    exemplar: &[u8],
+    max_null: f64,
+    max_optional: f64,
+) -> miette::Result<()> {
+    assert!(0.0 <= max_null && max_null <= 1.0);
+    assert!(0.0 <= max_optional && max_optional <= 1.0);
     let pcts = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0];
-    for npct in pcts {
-        for opct in pcts {
-            let scale = 1.0_f64.max(npct + opct) / 1.0;
+    for npct in pcts.iter().map(|pct| *pct * max_null) {
+        for opct in pcts.iter().map(|pct| *pct * max_optional) {
+            let scale = 1.0_f64.max(npct + opct) * 1.0;
             let nullability = npct / scale;
             let optionality = opct / scale;
-            dbg!(npct, opct);
             verify_exemplar_partial(script, exemplar, Some(nullability), Some(optionality))?;
         }
     }
@@ -325,33 +331,34 @@ fn verify_repeatable_client_service() {
 fn verify_exemplar_transactions() {
     let (script, exemplar) = test_data!("transactions");
     verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar).expect("exemplar partial");
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
 }
 
 #[test]
 fn verify_exemplar_orders() {
     let (script, exemplar) = test_data!("orders");
     verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar).expect("exemplar partial");
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
 }
 
 #[test]
 fn verify_exemplar_sensors() {
     let (script, exemplar) = test_data!("sensors");
     verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar).expect("exemplar partial");
+    // The sensors script uses a max of 0.75 for null scripting, so cap the optional at 0.25
+    verify_exemplar_partials(script, exemplar, 1.0, 0.25 - f64::EPSILON).expect("exemplar partial");
 }
 
 #[test]
 fn verify_exemplar_sensors_alternate() {
     let (script, exemplar) = test_data!("sensors-alternate");
     verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar).expect("exemplar partial");
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
 }
 
 #[test]
 fn verify_exemplar_client_service() {
     let (script, exemplar) = test_data!("client-service");
     verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar).expect("exemplar partial");
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
 }
