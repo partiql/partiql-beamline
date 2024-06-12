@@ -52,6 +52,9 @@ pub enum SimError {
     #[error("Unknown Process: {0:?}")]
     UnknownProcess(ProcessId),
 
+    #[error("Unknown DataSet: {0:?}")]
+    UnknownDataSet(DataSetId),
+
     #[error("Unknown Process: {0:?}")]
     ProcessSamplingError(#[from] DataSamplingError),
 
@@ -316,8 +319,10 @@ impl MultiSim {
         self.sims[id.0].next_sample()
     }
 
-    pub fn for_dataset(&mut self, id: DataSetId) -> &mut Sim {
-        &mut self.sims[id.0]
+    pub fn for_dataset(&mut self, id: DataSetId) -> SimResult<&mut Sim> {
+        self.sims
+            .get_mut(id.0)
+            .ok_or_else(|| SimError::UnknownDataSet(id))
     }
 
     pub fn shape(&self) -> DatasetTypeMapping {

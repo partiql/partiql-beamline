@@ -94,6 +94,8 @@ pub struct SimConfig {
     pub optionality: Option<f64>,
 }
 
+impl Diagnostic for SimConfigBuilderError {}
+
 impl SimConfigBuilder {
     pub fn build(&self) -> Result<SimConfig, SimConfigBuilderError> {
         let seed = match self.seed {

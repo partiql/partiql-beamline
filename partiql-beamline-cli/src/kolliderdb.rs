@@ -12,7 +12,7 @@ use std::process::exit;
 use time::OffsetDateTime;
 
 pub(crate) fn create_kollider_db(
-    cfg: &SimConfig,
+    cfg: SimConfig,
     catalog_name: &str,
     catalog_path: &str,
     script: &str,
@@ -58,7 +58,7 @@ pub(crate) fn create_kollider_db(
         let filename = ds_n.clone().0;
         let mut dataset_file = fs::File::create(format!("{:}/{filename}.ion", &catalog_full_path))
             .expect("dataset file");
-        let sim = sim.for_dataset(id);
+        let sim = sim.for_dataset(id)?;
         sim.iter_mut().take(sample_count as usize).for_each(|s| {
             let s = s.expect("value");
             let val = s.value;
