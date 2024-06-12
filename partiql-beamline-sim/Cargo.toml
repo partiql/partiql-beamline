@@ -46,5 +46,8 @@ regex-syntax = "0.8"
 
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
 
+[dev-dependencies]
+assert_matches = "1.5"
+
 [features]
 default = []

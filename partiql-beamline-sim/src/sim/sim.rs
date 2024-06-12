@@ -19,7 +19,7 @@ use crate::reader::ProcessConfigError;
 use crate::reader::ProcessParser;
 use crate::sim::context::{ConstantBindingValue, SimContext, SimContextError};
 use crate::sim::timeline::Timeline;
-use crate::sim::{SimConfig, SimConfigError, SimConfigResult};
+use crate::sim::{SimConfig, SimConfigBuilderError, SimConfigError, SimConfigResult};
 
 pub const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
@@ -33,6 +33,9 @@ pub enum SimError {
 
     #[error("Config error: {0}")]
     ConfigError(#[from] SimConfigError),
+
+    #[error("Config error: {0}")]
+    ConfigBuilderError(#[from] SimConfigBuilderError),
 
     #[error("Config error: {0}")]
     ProcessConfigError(#[from] ProcessConfigError),
@@ -112,6 +115,7 @@ impl SimBuilder {
     }
 }
 
+#[derive(Debug)]
 pub struct Sim {
     context: SimContext,
 
@@ -241,6 +245,7 @@ impl IntoIterator for Sim {
     }
 }
 
+#[derive(Debug)]
 pub struct MultiSim {
     context: SimContext,
 

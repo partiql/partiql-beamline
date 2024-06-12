@@ -929,26 +929,29 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 
 #### Data Generator Configuration
 
-| Name            | Configuration               | Defaults                                                       |
-|-----------------|-----------------------------|----------------------------------------------------------------|
-| Bool            | p: f64                      | p: 0.5                                                         |
-| LoremIpsum      | min_words:10, max_words:200 | [N/A]                                                          |
-| LoremIpsumTitle | [N/A]                       | [N/A]                                                          |
-| Regex           | pattern: String             | [N/A]                                                          |
-| Uniform         | [TODO]                      | [TODO]                                                         |
-| UniformArray    | [TODO]                      | [TODO]                                                         |
-| UniformAnyOf    | [TODO]                      | [TODO]                                                         |
-| UniformU8       | low: u8, high: u8           | low:0, high:255                                                |
-| UniformU16      | low: u16, high: u16         | low:0, high:65,535                                             |
-| UniformU32      | low: u32, high: u32         | low:0, high:4,294,967,295                                      |
-| UniformU64      | low: u64, high: u64         | low:0, high:9,223,372,036,854,775,807                          |
-| UniformI8       | low: i8, high: i8           | low:-127, high:127                                             |
-| UniformI16      | low: i16, high: i16         | low:-32,767, high:32,767                                       |
-| UniformI32      | low: i32, high: i32         | low:-2,147,483,647, high:2,147,483,647                         |
-| UniformI64      | low: i64, high: i64         | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
-| UniformF64      | low: f64, high: f64         | low:-127, high:127                                             |
-| UniformDecimal  | low: f64, high: f64         | low:-127, high:127                                             |
-| UUID            | [N/A]                       | [N/A]                                                          |
+| Name            | Configuration                                                   | Defaults                                                       |
+|-----------------|-----------------------------------------------------------------|----------------------------------------------------------------|
+| Bool            | p: f64                                                          | p: 0.5                                                         |
+| LoremIpsum      | min_words:10, max_words:200                                     | [N/A]                                                          |
+| LoremIpsumTitle | [N/A]                                                           | [N/A]                                                          |
+| Regex           | pattern: String                                                 | [N/A]                                                          |
+| Uniform         | choices: [ <Literal> ]                                          | [N/A]                                                          |     
+| UniformArray    | min_size: u64, max_size: u64, element_type: [ <DataGenerator> ] | [N/A]                                                          |
+| UniformAnyOf    | types: [ <DataGenerator> ]                                      | [N/A]                                                          |
+| UniformU8       | low: u8, high: u8                                               | low:0, high:255                                                |
+| UniformU16      | low: u16, high: u16                                             | low:0, high:65,535                                             |
+| UniformU32      | low: u32, high: u32                                             | low:0, high:4,294,967,295                                      |
+| UniformU64      | low: u64, high: u64                                             | low:0, high:9,223,372,036,854,775,807                          |
+| UniformI8       | low: i8, high: i8                                               | low:-127, high:127                                             |
+| UniformI16      | low: i16, high: i16                                             | low:-32,767, high:32,767                                       |
+| UniformI32      | low: i32, high: i32                                             | low:-2,147,483,647, high:2,147,483,647                         |
+| UniformI64      | low: i64, high: i64                                             | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
+| UniformF64      | low: f64, high: f64                                             | low:-127, high:127                                             |
+| UniformDecimal  | low: f64, high: f64                                             | low:-127, high:127                                             |
+| UUID            | [N/A]                                                           | [N/A]                                                          |
+
+* [ <Literal> ] means array of the following [Ion](https://amazon-ion.github.io/ion-docs/) literals: `bool`, `int`, `float`, `string`.
+* [ <DataGenerator> ] means array of data generators, e.g., [Tick, Instant, UniformI32]
 
 
 #### Nullabilty and Optionality
@@ -1116,19 +1119,19 @@ Run the data generator
 Usage: partiql-beamline-cli gen data [OPTIONS] <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>>
 
 Options:
-      --seed-auto                      Use the local machine's entropy to generate a 'random' seed
-      --seed <SEED>                    (Re)play from a specified seed
-      --start-auto                     Use the local machine's entropy to generate a 'random' start time
-      --start-epoch-ms <EPOCH_MS>      (Re)play from a specified start time (specified in ms since the unix epoch)
-      --start-iso <ISO_8601>           (Re)play from a specified start time (specified in ms since the unix epoch)
+      --seed-auto                            Use the local machine's entropy to generate a 'random' seed
+      --seed <SEED>                          (Re)play from a specified seed
+      --start-auto                           Use the local machine's entropy to generate a 'random' start time
+      --start-epoch-ms <EPOCH_MS>            (Re)play from a specified start time (specified in ms since the unix epoch)
+      --start-iso <ISO_8601>                 (Re)play from a specified start time (specified in ms since the unix epoch)
       --script-path <PATH/TO/SCRIPT>
-      --script <SCRIPT_DATA>           (Re)play from a specified seed
-      --default-not-null               If false, value types will be non-nullable by default
-      --pct-null <PCT_NULL>            If specifed, value types are nullable by default and will generate `NULL` at the given percentage
-      --default-not-optional           If false, value types will be non-nullable by default
-      --pct-optional <PCT_OPTIONAL>    If specifed, value types are nullable by default and will generate `MISSING` at the given percentage
-      --sample-count <SAMPLE_COUNT>    Value for the number of samples [default: 10]
-  -f, --output-format <OUTPUT_FORMAT>  [default: text] [possible values: ion, ion-pretty, text]
+      --script <SCRIPT_DATA>                 (Re)play from a specified seed
+      --default-nullable <DEFAULT_NULLABLE>  If true, value types will be nullable by default; Else if false, not-nullable by default [possible values: true, false]
+      --pct-null <PCT_NULL>                  If specified, value types are nullable by default and will generate `NULL` at the given percentage
+      --default-optional <DEFAULT_OPTIONAL>  If true, value types will be optional by default; Else if false, not-optional by default [possible values: true, false]
+      --pct-optional <PCT_OPTIONAL>          If specified, value types are optional by default and will generate `MISSING` at the given percentage
+      --sample-count <SAMPLE_COUNT>          Value for the number of samples [default: 10]
+  -f, --output-format <OUTPUT_FORMAT>        [default: text] [possible values: ion, ion-pretty, text]
   -d, --dataset <DATASETS>
-  -h, --help
+  -h, --help                                 Print help
 ```

@@ -33,7 +33,7 @@ impl RandomProcess for SimpleProcess {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct RandomProcesses {
     processes: Vec<(DataSetName, Box<dyn RandomProcess>)>,
 }
