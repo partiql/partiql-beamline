@@ -122,7 +122,7 @@ fn main() -> miette::Result<()> {
                                     if let Ok(Some(Sample {
                                         tick: Tick(t),
                                         value,
-                                    })) = sim.for_dataset(id).next_sample()
+                                    })) = sim.for_dataset(id)?.next_sample()
                                     {
                                         let time = t0.add(Duration::milliseconds(t as i64));
                                         let name = name.clone().0;
@@ -138,7 +138,7 @@ fn main() -> miette::Result<()> {
                                         if let Ok(Some(Sample {
                                             tick: Tick(t),
                                             value,
-                                        })) = sim.for_dataset(id).next_sample()
+                                        })) = sim.for_dataset(id)?.next_sample()
                                         {
                                             let time = t0.add(Duration::milliseconds(t as i64));
                                             println!("[{time}] : {dataset:?} {value:?}");
@@ -209,7 +209,7 @@ fn main() -> miette::Result<()> {
 
                             create_script_file(&catalog_full_path, &script)?;
                             create_kollider_db(
-                                &cfg,
+                                cfg,
                                 &catalog_name,
                                 &catalog_path,
                                 &script,
