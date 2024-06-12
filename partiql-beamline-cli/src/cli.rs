@@ -1,10 +1,6 @@
-use ion_rs::element::writer::TextKind;
-use miette::Diagnostic;
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetId, DataSetName};
-use partiql_beamline::sim::{
-    MultiSim, SimBuilder, SimConfig, SimError, SimResult, DATETIME_FORMAT,
-};
+use partiql_beamline::sim::{MultiSim, SimBuilder, SimConfig, SimResult, DATETIME_FORMAT};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding;
 use partiql_value::{tuple, List, Value};

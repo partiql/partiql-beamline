@@ -16,7 +16,6 @@ use crate::reader::{
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
 use partiql_value::Value;
 use rand::Rng;
-use std::collections::{HashMap, HashSet};
 
 pub(crate) const DEFAULT_UINT8: (i64, i64) = (u8::MIN as i64, u8::MAX as i64);
 pub(crate) const DEFAULT_UINT16: (i64, i64) = (u16::MIN as i64, u16::MAX as i64);
@@ -28,10 +27,9 @@ pub(crate) const DEFAULT_INT32: (i64, i64) = (i32::MIN as i64, i32::MAX as i64);
 pub(crate) const DEFAULT_INT64: (i64, i64) = (i64::MIN, i64::MAX);
 pub(crate) const DEFAULT_FLOAT: (f64, f64) = (i8::MIN as f64, i8::MAX as f64);
 pub(crate) const DEFAULT_BOOL: f64 = 0.5;
-pub(crate) const CONFIG_KEY_RANGE_LOW: &'static str = "low";
-pub(crate) const CONFIG_KEY_RANGE_HIGH: &'static str = "high";
-pub(crate) const CONFIG_KEYS_RANGE: [&'static str; 2] =
-    [CONFIG_KEY_RANGE_LOW, CONFIG_KEY_RANGE_HIGH];
+pub(crate) const CONFIG_KEY_RANGE_LOW: &str = "low";
+pub(crate) const CONFIG_KEY_RANGE_HIGH: &str = "high";
+pub(crate) const CONFIG_KEYS_RANGE: [&str; 2] = [CONFIG_KEY_RANGE_LOW, CONFIG_KEY_RANGE_HIGH];
 
 #[derive(Debug)]
 pub enum SimpleScriptVariableKind {

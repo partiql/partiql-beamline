@@ -146,8 +146,8 @@ fn verify_exemplar_partials(
     max_null: f64,
     max_optional: f64,
 ) -> miette::Result<()> {
-    assert!(0.0 <= max_null && max_null <= 1.0);
-    assert!(0.0 <= max_optional && max_optional <= 1.0);
+    assert!((0.0..=1.0).contains(&max_null));
+    assert!((0.0..=1.0).contains(&max_optional));
     let pcts = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0];
     for npct in pcts.iter().map(|pct| *pct * max_null) {
         for opct in pcts.iter().map(|pct| *pct * max_optional) {

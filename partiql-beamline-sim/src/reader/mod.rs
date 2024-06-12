@@ -18,10 +18,9 @@ pub(crate) const DEFAULT_NULLABILITY: Option<f64> = Some(0.0);
 /// By default, no types are optional (i.e. will never be missing)
 pub(crate) const DEFAULT_OPTIONALITY: Option<f64> = None;
 
-pub(crate) const CONFIG_KEY_NULLABLE: &'static str = "nullable";
-pub(crate) const CONFIG_KEY_OPTIONAL: &'static str = "optional";
-pub(crate) const CONFIG_KEYS_DENSITY: [&'static str; 2] =
-    [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
+pub(crate) const CONFIG_KEY_NULLABLE: &str = "nullable";
+pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
+pub(crate) const CONFIG_KEYS_DENSITY: [&str; 2] = [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -185,7 +184,7 @@ pub(crate) fn validate_config_keys<const N: usize>(
     config: Option<LazyStruct<AnyEncoding>>,
     allowed_keys: [&[&'static str]; N],
 ) -> ProcessConfigResult<()> {
-    let keys: HashSet<&'static str> = allowed_keys.into_iter().flatten().map(|s| *s).collect();
+    let keys: HashSet<&'static str> = allowed_keys.into_iter().flatten().copied().collect();
     validate_config_keyset(config, keys)
 }
 pub(crate) fn validate_config_keyset(
