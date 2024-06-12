@@ -18,7 +18,7 @@ impl ConstantGenerator {
 }
 
 impl ValueGenerator for ConstantGenerator {
-    fn present_value(&self, ctx: &SimContext) -> Value {
+    fn present_value(&self, _ctx: &SimContext) -> Value {
         self.constant.clone()
     }
 

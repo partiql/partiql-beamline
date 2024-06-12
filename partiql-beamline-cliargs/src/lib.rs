@@ -4,6 +4,7 @@ use std::fs;
 
 use std::num::ParseIntError;
 use std::path::PathBuf;
+use std::str::FromStr;
 use time::OffsetDateTime;
 
 /// Output format for the generated data
@@ -63,6 +64,32 @@ pub struct StartTime {
     pub start_iso: Option<time::OffsetDateTime>,
 }
 
+/// Default nullability for the simulation.
+#[derive(Args, Debug, Clone, PartialEq)]
+#[group(required = false, multiple = false)]
+pub struct Nullability {
+    /// If true, value types will be nullable by default; Else if false, not-nullable by default.
+    #[arg(long)]
+    pub default_nullable: Option<bool>,
+
+    /// If specified, value types are nullable by default and will generate `NULL` at the given percentage.
+    #[arg(long, value_parser=pct_parser)]
+    pub pct_null: Option<f64>,
+}
+
+/// Default nullability for the simulation.
+#[derive(Args, Debug, Clone, PartialEq)]
+#[group(required = false, multiple = false)]
+pub struct Optionality {
+    /// If true, value types will be optional by default; Else if false, not-optional by default.
+    #[arg(long)]
+    pub default_optional: Option<bool>,
+
+    /// If specified, value types are optional by default and will generate `MISSING` at the given percentage.
+    #[arg(long, value_parser=pct_parser)]
+    pub pct_optional: Option<f64>,
+}
+
 /// Seed configuration for the generator.
 #[derive(Args, Debug, Clone, PartialEq, Eq)]
 #[group(required = true, multiple = false)]
@@ -76,7 +103,7 @@ pub struct Script {
 }
 
 /// Seed configuration for the generator.
-#[derive(Args, Debug, Clone, PartialEq, Eq)]
+#[derive(Args, Debug, Clone, PartialEq)]
 pub struct SimSpec {
     #[command(flatten)]
     pub seed: Seed,
@@ -86,6 +113,12 @@ pub struct SimSpec {
 
     #[command(flatten)]
     pub script: Script,
+
+    #[command(flatten)]
+    pub nullability: Nullability,
+
+    #[command(flatten)]
+    pub optionality: Optionality,
 }
 
 /// Seed configuration for the generator.
@@ -137,6 +170,15 @@ fn iso_parser(arg: &str) -> Result<time::OffsetDateTime, String> {
     time::OffsetDateTime::parse(arg, &iso8601).map_err(|e| e.to_string())
 }
 
+fn pct_parser(arg: &str) -> Result<f64, String> {
+    let pct = f64::from_str(arg).map_err(|e| e.to_string())?;
+    if !(0.0..=1.0).contains(&pct) {
+        Err(format!("Percents must be between 0 and 1: `{pct}`"))
+    } else {
+        Ok(pct)
+    }
+}
+
 impl Seed {
     pub fn extract(&self) -> Option<u64> {
         match (&self.seed, &self.seed_auto) {
@@ -168,7 +210,12 @@ impl Script {
     }
 }
 
-pub fn parse_args(seed: &Seed, t0: &StartTime) -> SimConfigBuildResult<SimConfig> {
+pub fn parse_args(
+    seed: &Seed,
+    t0: &StartTime,
+    null: Nullability,
+    opt: Optionality,
+) -> SimConfigBuildResult<SimConfig> {
     let mut cfg = SimConfigBuilder::default();
 
     if let Some(seed) = seed.extract() {
@@ -176,6 +223,18 @@ pub fn parse_args(seed: &Seed, t0: &StartTime) -> SimConfigBuildResult<SimConfig
     }
     if let Some(t0) = t0.extract() {
         cfg.t0(t0);
+    }
+
+    if let Some(nullable) = null.default_nullable {
+        cfg.nullability(if nullable { Some(0.0) } else { None });
+    } else if let Some(null) = null.pct_null {
+        cfg.nullability(Some(null));
+    }
+
+    if let Some(optional) = opt.default_optional {
+        cfg.optionality(if optional { Some(0.0) } else { None });
+    } else if let Some(opt) = opt.pct_optional {
+        cfg.optionality(Some(opt));
     }
 
     cfg.build()

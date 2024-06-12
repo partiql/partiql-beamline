@@ -1,4 +1,4 @@
-use crate::gen::distributions::{InnerValueGenerator, RandomVariable};
+use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::context::SimContext;
 use lipsum::{lipsum_title_with_rng, lipsum_with_rng};
@@ -24,9 +24,9 @@ impl<R> LoremIpsumGenerator<R>
 where
     R: Rng + Sized + Clone,
 {
-    pub fn new(rng: R, min: u8, max: u8) -> DataGenerationResult<Self> {
+    pub fn new(rng: R, density: Density, min: u8, max: u8) -> DataGenerationResult<Self> {
         let len = statrs::distribution::DiscreteUniform::new(min as i64, max as i64)?;
-        RandomVariable::create(rng, LoremIpsumImpl { len })
+        RandomVariable::create(rng, density, LoremIpsumImpl { len })
     }
 }
 
@@ -53,8 +53,8 @@ impl<R> LoremIpsumTitleGenerator<R>
 where
     R: Rng + Sized + Clone,
 {
-    pub fn new(rng: R) -> DataGenerationResult<Self> {
-        RandomVariable::create(rng, LoremIpsumTitleImpl {})
+    pub fn new(rng: R, density: Density) -> DataGenerationResult<Self> {
+        RandomVariable::create(rng, density, LoremIpsumTitleImpl {})
     }
 }
 
@@ -94,10 +94,10 @@ impl<R> RegexGenerator<R>
 where
     R: Rng + Sized + Clone,
 {
-    pub fn new(rng: R, regex: &str) -> DataGenerationResult<Self> {
+    pub fn new(rng: R, density: Density, regex: &str) -> DataGenerationResult<Self> {
         let hir = ParserBuilder::new().build().parse(regex)?;
         let re_strategy = regex_gen(&hir)?;
-        RandomVariable::create(rng, RegexImpl { re_strategy })
+        RandomVariable::create(rng, density, RegexImpl { re_strategy })
     }
 }
 

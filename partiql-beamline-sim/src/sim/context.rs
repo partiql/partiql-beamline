@@ -1,5 +1,6 @@
+use crate::gen::distributions::Density;
 use crate::primitives::Tick;
-use crate::sim::SimConfig;
+use crate::sim::{SimConfig, SimConfigResult};
 use miette::Diagnostic;
 use std::collections::HashMap;
 use thiserror::Error;
@@ -20,15 +21,19 @@ pub enum SimContextError {
 #[derive(Clone, Debug)]
 pub struct SimContext {
     config: SimConfig,
+    density: Density,
     bindings: HashMap<UniCase<String>, ConstantBindingValue>,
 }
 
 impl SimContext {
-    pub fn new(config: SimConfig) -> SimContext {
-        SimContext {
+    pub fn new(config: SimConfig) -> SimConfigResult<SimContext> {
+        let present = 1.0 - (config.nullability.unwrap_or(0.0) + config.optionality.unwrap_or(0.0));
+        let density = Density::new(config.nullability, config.optionality, present)?;
+        Ok(SimContext {
             config,
+            density,
             bindings: Default::default(),
-        }
+        })
     }
 
     pub fn add_binding(&mut self, key: &str, value: &ConstantBindingValue) -> SimContextResult<()> {
@@ -63,6 +68,10 @@ impl SimContext {
 
     pub fn t0(&self) -> &OffsetDateTime {
         &self.config.t0
+    }
+
+    pub fn density(&self) -> &Density {
+        &self.density
     }
 }
 

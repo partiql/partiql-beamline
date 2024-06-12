@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use crate::gen::DataGenerationError;
 use derive_builder::Builder;
 use ion_rs::IonError;
 use miette::Diagnostic;
@@ -10,7 +11,7 @@ use thiserror::Error;
 use time::macros::datetime;
 use time::OffsetDateTime;
 
-use crate::reader::ProcessConfigError;
+use crate::reader::{ProcessConfigError, DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY};
 
 /// Error in simulation configuration.
 #[derive(Debug, Error, Diagnostic)]
@@ -28,6 +29,13 @@ pub enum SimConfigError {
 
     #[error("Unknown Error: {0}")]
     UnknownError(Box<dyn Error + Send + Sync + 'static>),
+}
+
+impl From<DataGenerationError> for SimConfigError {
+    fn from(value: DataGenerationError) -> Self {
+        let pe: ProcessConfigError = value.into();
+        pe.into()
+    }
 }
 
 impl From<rand::Error> for SimConfigError {
@@ -78,6 +86,12 @@ pub struct SimConfig {
 
     /// Simulation time zero
     pub t0: OffsetDateTime,
+
+    /// Simulation-wide value nullability; Default is Nullable, but with 0% chance
+    pub nullability: Option<f64>,
+
+    /// Simulation-wide value optionality; Default is not-optional (i.e., will never be `MISSING`).
+    pub optionality: Option<f64>,
 }
 
 impl SimConfigBuilder {
@@ -92,7 +106,23 @@ impl SimConfigBuilder {
             None => auto_t0(seed)?,
         };
 
-        Ok(SimConfig { seed, t0 })
+        let nullability = self.nullability.unwrap_or(DEFAULT_NULLABILITY);
+        let optionality = self.optionality.unwrap_or(DEFAULT_OPTIONALITY);
+
+        let sum = nullability.unwrap_or(0.0) + optionality.unwrap_or(0.0);
+        if !(0.0..=1.0).contains(&sum) {
+            return Err(SimConfigBuilderError::ValidationError(
+                "Sum of simulation default nullability and optionality must be between 0 and 1"
+                    .to_string(),
+            ));
+        }
+
+        Ok(SimConfig {
+            seed,
+            t0,
+            nullability,
+            optionality,
+        })
     }
 }
 

@@ -15,7 +15,7 @@ impl RandomProcess for SimpleProcess {
     fn next_sample(&self, ctx: &SimContext) -> Option<Result<Sample, DataSamplingError>> {
         let tick_binding_value = ctx.get_binding(CURRENT_TICK).expect("tick binding value");
         if let &ConstantBindingValue::Tick(tick) = tick_binding_value {
-            let value = self.data.gen_value(ctx);
+            let value = self.data.present_value(ctx);
             Some(Ok(Sample { tick, value }))
         } else {
             Some(Err(DataSamplingError::InvalidTick(format!(
@@ -33,7 +33,7 @@ impl RandomProcess for SimpleProcess {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct RandomProcesses {
     processes: Vec<(DataSetName, Box<dyn RandomProcess>)>,
 }

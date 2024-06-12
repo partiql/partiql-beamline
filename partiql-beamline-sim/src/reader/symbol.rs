@@ -21,4 +21,8 @@ pub trait EnvSymbolParser {
     fn parse_symbol_as_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String>;
 
     fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String>;
+
+    fn default_nullability(&self) -> ProcessConfigResult<Option<f64>>;
+
+    fn default_optionality(&self) -> ProcessConfigResult<Option<f64>>;
 }
