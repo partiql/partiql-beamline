@@ -10,7 +10,9 @@ pub mod reader;
 mod tests {
     use crate::primitives::{Sample, Tick};
     use crate::reader::ProcessConfigError;
-    use crate::sim::{Sim, SimBuilder, SimConfigBuilder, SimConfigError, SimError, SimResult};
+    use crate::sim::{
+        ISim, Sim, SimBuilder, SimConfigBuilder, SimConfigError, SimError, SimResult,
+    };
     use assert_matches::assert_matches;
     use partiql_types::{StructField, TypeKind};
     use partiql_value::{list, tuple, Value};

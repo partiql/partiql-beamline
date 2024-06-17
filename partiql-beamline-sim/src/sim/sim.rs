@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::default::Default;
 use std::error::Error;
 
@@ -118,6 +118,25 @@ impl SimBuilder {
     }
 }
 
+pub trait ISim {
+    /// The [`SimConfig`] used to construct this.
+    fn config(&self) -> &SimConfig;
+
+    /// The [`DatasetTypeMapping`] that defines the `shape` of this sim.
+    fn shape(&self) -> DatasetTypeMapping;
+
+    /// The 'dataset's represented by this simulation.
+    fn datasets(&self) -> Vec<(DataSetId, DataSetName)>;
+
+    /// Get a 'dataset' id from its name.
+    fn get_dataset_id(&self, name: &DataSetName) -> Option<DataSetId> {
+        self.datasets()
+            .iter()
+            .find(|(_, ds_name)| ds_name == name)
+            .map(|(id, _)| *id)
+    }
+}
+
 #[derive(Debug)]
 pub struct Sim {
     context: SimContext,
@@ -162,14 +181,6 @@ impl Sim {
         })
     }
 
-    pub fn config(&self) -> &SimConfig {
-        self.context.config()
-    }
-
-    pub fn shape(&self) -> DatasetTypeMapping {
-        self.processes.shape()
-    }
-
     /// Generate the next sample from this simulation
     pub fn next_sample(&mut self) -> SimResult<Option<Sample>> {
         match self.timeline.pop() {
@@ -205,6 +216,20 @@ impl Sim {
     #[must_use]
     pub fn iter_mut(&mut self) -> SimIterMut<'_> {
         SimIterMut(self)
+    }
+}
+
+impl ISim for Sim {
+    fn config(&self) -> &SimConfig {
+        self.context.config()
+    }
+
+    fn shape(&self) -> DatasetTypeMapping {
+        self.processes.shape()
+    }
+
+    fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
+        self.processes.datasets()
     }
 }
 
@@ -271,23 +296,24 @@ impl MultiSim {
             t0,
         } = builder;
 
-        let shape = processes.shape();
-        let mut processes: Vec<_> = processes.decompose().into_iter().collect();
-        processes.sort_by(|(ld, _), (rd, _)| ld.cmp(rd));
-
-        let mut datasets = Vec::default();
-        let mut sims = Vec::default();
-        for (d, p) in processes {
-            datasets.push(d);
-
-            let bld = SimBuilder {
+        let build = |p| {
+            SimBuilder {
                 context: context.clone(),
                 root_rng: root_rng.clone(),
                 t0,
                 processes: p,
-            };
-            sims.push(bld.build_time_ordered()?);
-        }
+            }
+            .build_time_ordered()
+        };
+
+        let shape = processes.shape();
+
+        let processes: Result<Vec<_>, _> = processes
+            .decompose()
+            .into_iter()
+            .map(|(n, p)| build(p).map(|sim| (n, sim)))
+            .collect();
+        let (datasets, sims): (Vec<_>, Vec<_>) = processes?.into_iter().unzip();
 
         Ok(MultiSim {
             context,
@@ -298,11 +324,27 @@ impl MultiSim {
         })
     }
 
-    pub fn config(&self) -> &SimConfig {
-        self.context.config()
+    pub fn for_dataset(&mut self, id: DataSetId) -> SimResult<&mut Sim> {
+        self.sims
+            .get_mut(id.0)
+            .ok_or_else(|| SimError::UnknownDataSet(id))
     }
 
-    pub fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
+    /// Generate the next sample from this simulation
+    fn next_sample(&mut self, id: DataSetId) -> SimResult<Option<Sample>> {
+        self.sims[id.0].next_sample()
+    }
+}
+
+impl ISim for MultiSim {
+    fn config(&self) -> &SimConfig {
+        self.context.config()
+    }
+    fn shape(&self) -> DatasetTypeMapping {
+        self.dataset_shapes.clone()
+    }
+
+    fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
         self.datasets
             .iter()
             .enumerate()
@@ -310,22 +352,7 @@ impl MultiSim {
             .collect()
     }
 
-    pub fn get_dataset_id(&self, name: &DataSetName) -> Option<DataSetId> {
+    fn get_dataset_id(&self, name: &DataSetName) -> Option<DataSetId> {
         self.datasets.iter().position(|d| d == name).map(DataSetId)
-    }
-
-    /// Generate the next sample from this simulation
-    pub fn next_sample(&mut self, id: DataSetId) -> SimResult<Option<Sample>> {
-        self.sims[id.0].next_sample()
-    }
-
-    pub fn for_dataset(&mut self, id: DataSetId) -> SimResult<&mut Sim> {
-        self.sims
-            .get_mut(id.0)
-            .ok_or_else(|| SimError::UnknownDataSet(id))
-    }
-
-    pub fn shape(&self) -> DatasetTypeMapping {
-        self.dataset_shapes.clone()
     }
 }

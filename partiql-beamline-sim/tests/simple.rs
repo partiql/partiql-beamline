@@ -1,5 +1,5 @@
 use miette::IntoDiagnostic;
-use partiql_beamline::sim::{SimBuilder, SimConfigBuilder, SimResult, DATETIME_FORMAT};
+use partiql_beamline::sim::{ISim, SimBuilder, SimConfigBuilder, SimResult, DATETIME_FORMAT};
 use partiql_extension_ion::decode::{IonDecoderBuilder, IonDecoderConfig};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding::PartiqlEncodedAsIon;
@@ -93,11 +93,7 @@ pub(crate) fn decode_ion(buff: &[u8]) -> Result<Value, IonEncodeError> {
 fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
     let seed = 90; // thanks random.org
     let t0 = datetime!(2024-05-24 20:39:13 UTC);
-    let config = SimConfigBuilder::default()
-        .t0(t0)
-        .seed(seed)
-        .build()
-        .expect("auto config");
+    let config = SimConfigBuilder::default().t0(t0).seed(seed).build()?;
 
     let skip_count = 75;
     let sample_count = 5;
