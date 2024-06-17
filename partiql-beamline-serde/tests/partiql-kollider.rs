@@ -1,6 +1,6 @@
 use ion_rs::element::writer::TextKind;
 use ion_rs::element::Element;
-use partiql_beamline::sim::{SimBuilder, SimConfigBuilder};
+use partiql_beamline::sim::{ISim, SimBuilder, SimConfigBuilder};
 use partiql_beamline_serde::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;

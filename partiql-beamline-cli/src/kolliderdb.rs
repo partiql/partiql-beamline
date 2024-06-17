@@ -1,6 +1,6 @@
 use crate::cli::{encode_ion_text, get_multi_sim, IonPrintMode};
 use ion_rs::element::writer::TextKind;
-use partiql_beamline::sim::{SimConfig, DATETIME_FORMAT};
+use partiql_beamline::sim::{ISim, SimConfig, DATETIME_FORMAT};
 use partiql_beamline_serde::ddl::{DdlSyntax, PartiqlDdlEncoder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;

@@ -6,7 +6,7 @@ use clap::{Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
-use partiql_beamline::sim::{SimBuilder, DATETIME_FORMAT};
+use partiql_beamline::sim::{ISim, SimBuilder, DATETIME_FORMAT};
 use partiql_beamline_cliargs::{
     parse_args, DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat, SimSpec,
 };
