@@ -1,4 +1,4 @@
-use crate::gen::{DataGenerationResult, ValueGenerator};
+use crate::gen::{ArrivalTime, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
 use partiql_types::PartiqlType;
 use partiql_value::Value;
@@ -85,7 +85,10 @@ pub trait InnerValueGenerator<R>: Debug + Clone
 where
     R: Rng + Sized + Clone,
 {
+    /// Generates non-absent [`Value`] (i.e., not [`Value::Null`] and not [`Value::Missing`]).
     fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
+
+    /// The [`PartiqlType`] of the generated values.
     fn value_type(&self) -> PartiqlType;
 }
 

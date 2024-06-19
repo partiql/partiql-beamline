@@ -60,7 +60,7 @@
             name: "ar4",
             type: {
                 type: "list",
-                items: "int8"
+                items: "tinyint"
             }
           },
           {
@@ -96,7 +96,7 @@
           },
           {
             name: "i8",
-            type: "int8",
+            type: "tinyint",
           },
           {
             name: "tick",
