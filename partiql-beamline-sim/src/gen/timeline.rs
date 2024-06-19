@@ -8,20 +8,11 @@ use rand::Rng;
 use std::ops::Add;
 use time::Duration;
 
-/// Yields the simulation's current [`Tick`] when a value is generated.
-pub type TickGenerator<R> = RandomVariable<R, TickGeneratorImpl>;
+use crate::gen::macros::*;
 
-impl<R> TickGenerator<R>
-where
-    R: Rng + Sized + Clone,
-{
-    pub fn new(rng: R, density: Density) -> DataGenerationResult<Self> {
-        RandomVariable::create(rng, density, TickGeneratorImpl {})
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct TickGeneratorImpl {}
+make_rv_stateless!(
+    /// Yields the simulation's current [`Tick`] when a value is generated.
+    TickGenerator, TickGeneratorImpl);
 
 impl<R> InnerValueGenerator<R> for TickGeneratorImpl
 where
@@ -42,21 +33,12 @@ where
     }
 }
 
-/// Yields the simulation's current 'Time' when a value is generated.
-///
-/// The current time is calculated by adding the current [`Tick`] to the simulation's start time (`t0`).
-pub type InstantGenerator<R> = RandomVariable<R, InstantGeneratorImpl>;
-impl<R> InstantGenerator<R>
-where
-    R: Rng + Sized + Clone,
-{
-    pub fn new(rng: R, density: Density) -> DataGenerationResult<Self> {
-        RandomVariable::create(rng, density, InstantGeneratorImpl {})
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct InstantGeneratorImpl {}
+make_rv_stateless!(
+    /// Yields the simulation's current 'Time' when a value is generated.
+    ///
+    /// The current time is calculated by adding the current [`Tick`] to the simulation's start time (`t0`).
+    InstantGenerator, InstantGeneratorImpl
+);
 
 impl<R> InnerValueGenerator<R> for InstantGeneratorImpl
 where
