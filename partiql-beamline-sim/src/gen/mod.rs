@@ -1,3 +1,4 @@
+use crate::gen::distributions::Density;
 use crate::primitives::{Sample, Tick};
 use crate::sim::context::SimContext;
 use dyn_clone::DynClone;

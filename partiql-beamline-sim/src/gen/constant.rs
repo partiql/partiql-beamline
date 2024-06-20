@@ -1,3 +1,4 @@
+use crate::gen::distributions::Density;
 use crate::gen::util::ValueTypeInference;
 use crate::gen::ValueGenerator;
 use crate::sim::context::SimContext;

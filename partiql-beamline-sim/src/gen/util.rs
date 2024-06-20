@@ -1,3 +1,4 @@
+use crate::gen::distributions::Density;
 use partiql_types::{
     ArrayType, BagType, PartiqlShape, StructConstraint, StructField, StructType, TYPE_BOOL,
     TYPE_DATETIME, TYPE_DECIMAL, TYPE_INT, TYPE_REAL, TYPE_STRING,

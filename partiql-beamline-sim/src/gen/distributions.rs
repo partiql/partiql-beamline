@@ -129,6 +129,10 @@ where
         let value = self.inner.present_value(rng, ctx);
         (presence, value)
     }
+
+    fn density(&self) -> &Density {
+        &self.density
+    }
 }
 
 impl<R, Impl> Clone for RandomVariable<R, Impl>
