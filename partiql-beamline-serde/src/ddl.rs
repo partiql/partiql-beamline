@@ -166,29 +166,23 @@ impl PartiqlDdlEncoder for PartiqlBasicDdlEncoder {
         let ty = ty.expect_static()?;
 
         if let StaticTypeVariant::Bag(bag) = ty.ty() {
-            if let s = bag.element_type().expect_struct()? {
-                let fields = s.fields();
-                let mut fields = fields.iter().peekable();
-                while let Some(field) = fields.next() {
-                    output.push_str(&format!("\"{}\" ", field.name()));
+            let s = bag.element_type().expect_struct()?;
+            let fields = s.fields();
+            let mut fields = fields.iter().peekable();
+            while let Some(field) = fields.next() {
+                output.push_str(&format!("\"{}\" ", field.name()));
 
-                    if field.is_optional() {
-                        output.push_str("OPTIONAL ");
-                    }
-
-                    output.push_str(&self.write_shape(field.ty())?);
-                    if fields.peek().is_some() {
-                        output.push(',');
-                        output.push_str(&self.write_line()?);
-                    }
+                if field.is_optional() {
+                    output.push_str("OPTIONAL ");
                 }
-                Ok(output)
-            } else {
-                Err(ShapeEncodingError::UnsupportedEncoding(format!(
-                    "Unsupported top level element type {:?}",
-                    bag.element_type()
-                )))
+
+                output.push_str(&self.write_shape(field.ty())?);
+                if fields.peek().is_some() {
+                    output.push(',');
+                    output.push_str(&self.write_line()?);
+                }
             }
+            Ok(output)
         } else {
             Err(ShapeEncodingError::UnsupportedEncoding(format!(
                 "Unsupported top level type {:?}",

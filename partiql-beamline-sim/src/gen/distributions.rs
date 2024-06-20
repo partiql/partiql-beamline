@@ -177,14 +177,14 @@ where
 
     fn value_type(&self) -> PartiqlShape {
         let inner_type = self.inner.value_type();
-        if let Some(nullability) = self.density().null {
-            if nullability == 0f64 {
-                inner_type.as_non_nullable().unwrap_or(inner_type)
-            } else {
-                inner_type
-            }
-        } else {
+        if let Some(_) = self.density().null {
             inner_type
+        } else {
+            inner_type.as_non_nullable().unwrap_or(inner_type)
         }
+    }
+
+    fn density(&self) -> Option<Density> {
+        Some(self.density.clone())
     }
 }

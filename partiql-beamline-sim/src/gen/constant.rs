@@ -26,4 +26,8 @@ impl ValueGenerator for ConstantGenerator {
     fn value_type(&self) -> PartiqlShape {
         self.typ.clone()
     }
+
+    fn density(&self) -> Option<Density> {
+        None
+    }
 }

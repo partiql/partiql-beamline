@@ -96,7 +96,17 @@ where
             SimpleRandomDataImpl::Collection(kvs) => {
                 let fields = kvs
                     .iter()
-                    .map(|(k, v)| StructField::new(k, v.value_type()))
+                    .map(|(k, v)| {
+                        if let Some(d) = v.density() {
+                            if let Some(_) = d.optionality() {
+                                StructField::new_optional(k, v.value_type())
+                            } else {
+                                StructField::new(k, v.value_type())
+                            }
+                        } else {
+                            StructField::new(k, v.value_type())
+                        }
+                    })
                     .collect();
                 PartiqlShape::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
             }

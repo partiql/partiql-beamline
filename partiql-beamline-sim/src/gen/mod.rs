@@ -90,6 +90,8 @@ pub trait ValueGenerator: Debug + DynClone {
     /// Generates non-absent [`Value`] (i.e., not [`Value::Null`] and not [`Value::Missing`]).
     fn present_value(&self, ctx: &SimContext) -> Value;
     fn value_type(&self) -> PartiqlShape;
+
+    fn density(&self) -> Option<Density>;
 }
 
 dyn_clone::clone_trait_object!(ValueGenerator);
