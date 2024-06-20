@@ -1,15 +1,24 @@
 use crate::gen::distributions::Density;
-use crate::gen::simple::{
-    bounded_array, bounded_bool, bounded_choose, bounded_decimal, bounded_f64, bounded_i16,
-    bounded_i32, bounded_i64, bounded_i8, bounded_u16, bounded_u32, bounded_u64, bounded_u8,
-    bounded_union, simple_uuid,
+
+use crate::gen::simple::{SimpleAnyOf, SimpleArray, SimpleBool, SimpleChoose, Uuid};
+use crate::gen::simple_numeric::{
+    SimpleDecimal, SimpleF64, SimpleInt16, SimpleInt32, SimpleInt64, SimpleInt8, SimpleUInt16,
+    SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
-use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
+use crate::gen::ValueGeneratorBoxed;
+use crate::gen::{ArrivalBoxed, DataGenerationError, DataGenerationResult, ValueGenerator};
+
 use crate::reader;
 use crate::reader::registry::ValueGeneratorParser;
+use crate::reader::simple::SimpleScriptVariableKind::UInt8;
 use crate::reader::symbol::EnvSymbolParser;
-use crate::reader::{to_f64, to_i64, ProcessConfigError, ProcessConfigResult};
+
+use crate::reader::{
+    to_f64, to_i64, validate_config_keys, ProcessConfigError, ProcessConfigResult,
+    CONFIG_KEYS_DENSITY,
+};
+
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
 use partiql_value::Value;
 use rand::Rng;
@@ -24,6 +33,10 @@ pub(crate) const DEFAULT_INT32: (i64, i64) = (i32::MIN as i64, i32::MAX as i64);
 pub(crate) const DEFAULT_INT64: (i64, i64) = (i64::MIN, i64::MAX);
 pub(crate) const DEFAULT_FLOAT: (f64, f64) = (i8::MIN as f64, i8::MAX as f64);
 pub(crate) const DEFAULT_BOOL: f64 = 0.5;
+
+pub(crate) const CONFIG_KEY_RANGE_LOW: &str = "low";
+pub(crate) const CONFIG_KEY_RANGE_HIGH: &str = "high";
+pub(crate) const CONFIG_KEYS_RANGE: [&str; 2] = [CONFIG_KEY_RANGE_LOW, CONFIG_KEY_RANGE_HIGH];
 
 #[derive(Debug)]
 pub enum SimpleScriptVariableKind {
@@ -101,8 +114,12 @@ impl SimpleScriptVariableKind {
 fn range(
     config: Option<LazyStruct<AnyEncoding>>,
 ) -> ProcessConfigResult<Option<(ValueRef<AnyEncoding>, ValueRef<AnyEncoding>)>> {
-    let low = config.and_then(|c| c.get("low").transpose()).transpose()?;
-    let high = config.and_then(|c| c.get("high").transpose()).transpose()?;
+    let low = config
+        .and_then(|c| c.get(CONFIG_KEY_RANGE_LOW).transpose())
+        .transpose()?;
+    let high = config
+        .and_then(|c| c.get(CONFIG_KEY_RANGE_HIGH).transpose())
+        .transpose()?;
 
     match (low, high) {
         (Some(low), Some(high)) => Ok(Some((low, high))),
@@ -165,57 +182,77 @@ where
             SimpleScriptVariableKind::Array => {
                 self.parse_array(rng, density, symbol_parser, config)?
             }
-            SimpleScriptVariableKind::Tick => Box::new(TickGenerator::new(rng, density)?),
-            SimpleScriptVariableKind::Instant => Box::new(InstantGenerator::new(rng, density)?),
+            SimpleScriptVariableKind::Tick => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY])?;
+                Box::new(TickGenerator::new(rng, density)?)
+            }
+            SimpleScriptVariableKind::Instant => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY])?;
+                Box::new(InstantGenerator::new(rng, density)?)
+            }
             SimpleScriptVariableKind::UInt8 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT8);
-                Box::new(bounded_u8(rng, density, low, high)?)
+                SimpleUInt8::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::UInt16 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT16);
-                Box::new(bounded_u16(rng, density, low, high)?)
+                SimpleUInt16::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::UInt32 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT32);
-                Box::new(bounded_u32(rng, density, low, high)?)
+                SimpleUInt32::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::UInt64 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT64);
-                Box::new(bounded_u64(rng, density, low, high)?)
+                SimpleUInt64::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::Int8 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT8);
-                Box::new(bounded_i8(rng, density, low, high)?)
+                SimpleInt8::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::Int16 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT16);
-                Box::new(bounded_i16(rng, density, low, high)?)
+                SimpleInt16::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::Int32 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT32);
-                Box::new(bounded_i32(rng, density, low, high)?)
+                SimpleInt32::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::Int64 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT64);
-                Box::new(bounded_i64(rng, density, low, high)?)
+                SimpleInt64::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::Float64 => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_f64(config, symbol_parser)?.unwrap_or(DEFAULT_FLOAT);
-                Box::new(bounded_f64(rng, density, low, high)?)
+                SimpleF64::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::Decimal => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_f64(config, symbol_parser)?.unwrap_or(DEFAULT_FLOAT);
-                Box::new(bounded_decimal(rng, density, low, high)?)
+                SimpleDecimal::new(low, high, rng, density)?.boxed()
             }
             SimpleScriptVariableKind::Bool => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &["p"]])?;
                 let p = if let Some(p) = config.and_then(|c| c.get("p").transpose()).transpose()? {
                     to_f64(p, symbol_parser)?
                 } else {
                     DEFAULT_BOOL
                 };
-                Box::new(bounded_bool(rng, density, p)?)
+                SimpleBool::new(p, rng, density)?.boxed()
             }
-            SimpleScriptVariableKind::UUID => Box::new(simple_uuid(rng, density)?),
+            SimpleScriptVariableKind::UUID => {
+                validate_config_keys(config, [&CONFIG_KEYS_DENSITY])?;
+                Uuid::new(rng, density)?.boxed()
+            }
         };
         Ok(gen)
     }
@@ -232,9 +269,11 @@ impl SimpleScriptVariableKind {
     where
         R: Rng + Sized + Clone + 'static,
     {
+        validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &["types"]])?;
         let config = config.ok_or_else(|| {
             ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
         })?;
+
         let lst = config.get_expected("types")?.expect_list()?;
 
         let mut generators = vec![];
@@ -261,7 +300,7 @@ impl SimpleScriptVariableKind {
             generators.push(gen);
         }
 
-        Ok(Box::new(bounded_union(rng, density, generators)?))
+        Ok(SimpleAnyOf::new(generators, rng, density)?.boxed())
     }
 
     fn parse_choice<R>(
@@ -274,6 +313,7 @@ impl SimpleScriptVariableKind {
     where
         R: Rng + Sized + Clone + 'static,
     {
+        validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &["choices"]])?;
         let config = config.ok_or_else(|| {
             ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
         })?;
@@ -296,7 +336,7 @@ impl SimpleScriptVariableKind {
             choice_values.push(value);
         }
 
-        Ok(Box::new(bounded_choose(rng, density, choice_values)?))
+        Ok(SimpleChoose::new(choice_values, rng, density)?.boxed())
     }
     fn parse_array<R>(
         &self,
@@ -308,6 +348,13 @@ impl SimpleScriptVariableKind {
     where
         R: Rng + Sized + Clone + 'static,
     {
+        validate_config_keys(
+            config,
+            [
+                &CONFIG_KEYS_DENSITY,
+                &["element_type", "min_size", "max_size"],
+            ],
+        )?;
         let config = config.ok_or_else(|| {
             ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
         })?;
@@ -320,13 +367,9 @@ impl SimpleScriptVariableKind {
          -> ProcessConfigResult<Box<dyn ValueGenerator>> {
             let gen = symbol_parser.parse_symbol_as_generator(sym, cfg)?;
 
-            Ok(Box::new(bounded_array(
-                rng,
-                density,
-                min_size.expect_i64()?,
-                max_size.expect_i64()?,
-                gen,
-            )?) as Box<dyn ValueGenerator>)
+            let min = min_size.expect_i64()?;
+            let max = max_size.expect_i64()?;
+            Ok(SimpleArray::new(min, max, gen, rng, density)?.boxed())
         };
 
         let elem_type = config.get_expected("element_type")?;

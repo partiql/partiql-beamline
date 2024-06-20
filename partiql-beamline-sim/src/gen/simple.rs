@@ -1,7 +1,11 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
-use partiql_types::{ArrayType, PartiqlShape, StaticTypeVariant, TYPE_BOOL};
+use partiql_types::{
+    ArrayType, PartiqlShape, StaticTypeVariant, TYPE_BOOL, TYPE_DECIMAL, TYPE_DOUBLE, TYPE_INT16,
+    TYPE_INT32, TYPE_INT64, TYPE_INT8, TYPE_STRING,
+};
+
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -9,383 +13,208 @@ use rand_distr::num_traits::FromPrimitive;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
-pub struct SimpleRandomVariableImpl<R, F>
-where
-    R: Rng + Sized + Clone,
-    F: Fn(&mut R, &SimContext) -> Value,
-{
-    pub(crate) name: String,
-    pub(crate) typ: PartiqlShape,
-    pub(crate) f: F,
-    rng: PhantomData<R>,
+use crate::gen::macros::*;
+use crate::gen::util::ValueTypeInference;
+use debug_ignore::DebugIgnore;
+use rand::seq::SliceRandom;
+
+rv_typedef!(
+    /// Generates a single value by using a Discrete Uniform to choose amongst inner generators.
+    SimpleAnyOf, SimpleAnyOfImpl);
+#[derive(Debug, Clone)]
+#[doc(hidden)]
+pub struct SimpleAnyOfImpl {
+    generators: Vec<Box<dyn ValueGenerator>>,
+    types: PartiqlShape,
+    dist: DebugIgnore<statrs::distribution::DiscreteUniform>,
 }
 
-pub type SimpleRandomVariable<R, F> = RandomVariable<R, SimpleRandomVariableImpl<R, F>>;
-
-impl<R, F> SimpleRandomVariable<R, F>
+impl<R> SimpleAnyOf<R>
 where
     R: Rng + Sized + Clone,
-    F: Fn(&mut R, &SimContext) -> Value + Clone,
 {
     pub fn new(
+        generators: Vec<Box<dyn ValueGenerator>>,
         rng: R,
         density: Density,
-        name: String,
-        typ: PartiqlShape,
-        f: F,
     ) -> DataGenerationResult<Self> {
-        let inner = SimpleRandomVariableImpl {
-            name,
-            typ,
-            f,
-            rng: PhantomData,
-        };
-        RandomVariable::create(rng, density, inner)
+        let types: Vec<PartiqlShape> = generators.iter().map(|gen| gen.value_type()).collect();
+        let types = PartiqlShape::any_of(types);
+        let dist =
+            statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?.into();
+        RandomVariable::create(
+            rng,
+            density,
+            SimpleAnyOfImpl {
+                generators,
+                types,
+                dist,
+            },
+        )
     }
 }
-
-impl<R, F> Clone for SimpleRandomVariableImpl<R, F>
+impl<R> InnerValueGenerator<R> for SimpleAnyOfImpl
 where
     R: Rng + Sized + Clone,
-    F: Fn(&mut R, &SimContext) -> Value + Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            name: self.name.clone(),
-            typ: self.typ.clone(),
-            f: self.f.clone(),
-            rng: self.rng,
-        }
-    }
-}
-
-impl<R, F> Debug for SimpleRandomVariableImpl<R, F>
-where
-    R: Rng + Sized + Clone,
-    F: Fn(&mut R, &SimContext) -> Value,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SimpleRandomVariable")
-            .field("name", &self.name)
-            .finish()
-    }
-}
-
-impl<R, F> InnerValueGenerator<R> for SimpleRandomVariableImpl<R, F>
-where
-    R: Rng + Sized + Clone,
-    F: Fn(&mut R, &SimContext) -> Value + Clone,
 {
     fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
-        (self.f)(rng, ctx)
+        let idx = self.dist.sample(rng) as i64;
+        let generator = &self.generators[idx as usize];
+        generator.gen_value(ctx)
     }
 
     fn value_type(&self) -> PartiqlShape {
-        self.typ.clone()
+        self.types.clone()
     }
 }
 
-pub fn bounded_union<R>(
-    rng: R,
-    density: Density,
-    generators: Vec<Box<dyn ValueGenerator>>,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    let types: Vec<PartiqlShape> = generators.iter().map(|gen| gen.value_type()).collect();
-
-    let name = format!("UniformUnion::[ {:?} ]", types);
-    let typ = PartiqlShape::any_of(types);
-
-    let dist = statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?;
-    let f = move |rng: &mut R, ctx: &SimContext| {
-        let idx = dist.sample(rng) as i64;
-        let generator = &generators[idx as usize];
-        generator.gen_value(ctx)
-    };
-    SimpleRandomVariable::new(rng, density, name, typ, f)
-}
-
-pub fn bounded_choose<R>(
-    rng: R,
-    density: Density,
+rv_typedef!(
+    /// Generates a single value by using a Discrete Uniform to choose amongst inner generators.
+    SimpleChoose, SimpleChooseImpl);
+#[derive(Debug, Clone)]
+#[doc(hidden)]
+pub struct SimpleChooseImpl {
     choices: Vec<Value>,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if choices.is_empty() {
-        return Err(DataGenerationError::Other(
-            "Empty choice vector".to_string(),
-        ));
-    }
-
-    use crate::gen::util::ValueTypeInference;
-    use rand::seq::SliceRandom;
-
-    let name = "UniformChoice".into();
-    let typ = PartiqlShape::any_of(choices.iter().map(|v| v.infer_shape()));
-
-    let f = move |rng: &mut R, _ctx: &SimContext| choices.as_slice().choose(rng).unwrap().clone();
-    SimpleRandomVariable::new(rng, density, name, typ, f)
+    types: PartiqlShape,
 }
 
-pub fn simple_uuid<R>(
-    rng: R,
-    density: Density,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
+impl<R> SimpleChoose<R>
 where
     R: Rng + Sized + Clone,
 {
-    let name = "UUID".into();
-    let typ = PartiqlShape::new(StaticTypeVariant::String);
+    pub fn new(choices: Vec<Value>, rng: R, density: Density) -> DataGenerationResult<Self> {
+        if choices.is_empty() {
+            return Err(DataGenerationError::Other(
+                "Empty choice vector".to_string(),
+            ));
+        }
+        let types = PartiqlShape::any_of(choices.iter().map(|v| v.infer_type()));
+        RandomVariable::create(rng, density, SimpleChooseImpl { choices, types })
+    }
+}
 
-    let f = move |rng: &mut R, _ctx: &SimContext| {
+impl<R> InnerValueGenerator<R> for SimpleChooseImpl
+where
+    R: Rng + Sized + Clone,
+{
+    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
+        self.choices.as_slice().choose(rng).unwrap().clone()
+    }
+
+    fn value_type(&self) -> PartiqlShape {
+        self.types.clone()
+    }
+}
+
+rv_typedef!(
+    /// Uses a Discrete Uniform to generate a length and uses the inner generator for each element
+    SimpleArray, SimpleArrayImpl);
+#[derive(Debug, Clone)]
+#[doc(hidden)]
+pub struct SimpleArrayImpl {
+    min: i64,
+    max: i64,
+    elem_generator: Box<dyn ValueGenerator>,
+    types: PartiqlShape,
+    dist: DebugIgnore<statrs::distribution::DiscreteUniform>,
+}
+
+impl<R> SimpleArray<R>
+where
+    R: Rng + Sized + Clone,
+{
+    pub fn new(
+        min: i64,
+        max: i64,
+        elem_generator: Box<dyn ValueGenerator>,
+        rng: R,
+        density: Density,
+    ) -> DataGenerationResult<Self> {
+        if min > max {
+            Err(DataGenerationError::Bounds(min, max))
+        } else {
+            let dist = statrs::distribution::DiscreteUniform::new(min, max)?.into();
+            let types =
+                PartiqlShape::new_array(ArrayType::new(Box::new(elem_generator.value_type())));
+            RandomVariable::create(
+                rng,
+                density,
+                crate::gen::simple::SimpleArrayImpl {
+                    min,
+                    max,
+                    elem_generator,
+                    types,
+                    dist,
+                },
+            )
+        }
+    }
+}
+impl<R> InnerValueGenerator<R> for crate::gen::simple::SimpleArrayImpl
+where
+    R: Rng + Sized + Clone,
+{
+    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
+        let array_length = self.dist.sample(rng) as usize;
+        let array: Vec<_> = std::iter::repeat_with(|| self.elem_generator.gen_value(ctx))
+            .take(array_length)
+            .collect();
+        Value::List(Box::new(List::from(array)))
+    }
+
+    fn value_type(&self) -> PartiqlShape {
+        self.types.clone()
+    }
+}
+
+rv_typedef!(
+    /// Generates a boolean based on a percent likelihood
+    SimpleBool, SimpleBoolImpl);
+#[derive(Debug, Clone)]
+#[doc(hidden)]
+pub struct SimpleBoolImpl {
+    pct: f64,
+    dist: DebugIgnore<statrs::distribution::Bernoulli>,
+}
+
+impl<R> SimpleBool<R>
+where
+    R: Rng + Sized + Clone,
+{
+    pub fn new(pct: f64, rng: R, density: Density) -> DataGenerationResult<Self> {
+        let dist = statrs::distribution::Bernoulli::new(pct)?.into();
+        RandomVariable::create(rng, density, SimpleBoolImpl { pct, dist })
+    }
+}
+impl<R> InnerValueGenerator<R> for SimpleBoolImpl
+where
+    R: Rng + Sized + Clone,
+{
+    fn present_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
+        // `dist.sample` returns either 0.0 or 1.0
+        Value::from(self.dist.sample(rng) > 0f64)
+    }
+
+    fn value_type(&self) -> PartiqlShape {
+        TYPE_BOOL
+    }
+}
+
+make_rv_stateless!(
+    /// Yields a Version 4 UUID
+    Uuid, UuidImpl);
+impl<R> InnerValueGenerator<R> for UuidImpl
+where
+    R: Rng + Sized + Clone,
+{
+    fn present_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
         let mut uuid_bytes = uuid::Bytes::default();
         rng.fill_bytes(&mut uuid_bytes);
         let id = uuid::Builder::from_random_bytes(uuid_bytes).into_uuid();
         Value::from(id.to_string())
-    };
-    SimpleRandomVariable::new(rng, density, name, typ, f)
-}
-
-pub fn bounded_array<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-    elem_generator: Box<dyn ValueGenerator>,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min > max {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        let elem_type = elem_generator.value_type();
-
-        let name = format!(
-            "UniformArray::{{ min_size: {min}, max_size: {max}, element_type: {elem_type:?} }}"
-        );
-
-        let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
-        let typ = PartiqlShape::new_array(ArrayType::new(Box::new(elem_type.clone())));
-        let f = move |rng: &mut R, ctx: &SimContext| {
-            let array_length = dist.sample(rng) as usize;
-            let array: Vec<_> = std::iter::repeat_with(|| elem_generator.gen_value(ctx))
-                .take(array_length)
-                .collect();
-            Value::List(Box::new(List::from(array)))
-        };
-        SimpleRandomVariable::new(rng, density, name, typ, f)
     }
-}
 
-pub fn bounded_bool<R>(
-    rng: R,
-    density: Density,
-    p: f64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    let name = format!("UniformBool::{{ p: {p} }}");
-    let typ = TYPE_BOOL;
-
-    let dist = statrs::distribution::Bernoulli::new(p)?;
-    let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng) > 0f64);
-    SimpleRandomVariable::new(rng, density, name, typ, f)
-}
-
-pub fn bounded_u8<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min < u8::MIN as i64 || max > u8::MAX as i64 {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        bounded_i64(rng, density, min, max)
+    fn value_type(&self) -> PartiqlShape {
+        TYPE_STRING
     }
-}
-
-pub fn bounded_u16<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min < u16::MIN as i64 || max > u16::MAX as i64 {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        bounded_i64(rng, density, min, max)
-    }
-}
-
-pub fn bounded_u32<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min < u32::MIN as i64 || max > u32::MAX as i64 {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        bounded_i64(rng, density, min, max)
-    }
-}
-
-pub fn bounded_u64<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min < u64::MIN as i64 {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        bounded_i64(rng, density, min, max)
-    }
-}
-
-pub fn bounded_i8<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min < i8::MIN as i64 || max > i8::MAX as i64 {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        bounded_i64(rng, density, min, max)
-    }
-}
-
-pub fn bounded_i16<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min < i16::MIN as i64 || max > i16::MAX as i64 {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        bounded_i64(rng, density, min, max)
-    }
-}
-
-pub fn bounded_i32<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    if min < i32::MIN as i64 || max > i32::MAX as i64 {
-        Err(DataGenerationError::Bounds(min, max))
-    } else {
-        bounded_i64(rng, density, min, max)
-    }
-}
-
-pub fn bounded_i64<R>(
-    rng: R,
-    density: Density,
-    min: i64,
-    max: i64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    let name = format!("UniformI64::{{ low: {min}, high: {max} }}");
-    let typ = PartiqlShape::new(StaticTypeVariant::Int64);
-
-    let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
-    let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng) as i64);
-    SimpleRandomVariable::new(rng, density, name, typ, f)
-}
-
-pub fn bounded_f64<R>(
-    rng: R,
-    density: Density,
-    min: f64,
-    max: f64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    let name = format!("UniformF64::{{ low: {min}, high: {max} }}");
-    let typ = PartiqlShape::new(StaticTypeVariant::Float64);
-
-    let dist = statrs::distribution::Uniform::new(min, max)?;
-    let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng));
-    SimpleRandomVariable::new(rng, density, name, typ, f)
-}
-
-pub fn bounded_decimal<R>(
-    rng: R,
-    density: Density,
-    min: f64,
-    max: f64,
-) -> DataGenerationResult<SimpleRandomVariable<R, impl Fn(&mut R, &SimContext) -> Value + Clone>>
-where
-    R: Rng + Sized + Clone,
-{
-    let p_and_s = |n| {
-        let dec = rust_decimal::Decimal::from_f64(n).unwrap();
-        let precision = dec
-            .mantissa()
-            .unsigned_abs()
-            .checked_ilog10()
-            .unwrap_or_default()
-            + 1;
-
-        let scale = dec.scale();
-        (precision, scale)
-    };
-
-    let name = format!("UniformDecimal::{{low: {min}, high: {max} }}");
-
-    let (p_max_dec_precision, p_max_scale) = p_and_s(max);
-    let (p_min_dec_precision, p_min_scale) = p_and_s(min);
-
-    let precision = p_max_dec_precision.max(p_min_dec_precision);
-    let scale = p_max_scale.max(p_min_scale);
-
-    let typ = PartiqlShape::new(StaticTypeVariant::DecimalP(
-        precision as usize,
-        scale as usize,
-    ));
-
-    let dist = statrs::distribution::Uniform::new(min, max)?;
-
-    let f = move |rng: &mut R, _ctx: &SimContext| {
-        let mut out_dec =
-            rust_decimal::Decimal::from_f64_retain(dist.sample(rng)).expect("decimal value");
-        out_dec.rescale(scale);
-        Value::Decimal(Box::new(out_dec))
-    };
-    SimpleRandomVariable::new(rng, density, name, typ, f)
 }

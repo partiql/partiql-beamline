@@ -1,5 +1,5 @@
 use miette::IntoDiagnostic;
-use partiql_beamline::sim::{SimBuilder, SimConfigBuilder, DATETIME_FORMAT};
+use partiql_beamline::sim::{ISim, SimBuilder, SimConfigBuilder, SimResult, DATETIME_FORMAT};
 use partiql_extension_ion::decode::{IonDecoderBuilder, IonDecoderConfig};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding::PartiqlEncodedAsIon;
@@ -8,53 +8,38 @@ use std::collections::HashMap;
 use time::macros::datetime;
 
 #[track_caller]
-fn verify_repeatable(script: &[u8]) {
-    let config = SimConfigBuilder::default().build().expect("auto config");
+fn repeatable_sims(script: &[u8]) -> SimResult<(SimBuilder, SimBuilder)> {
+    let config = SimConfigBuilder::default().build()?;
     let t0 = config.t0;
     let seed = config.seed;
-    let config2 = SimConfigBuilder::default()
-        .t0(t0)
-        .seed(seed)
-        .build()
-        .expect("repetition config");
+    let config2 = SimConfigBuilder::default().t0(t0).seed(seed).build()?;
 
-    let mut sim = SimBuilder::from_config(config, script)
-        .expect("auto sim")
-        .build_time_ordered()
-        .expect("auto sim");
-
-    let sim2 = SimBuilder::from_config(config2, script)
-        .expect("repetition sim")
-        .build_time_ordered()
-        .expect("repetition sim");
-
-    for (sample1, sample2) in std::iter::zip(sim.iter_mut(), sim2).take(100) {
-        assert_eq!(sample1.expect("sample"), sample2.expect("sample2"));
-    }
-
-    let _test_final = sim.next_sample();
+    Ok((
+        SimBuilder::from_config(config, script)?,
+        SimBuilder::from_config(config2, script)?,
+    ))
 }
 
 #[track_caller]
-fn verify_repeatable_multi(script: &[u8]) {
-    let config = SimConfigBuilder::default().build().expect("auto config");
+fn verify_repeatable(script: &[u8]) -> SimResult<()> {
+    let (sim, sim2) = repeatable_sims(script)?;
+    let mut sim = sim.build_time_ordered()?;
+    let mut sim2 = sim2.build_time_ordered()?;
 
-    let t0 = config.t0;
-    let seed = config.seed;
-    let config2 = SimConfigBuilder::default()
-        .t0(t0)
-        .seed(seed)
-        .build()
-        .expect("repetition config");
+    for (sample1, sample2) in sim.iter_mut().zip(sim2.iter_mut()).take(100) {
+        assert_eq!(sample1?, sample2?);
+    }
 
-    let mut sim = SimBuilder::from_config(config, script)
-        .expect("auto sim")
-        .build_multi_dataset()
-        .expect("auto sim");
-    let mut sim2 = SimBuilder::from_config(config2, script)
-        .expect("repetition sim")
-        .build_multi_dataset()
-        .expect("repetition sim");
+    let _test_final = sim.next_sample();
+
+    Ok(())
+}
+
+#[track_caller]
+fn verify_repeatable_multi(script: &[u8]) -> SimResult<()> {
+    let (sim, sim2) = repeatable_sims(script)?;
+    let mut sim = sim.build_multi_dataset()?;
+    let mut sim2 = sim2.build_multi_dataset()?;
 
     let ds1 = sim.datasets();
     let ds2 = sim2.datasets();
@@ -62,18 +47,18 @@ fn verify_repeatable_multi(script: &[u8]) {
 
     for (id, _n) in ds1 {
         for (sample1, sample2) in
-            std::iter::zip(sim.for_dataset(id), sim2.for_dataset(id)).take(100)
+            std::iter::zip(sim.for_dataset(id)?, sim2.for_dataset(id)?).take(100)
         {
-            assert_eq!(sample1.expect("sample"), sample2.expect("sample2"));
+            assert_eq!(sample1?, sample2?);
         }
     }
+
+    Ok(())
 }
 
 pub(crate) fn encode_ion_text(value: &Value) -> Result<String, IonEncodeError> {
     let mut buff = vec![];
-    let mut writer = ion_rs_old::TextWriterBuilder::pretty()
-        .build(&mut buff)
-        .expect("pretty writer");
+    let mut writer = ion_rs_old::TextWriterBuilder::pretty().build(&mut buff)?;
 
     let mut encoder =
         IonEncoderBuilder::new(IonEncoderConfig::default().with_mode(PartiqlEncodedAsIon))
@@ -88,9 +73,7 @@ pub(crate) fn encode_ion_text(value: &Value) -> Result<String, IonEncodeError> {
 }
 
 pub(crate) fn decode_ion(buff: &[u8]) -> Result<Value, IonEncodeError> {
-    let reader = ion_rs_old::reader::ReaderBuilder::new()
-        .build(buff)
-        .expect("pretty writer");
+    let reader = ion_rs_old::reader::ReaderBuilder::new().build(buff)?;
 
     let mut decoder =
         IonDecoderBuilder::new(IonDecoderConfig::default().with_mode(PartiqlEncodedAsIon))
@@ -110,11 +93,7 @@ pub(crate) fn decode_ion(buff: &[u8]) -> Result<Value, IonEncodeError> {
 fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
     let seed = 90; // thanks random.org
     let t0 = datetime!(2024-05-24 20:39:13 UTC);
-    let config = SimConfigBuilder::default()
-        .t0(t0)
-        .seed(seed)
-        .build()
-        .expect("auto config");
+    let config = SimConfigBuilder::default().t0(t0).seed(seed).build()?;
 
     let skip_count = 75;
     let sample_count = 5;
@@ -122,15 +101,12 @@ fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
     let start = t0.format(&DATETIME_FORMAT).expect("start datetime string");
     let seed = config.seed;
 
-    let mut sim = SimBuilder::from_config(config, script)
-        .expect("auto sim")
-        .build_multi_dataset()
-        .expect("auto sim");
+    let mut sim = SimBuilder::from_config(config, script)?.build_multi_dataset()?;
 
     let datasets = sim.datasets();
     let mut tp = tuple!();
     for (ds_id, ds_n) in datasets {
-        let sim = sim.for_dataset(ds_id);
+        let sim = sim.for_dataset(ds_id)?;
         let name = ds_n.0.as_str();
         let vals: Result<Vec<_>, _> = sim
             .iter_mut()
@@ -166,8 +142,13 @@ fn verify_exemplar_partials(
     max_null: f64,
     max_optional: f64,
 ) -> miette::Result<()> {
+<<<<<<< HEAD
     assert!(0.0 <= max_null && max_null <= 1.0);
     assert!(0.0 <= max_optional && max_optional <= 1.0);
+=======
+    assert!((0.0..=1.0).contains(&max_null));
+    assert!((0.0..=1.0).contains(&max_optional));
+>>>>>>> main
     let pcts = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0];
     for npct in pcts.iter().map(|pct| *pct * max_null) {
         for opct in pcts.iter().map(|pct| *pct * max_optional) {
@@ -195,8 +176,12 @@ fn verify_exemplar_partial(
         .seed(seed)
         .nullability(nullability)
         .optionality(optionality)
+<<<<<<< HEAD
         .build()
         .expect("auto config");
+=======
+        .build()?;
+>>>>>>> main
 
     let skip_count = 75;
     let sample_count = 5;
@@ -204,15 +189,23 @@ fn verify_exemplar_partial(
     let start = t0.format(&DATETIME_FORMAT).expect("start datetime string");
     let seed = config.seed;
 
+<<<<<<< HEAD
     let mut sim = SimBuilder::from_config(config, script)
         .expect("auto sim")
         .build_multi_dataset()
         .expect("auto sim");
+=======
+    let mut sim = SimBuilder::from_config(config, script)?.build_multi_dataset()?;
+>>>>>>> main
 
     let datasets = sim.datasets();
     let mut tp = tuple!();
     for (ds_id, ds_n) in datasets {
+<<<<<<< HEAD
         let sim = sim.for_dataset(ds_id);
+=======
+        let sim = sim.for_dataset(ds_id)?;
+>>>>>>> main
         let name = ds_n.0.as_str();
         let vals: Result<Vec<_>, _> = sim
             .iter_mut()
@@ -293,6 +286,7 @@ macro_rules! test_data {
 }
 
 #[test]
+<<<<<<< HEAD
 fn verify_repeatable_transactions() {
     let (script, _) = test_data!("transactions");
     verify_repeatable(script);
@@ -361,4 +355,84 @@ fn verify_exemplar_client_service() {
     let (script, exemplar) = test_data!("client-service");
     verify_exemplar(script, exemplar).expect("exemplar");
     verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
+=======
+fn verify_repeatable_transactions() -> miette::Result<()> {
+    let (script, _) = test_data!("transactions");
+    verify_repeatable(script)?;
+    verify_repeatable_multi(script)?;
+    Ok(())
+}
+
+#[test]
+fn verify_repeatable_orders() -> miette::Result<()> {
+    let (script, _) = test_data!("orders");
+    verify_repeatable(script)?;
+    verify_repeatable_multi(script)?;
+    Ok(())
+}
+
+#[test]
+fn verify_repeatable_sensors() -> miette::Result<()> {
+    let (script, _) = test_data!("sensors");
+    verify_repeatable(script)?;
+    verify_repeatable_multi(script)?;
+    Ok(())
+}
+
+#[test]
+fn verify_repeatable_sensors_alternate() -> miette::Result<()> {
+    let (script, _) = test_data!("sensors-alternate");
+    verify_repeatable(script)?;
+    verify_repeatable_multi(script)?;
+    Ok(())
+}
+
+#[test]
+fn verify_repeatable_client_service() -> miette::Result<()> {
+    let (script, _) = test_data!("client-service");
+    verify_repeatable(script)?;
+    verify_repeatable_multi(script)?;
+    Ok(())
+}
+
+#[test]
+fn verify_exemplar_transactions() -> miette::Result<()> {
+    let (script, exemplar) = test_data!("transactions");
+    verify_exemplar(script, exemplar)?;
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
+    Ok(())
+}
+
+#[test]
+fn verify_exemplar_orders() -> miette::Result<()> {
+    let (script, exemplar) = test_data!("orders");
+    verify_exemplar(script, exemplar)?;
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
+    Ok(())
+}
+
+#[test]
+fn verify_exemplar_sensors() -> miette::Result<()> {
+    let (script, exemplar) = test_data!("sensors");
+    verify_exemplar(script, exemplar)?;
+    // The sensors script uses a max of 0.75 for null scripting, so cap the optional at 0.25
+    verify_exemplar_partials(script, exemplar, 1.0, 0.25 - f64::EPSILON)?;
+    Ok(())
+}
+
+#[test]
+fn verify_exemplar_sensors_alternate() -> miette::Result<()> {
+    let (script, exemplar) = test_data!("sensors-alternate");
+    verify_exemplar(script, exemplar)?;
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
+    Ok(())
+}
+
+#[test]
+fn verify_exemplar_client_service() -> miette::Result<()> {
+    let (script, exemplar) = test_data!("client-service");
+    verify_exemplar(script, exemplar)?;
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
+    Ok(())
+>>>>>>> main
 }

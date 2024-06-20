@@ -1,9 +1,9 @@
 use crate::gen::{ArrivalTime, DataSamplingError, RandomProcess, ValueGenerator, CURRENT_TICK};
-use crate::primitives::{DataSetName, ProcessId, Sample, Tick};
+use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
 use crate::sim::context::{ConstantBindingValue, SimContext};
 use partiql_types::{BagType, PartiqlShape};
 use std::collections::hash_map::Entry;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 #[derive(Debug)]
 pub struct SimpleProcess {
@@ -33,7 +33,7 @@ impl RandomProcess for SimpleProcess {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct RandomProcesses {
     processes: Vec<(DataSetName, Box<dyn RandomProcess>)>,
 }
@@ -57,8 +57,16 @@ impl RandomProcesses {
         (0..self.processes.len()).map(ProcessId).collect()
     }
 
-    pub fn decompose(self) -> HashMap<DataSetName, RandomProcesses> {
-        let mut procs: HashMap<DataSetName, RandomProcesses> = HashMap::default();
+    pub fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
+        self.processes
+            .iter()
+            .enumerate()
+            .map(|(id, (name, _))| (DataSetId(id), name.clone()))
+            .collect()
+    }
+
+    pub fn decompose(self) -> BTreeMap<DataSetName, RandomProcesses> {
+        let mut procs = BTreeMap::default();
 
         for (d, p) in self.processes {
             let rp = procs

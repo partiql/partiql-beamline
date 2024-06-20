@@ -2,6 +2,8 @@ use crate::gen::DataGenerationError;
 use ion_rs::{AnyEncoding, IonError, LazyStruct, ValueRef};
 use partiql_value::Value;
 
+use std::collections::HashSet;
+
 use thiserror::Error;
 
 use ion_rs_old::external::bigdecimal::ToPrimitive;
@@ -16,6 +18,10 @@ mod text;
 pub(crate) const DEFAULT_NULLABILITY: Option<f64> = Some(0.0);
 /// By default, no types are optional (i.e. will never be missing)
 pub(crate) const DEFAULT_OPTIONALITY: Option<f64> = None;
+
+pub(crate) const CONFIG_KEY_NULLABLE: &str = "nullable";
+pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
+pub(crate) const CONFIG_KEYS_DENSITY: [&str; 2] = [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -37,6 +43,12 @@ pub enum ProcessConfigError {
 
     #[error("No data for random process")]
     NoData,
+
+    #[error("Duplicate Configuration key: `{0}`")]
+    ConfigDuplicateKey(String),
+
+    #[error("Unexpected Configuration key: `{0}`")]
+    ConfigInvalidKey(String),
 
     #[error("Error: `{0}`")]
     UnknownGenerator(String),
@@ -68,10 +80,10 @@ pub(crate) fn parse_density(
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Density> {
     let nullable_config = config
-        .and_then(|c| c.get("nullable").transpose())
+        .and_then(|c| c.get(CONFIG_KEY_NULLABLE).transpose())
         .transpose()?;
     let optional_config = config
-        .and_then(|c| c.get("optional").transpose())
+        .and_then(|c| c.get(CONFIG_KEY_OPTIONAL).transpose())
         .transpose()?;
 
     let null = symbol_parser.default_nullability()?;
@@ -104,8 +116,10 @@ pub(crate) fn parse_density(
                 }
             )
         };
-        let nullability = fmt_msg("Nullable", nullable, nullable_default);
-        let optionality = fmt_msg("Optionality", optional, optional_default);
+
+        let nullability = fmt_msg(CONFIG_KEY_NULLABLE, nullable, nullable_default);
+        let optionality = fmt_msg(CONFIG_KEY_OPTIONAL, optional, optional_default);
+
         let msg = format!(
             "Combined Nullability and Optionality Percents must be between 0.0 and 1.0; {}; {}.",
             nullability, optionality
@@ -167,6 +181,34 @@ pub(crate) fn to_f64(
         }),
         _ => todo!("non-numeric float64 param {val:?}"),
     }
+}
+
+pub(crate) fn validate_config_keys<const N: usize>(
+    config: Option<LazyStruct<AnyEncoding>>,
+    allowed_keys: [&[&'static str]; N],
+) -> ProcessConfigResult<()> {
+    let keys: HashSet<&'static str> = allowed_keys.into_iter().flatten().copied().collect();
+    validate_config_keyset(config, keys)
+}
+pub(crate) fn validate_config_keyset(
+    config: Option<LazyStruct<AnyEncoding>>,
+    allowed_keys: HashSet<&'static str>,
+) -> ProcessConfigResult<()> {
+    let mut seen: HashSet<String> = HashSet::default();
+    if let Some(config) = config {
+        for s in config.iter() {
+            let s = s?;
+            let name = s.name()?;
+            let name = name.expect_text()?;
+            if !allowed_keys.contains(name) {
+                return Err(ProcessConfigError::ConfigInvalidKey(name.to_string()));
+            }
+            if !seen.insert(name.to_string()) {
+                return Err(ProcessConfigError::ConfigDuplicateKey(name.to_string()));
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

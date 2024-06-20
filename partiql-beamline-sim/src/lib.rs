@@ -9,12 +9,71 @@ pub mod reader;
 #[cfg(test)]
 mod tests {
     use crate::primitives::{Sample, Tick};
-    use crate::sim::{Sim, SimBuilder, SimConfigBuilder};
+
+    use crate::reader::ProcessConfigError;
+    use crate::sim::{
+        ISim, Sim, SimBuilder, SimConfigBuilder, SimConfigError, SimError, SimResult,
+    };
+    use assert_matches::assert_matches;
     use partiql_types::{StaticTypeVariant, StructField};
     use partiql_value::{list, tuple, Value};
     use std::ops::Add;
     use time::macros::datetime;
     use time::Duration;
+
+    fn format_simple_script(config: &'static str) -> String {
+        format!(
+            r#"
+            rand_processes::{{
+              $n:UniformU8::{{
+                low:2,
+                high:4
+              }},
+              sensors:$n::[
+                rand_process::{{
+                  $r:Uniform::{{ choices: [2, 3] }},
+                  $arrival:HomogeneousPoisson::{{
+                    interarrival:minutes::$r
+                  }},
+                  $data:{{
+                    i8:UniformI8::{config},
+                  }}
+                }}
+              ]
+            }}
+        "#
+        )
+    }
+
+    #[test]
+    fn config_error_invalid_key_low() {
+        assert_matches!(
+            sim_from_script(&format_simple_script("{low_val: 5, high_val: 6}")),
+            Err(SimError::ConfigError(SimConfigError::ProcessConfig(
+                ProcessConfigError::ConfigInvalidKey(msg),
+            ))) if msg == "low_val"
+        );
+    }
+
+    #[test]
+    fn config_error_invalid_key_high() {
+        assert_matches!(
+            sim_from_script(&format_simple_script("{low: 5, high_val: 6}")),
+            Err(SimError::ConfigError(SimConfigError::ProcessConfig(
+                ProcessConfigError::ConfigInvalidKey(msg),
+            ))) if msg == "high_val"
+        );
+    }
+
+    #[test]
+    fn config_error_duplicate_key_high() {
+        assert_matches!(
+            sim_from_script(&format_simple_script("{low: 5, high: 6, high: 9}")),
+            Err(SimError::ConfigError(SimConfigError::ProcessConfig(
+                ProcessConfigError::ConfigDuplicateKey(msg),
+            ))) if msg == "high"
+        );
+    }
 
     fn sensor_script() -> &'static str {
         r#"
@@ -83,21 +142,19 @@ mod tests {
         "#
     }
 
-    fn sensor_sim() -> Sim {
-        let script = sensor_script();
-
+    fn sim_from_script(script: &str) -> SimResult<Sim> {
         let t0 = datetime!(2013-11-07 00:00:01-05:00);
         let config = SimConfigBuilder::default()
             .seed(5) // Chosen via roll of a fair die.
             .t0(t0)
-            .build()
-            .expect("config");
+            .build()?;
 
-        let sim = SimBuilder::from_config(config, script.as_bytes())
-            .expect("sim")
-            .build_time_ordered()
-            .expect("sim");
-        sim
+        let sim = SimBuilder::from_config(config, script.as_bytes())?.build_time_ordered()?;
+        Ok(sim)
+    }
+
+    fn sensor_sim() -> Sim {
+        sim_from_script(sensor_script()).expect("sim creation")
     }
 
     #[test]

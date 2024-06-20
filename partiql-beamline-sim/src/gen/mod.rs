@@ -4,15 +4,20 @@ use dyn_clone::DynClone;
 use partiql_types::PartiqlShape;
 use partiql_value::Value;
 use statrs::StatsError;
+use std::convert::Infallible;
 use std::fmt::Debug;
+use std::hint::unreachable_unchecked;
+use std::num::TryFromIntError;
 use thiserror::Error;
 
 pub mod arrival;
 pub mod constant;
 pub mod data;
 pub mod distributions;
+mod macros;
 pub mod process;
 pub mod simple;
+pub mod simple_numeric;
 pub mod text;
 pub mod timeline;
 mod util;
@@ -28,11 +33,23 @@ pub enum DataGenerationError {
     #[error("Bounds Error: `{0}-{0}`")]
     Bounds(i64, i64),
 
+    #[error("Bounds Error: `{0}-{0}`")]
+    BoundsF(f64, f64),
+
     #[error("Error: {0}")]
     NoConfig(String),
 
+    #[error("Integer Conversion Error: {0}")]
+    IntConversionError(#[from] TryFromIntError),
+
     #[error("Error: `{0}`")]
     Other(String),
+}
+
+impl From<Infallible> for DataGenerationError {
+    fn from(value: Infallible) -> Self {
+        unreachable!();
+    }
 }
 
 #[derive(Debug, Error)]
@@ -76,6 +93,20 @@ pub trait ValueGenerator: Debug + DynClone {
 }
 
 dyn_clone::clone_trait_object!(ValueGenerator);
+
+pub trait ValueGeneratorBoxed: ValueGenerator
+where
+    Self: 'static,
+{
+    fn boxed(self) -> Box<dyn ValueGenerator>
+    where
+        Self: Sized,
+    {
+        Box::new(self)
+    }
+}
+
+impl<T> ValueGeneratorBoxed for T where T: ValueGenerator + 'static {}
 
 /// A 'generator' of arrival times for the events from a Random Process (aka Stochastic Process)
 pub trait ArrivalTime: Debug + DynClone {

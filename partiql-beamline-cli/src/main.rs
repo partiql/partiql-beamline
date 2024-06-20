@@ -6,7 +6,7 @@ use clap::{Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
-use partiql_beamline::sim::{SimBuilder, DATETIME_FORMAT};
+use partiql_beamline::sim::{ISim, SimBuilder, DATETIME_FORMAT};
 use partiql_beamline_cliargs::{
     parse_args, DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat, SimSpec,
 };
@@ -122,7 +122,7 @@ fn main() -> miette::Result<()> {
                                     if let Ok(Some(Sample {
                                         tick: Tick(t),
                                         value,
-                                    })) = sim.for_dataset(id).next_sample()
+                                    })) = sim.for_dataset(id)?.next_sample()
                                     {
                                         let time = t0.add(Duration::milliseconds(t as i64));
                                         let name = name.clone().0;
@@ -138,7 +138,7 @@ fn main() -> miette::Result<()> {
                                         if let Ok(Some(Sample {
                                             tick: Tick(t),
                                             value,
-                                        })) = sim.for_dataset(id).next_sample()
+                                        })) = sim.for_dataset(id)?.next_sample()
                                         {
                                             let time = t0.add(Duration::milliseconds(t as i64));
                                             println!("[{time}] : {dataset:?} {value:?}");
@@ -196,6 +196,8 @@ fn main() -> miette::Result<()> {
                         sample_count,
                     } => {
                         if let DbTarget::Filesystem = target {
+                            let cfg = parse_args(&seed, &start_time, nullability, optionality)
+                                .into_diagnostic()?;
                             let script = script.extract().into_diagnostic()?;
                             let sample_count = sample_count.sample_count;
                             let catalog_full_path = catalog_full_path(&catalog_name, &catalog_path);
@@ -209,7 +211,7 @@ fn main() -> miette::Result<()> {
 
                             create_script_file(&catalog_full_path, &script)?;
                             create_kollider_db(
-                                &cfg,
+                                cfg,
                                 &catalog_name,
                                 &catalog_path,
                                 &script,
