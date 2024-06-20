@@ -7,11 +7,10 @@ use crate::gen::simple_numeric::{
 };
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::ValueGeneratorBoxed;
-use crate::gen::{ArrivalBoxed, DataGenerationError, DataGenerationResult, ValueGenerator};
+use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 
 use crate::reader;
 use crate::reader::registry::ValueGeneratorParser;
-use crate::reader::simple::SimpleScriptVariableKind::UInt8;
 use crate::reader::symbol::EnvSymbolParser;
 
 use crate::reader::{

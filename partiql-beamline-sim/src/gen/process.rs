@@ -3,7 +3,7 @@ use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
 use crate::sim::context::{ConstantBindingValue, SimContext};
 use partiql_types::{BagType, PartiqlShape};
 use std::collections::hash_map::Entry;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug)]
 pub struct SimpleProcess {

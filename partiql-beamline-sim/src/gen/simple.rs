@@ -1,17 +1,12 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
-use partiql_types::{
-    ArrayType, PartiqlShape, StaticTypeVariant, TYPE_BOOL, TYPE_DECIMAL, TYPE_DOUBLE, TYPE_INT16,
-    TYPE_INT32, TYPE_INT64, TYPE_INT8, TYPE_STRING,
-};
+use partiql_types::{ArrayType, PartiqlShape, TYPE_BOOL, TYPE_STRING};
 
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
-use rand_distr::num_traits::FromPrimitive;
-use std::fmt::{Debug, Formatter};
-use std::marker::PhantomData;
+use std::fmt::Debug;
 
 use crate::gen::macros::*;
 use crate::gen::util::ValueTypeInference;
@@ -88,7 +83,7 @@ where
                 "Empty choice vector".to_string(),
             ));
         }
-        let types = PartiqlShape::any_of(choices.iter().map(|v| v.infer_type()));
+        let types = PartiqlShape::any_of(choices.iter().map(|v| v.infer_shape()));
         RandomVariable::create(rng, density, SimpleChooseImpl { choices, types })
     }
 }
@@ -97,7 +92,7 @@ impl<R> InnerValueGenerator<R> for SimpleChooseImpl
 where
     R: Rng + Sized + Clone,
 {
-    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
+    fn present_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
         self.choices.as_slice().choose(rng).unwrap().clone()
     }
 

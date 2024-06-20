@@ -1,4 +1,4 @@
-use crate::gen::{ArrivalTime, DataGenerationResult, ValueGenerator};
+use crate::gen::{DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
 use partiql_types::PartiqlShape;
 use partiql_value::Value;

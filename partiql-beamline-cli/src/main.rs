@@ -204,8 +204,6 @@ fn main() -> miette::Result<()> {
 
                             create_catalog_dir(force, &catalog_name, &catalog_path)?;
 
-                            let cfg = parse_args(&seed, &start_time, nullability, optionality)
-                                .into_diagnostic()?;
                             let ddl_encoder = PartiqlBasicDdlEncoder::new(DdlFormat::Pretty);
                             create_manifest_file(&cfg, &catalog_full_path, &ddl_encoder.syntax())?;
 

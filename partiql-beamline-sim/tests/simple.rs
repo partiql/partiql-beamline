@@ -142,13 +142,8 @@ fn verify_exemplar_partials(
     max_null: f64,
     max_optional: f64,
 ) -> miette::Result<()> {
-<<<<<<< HEAD
-    assert!(0.0 <= max_null && max_null <= 1.0);
-    assert!(0.0 <= max_optional && max_optional <= 1.0);
-=======
     assert!((0.0..=1.0).contains(&max_null));
     assert!((0.0..=1.0).contains(&max_optional));
->>>>>>> main
     let pcts = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0];
     for npct in pcts.iter().map(|pct| *pct * max_null) {
         for opct in pcts.iter().map(|pct| *pct * max_optional) {
@@ -176,12 +171,7 @@ fn verify_exemplar_partial(
         .seed(seed)
         .nullability(nullability)
         .optionality(optionality)
-<<<<<<< HEAD
-        .build()
-        .expect("auto config");
-=======
         .build()?;
->>>>>>> main
 
     let skip_count = 75;
     let sample_count = 5;
@@ -189,23 +179,12 @@ fn verify_exemplar_partial(
     let start = t0.format(&DATETIME_FORMAT).expect("start datetime string");
     let seed = config.seed;
 
-<<<<<<< HEAD
-    let mut sim = SimBuilder::from_config(config, script)
-        .expect("auto sim")
-        .build_multi_dataset()
-        .expect("auto sim");
-=======
     let mut sim = SimBuilder::from_config(config, script)?.build_multi_dataset()?;
->>>>>>> main
 
     let datasets = sim.datasets();
     let mut tp = tuple!();
     for (ds_id, ds_n) in datasets {
-<<<<<<< HEAD
-        let sim = sim.for_dataset(ds_id);
-=======
         let sim = sim.for_dataset(ds_id)?;
->>>>>>> main
         let name = ds_n.0.as_str();
         let vals: Result<Vec<_>, _> = sim
             .iter_mut()
@@ -286,76 +265,6 @@ macro_rules! test_data {
 }
 
 #[test]
-<<<<<<< HEAD
-fn verify_repeatable_transactions() {
-    let (script, _) = test_data!("transactions");
-    verify_repeatable(script);
-    verify_repeatable_multi(script);
-}
-
-#[test]
-fn verify_repeatable_orders() {
-    let (script, _) = test_data!("orders");
-    verify_repeatable(script);
-    verify_repeatable_multi(script);
-}
-
-#[test]
-fn verify_repeatable_sensors() {
-    let (script, _) = test_data!("sensors");
-    verify_repeatable(script);
-    verify_repeatable_multi(script);
-}
-
-#[test]
-fn verify_repeatable_sensors_alternate() {
-    let (script, _) = test_data!("sensors-alternate");
-    verify_repeatable(script);
-    verify_repeatable_multi(script);
-}
-
-#[test]
-fn verify_repeatable_client_service() {
-    let (script, _) = test_data!("client-service");
-    verify_repeatable(script);
-    verify_repeatable_multi(script);
-}
-
-#[test]
-fn verify_exemplar_transactions() {
-    let (script, exemplar) = test_data!("transactions");
-    verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
-}
-
-#[test]
-fn verify_exemplar_orders() {
-    let (script, exemplar) = test_data!("orders");
-    verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
-}
-
-#[test]
-fn verify_exemplar_sensors() {
-    let (script, exemplar) = test_data!("sensors");
-    verify_exemplar(script, exemplar).expect("exemplar");
-    // The sensors script uses a max of 0.75 for null scripting, so cap the optional at 0.25
-    verify_exemplar_partials(script, exemplar, 1.0, 0.25 - f64::EPSILON).expect("exemplar partial");
-}
-
-#[test]
-fn verify_exemplar_sensors_alternate() {
-    let (script, exemplar) = test_data!("sensors-alternate");
-    verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
-}
-
-#[test]
-fn verify_exemplar_client_service() {
-    let (script, exemplar) = test_data!("client-service");
-    verify_exemplar(script, exemplar).expect("exemplar");
-    verify_exemplar_partials(script, exemplar, 1.0, 1.0).expect("exemplar partial");
-=======
 fn verify_repeatable_transactions() -> miette::Result<()> {
     let (script, _) = test_data!("transactions");
     verify_repeatable(script)?;
@@ -434,5 +343,4 @@ fn verify_exemplar_client_service() -> miette::Result<()> {
     verify_exemplar(script, exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())
->>>>>>> main
 }

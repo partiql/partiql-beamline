@@ -199,7 +199,8 @@ pub(crate) fn validate_config_keyset(
         for s in config.iter() {
             let s = s?;
             let name = s.name()?;
-            let name = name.expect_text()?;
+            // TODO fix
+            let name = name.text().expect("fix");
             if !allowed_keys.contains(name) {
                 return Err(ProcessConfigError::ConfigInvalidKey(name.to_string()));
             }

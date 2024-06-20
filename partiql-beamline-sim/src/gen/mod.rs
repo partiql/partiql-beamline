@@ -6,7 +6,6 @@ use partiql_value::Value;
 use statrs::StatsError;
 use std::convert::Infallible;
 use std::fmt::Debug;
-use std::hint::unreachable_unchecked;
 use std::num::TryFromIntError;
 use thiserror::Error;
 
@@ -47,7 +46,7 @@ pub enum DataGenerationError {
 }
 
 impl From<Infallible> for DataGenerationError {
-    fn from(value: Infallible) -> Self {
+    fn from(_value: Infallible) -> Self {
         unreachable!();
     }
 }

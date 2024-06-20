@@ -1,5 +1,4 @@
 use crate::serde::{ShapeEncodeResult, ShapeEncodingError};
-use partiql_beamline::sim::SimConfig;
 use partiql_types::{
     AnyOf, ArrayType, BagType, PartiqlShape, StaticType, StaticTypeVariant, StructType,
 };
@@ -249,7 +248,11 @@ mod tests {
         let ddl_compact = PartiqlBasicDdlEncoder::new(DdlFormat::Compact);
         assert_eq!(ddl_compact.ddl(&ty).expect("write shape"), expected_compact);
 
+        dbg!(&expected_compact);
+
         let ddl_pretty = PartiqlBasicDdlEncoder::new(DdlFormat::Pretty);
         assert_eq!(ddl_pretty.ddl(&ty).expect("write shape"), expected_pretty);
+
+        dbg!(&expected_pretty);
     }
 }

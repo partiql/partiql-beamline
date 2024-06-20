@@ -1,10 +1,3 @@
-use partiql_types::{
-    ArrayType, BagType, PartiqlType, StructConstraint, StructField, StructType, TypeKind,
-    TYPE_BOOL, TYPE_DATETIME, TYPE_DECIMAL, TYPE_INT, TYPE_MISSING, TYPE_NULL, TYPE_REAL,
-    TYPE_STRING,
-};
-use partiql_value::Value;
-
 // TODO use concat_idents! when stable so $inner doesn't need to be passed
 
 macro_rules! rv_typedef {
