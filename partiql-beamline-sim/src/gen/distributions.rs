@@ -176,6 +176,15 @@ where
     }
 
     fn value_type(&self) -> PartiqlShape {
-        self.inner.value_type()
+        let inner_type = self.inner.value_type();
+        if let Some(nullability) = self.density().null {
+            if nullability == 0f64 {
+                inner_type.as_non_nullable().unwrap_or(inner_type)
+            } else {
+                inner_type
+            }
+        } else {
+            inner_type
+        }
     }
 }
