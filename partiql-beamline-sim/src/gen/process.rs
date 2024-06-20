@@ -1,7 +1,7 @@
 use crate::gen::{ArrivalTime, DataSamplingError, RandomProcess, ValueGenerator, CURRENT_TICK};
 use crate::primitives::{DataSetName, ProcessId, Sample, Tick};
 use crate::sim::context::{ConstantBindingValue, SimContext};
-use partiql_types::{BagType, PartiqlType};
+use partiql_types::{BagType, PartiqlShape};
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, HashMap};
 
@@ -28,7 +28,7 @@ impl RandomProcess for SimpleProcess {
         self.arrival.next_arrival(now)
     }
 
-    fn shape(&self) -> PartiqlType {
+    fn shape(&self) -> PartiqlShape {
         self.data.value_type()
     }
 }
@@ -70,12 +70,12 @@ impl RandomProcesses {
         procs
     }
 
-    pub fn shape(&self) -> BTreeMap<String, PartiqlType> {
+    pub fn shape(&self) -> BTreeMap<String, PartiqlShape> {
         let mut kvs: HashMap<&str, _> = HashMap::default();
         for (d, rp) in &self.processes {
             match kvs.entry(&d.0) {
                 Entry::Occupied(mut e) => {
-                    let x: &mut PartiqlType = e.get_mut();
+                    let x: &mut PartiqlShape = e.get_mut();
                     let y = rp.shape();
                     let u = x.clone().union_with(y); // todo make not need clone
                     *x = u;
@@ -90,7 +90,7 @@ impl RandomProcesses {
             .map(|(k, v)| {
                 (
                     k.to_string(),
-                    PartiqlType::new_bag(BagType::new(Box::new(v))),
+                    PartiqlShape::new_bag(BagType::new(Box::new(v))),
                 )
             })
             .collect()

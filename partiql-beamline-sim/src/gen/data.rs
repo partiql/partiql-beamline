@@ -1,7 +1,7 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
 use crate::gen::{DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
-use partiql_types::{PartiqlType, StructConstraint, StructField, StructType};
+use partiql_types::{PartiqlShape, StructConstraint, StructField, StructType};
 use partiql_value::{Tuple, Value};
 use rand::Rng;
 use std::collections::HashMap;
@@ -90,7 +90,7 @@ where
         }
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         match self {
             SimpleRandomDataImpl::Single(rv) => rv.value_type(),
             SimpleRandomDataImpl::Collection(kvs) => {
@@ -98,7 +98,7 @@ where
                     .iter()
                     .map(|(k, v)| StructField::new(k, v.value_type()))
                     .collect();
-                PartiqlType::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
+                PartiqlShape::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
             }
         }
     }

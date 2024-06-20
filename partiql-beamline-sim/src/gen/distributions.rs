@@ -1,6 +1,6 @@
 use crate::gen::{DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
-use partiql_types::PartiqlType;
+use partiql_types::PartiqlShape;
 use partiql_value::Value;
 use rand::Rng;
 use rand_distr::Distribution;
@@ -86,7 +86,7 @@ where
     R: Rng + Sized + Clone,
 {
     fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
-    fn value_type(&self) -> PartiqlType;
+    fn value_type(&self) -> PartiqlShape;
 }
 
 pub struct RandomVariable<R, Inner>
@@ -170,7 +170,7 @@ where
         value
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         self.inner.value_type()
     }
 }

@@ -1,7 +1,7 @@
 use ion_rs::{IonError, IonWriter};
 use miette::Diagnostic;
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig};
-use partiql_types::PartiqlType;
+use partiql_types::{PartiqlShape, ShapeResultError};
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -14,6 +14,10 @@ pub enum ShapeEncodingError {
     IonEncodingError(#[from] IonError),
     #[error("DateTimeEncodingError e: {0}")]
     DateTimeEncodingError(#[from] time::error::Format),
+    #[error("Invalid Simulation Configuration e: {0}")]
+    InvalidSimConfigError(String),
+    #[error("Invalid Shape Result e: {0}")]
+    ShapeResultError(#[from] ShapeResultError),
 }
 
 /// Result of attempts to encode to Ion.
@@ -45,5 +49,5 @@ where
     fn writer(&mut self) -> &mut I;
 
     /// Write an Ion stream value from the given [`PartiqlType`]
-    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult<()>;
+    fn write_shape(&mut self, shape: &PartiqlShape) -> ShapeEncodeResult<()>;
 }

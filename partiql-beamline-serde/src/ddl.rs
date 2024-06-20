@@ -1,5 +1,8 @@
 use crate::serde::{ShapeEncodeResult, ShapeEncodingError};
-use partiql_types::{AnyOf, ArrayType, BagType, PartiqlType, StructType, TypeKind};
+use partiql_beamline::sim::SimConfig;
+use partiql_types::{
+    AnyOf, ArrayType, BagType, PartiqlShape, StaticType, StaticTypeVariant, StructType,
+};
 use std::fmt::{Display, Formatter};
 use std::string::ToString;
 
@@ -46,7 +49,7 @@ pub struct DdlSyntaxVersion {
 pub trait PartiqlDdlEncoder {
     type Output;
 
-    fn ddl(&self, ty: &PartiqlType) -> ShapeEncodeResult<Self::Output>;
+    fn ddl(&self, ty: &PartiqlShape) -> ShapeEncodeResult<Self::Output>;
 
     fn syntax(&self) -> DdlSyntax;
 }
@@ -68,29 +71,45 @@ impl PartiqlBasicDdlEncoder {
         }
     }
 
-    fn write_shape(&self, shape: &PartiqlType) -> ShapeEncodeResult<String> {
-        Ok(match shape.kind() {
-            TypeKind::Any => "ANY".to_string(),
-            TypeKind::AnyOf(any_of) => self.write_union(any_of)?,
-            TypeKind::Int => "INT".to_string(),
-            TypeKind::Int8 => "TINYINT".to_string(),
-            TypeKind::Int16 => "SMALLINT".to_string(),
-            TypeKind::Int32 => "INTEGER".to_string(),
-            TypeKind::Int64 => "INT8".to_string(),
-            TypeKind::Bool => "BOOL".to_string(),
-            TypeKind::Decimal => "DECIMAL".to_string(),
-            TypeKind::DecimalP(p, s) => format!("DECIMAL({p}, {s})"),
-            TypeKind::DateTime => "TIMESTAMP".to_string(),
-            TypeKind::Float32 => "REAL".to_string(),
-            TypeKind::Float64 => "DOUBLE".to_string(),
-            TypeKind::String => "VARCHAR".to_string(),
-            TypeKind::Struct(s) => self.write_struct(s)?,
-            TypeKind::Bag(b) => self.write_bag(b)?,
-            TypeKind::Array(a) => self.write_array(a)?,
+    fn write_shape(&self, shape: &PartiqlShape) -> ShapeEncodeResult<String> {
+        Ok(match shape {
+            PartiqlShape::AnyOf(any_of) => self.write_union(any_of)?,
+            PartiqlShape::Static(stype) => self.write_attribute(stype)?,
+            _ => Err(ShapeEncodingError::UnsupportedEncoding(format!(
+                "`{shape}` is unsupported"
+            )))?,
+        })
+    }
+
+    fn write_attribute(&self, ty: &StaticType) -> ShapeEncodeResult<String> {
+        let mut out = String::new();
+
+        match ty.ty() {
+            StaticTypeVariant::Int => out.push_str("INT"),
+            StaticTypeVariant::Int8 => out.push_str("TINYINT"),
+            StaticTypeVariant::Int16 => out.push_str("SMALLINT"),
+            StaticTypeVariant::Int32 => out.push_str("INTEGER"),
+            StaticTypeVariant::Int64 => out.push_str("INT8"),
+            StaticTypeVariant::Bool => out.push_str("BOOL"),
+            StaticTypeVariant::Decimal => out.push_str("DECIMAL"),
+            StaticTypeVariant::DecimalP(p, s) => out.push_str(&format!("DECIMAL({p}, {s})")),
+            StaticTypeVariant::DateTime => out.push_str("TIMESTAMP"),
+            StaticTypeVariant::Float32 => out.push_str("REAL"),
+            StaticTypeVariant::Float64 => out.push_str("DOUBLE"),
+            StaticTypeVariant::String => out.push_str("VARCHAR"),
+            StaticTypeVariant::Struct(s) => out.push_str(&self.write_struct(&s)?),
+            StaticTypeVariant::Bag(b) => out.push_str(&self.write_bag(&b)?),
+            StaticTypeVariant::Array(a) => out.push_str(&self.write_array(&a)?),
 
             // non-exhaustive catch-all
-            _ => todo!("handle type for {}", shape.kind()),
-        })
+            _ => todo!("handle type for {}", ty),
+        }
+
+        if !ty.is_nullable() {
+            out.push_str(" NOT NULL")
+        }
+
+        Ok(out)
     }
 
     fn write_bag(&self, bag: &BagType) -> ShapeEncodeResult<String> {
@@ -143,15 +162,21 @@ impl PartiqlBasicDdlEncoder {
 impl PartiqlDdlEncoder for PartiqlBasicDdlEncoder {
     type Output = String;
 
-    fn ddl(&self, ty: &PartiqlType) -> ShapeEncodeResult<String> {
+    fn ddl(&self, ty: &PartiqlShape) -> ShapeEncodeResult<String> {
         let mut output = String::new();
+        let ty = ty.expect_static()?;
 
-        if let TypeKind::Bag(bag) = ty.kind() {
-            if let TypeKind::Struct(s) = bag.element_type().kind() {
+        if let StaticTypeVariant::Bag(bag) = ty.ty() {
+            if let s = bag.element_type().expect_struct()? {
                 let fields = s.fields();
                 let mut fields = fields.iter().peekable();
                 while let Some(field) = fields.next() {
                     output.push_str(&format!("\"{}\" ", field.name()));
+
+                    if field.is_optional() {
+                        output.push_str("OPTIONAL ");
+                    }
+
                     output.push_str(&self.write_shape(field.ty())?);
                     if fields.peek().is_some() {
                         output.push(',');
@@ -168,7 +193,7 @@ impl PartiqlDdlEncoder for PartiqlBasicDdlEncoder {
         } else {
             Err(ShapeEncodingError::UnsupportedEncoding(format!(
                 "Unsupported top level type {:?}",
-                ty.kind()
+                ty
             )))
         }
     }
@@ -189,9 +214,9 @@ mod tests {
         let nested_attrs = struct_fields![
             (
                 "a",
-                PartiqlType::any_of(vec![
-                    PartiqlType::new(TypeKind::DecimalP(5, 4)),
-                    PartiqlType::new(TypeKind::Int8),
+                PartiqlShape::any_of(vec![
+                    PartiqlShape::new(StaticTypeVariant::DecimalP(5, 4)),
+                    PartiqlShape::new(StaticTypeVariant::Int8),
                 ])
             ),
             ("b", array![str![]]),
@@ -202,7 +227,10 @@ mod tests {
         let fields = struct_fields![
             ("employee_id", int8![]),
             ("full_name", str![]),
-            ("salary", PartiqlType::new(TypeKind::DecimalP(8, 2))),
+            (
+                "salary",
+                PartiqlShape::new(StaticTypeVariant::DecimalP(8, 2))
+            ),
             ("details", details),
             ("dependents", array![str![]])
         ];

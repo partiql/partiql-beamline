@@ -1,7 +1,7 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
-use partiql_types::{ArrayType, PartiqlType, TypeKind, TYPE_BOOL};
+use partiql_types::{ArrayType, PartiqlShape, StaticTypeVariant, TYPE_BOOL};
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -15,7 +15,7 @@ where
     F: Fn(&mut R, &SimContext) -> Value,
 {
     pub(crate) name: String,
-    pub(crate) typ: PartiqlType,
+    pub(crate) typ: PartiqlShape,
     pub(crate) f: F,
     rng: PhantomData<R>,
 }
@@ -31,7 +31,7 @@ where
         rng: R,
         density: Density,
         name: String,
-        typ: PartiqlType,
+        typ: PartiqlShape,
         f: F,
     ) -> DataGenerationResult<Self> {
         let inner = SimpleRandomVariableImpl {
@@ -80,7 +80,7 @@ where
         (self.f)(rng, ctx)
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         self.typ.clone()
     }
 }
@@ -93,10 +93,10 @@ pub fn bounded_union<R>(
 where
     R: Rng + Sized + Clone,
 {
-    let types: Vec<PartiqlType> = generators.iter().map(|gen| gen.value_type()).collect();
+    let types: Vec<PartiqlShape> = generators.iter().map(|gen| gen.value_type()).collect();
 
     let name = format!("UniformUnion::[ {:?} ]", types);
-    let typ = PartiqlType::any_of(types);
+    let typ = PartiqlShape::any_of(types);
 
     let dist = statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?;
     let f = move |rng: &mut R, ctx: &SimContext| {
@@ -125,7 +125,7 @@ where
     use rand::seq::SliceRandom;
 
     let name = "UniformChoice".into();
-    let typ = PartiqlType::any_of(choices.iter().map(|v| v.infer_type()));
+    let typ = PartiqlShape::any_of(choices.iter().map(|v| v.infer_shape()));
 
     let f = move |rng: &mut R, _ctx: &SimContext| choices.as_slice().choose(rng).unwrap().clone();
     SimpleRandomVariable::new(rng, density, name, typ, f)
@@ -139,7 +139,7 @@ where
     R: Rng + Sized + Clone,
 {
     let name = "UUID".into();
-    let typ = PartiqlType::new(TypeKind::String);
+    let typ = PartiqlShape::new(StaticTypeVariant::String);
 
     let f = move |rng: &mut R, _ctx: &SimContext| {
         let mut uuid_bytes = uuid::Bytes::default();
@@ -170,7 +170,7 @@ where
         );
 
         let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
-        let typ = PartiqlType::new_array(ArrayType::new(Box::new(elem_type.clone())));
+        let typ = PartiqlShape::new_array(ArrayType::new(Box::new(elem_type.clone())));
         let f = move |rng: &mut R, ctx: &SimContext| {
             let array_length = dist.sample(rng) as usize;
             let array: Vec<_> = std::iter::repeat_with(|| elem_generator.gen_value(ctx))
@@ -320,7 +320,7 @@ where
     R: Rng + Sized + Clone,
 {
     let name = format!("UniformI64::{{ low: {min}, high: {max} }}");
-    let typ = PartiqlType::new(TypeKind::Int64);
+    let typ = PartiqlShape::new(StaticTypeVariant::Int64);
 
     let dist = statrs::distribution::DiscreteUniform::new(min, max)?;
     let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng) as i64);
@@ -337,7 +337,7 @@ where
     R: Rng + Sized + Clone,
 {
     let name = format!("UniformF64::{{ low: {min}, high: {max} }}");
-    let typ = PartiqlType::new(TypeKind::Float64);
+    let typ = PartiqlShape::new(StaticTypeVariant::Float64);
 
     let dist = statrs::distribution::Uniform::new(min, max)?;
     let f = move |rng: &mut R, _ctx: &SimContext| Value::from(dist.sample(rng));
@@ -374,7 +374,10 @@ where
     let precision = p_max_dec_precision.max(p_min_dec_precision);
     let scale = p_max_scale.max(p_min_scale);
 
-    let typ = PartiqlType::new(TypeKind::DecimalP(precision as usize, scale as usize));
+    let typ = PartiqlShape::new(StaticTypeVariant::DecimalP(
+        precision as usize,
+        scale as usize,
+    ));
 
     let dist = statrs::distribution::Uniform::new(min, max)?;
 

@@ -196,14 +196,14 @@ fn main() -> miette::Result<()> {
                         sample_count,
                     } => {
                         if let DbTarget::Filesystem = target {
-                            let cfg = parse_args(&seed, &start_time, nullability, optionality)
-                                .into_diagnostic()?;
                             let script = script.extract().into_diagnostic()?;
                             let sample_count = sample_count.sample_count;
                             let catalog_full_path = catalog_full_path(&catalog_name, &catalog_path);
 
                             create_catalog_dir(force, &catalog_name, &catalog_path)?;
 
+                            let cfg = parse_args(&seed, &start_time, nullability, optionality)
+                                .into_diagnostic()?;
                             let ddl_encoder = PartiqlBasicDdlEncoder::new(DdlFormat::Pretty);
                             create_manifest_file(&cfg, &catalog_full_path, &ddl_encoder.syntax())?;
 

@@ -10,7 +10,7 @@ pub mod reader;
 mod tests {
     use crate::primitives::{Sample, Tick};
     use crate::sim::{Sim, SimBuilder, SimConfigBuilder};
-    use partiql_types::{StructField, TypeKind};
+    use partiql_types::{StaticTypeVariant, StructField};
     use partiql_value::{list, tuple, Value};
     use std::ops::Add;
     use time::macros::datetime;
@@ -148,8 +148,11 @@ mod tests {
         let datasets_mappings = sim.shape();
         let sensors_shape = datasets_mappings.get("sensors").expect("sensors shape");
         assert!(sensors_shape.is_bag());
-        if let TypeKind::Bag(bag) = sensors_shape.kind() {
-            if let TypeKind::Struct(struct_type) = bag.element_type().kind() {
+
+        let stype = sensors_shape.expect_static().expect("static type");
+
+        if let StaticTypeVariant::Bag(bag) = stype.ty() {
+            if let Ok(struct_type) = bag.element_type().expect_struct() {
                 let fields: Vec<StructField> = struct_type
                     .fields()
                     .into_iter()
@@ -157,10 +160,11 @@ mod tests {
                     .collect();
                 assert_eq!(fields.len(), 2);
                 fields.into_iter().for_each(|f| {
+                    let stype = f.ty().expect_static().expect("struct type");
                     if f.name() == "w" {
-                        assert_eq!(f.ty().kind(), &TypeKind::DecimalP(5, 4));
+                        assert_eq!(stype.ty(), StaticTypeVariant::DecimalP(5, 4));
                     } else {
-                        assert_eq!(f.ty().kind(), &TypeKind::DecimalP(2, 0));
+                        assert_eq!(stype.ty(), StaticTypeVariant::DecimalP(2, 0));
                     }
                 });
             } else {

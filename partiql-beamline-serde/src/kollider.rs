@@ -3,7 +3,7 @@ use ion_rs::element::writer::ElementWriter;
 use ion_rs::element::Element;
 use ion_rs::{IonType, IonWriter};
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig, DATETIME_FORMAT};
-use partiql_types::{AnyOf, ArrayType, BagType, PartiqlType, StructType, TypeKind};
+use partiql_types::{AnyOf, ArrayType, BagType, PartiqlShape, StaticTypeVariant, StructType};
 
 #[derive(Debug)]
 pub struct PartiqlKolliderEncoder<'a, W, I>
@@ -31,37 +31,30 @@ where
     fn writer(&mut self) -> &mut I {
         self.writer
     }
-    fn write_shape(&mut self, shape: &PartiqlType) -> ShapeEncodeResult<()> {
-        match shape.kind() {
-            TypeKind::Any => self.write_typename("any"),
-            TypeKind::AnyOf(any_of) => self.write_union(any_of),
-            TypeKind::Null => self.write_typename("null"),
-            TypeKind::Missing => todo!("handle type for {}", shape.kind()),
-
-            TypeKind::Int => self.write_typename("int"),
-            TypeKind::Int8 => self.write_typename("tinyint"),
-            TypeKind::Int16 => self.write_typename("smallint"),
-            TypeKind::Int32 => self.write_typename("integer"),
-            TypeKind::Int64 => self.write_typename("int8"),
-            TypeKind::Bool => self.write_typename("bool"),
-            TypeKind::Decimal => self.write_typename("decimal"),
-            TypeKind::DecimalP(p, s) => self.write_constrained_decimal(p, s),
-
-            TypeKind::DateTime => self.write_typename("timestamp"),
-            TypeKind::Float32 => self.write_typename("real"),
-            TypeKind::Float64 => self.write_typename("double"),
-            TypeKind::String => self.write_typename("string"),
-            TypeKind::StringFixed(_) => todo!("handle type for {}", shape.kind()),
-            TypeKind::StringVarying(_) => todo!("handle type for {}", shape.kind()),
-
-            TypeKind::Undefined => self.write_typename("undefined"),
-
-            TypeKind::Struct(s) => self.write_struct(s),
-            TypeKind::Bag(b) => self.write_bag(b),
-            TypeKind::Array(a) => self.write_list(a),
-
-            // non-exhaustive catch-all
-            _ => todo!("handle type for {}", shape.kind()),
+    fn write_shape(&mut self, shape: &PartiqlShape) -> ShapeEncodeResult<()> {
+        match shape {
+            PartiqlShape::Dynamic => self.write_typename("any"),
+            PartiqlShape::AnyOf(any_of) => self.write_union(any_of),
+            PartiqlShape::Static(stype) => match stype.ty() {
+                StaticTypeVariant::Int => self.write_typename("int"),
+                StaticTypeVariant::Int8 => self.write_typename("tinyint"),
+                StaticTypeVariant::Int16 => self.write_typename("smallint"),
+                StaticTypeVariant::Int32 => self.write_typename("integer"),
+                StaticTypeVariant::Int64 => self.write_typename("int8"),
+                StaticTypeVariant::Bool => self.write_typename("bool"),
+                StaticTypeVariant::Decimal => self.write_typename("decimal"),
+                StaticTypeVariant::DecimalP(p, s) => self.write_constrained_decimal(&p, &s),
+                StaticTypeVariant::DateTime => self.write_typename("timestamp"),
+                StaticTypeVariant::Float32 => self.write_typename("real"),
+                StaticTypeVariant::Float64 => self.write_typename("double"),
+                StaticTypeVariant::String => self.write_typename("string"),
+                StaticTypeVariant::StringFixed(_) => todo!("handle type for {}", stype),
+                StaticTypeVariant::StringVarying(_) => todo!("handle type for {}", stype),
+                StaticTypeVariant::Struct(s) => self.write_struct(&s),
+                StaticTypeVariant::Bag(b) => self.write_bag(&b),
+                StaticTypeVariant::Array(a) => self.write_list(&a),
+            },
+            PartiqlShape::Undefined => todo!("handle type for {}", shape),
         }
     }
 }
