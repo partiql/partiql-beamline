@@ -929,28 +929,6 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 
 #### Data Generator Configuration
 
-<<<<<<< HEAD
-| Name            | Configuration               | Defaults                                                       |
-|-----------------|-----------------------------|----------------------------------------------------------------|
-| Bool            | p: f64                      | p: 0.5                                                         |
-| LoremIpsum      | min_words:10, max_words:200 | [N/A]                                                          |
-| LoremIpsumTitle | [N/A]                       | [N/A]                                                          |
-| Regex           | pattern: String             | [N/A]                                                          |
-| Uniform         | [TODO]                      | [TODO]                                                         |
-| UniformArray    | [TODO]                      | [TODO]                                                         |
-| UniformAnyOf    | [TODO]                      | [TODO]                                                         |
-| UniformU8       | low: u8, high: u8           | low:0, high:255                                                |
-| UniformU16      | low: u16, high: u16         | low:0, high:65,535                                             |
-| UniformU32      | low: u32, high: u32         | low:0, high:4,294,967,295                                      |
-| UniformU64      | low: u64, high: u64         | low:0, high:9,223,372,036,854,775,807                          |
-| UniformI8       | low: i8, high: i8           | low:-127, high:127                                             |
-| UniformI16      | low: i16, high: i16         | low:-32,767, high:32,767                                       |
-| UniformI32      | low: i32, high: i32         | low:-2,147,483,647, high:2,147,483,647                         |
-| UniformI64      | low: i64, high: i64         | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
-| UniformF64      | low: f64, high: f64         | low:-127, high:127                                             |
-| UniformDecimal  | low: f64, high: f64         | low:-127, high:127                                             |
-| UUID            | [N/A]                       | [N/A]                                                          |
-=======
 | Name            | Configuration                                                   | Defaults                                                       |
 |-----------------|-----------------------------------------------------------------|----------------------------------------------------------------|
 | Bool            | p: f64                                                          | p: 0.5                                                         |
@@ -974,7 +952,6 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 
 * [ <Literal> ] means array of the following [Ion](https://amazon-ion.github.io/ion-docs/) literals: `bool`, `int`, `float`, `string`.
 * [ <DataGenerator> ] means array of data generators, e.g., [Tick, Instant, UniformI32]
->>>>>>> main
 
 
 #### Nullabilty and Optionality

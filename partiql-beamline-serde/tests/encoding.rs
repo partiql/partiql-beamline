@@ -50,7 +50,7 @@ pub fn verify_correct_encoding() {
     let (_, sensors_ty) = shape.get_key_value("sensors").expect("sensors_type");
 
     let ddl_compact = PartiqlBasicDdlEncoder::new(DdlFormat::Compact);
-    let ddl_expected = r#""a" UNION<INT8,DECIMAL(5, 4),DOUBLE,VARCHAR>,"ar1" ARRAY<DECIMAL(2, 1)>,"ar2" ARRAY<VARCHAR>,"ar3" ARRAY<DECIMAL(5, 4)>,"ar4" ARRAY<TINYINT>,"ar5" ARRAY<UNION<INT8,DECIMAL(5, 4),DOUBLE,VARCHAR>>,"d" DECIMAL(2, 0) NOT NULL,"f" DOUBLE,"i8" TINYINT,"tick" INT8,"w" OPTIONAL DECIMAL(5, 4)"#;
+    let ddl_expected = r#""a" UNION<INT8,DECIMAL(5, 4) NOT NULL,DOUBLE,VARCHAR>,"ar1" ARRAY<DECIMAL(2, 1)>,"ar2" ARRAY<VARCHAR>,"ar3" ARRAY<DECIMAL(5, 4)>,"ar4" ARRAY<TINYINT>,"ar5" ARRAY<UNION<INT8,DECIMAL(5, 4) NOT NULL,DOUBLE,VARCHAR>>,"d" DECIMAL(2, 0) NOT NULL,"f" DOUBLE,"i8" TINYINT,"tick" INT8,"w" OPTIONAL DECIMAL(5, 4)"#;
     let ddl_actual = ddl_compact.ddl(sensors_ty).expect("ddl_output");
 
     println!("{:}", &ddl_expected);

@@ -6,7 +6,7 @@ rand_processes::{
             $r: Uniform::{ choices: [5,10] },
             $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
             $weight: UniformDecimal::{ nullable: 0.75, low: 1.995, high: 4.9999, optional: true },
-            $anyof: UniformAnyOf::{ types: [Tick, UniformF64, UUID, UniformDecimal::{ low: 1.995, high: 4.9999 }] },
+            $anyof: UniformAnyOf::{ types: [Tick, UniformF64, UUID, UniformDecimal::{ low: 1.995, high: 4.9999, nullable: false }] },
             $array: UniformArray::{
                 min_size: 3,
                 max_size: 3,
