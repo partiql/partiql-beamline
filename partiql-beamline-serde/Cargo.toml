@@ -14,9 +14,8 @@ version.workspace = true
 
 [dependencies]
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
-#partiql-types = "^0.7.2"
-partiql-types = { git = "https://github.com/partiql/partiql-lang-rust.git", branch = "feat-types-additions" }
-
+partiql-types = { git = "https://github.com/partiql/partiql-lang-rust.git", branch = "main" }
+partiql-extension-ddl = { git = "https://github.com/partiql/partiql-lang-rust.git", branch = "main" }
 ion-rs = "0.18.1"
 miette = { version = "7.2", features = ["fancy"] }
 thiserror = "1.*"

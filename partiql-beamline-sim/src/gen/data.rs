@@ -98,7 +98,7 @@ where
                     .iter()
                     .map(|(k, v)| {
                         if let Some(d) = v.density() {
-                            if let Some(_) = d.optionality() {
+                            if d.optionality().is_some() {
                                 StructField::new_optional(k, v.value_type())
                             } else {
                                 StructField::new(k, v.value_type())

@@ -3,7 +3,7 @@ use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::context::SimContext;
 
 use partiql_types::{
-    PartiqlShape, StaticTypeVariant, TYPE_DOUBLE, TYPE_INT16, TYPE_INT32, TYPE_INT64, TYPE_INT8,
+    PartiqlShape, Static, TYPE_DOUBLE, TYPE_INT16, TYPE_INT32, TYPE_INT64, TYPE_INT8,
 };
 use partiql_value::Value;
 use rand::distributions::Distribution;
@@ -108,10 +108,10 @@ macro_rules! make_rv_ranged_continuous {
 }
 
 // TODO fix in partiql-type
-pub const TYPE_UINT8: PartiqlShape = PartiqlShape::new(StaticTypeVariant::Int64);
-pub const TYPE_UINT16: PartiqlShape = PartiqlShape::new(StaticTypeVariant::Int64);
-pub const TYPE_UINT32: PartiqlShape = PartiqlShape::new(StaticTypeVariant::Int64);
-pub const TYPE_UINT64: PartiqlShape = PartiqlShape::new(StaticTypeVariant::Int64);
+pub const TYPE_UINT8: PartiqlShape = PartiqlShape::new(Static::Int64);
+pub const TYPE_UINT16: PartiqlShape = PartiqlShape::new(Static::Int64);
+pub const TYPE_UINT32: PartiqlShape = PartiqlShape::new(Static::Int64);
+pub const TYPE_UINT64: PartiqlShape = PartiqlShape::new(Static::Int64);
 
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
 make_rv_ranged_discrete!(SimpleUInt8, SimpleUInt8Impl,  u8,  TYPE_UINT8,       u8::MIN,  u8::MAX);
@@ -178,7 +178,7 @@ where
     /// with the specified [`Density`].
     pub fn new(min: f64, max: f64, rng: R, density: Density) -> DataGenerationResult<Self> {
         if min < f64::MIN || max > f64::MAX {
-            Err(DataGenerationError::BoundsF(min.into(), max.into()))
+            Err(DataGenerationError::BoundsF(min, max))
         } else {
             let p_and_s = |n| {
                 let dec = rust_decimal::Decimal::from_f64(n).unwrap();
@@ -224,7 +224,7 @@ where
     }
 
     fn value_type(&self) -> PartiqlShape {
-        PartiqlShape::new(StaticTypeVariant::DecimalP(
+        PartiqlShape::new(Static::DecimalP(
             self.precision as usize,
             self.scale as usize,
         ))

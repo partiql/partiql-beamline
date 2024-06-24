@@ -1,5 +1,6 @@
 use ion_rs::{IonError, IonWriter};
 use miette::Diagnostic;
+
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig};
 use partiql_types::{PartiqlShape, ShapeResultError};
 use thiserror::Error;

@@ -3,7 +3,7 @@ use ion_rs::element::writer::ElementWriter;
 use ion_rs::element::Element;
 use ion_rs::{IonType, IonWriter};
 use partiql_beamline::sim::{DatasetTypeMapping, SimConfig, DATETIME_FORMAT};
-use partiql_types::{AnyOf, ArrayType, BagType, PartiqlShape, StaticTypeVariant, StructType};
+use partiql_types::{AnyOf, ArrayType, BagType, PartiqlShape, Static, StructType};
 
 #[derive(Debug)]
 pub struct PartiqlKolliderEncoder<'a, W, I>
@@ -36,23 +36,23 @@ where
             PartiqlShape::Dynamic => self.write_typename("any"),
             PartiqlShape::AnyOf(any_of) => self.write_union(any_of),
             PartiqlShape::Static(stype) => match stype.ty() {
-                StaticTypeVariant::Int => self.write_typename("int"),
-                StaticTypeVariant::Int8 => self.write_typename("tinyint"),
-                StaticTypeVariant::Int16 => self.write_typename("smallint"),
-                StaticTypeVariant::Int32 => self.write_typename("integer"),
-                StaticTypeVariant::Int64 => self.write_typename("int8"),
-                StaticTypeVariant::Bool => self.write_typename("bool"),
-                StaticTypeVariant::Decimal => self.write_typename("decimal"),
-                StaticTypeVariant::DecimalP(p, s) => self.write_constrained_decimal(&p, &s),
-                StaticTypeVariant::DateTime => self.write_typename("timestamp"),
-                StaticTypeVariant::Float32 => self.write_typename("real"),
-                StaticTypeVariant::Float64 => self.write_typename("double"),
-                StaticTypeVariant::String => self.write_typename("string"),
-                StaticTypeVariant::StringFixed(_) => todo!("handle type for {}", stype),
-                StaticTypeVariant::StringVarying(_) => todo!("handle type for {}", stype),
-                StaticTypeVariant::Struct(s) => self.write_struct(&s),
-                StaticTypeVariant::Bag(b) => self.write_bag(&b),
-                StaticTypeVariant::Array(a) => self.write_list(&a),
+                Static::Int => self.write_typename("int"),
+                Static::Int8 => self.write_typename("tinyint"),
+                Static::Int16 => self.write_typename("smallint"),
+                Static::Int32 => self.write_typename("integer"),
+                Static::Int64 => self.write_typename("int8"),
+                Static::Bool => self.write_typename("bool"),
+                Static::Decimal => self.write_typename("decimal"),
+                Static::DecimalP(p, s) => self.write_constrained_decimal(&p, &s),
+                Static::DateTime => self.write_typename("timestamp"),
+                Static::Float32 => self.write_typename("real"),
+                Static::Float64 => self.write_typename("double"),
+                Static::String => self.write_typename("string"),
+                Static::StringFixed(_) => todo!("handle type for {}", stype),
+                Static::StringVarying(_) => todo!("handle type for {}", stype),
+                Static::Struct(s) => self.write_struct(&s),
+                Static::Bag(b) => self.write_bag(&b),
+                Static::Array(a) => self.write_list(&a),
             },
             PartiqlShape::Undefined => todo!("handle type for {}", shape),
         }

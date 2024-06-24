@@ -16,9 +16,9 @@ version.workspace = true
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
 partiql-beamline-cliargs = { path = "../partiql-beamline-cliargs", version = "0.1" }
 partiql-beamline-serde = { path = "../partiql-beamline-serde", version = "0.1" }
+partiql-extension-ddl = { git = "https://github.com/partiql/partiql-lang-rust.git", branch = "main" }
 partiql-extension-ion = "0.7"
 partiql-value = "0.7"
-partiql-types = "^0.7.2"
 
 clap = { version = "4.4", features = ["derive", "wrap_help", "help", "usage", "error-context"] }
 miette = { version = "7.2", features = ["fancy"] }

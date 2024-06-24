@@ -14,8 +14,7 @@ version.workspace = true
 
 [dependencies]
 partiql-value = "0.7"
-#partiql-types = "^0.7.2"
-partiql-types = { git = "https://github.com/partiql/partiql-lang-rust.git", branch = "feat-types-additions" }
+partiql-types = { git = "https://github.com/partiql/partiql-lang-rust.git", branch = "main" }
 partiql-extension-ion = "0.7"
 
 # TODO: move to stable `ion-rs` once available
