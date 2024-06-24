@@ -13,10 +13,9 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-partiql-value = "0.7"
-# Move to `partiql-extension-ddl` once out
-partiql-types = { git = "https://github.com/partiql/partiql-lang-rust.git" }
-partiql-extension-ion = "0.7"
+partiql-value = "0.8"
+partiql-types = "0.8"
+partiql-extension-ion = "0.8"
 
 # TODO: move to stable `ion-rs` once available
 ion-rs = { version = "1.0.0-rc.5", features = ["experimental"] }
