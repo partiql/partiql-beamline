@@ -91,6 +91,7 @@ pub trait ValueGenerator: Debug + DynClone {
     fn present_value(&self, ctx: &SimContext) -> Value;
     fn value_type(&self) -> PartiqlShape;
 
+    // TODO Change to `fn density(&self) -> Density;` as part of https://github.com/partiql/partiql-beamline/issues/27
     fn density(&self) -> Option<Density>;
 }
 
