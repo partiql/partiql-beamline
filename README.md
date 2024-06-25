@@ -966,9 +966,34 @@ densities of `NULL` and/or `MISSING` data.
     - `{nullable: false}`: Type is not-nullable
     - `{nullable: <float>}`: Type is nullable, the float must be between 0.0 and 1.0 and specifies the percent change of a `NULL` value.
 - Optionality can be scripted with:
-    - **DEFAULT** - `{optional: false}`: Type is not-optional
+    - **DEFAULT** - `{optional: false}`: Type is not-optional i.e., `required`
     - `{optional: true}`: Type is optional, but there is a 0% chance to generate `MISSING` values
     - `{optional: <float>}`: Type is optional, the float must be between 0.0 and 1.0 and specifies the percent change of a `MISSING` value.
+- The default behavior of optionality and nullability can be changed using `--default-nullable` and `default-optional` command line arguments, e.g.:
+
+```
+$  cargo run infer-shape \
+      --seed 7844265201457918498 \
+      --start-auto \
+      --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
+      --output-format basic-ddl --default-nullable false --default-optional true
+      
+-- Seed: 7844265201457918498
+-- Start: 2024-01-18T11:40:34.000000000Z
+-- Syntax: partiql_datatype_syntax-0.1
+-- Dataset: sensors
+"a" OPTIONAL UNION<INT8 NOT NULL,DECIMAL(5, 4) NOT NULL,DOUBLE NOT NULL,VARCHAR NOT NULL>,
+"ar1" OPTIONAL ARRAY<DECIMAL(2, 1) NOT NULL> NOT NULL,
+"ar2" OPTIONAL ARRAY<VARCHAR NOT NULL> NOT NULL,
+"ar3" OPTIONAL ARRAY<DECIMAL(5, 4)> NOT NULL,
+"ar4" OPTIONAL ARRAY<TINYINT NOT NULL> NOT NULL,
+"ar5" OPTIONAL ARRAY<UNION<INT8 NOT NULL,DECIMAL(5, 4) NOT NULL,DOUBLE NOT NULL,VARCHAR NOT NULL>> NOT NULL,
+"d" OPTIONAL DECIMAL(2, 0) NOT NULL,
+"f" OPTIONAL DOUBLE NOT NULL,
+"i8" OPTIONAL TINYINT NOT NULL,
+"tick" OPTIONAL INT8 NOT NULL,
+"w" OPTIONAL DECIMAL(5, 4)
+```
 
 **NOTE**: The `NULL` and `MISSING` defaults can be changed with simulation parameterization via the CLI.
 

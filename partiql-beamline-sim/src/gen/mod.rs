@@ -1,12 +1,12 @@
+use crate::gen::distributions::Density;
 use crate::primitives::{Sample, Tick};
 use crate::sim::context::SimContext;
 use dyn_clone::DynClone;
-use partiql_types::PartiqlType;
+use partiql_types::PartiqlShape;
 use partiql_value::Value;
 use statrs::StatsError;
 use std::convert::Infallible;
 use std::fmt::Debug;
-use std::hint::unreachable_unchecked;
 use std::num::TryFromIntError;
 use thiserror::Error;
 
@@ -47,7 +47,7 @@ pub enum DataGenerationError {
 }
 
 impl From<Infallible> for DataGenerationError {
-    fn from(value: Infallible) -> Self {
+    fn from(_value: Infallible) -> Self {
         unreachable!();
     }
 }
@@ -71,7 +71,7 @@ pub trait RandomProcess: Debug {
     /// Returns [`None`] when the process is 'finished'.
     fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Option<Tick>;
 
-    fn shape(&self) -> PartiqlType;
+    fn shape(&self) -> PartiqlShape;
 }
 
 pub type DataGenerationResult<T> = Result<T, DataGenerationError>;
@@ -89,8 +89,10 @@ pub trait ValueGenerator: Debug + DynClone {
 
     /// Generates non-absent [`Value`] (i.e., not [`Value::Null`] and not [`Value::Missing`]).
     fn present_value(&self, ctx: &SimContext) -> Value;
-    /// The [`PartiqlType`] of the generated values.
-    fn value_type(&self) -> PartiqlType;
+    fn value_type(&self) -> PartiqlShape;
+
+    // TODO Change to `fn density(&self) -> Density;` as part of https://github.com/partiql/partiql-beamline/issues/27
+    fn density(&self) -> Option<Density>;
 }
 
 dyn_clone::clone_trait_object!(ValueGenerator);

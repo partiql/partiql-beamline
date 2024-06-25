@@ -1,17 +1,12 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
+use partiql_types::{ArrayType, PartiqlShape, TYPE_BOOL, TYPE_STRING};
 
-use partiql_types::{
-    ArrayType, PartiqlType, TypeKind, TYPE_BOOL, TYPE_DECIMAL, TYPE_DOUBLE, TYPE_INT16, TYPE_INT32,
-    TYPE_INT64, TYPE_INT8, TYPE_STRING,
-};
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
 use rand::Rng;
-use rand_distr::num_traits::FromPrimitive;
-use std::fmt::{Debug, Formatter};
-use std::marker::PhantomData;
+use std::fmt::Debug;
 
 use crate::gen::macros::*;
 use crate::gen::util::ValueTypeInference;
@@ -25,7 +20,7 @@ rv_typedef!(
 #[doc(hidden)]
 pub struct SimpleAnyOfImpl {
     generators: Vec<Box<dyn ValueGenerator>>,
-    types: PartiqlType,
+    types: PartiqlShape,
     dist: DebugIgnore<statrs::distribution::DiscreteUniform>,
 }
 
@@ -38,8 +33,8 @@ where
         rng: R,
         density: Density,
     ) -> DataGenerationResult<Self> {
-        let types: Vec<PartiqlType> = generators.iter().map(|gen| gen.value_type()).collect();
-        let types = PartiqlType::any_of(types);
+        let types: Vec<PartiqlShape> = generators.iter().map(|gen| gen.value_type()).collect();
+        let types = PartiqlShape::any_of(types);
         let dist =
             statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?.into();
         RandomVariable::create(
@@ -63,7 +58,7 @@ where
         generator.gen_value(ctx)
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         self.types.clone()
     }
 }
@@ -75,7 +70,7 @@ rv_typedef!(
 #[doc(hidden)]
 pub struct SimpleChooseImpl {
     choices: Vec<Value>,
-    types: PartiqlType,
+    types: PartiqlShape,
 }
 
 impl<R> SimpleChoose<R>
@@ -88,19 +83,20 @@ where
                 "Empty choice vector".to_string(),
             ));
         }
-        let types = PartiqlType::any_of(choices.iter().map(|v| v.infer_type()));
+        let types = PartiqlShape::any_of(choices.iter().map(|v| v.infer_shape()));
         RandomVariable::create(rng, density, SimpleChooseImpl { choices, types })
     }
 }
+
 impl<R> InnerValueGenerator<R> for SimpleChooseImpl
 where
     R: Rng + Sized + Clone,
 {
-    fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value {
+    fn present_value(&self, rng: &mut R, _ctx: &SimContext) -> Value {
         self.choices.as_slice().choose(rng).unwrap().clone()
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         self.types.clone()
     }
 }
@@ -114,7 +110,7 @@ pub struct SimpleArrayImpl {
     min: i64,
     max: i64,
     elem_generator: Box<dyn ValueGenerator>,
-    types: PartiqlType,
+    types: PartiqlShape,
     dist: DebugIgnore<statrs::distribution::DiscreteUniform>,
 }
 
@@ -134,7 +130,7 @@ where
         } else {
             let dist = statrs::distribution::DiscreteUniform::new(min, max)?.into();
             let types =
-                PartiqlType::new_array(ArrayType::new(Box::new(elem_generator.value_type())));
+                PartiqlShape::new_array(ArrayType::new(Box::new(elem_generator.value_type())));
             RandomVariable::create(
                 rng,
                 density,
@@ -161,7 +157,7 @@ where
         Value::List(Box::new(List::from(array)))
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         self.types.clone()
     }
 }
@@ -194,7 +190,7 @@ where
         Value::from(self.dist.sample(rng) > 0f64)
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         TYPE_BOOL
     }
 }
@@ -213,7 +209,7 @@ where
         Value::from(id.to_string())
     }
 
-    fn value_type(&self) -> PartiqlType {
+    fn value_type(&self) -> PartiqlShape {
         TYPE_STRING
     }
 }

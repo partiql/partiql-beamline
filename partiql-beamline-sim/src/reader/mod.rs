@@ -1,6 +1,7 @@
 use crate::gen::DataGenerationError;
 use ion_rs::{AnyEncoding, IonError, LazyStruct, ValueRef};
 use partiql_value::Value;
+
 use std::collections::HashSet;
 
 use thiserror::Error;
@@ -115,8 +116,10 @@ pub(crate) fn parse_density(
                 }
             )
         };
+
         let nullability = fmt_msg(CONFIG_KEY_NULLABLE, nullable, nullable_default);
         let optionality = fmt_msg(CONFIG_KEY_OPTIONAL, optional, optional_default);
+
         let msg = format!(
             "Combined Nullability and Optionality Percents must be between 0.0 and 1.0; {}; {}.",
             nullability, optionality
@@ -196,7 +199,7 @@ pub(crate) fn validate_config_keyset(
         for s in config.iter() {
             let s = s?;
             let name = s.name()?;
-            let name = name.expect_text()?;
+            let name = name.text().unwrap_or("");
             if !allowed_keys.contains(name) {
                 return Err(ProcessConfigError::ConfigInvalidKey(name.to_string()));
             }

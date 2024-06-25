@@ -14,8 +14,8 @@ version.workspace = true
 
 [dependencies]
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
-partiql-types = "^0.7.2"
-
+partiql-types = "0.8"
+partiql-extension-ddl = "0.8"
 ion-rs = "0.18.1"
 miette = { version = "7.2", features = ["fancy"] }
 thiserror = "1.*"

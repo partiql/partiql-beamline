@@ -1,6 +1,6 @@
-use crate::gen::{ArrivalTime, DataGenerationResult, ValueGenerator};
+use crate::gen::{DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
-use partiql_types::PartiqlType;
+use partiql_types::PartiqlShape;
 use partiql_value::Value;
 use rand::Rng;
 use rand_distr::Distribution;
@@ -87,9 +87,7 @@ where
 {
     /// Generates non-absent [`Value`] (i.e., not [`Value::Null`] and not [`Value::Missing`]).
     fn present_value(&self, rng: &mut R, ctx: &SimContext) -> Value;
-
-    /// The [`PartiqlType`] of the generated values.
-    fn value_type(&self) -> PartiqlType;
+    fn value_type(&self) -> PartiqlShape;
 }
 
 pub struct RandomVariable<R, Inner>
@@ -130,6 +128,10 @@ where
         let presence = self.density.sample(rng);
         let value = self.inner.present_value(rng, ctx);
         (presence, value)
+    }
+
+    fn density(&self) -> &Density {
+        &self.density
     }
 }
 
@@ -173,7 +175,16 @@ where
         value
     }
 
-    fn value_type(&self) -> PartiqlType {
-        self.inner.value_type()
+    fn value_type(&self) -> PartiqlShape {
+        let inner_type = self.inner.value_type();
+        if self.density().null.is_some() {
+            inner_type
+        } else {
+            inner_type.as_non_nullable().unwrap_or(inner_type)
+        }
+    }
+
+    fn density(&self) -> Option<Density> {
+        Some(self.density.clone())
     }
 }

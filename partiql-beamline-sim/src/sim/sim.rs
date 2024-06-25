@@ -1,11 +1,11 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::default::Default;
 use std::error::Error;
 
 use crate::gen;
 use ion_rs::{AnyEncoding, IonError, Reader};
 use miette::Diagnostic;
-use partiql_types::PartiqlType;
+use partiql_types::PartiqlShape;
 
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
@@ -66,7 +66,7 @@ pub type SimResult<T> = Result<T, SimError>;
 
 pub type SimIterator = dyn Iterator<Item = SimResult<Sample>>;
 
-pub type DatasetTypeMapping = BTreeMap<String, PartiqlType>;
+pub type DatasetTypeMapping = BTreeMap<String, PartiqlShape>;
 
 pub struct SimBuilder {
     context: SimContext,

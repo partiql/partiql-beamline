@@ -13,9 +13,9 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-partiql-value = "0.7"
-partiql-types = "^0.7.2"
-partiql-extension-ion = "0.7"
+partiql-value = "0.8"
+partiql-types = "0.8"
+partiql-extension-ion = "0.8"
 
 # TODO: move to stable `ion-rs` once available
 ion-rs = { version = "1.0.0-rc.5", features = ["experimental"] }

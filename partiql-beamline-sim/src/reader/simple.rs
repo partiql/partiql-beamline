@@ -1,4 +1,5 @@
 use crate::gen::distributions::Density;
+
 use crate::gen::simple::{SimpleAnyOf, SimpleArray, SimpleBool, SimpleChoose, Uuid};
 use crate::gen::simple_numeric::{
     SimpleDecimal, SimpleF64, SimpleInt16, SimpleInt32, SimpleInt64, SimpleInt8, SimpleUInt16,
@@ -6,15 +7,17 @@ use crate::gen::simple_numeric::{
 };
 use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::ValueGeneratorBoxed;
-use crate::gen::{ArrivalBoxed, DataGenerationError, DataGenerationResult, ValueGenerator};
+use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
+
 use crate::reader;
 use crate::reader::registry::ValueGeneratorParser;
-use crate::reader::simple::SimpleScriptVariableKind::UInt8;
 use crate::reader::symbol::EnvSymbolParser;
+
 use crate::reader::{
     to_f64, to_i64, validate_config_keys, ProcessConfigError, ProcessConfigResult,
     CONFIG_KEYS_DENSITY,
 };
+
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
 use partiql_value::Value;
 use rand::Rng;
@@ -29,6 +32,7 @@ pub(crate) const DEFAULT_INT32: (i64, i64) = (i32::MIN as i64, i32::MAX as i64);
 pub(crate) const DEFAULT_INT64: (i64, i64) = (i64::MIN, i64::MAX);
 pub(crate) const DEFAULT_FLOAT: (f64, f64) = (i8::MIN as f64, i8::MAX as f64);
 pub(crate) const DEFAULT_BOOL: f64 = 0.5;
+
 pub(crate) const CONFIG_KEY_RANGE_LOW: &str = "low";
 pub(crate) const CONFIG_KEY_RANGE_HIGH: &str = "high";
 pub(crate) const CONFIG_KEYS_RANGE: [&str; 2] = [CONFIG_KEY_RANGE_LOW, CONFIG_KEY_RANGE_HIGH];
