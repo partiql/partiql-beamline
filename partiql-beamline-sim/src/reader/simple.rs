@@ -9,15 +9,12 @@ use crate::gen::timeline::{InstantGenerator, TickGenerator};
 use crate::gen::ValueGeneratorBoxed;
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 
-use crate::reader;
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
 
-use crate::reader::{
-    to_f64, to_i64, validate_config_keys, ProcessConfigError, ProcessConfigResult,
-    CONFIG_KEYS_DENSITY,
-};
+use crate::reader::{util, ProcessConfigError, ProcessConfigResult};
 
+use crate::reader::util::{to_f64, to_i64, validate_config_keys, CONFIG_KEYS_DENSITY};
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
 use partiql_value::Value;
 use rand::Rng;
@@ -169,7 +166,7 @@ where
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let density = reader::parse_density(config.as_ref(), symbol_parser)?;
+        let density = util::parse_density(config.as_ref(), symbol_parser)?;
 
         let gen: Box<dyn ValueGenerator> = match self {
             SimpleScriptVariableKind::AnyOf => {
