@@ -4,7 +4,7 @@ use std::default::Default;
 
 use crate::primitives::{Event, Tick};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 struct TimelineEvent(Event);
 
 // [`BinaryHeap`] depends on `Ord` and implements a max-heap.
@@ -40,7 +40,7 @@ impl<'a> From<&'a TimelineEvent> for &'a Event {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Timeline {
     queue: BinaryHeap<TimelineEvent>,
 }

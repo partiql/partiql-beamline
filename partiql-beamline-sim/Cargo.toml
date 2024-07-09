@@ -21,6 +21,8 @@ partiql-extension-ion = "0.8"
 ion-rs = { version = "1.0.0-rc.5", features = ["experimental"] }
 ion-rs_old = { version = "0.18", package = "ion-rs" }
 
+itertools = "0.13"
+
 dyn-clone = "1.0"
 
 thiserror = "1.*"

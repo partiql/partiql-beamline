@@ -1,4 +1,4 @@
-use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
+use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
 use partiql_types::{ArrayType, PartiqlShape, TYPE_BOOL, TYPE_STRING};
@@ -31,6 +31,7 @@ where
     pub fn new(
         generators: Vec<Box<dyn ValueGenerator>>,
         rng: R,
+        meta: Meta,
         density: Density,
     ) -> DataGenerationResult<Self> {
         let types: Vec<PartiqlShape> = generators.iter().map(|gen| gen.value_type()).collect();
@@ -39,6 +40,7 @@ where
             statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?.into();
         RandomVariable::create(
             rng,
+            meta,
             density,
             SimpleAnyOfImpl {
                 generators,
@@ -77,14 +79,19 @@ impl<R> SimpleChoose<R>
 where
     R: Rng + Sized + Clone,
 {
-    pub fn new(choices: Vec<Value>, rng: R, density: Density) -> DataGenerationResult<Self> {
+    pub fn new(
+        choices: Vec<Value>,
+        rng: R,
+        meta: Meta,
+        density: Density,
+    ) -> DataGenerationResult<Self> {
         if choices.is_empty() {
             return Err(DataGenerationError::Other(
                 "Empty choice vector".to_string(),
             ));
         }
         let types = PartiqlShape::any_of(choices.iter().map(|v| v.infer_shape()));
-        RandomVariable::create(rng, density, SimpleChooseImpl { choices, types })
+        RandomVariable::create(rng, meta, density, SimpleChooseImpl { choices, types })
     }
 }
 
@@ -123,6 +130,7 @@ where
         max: i64,
         elem_generator: Box<dyn ValueGenerator>,
         rng: R,
+        meta: Meta,
         density: Density,
     ) -> DataGenerationResult<Self> {
         if min > max {
@@ -133,6 +141,7 @@ where
                 PartiqlShape::new_array(ArrayType::new(Box::new(elem_generator.value_type())));
             RandomVariable::create(
                 rng,
+                meta,
                 density,
                 crate::gen::simple::SimpleArrayImpl {
                     min,
@@ -176,9 +185,9 @@ impl<R> SimpleBool<R>
 where
     R: Rng + Sized + Clone,
 {
-    pub fn new(pct: f64, rng: R, density: Density) -> DataGenerationResult<Self> {
+    pub fn new(pct: f64, rng: R, meta: Meta, density: Density) -> DataGenerationResult<Self> {
         let dist = statrs::distribution::Bernoulli::new(pct)?.into();
-        RandomVariable::create(rng, density, SimpleBoolImpl { pct, dist })
+        RandomVariable::create(rng, meta, density, SimpleBoolImpl { pct, dist })
     }
 }
 impl<R> InnerValueGenerator<R> for SimpleBoolImpl

@@ -64,7 +64,7 @@ pub type DataSamplingResult<T> = Result<T, DataSamplingError>;
 /// A Random Process (aka Stochastic Process) is
 /// > a mathematical models of systems and phenomena that appear to vary in a random manner.
 ///  -- from: https://en.wikipedia.org/wiki/Stochastic_process
-pub trait RandomProcess: Debug {
+pub trait RandomProcess: Debug + DynClone {
     fn next_sample(&self, ctx: &SimContext) -> Option<DataSamplingResult<Sample>>;
 
     /// Returns [`Some(Tick)`] representing the next arrival tick for this process's samples
@@ -73,6 +73,8 @@ pub trait RandomProcess: Debug {
 
     fn shape(&self) -> PartiqlShape;
 }
+
+dyn_clone::clone_trait_object!(RandomProcess);
 
 pub type DataGenerationResult<T> = Result<T, DataGenerationError>;
 

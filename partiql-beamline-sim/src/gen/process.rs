@@ -5,7 +5,7 @@ use partiql_types::{BagType, PartiqlShape};
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, HashMap};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SimpleProcess {
     pub arrival: Box<dyn ArrivalTime>,
     pub data: Box<dyn ValueGenerator>,
@@ -33,12 +33,12 @@ impl RandomProcess for SimpleProcess {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct RandomProcesses {
+#[derive(Default, Debug, Clone)]
+pub struct RandomDataSets {
     processes: Vec<(DataSetName, Box<dyn RandomProcess>)>,
 }
 
-impl RandomProcesses {
+impl RandomDataSets {
     pub fn is_empty(&self) -> bool {
         self.processes.is_empty()
     }
@@ -65,13 +65,13 @@ impl RandomProcesses {
             .collect()
     }
 
-    pub fn decompose(self) -> BTreeMap<DataSetName, RandomProcesses> {
+    pub fn decompose(self) -> BTreeMap<DataSetName, RandomDataSets> {
         let mut procs = BTreeMap::default();
 
         for (d, p) in self.processes {
             let rp = procs
                 .entry(d.clone())
-                .or_insert_with(|| RandomProcesses { processes: vec![] });
+                .or_insert_with(|| RandomDataSets { processes: vec![] });
             rp.processes.push((d, p));
         }
 

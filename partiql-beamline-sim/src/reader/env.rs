@@ -1,5 +1,6 @@
 use crate::gen::{ArrivalTime, ValueGenerator};
 use crate::reader::{ProcessConfigError, ProcessConfigResult};
+use itertools::Itertools;
 use partiql_value::Value;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -56,6 +57,15 @@ impl Env {
             ))),
             Entry::Vacant(e) => Ok(e.insert(val.into())),
         }
+    }
+
+    pub fn curr_path(&self, name: Option<&str>) -> ProcessConfigResult<String> {
+        Ok(self
+            .vars
+            .iter()
+            .map(|(n, _e)| n.as_str())
+            .chain(name)
+            .join("."))
     }
 }
 

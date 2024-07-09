@@ -1,4 +1,5 @@
 use crate::gen::constant::ConstantGenerator;
+use crate::gen::distributions::Meta;
 use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGenerator};
 use crate::gen::ValueGenerator;
 use crate::reader::registry::ValueGeneratorParser;
@@ -24,6 +25,7 @@ where
     fn parse_generator(
         &self,
         _rng: R,
+        meta: Meta,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
@@ -32,7 +34,7 @@ where
                 let patt = pattern.expect_string()?;
                 let patt = patt.text();
                 let constant = Value::from(symbol_parser.format_pattern(patt)?);
-                let gen = ConstantGenerator::new(constant);
+                let gen = ConstantGenerator::new(meta, constant);
                 return Ok(Box::new(gen));
             }
         }
@@ -49,6 +51,7 @@ where
     fn parse_generator(
         &self,
         rng: R,
+        meta: Meta,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
@@ -57,7 +60,7 @@ where
             if let Ok(pattern) = config.get_expected("pattern") {
                 let patt = pattern.expect_string()?;
                 let patt = patt.text();
-                let gen = RegexGenerator::new(rng, density, patt)?;
+                let gen = RegexGenerator::new(rng, meta, density, patt)?;
                 return Ok(Box::new(gen));
             }
         }
@@ -74,6 +77,7 @@ where
     fn parse_generator(
         &self,
         rng: R,
+        meta: Meta,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
@@ -85,7 +89,9 @@ where
             if let (Ok(min), Ok(max)) = (min, max) {
                 let min = min.expect_i64()? as u8;
                 let max = max.expect_i64()? as u8;
-                return Ok(Box::new(LoremIpsumGenerator::new(rng, density, min, max)?));
+                return Ok(Box::new(LoremIpsumGenerator::new(
+                    rng, meta, density, min, max,
+                )?));
             }
         }
 
@@ -102,11 +108,12 @@ where
     fn parse_generator(
         &self,
         rng: R,
+        meta: Meta,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let density = parse_density(config.as_ref(), symbol_parser)?;
 
-        Ok(Box::new(LoremIpsumTitleGenerator::new(rng, density)?))
+        Ok(Box::new(LoremIpsumTitleGenerator::new(rng, meta, density)?))
     }
 }

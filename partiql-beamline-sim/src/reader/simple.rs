@@ -1,4 +1,4 @@
-use crate::gen::distributions::Density;
+use crate::gen::distributions::{Density, Meta};
 
 use crate::gen::simple::{SimpleAnyOf, SimpleArray, SimpleBool, SimpleChoose, Uuid};
 use crate::gen::simple_numeric::{
@@ -163,6 +163,7 @@ where
     fn parse_generator(
         &self,
         rng: R,
+        meta: Meta,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
@@ -170,71 +171,71 @@ where
 
         let gen: Box<dyn ValueGenerator> = match self {
             SimpleScriptVariableKind::AnyOf => {
-                self.parse_any_of(rng, density, symbol_parser, config)?
+                self.parse_any_of(rng, meta, density, symbol_parser, config)?
             }
             SimpleScriptVariableKind::Choice => {
-                self.parse_choice(rng, density, symbol_parser, config)?
+                self.parse_choice(rng, meta, density, symbol_parser, config)?
             }
             SimpleScriptVariableKind::Array => {
-                self.parse_array(rng, density, symbol_parser, config)?
+                self.parse_array(rng, meta, density, symbol_parser, config)?
             }
             SimpleScriptVariableKind::Tick => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY])?;
-                Box::new(TickGenerator::new(rng, density)?)
+                Box::new(TickGenerator::new(rng, meta, density)?)
             }
             SimpleScriptVariableKind::Instant => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY])?;
-                Box::new(InstantGenerator::new(rng, density)?)
+                Box::new(InstantGenerator::new(rng, meta, density)?)
             }
             SimpleScriptVariableKind::UInt8 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT8);
-                SimpleUInt8::new(low, high, rng, density)?.boxed()
+                SimpleUInt8::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::UInt16 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT16);
-                SimpleUInt16::new(low, high, rng, density)?.boxed()
+                SimpleUInt16::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::UInt32 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT32);
-                SimpleUInt32::new(low, high, rng, density)?.boxed()
+                SimpleUInt32::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::UInt64 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_UINT64);
-                SimpleUInt64::new(low, high, rng, density)?.boxed()
+                SimpleUInt64::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Int8 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT8);
-                SimpleInt8::new(low, high, rng, density)?.boxed()
+                SimpleInt8::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Int16 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT16);
-                SimpleInt16::new(low, high, rng, density)?.boxed()
+                SimpleInt16::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Int32 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT32);
-                SimpleInt32::new(low, high, rng, density)?.boxed()
+                SimpleInt32::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Int64 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_i64(config, symbol_parser)?.unwrap_or(DEFAULT_INT64);
-                SimpleInt64::new(low, high, rng, density)?.boxed()
+                SimpleInt64::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Float64 => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_f64(config, symbol_parser)?.unwrap_or(DEFAULT_FLOAT);
-                SimpleF64::new(low, high, rng, density)?.boxed()
+                SimpleF64::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Decimal => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &CONFIG_KEYS_RANGE])?;
                 let (low, high) = range_f64(config, symbol_parser)?.unwrap_or(DEFAULT_FLOAT);
-                SimpleDecimal::new(low, high, rng, density)?.boxed()
+                SimpleDecimal::new(low, high, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Bool => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY, &["p"]])?;
@@ -243,11 +244,11 @@ where
                 } else {
                     DEFAULT_BOOL
                 };
-                SimpleBool::new(p, rng, density)?.boxed()
+                SimpleBool::new(p, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::UUID => {
                 validate_config_keys(config, [&CONFIG_KEYS_DENSITY])?;
-                Uuid::new(rng, density)?.boxed()
+                Uuid::new(rng, meta, density)?.boxed()
             }
         };
         Ok(gen)
@@ -258,6 +259,7 @@ impl SimpleScriptVariableKind {
     fn parse_any_of<R>(
         &self,
         rng: R,
+        meta: Meta,
         density: Density,
         symbol_parser: &dyn EnvSymbolParser,
         config: Option<LazyStruct<AnyEncoding>>,
@@ -296,12 +298,13 @@ impl SimpleScriptVariableKind {
             generators.push(gen);
         }
 
-        Ok(SimpleAnyOf::new(generators, rng, density)?.boxed())
+        Ok(SimpleAnyOf::new(generators, rng, meta, density)?.boxed())
     }
 
     fn parse_choice<R>(
         &self,
         rng: R,
+        meta: Meta,
         density: Density,
         _symbol_parser: &dyn EnvSymbolParser,
         config: Option<LazyStruct<AnyEncoding>>,
@@ -332,11 +335,12 @@ impl SimpleScriptVariableKind {
             choice_values.push(value);
         }
 
-        Ok(SimpleChoose::new(choice_values, rng, density)?.boxed())
+        Ok(SimpleChoose::new(choice_values, rng, meta, density)?.boxed())
     }
     fn parse_array<R>(
         &self,
         rng: R,
+        meta: Meta,
         density: Density,
         symbol_parser: &dyn EnvSymbolParser,
         config: Option<LazyStruct<AnyEncoding>>,
@@ -365,7 +369,7 @@ impl SimpleScriptVariableKind {
 
             let min = min_size.expect_i64()?;
             let max = max_size.expect_i64()?;
-            Ok(SimpleArray::new(min, max, gen, rng, density)?.boxed())
+            Ok(SimpleArray::new(min, max, gen, rng, meta, density)?.boxed())
         };
 
         let elem_type = config.get_expected("element_type")?;

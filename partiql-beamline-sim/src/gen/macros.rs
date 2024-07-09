@@ -25,8 +25,12 @@ macro_rules! rv_default_new {
         where
             R: Rng + Sized + Clone,
         {
-            pub fn new(rng: R, density: Density) -> DataGenerationResult<Self> {
-                RandomVariable::create(rng, density, Default::default())
+            pub fn new(
+                rng: R,
+                meta: crate::gen::distributions::Meta,
+                density: crate::gen::distributions::Density,
+            ) -> DataGenerationResult<Self> {
+                RandomVariable::create(rng, meta, density, Default::default())
             }
         }
     };

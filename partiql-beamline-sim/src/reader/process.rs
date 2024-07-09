@@ -1,7 +1,8 @@
 use crate::gen::arrival::{HomogeneousPoisson, OnceArrival};
 use crate::gen::constant::ConstantGenerator;
 use crate::gen::data::SimpleRandomData;
-use crate::gen::process::{RandomProcesses, SimpleProcess};
+use crate::gen::distributions::Meta;
+use crate::gen::process::{RandomDataSets, SimpleProcess};
 use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
@@ -37,7 +38,7 @@ pub struct ProcessParser {
     rng_stack: Rc<RefCell<Vec<Pcg64Mcg>>>,
     env_stack: Env,
     sim_context: SimContext,
-    processes: RandomProcesses,
+    processes: RandomDataSets,
 }
 
 impl ProcessParser {
@@ -53,6 +54,21 @@ impl ProcessParser {
             sim_context: ctx.clone(),
             processes: Default::default(),
         })
+    }
+
+    pub fn parse(
+        mut self,
+        reader: &mut Reader<AnyEncoding, &[u8]>,
+    ) -> ProcessConfigResult<RandomDataSets> {
+        let top_lvl = reader.expect_next()?;
+
+        let top_lvl = top_lvl.read()?;
+        let config = top_lvl.expect_struct()?;
+        config.annotations().expect([SCRIPT_SECTION_PROCESSES])?;
+
+        self.parse_scope_struct("^", config)?;
+
+        Ok(self.processes)
     }
 
     fn curr_nullability(&self) -> ProcessConfigResult<Option<f64>> {
@@ -76,34 +92,20 @@ impl ProcessParser {
             .map_err(|_e| ProcessConfigError::Fatal("Error allocation RNG".to_string()))
     }
     fn push_scope<S: Into<String>>(&mut self, name: S) -> ProcessConfigResult<()> {
-        self.env_stack.push_scope(name);
+        let name = name.into();
+        self.env_stack.push_scope(name.clone());
         let scope_rng = self.child_rng()?;
         self.rng_stack.borrow_mut().push(scope_rng);
 
         Ok(())
     }
 
-    pub fn pop_scope(&mut self) -> ProcessConfigResult<String> {
+    fn pop_scope(&mut self) -> ProcessConfigResult<String> {
         self.rng_stack
             .borrow_mut()
             .pop()
             .ok_or_else(|| ProcessConfigError::Fatal("Rng Stack Underflow".to_string()))?;
         self.env_stack.pop()
-    }
-
-    pub fn parse(
-        mut self,
-        reader: &mut Reader<AnyEncoding, &[u8]>,
-    ) -> ProcessConfigResult<RandomProcesses> {
-        let top_lvl = reader.expect_next()?;
-
-        let top_lvl = top_lvl.read()?;
-        let config = top_lvl.expect_struct()?;
-        config.annotations().expect([SCRIPT_SECTION_PROCESSES])?;
-
-        self.parse_scope_struct("^", config)?;
-
-        Ok(self.processes)
     }
 
     fn parse_scope<S: Into<String>>(
@@ -143,32 +145,39 @@ impl ProcessParser {
     ) -> ProcessConfigResult<()> {
         let annot = s.annotations().collect::<Result<Vec<_>, _>>()?;
 
+        let scope_name = scope_name.into();
+
+        let mut parse_scope = |scope_name: String, s| -> ProcessConfigResult<()> {
+            self.push_scope(scope_name)?;
+            self.parse_bindings(s)?;
+            self.pop_scope()?;
+            Ok(())
+        };
+
         if let Some(annot) = annot.first().and_then(|s| s.text()) {
             match annot {
                 SCRIPT_SECTION_PROCESS => {
-                    let process = self.parse_process(s)?;
-                    self.processes.add(DataSetName(scope_name.into()), process);
-                    return Ok(());
+                    let process = self.parse_process(s, &scope_name)?;
+                    self.processes.add(DataSetName(scope_name), process);
                 }
                 SCRIPT_SECTION_STATICDATA => {
                     self.push_scope(SCRIPT_SECTION_STATICDATA)?;
                     {
                         self.env_stack
                             .assign(PROCESS_KEY_ARRIVAL, OnceArrival::new(Tick(0)).boxed())?;
-                        let process = self.parse_process(s)?;
-                        self.processes.add(DataSetName(scope_name.into()), process);
+                        let process = self.parse_process(s, &scope_name)?;
+                        self.processes.add(DataSetName(scope_name), process);
                     }
                     self.pop_scope()?;
-                    return Ok(());
                 }
-                SCRIPT_SECTION_PROCESSES => (), // fall through
+                SCRIPT_SECTION_PROCESSES => {
+                    parse_scope(scope_name, s)?;
+                }
                 _ => todo!("unrecognized annotation {}", annot),
             }
+        } else {
+            parse_scope(scope_name, s)?;
         }
-
-        self.push_scope(scope_name)?;
-        self.parse_bindings(s)?;
-        self.pop_scope()?;
 
         Ok(())
     }
@@ -176,9 +185,11 @@ impl ProcessParser {
     fn parse_process(
         &mut self,
         processes: LazyStruct<AnyEncoding>,
+        scope_name: &str,
     ) -> ProcessConfigResult<Box<dyn RandomProcess>> {
         let mut data = None;
         let mut arrival = None;
+        //self.push_scope(scope_name)?;
         for field in processes.iter() {
             let field = field?;
             let name = self.parse_symbol_type(&field.name()?)?;
@@ -191,11 +202,11 @@ impl ProcessParser {
                             arrival = Some(self.parse_arrival(&value)?);
                         }
                         PROCESS_KEY_DATA => {
-                            data = Some(self.parse_generator(&value)?);
+                            data = Some(self.parse_generator(&value, &PROCESS_KEY_DATA)?);
                         }
                         _ => {
                             // variable definition
-                            let val = self.parse_binding_value(&value)?;
+                            let val = self.parse_binding_value(&value, &name)?;
                             self.env_stack.assign(name, val)?;
                         }
                     }
@@ -207,6 +218,7 @@ impl ProcessParser {
                 }
             }
         }
+        //self.pop_scope()?;
 
         if arrival.is_none() {
             if let Some(EnvBindingValue::Arrival(binding)) =
@@ -239,7 +251,7 @@ impl ProcessParser {
             match name {
                 SymbolType::VarRef(name) => {
                     // variable definition
-                    let val = self.parse_binding_value(&value)?;
+                    let val = self.parse_binding_value(&value, &name)?;
                     self.env_stack.assign(name, val)?;
                 }
                 SymbolType::Str(name) => {
@@ -253,6 +265,7 @@ impl ProcessParser {
     fn parse_binding_value(
         &mut self,
         value: &ValueRef<AnyEncoding>,
+        scope_name: &str,
     ) -> ProcessConfigResult<EnvBindingValue> {
         match self.parse_arrival(value) {
             Err(ProcessConfigError::UnknownArrival(_)) => {
@@ -266,7 +279,7 @@ impl ProcessParser {
             }
         }
 
-        match self.parse_generator(value) {
+        match self.parse_generator(value, scope_name) {
             Err(ProcessConfigError::UnknownGenerator(_)) => {
                 // continue to try immediate
             }
@@ -315,8 +328,10 @@ impl ProcessParser {
                     let scope_name: String = scope_name.into();
                     let index = name.replace('$', "$@");
                     for i in 0i64..n {
-                        self.push_scope(&scope_name)?;
                         let index = index.as_str();
+                        let index_scope = format!("{}={}", index, i);
+                        let scope_index_name = format!("{}({})", &scope_name, index_scope);
+                        self.push_scope(scope_index_name)?;
                         self.env_stack.assign(index, Value::from(i))?;
                         for val in list.iter() {
                             self.parse_scope(&scope_name, val?.read()?)?;
@@ -458,12 +473,17 @@ impl ProcessParser {
     fn parse_generator(
         &mut self,
         value: &ValueRef<AnyEncoding>,
+        scope_name: &str,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let script_path = self.env_stack.curr_path(Some(&scope_name))?;
+        let meta = Meta { script_path };
         match value {
             ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
                 SymbolType::VarRef(var) => {
                     let gen: Box<dyn ValueGenerator> = match self.env_stack.get(&var)? {
-                        EnvBindingValue::Value(v) => Box::new(ConstantGenerator::new(v.clone())),
+                        EnvBindingValue::Value(v) => {
+                            Box::new(ConstantGenerator::new(meta, v.clone()))
+                        }
                         EnvBindingValue::Generator(g) => g.clone(),
                         EnvBindingValue::Arrival(_) => todo!("arrival generator reference"),
                     };
@@ -472,7 +492,7 @@ impl ProcessParser {
                 SymbolType::Str(name) => {
                     if let Some(parser) = self.registry.get_parser(&name) {
                         let crng = self.child_rng()?;
-                        parser.parse_generator(crng, None, self)
+                        parser.parse_generator(crng, meta, None, self)
                     } else {
                         Err(ProcessConfigError::UnknownGenerator(name))
                     }
@@ -484,18 +504,18 @@ impl ProcessParser {
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
 
                 if annot.is_empty() {
-                    self.push_scope("data")?;
+                    self.push_scope(scope_name)?;
                     let mut kvs: HashMap<String, Box<_>> = Default::default();
                     for field in strct.iter() {
                         let field = field?;
                         let name = self.parse_symbol_text(&field.name()?)?.to_string();
                         let value_ref = field.value().read()?;
-                        let value_generator = self.parse_generator(&value_ref)?;
+                        let value_generator = self.parse_generator(&value_ref, &name)?;
                         kvs.insert(name, value_generator);
                     }
                     self.pop_scope()?;
                     let rng = self.child_rng()?;
-                    Ok(Box::new(SimpleRandomData::new(rng, density, kvs)?)
+                    Ok(Box::new(SimpleRandomData::new(rng, meta, density, kvs)?)
                         as Box<dyn ValueGenerator>)
                 } else {
                     let kind = self.parse_symbol_type(&annot[0])?;
@@ -505,9 +525,9 @@ impl ProcessParser {
                         }
                         SymbolType::Str(name) => {
                             if self.registry.has_parser(&name) {
-                                let rng = self.child_rng()?;
+                                let crng = self.child_rng()?;
                                 let parser = self.registry.get_parser(&name).unwrap();
-                                parser.parse_generator(rng, Some(*strct), self)
+                                parser.parse_generator(crng, meta, Some(*strct), self)
                             } else {
                                 Err(ProcessConfigError::UnknownGenerator(name))
                             }
@@ -520,7 +540,7 @@ impl ProcessParser {
             ))),
             other => {
                 let constant = self.parse_immediate(other)?;
-                Ok(Box::new(ConstantGenerator::new(constant)))
+                Ok(Box::new(ConstantGenerator::new(meta, constant)))
             }
         }
     }
@@ -599,7 +619,9 @@ impl EnvSymbolParser for ProcessParser {
             SymbolType::Str(name) => {
                 if let Some(parser) = self.registry.get_parser(&name) {
                     let crng = self.child_rng()?;
-                    parser.parse_generator(crng, cfg, self)
+                    let script_path = self.env_stack.curr_path(sym.text())?;
+                    let meta = Meta { script_path };
+                    parser.parse_generator(crng, meta, cfg, self)
                 } else {
                     Err(ProcessConfigError::UnknownGenerator(name))
                 }

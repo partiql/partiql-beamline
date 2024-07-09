@@ -1,3 +1,4 @@
+use crate::gen::distributions::Meta;
 use crate::gen::ValueGenerator;
 use crate::reader::simple::SimpleScriptVariableKind;
 use crate::reader::symbol::EnvSymbolParser;
@@ -15,6 +16,7 @@ where
     fn parse_generator(
         &self,
         rng: R,
+        meta: Meta,
         config: Option<LazyStruct<AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
