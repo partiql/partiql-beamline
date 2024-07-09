@@ -3,7 +3,8 @@ use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGener
 use crate::gen::ValueGenerator;
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
-use crate::reader::{parse_density, ProcessConfigError, ProcessConfigResult};
+use crate::reader::util::parse_density;
+use crate::reader::{ProcessConfigError, ProcessConfigResult};
 use ion_rs::{AnyEncoding, LazyStruct};
 use partiql_value::Value;
 use rand::Rng;

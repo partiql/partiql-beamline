@@ -7,7 +7,8 @@ use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
-use crate::reader::{parse_density, ProcessConfigError, ProcessConfigResult};
+use crate::reader::util::parse_density;
+use crate::reader::{ProcessConfigError, ProcessConfigResult};
 use crate::sim::context::SimContext;
 use ion_rs::{
     AnyEncoding, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef, ValueRef,
