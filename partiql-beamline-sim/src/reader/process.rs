@@ -111,7 +111,7 @@ impl ProcessParser {
     fn parse_scope<S: Into<String>>(
         &mut self,
         scope_name: S,
-        value: ValueRef<AnyEncoding>,
+        value: ValueRef<'_, AnyEncoding>,
     ) -> ProcessConfigResult<()> {
         let ion_type = value.ion_type();
         match value.ion_type() {
@@ -126,7 +126,7 @@ impl ProcessParser {
     fn parse_scope_list<S: Into<String>>(
         &mut self,
         scope_name: S,
-        l: LazyList<AnyEncoding>,
+        l: LazyList<'_, AnyEncoding>,
     ) -> ProcessConfigResult<()> {
         let annot = l.annotations().collect::<Result<Vec<_>, _>>()?;
 
@@ -141,7 +141,7 @@ impl ProcessParser {
     fn parse_scope_struct<S: Into<String>>(
         &mut self,
         scope_name: S,
-        s: LazyStruct<AnyEncoding>,
+        s: LazyStruct<'_, AnyEncoding>,
     ) -> ProcessConfigResult<()> {
         let annot = s.annotations().collect::<Result<Vec<_>, _>>()?;
 
@@ -184,7 +184,7 @@ impl ProcessParser {
 
     fn parse_process(
         &mut self,
-        processes: LazyStruct<AnyEncoding>,
+        processes: LazyStruct<'_, AnyEncoding>,
         scope_name: &str,
     ) -> ProcessConfigResult<Box<dyn RandomProcess>> {
         let mut data = None;
@@ -202,7 +202,7 @@ impl ProcessParser {
                             arrival = Some(self.parse_arrival(&value)?);
                         }
                         PROCESS_KEY_DATA => {
-                            data = Some(self.parse_generator(&value, &PROCESS_KEY_DATA)?);
+                            data = Some(self.parse_generator(&value, PROCESS_KEY_DATA)?);
                         }
                         _ => {
                             // variable definition
@@ -241,7 +241,10 @@ impl ProcessParser {
         Ok(Box::new(SimpleProcess { arrival, data }))
     }
 
-    fn parse_bindings(&mut self, processes: LazyStruct<AnyEncoding>) -> ProcessConfigResult<()> {
+    fn parse_bindings(
+        &mut self,
+        processes: LazyStruct<'_, AnyEncoding>,
+    ) -> ProcessConfigResult<()> {
         for field in processes.iter() {
             let field = field?;
             let name = self.parse_symbol_type(&field.name()?)?;
@@ -264,7 +267,7 @@ impl ProcessParser {
 
     fn parse_binding_value(
         &mut self,
-        value: &ValueRef<AnyEncoding>,
+        value: &ValueRef<'_, AnyEncoding>,
         scope_name: &str,
     ) -> ProcessConfigResult<EnvBindingValue> {
         match self.parse_arrival(value) {
@@ -311,8 +314,8 @@ impl ProcessParser {
     fn parse_list_parameterized<S: Into<String>>(
         &mut self,
         scope_name: S,
-        list: LazyList<AnyEncoding>,
-        parameterization: &SymbolRef,
+        list: LazyList<'_, AnyEncoding>,
+        parameterization: &SymbolRef<'_>,
     ) -> ProcessConfigResult<()> {
         let list_param = self
             .env_stack
@@ -354,12 +357,12 @@ impl ProcessParser {
     fn parse_list_unparameterized<S: Into<String>>(
         &mut self,
         _scope_name: S,
-        _list: LazyList<AnyEncoding>,
+        _list: LazyList<'_, AnyEncoding>,
     ) -> ProcessConfigResult<()> {
         todo!("parse_list_unparameterized list")
     }
 
-    fn parse_immediate(&mut self, value: &ValueRef<AnyEncoding>) -> ProcessConfigResult<Value> {
+    fn parse_immediate(&mut self, value: &ValueRef<'_, AnyEncoding>) -> ProcessConfigResult<Value> {
         let ion_type = value.ion_type();
         match value {
             ValueRef::Bool(b) => Ok((*b).into()),
@@ -381,7 +384,10 @@ impl ProcessParser {
         }
     }
 
-    fn parse_duration(&self, duration: &LazyValue<AnyEncoding>) -> ProcessConfigResult<Duration> {
+    fn parse_duration(
+        &self,
+        duration: &LazyValue<'_, AnyEncoding>,
+    ) -> ProcessConfigResult<Duration> {
         let ion_type = duration.ion_type();
         let mut annot = duration.annotations();
         let duration = duration.read()?;
@@ -439,7 +445,7 @@ impl ProcessParser {
 
     fn parse_arrival(
         &mut self,
-        value: &ValueRef<AnyEncoding>,
+        value: &ValueRef<'_, AnyEncoding>,
     ) -> ProcessConfigResult<Box<dyn ArrivalTime>> {
         let ion_type = value.ion_type();
         match value {
@@ -472,10 +478,10 @@ impl ProcessParser {
 
     fn parse_generator(
         &mut self,
-        value: &ValueRef<AnyEncoding>,
+        value: &ValueRef<'_, AnyEncoding>,
         scope_name: &str,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let script_path = self.env_stack.curr_path(Some(&scope_name))?;
+        let script_path = self.env_stack.curr_path(Some(scope_name))?;
         let meta = Meta { script_path };
         match value {
             ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
@@ -545,7 +551,7 @@ impl ProcessParser {
         }
     }
 
-    fn parse_symbol_type(&self, sym: &SymbolRef) -> ProcessConfigResult<SymbolType> {
+    fn parse_symbol_type(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<SymbolType> {
         self.parse_symbol_text(sym).map(|sym| {
             if sym.starts_with('$') {
                 SymbolType::VarRef(sym.to_string())
@@ -555,7 +561,7 @@ impl ProcessParser {
         })
     }
 
-    fn parse_symbol_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String> {
+    fn parse_symbol_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String> {
         let txt = sym
             .text()
             .ok_or_else(|| ProcessConfigError::Other("Non-text symbol".to_string()))?;
@@ -596,7 +602,7 @@ impl ProcessParser {
 }
 
 impl EnvSymbolParser for ProcessParser {
-    fn parse_symbol_as_value(&self, sym: &SymbolRef) -> ProcessConfigResult<Value> {
+    fn parse_symbol_as_value(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<Value> {
         match self.parse_symbol_type(sym)? {
             SymbolType::VarRef(name) => match self.env_stack.get(&name)? {
                 EnvBindingValue::Value(v) => Ok(v.clone()),
@@ -608,8 +614,8 @@ impl EnvSymbolParser for ProcessParser {
     }
     fn parse_symbol_as_generator(
         &self,
-        sym: &SymbolRef,
-        cfg: Option<LazyStruct<AnyEncoding>>,
+        sym: &SymbolRef<'_>,
+        cfg: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         match self.parse_symbol_type(sym)? {
             SymbolType::VarRef(name) => match self.env_stack.get(&name)? {
@@ -629,7 +635,7 @@ impl EnvSymbolParser for ProcessParser {
         }
     }
 
-    fn parse_symbol_as_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String> {
+    fn parse_symbol_as_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String> {
         self.parse_symbol_text(sym)
     }
 

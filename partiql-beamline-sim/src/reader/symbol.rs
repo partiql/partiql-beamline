@@ -10,15 +10,15 @@ pub enum SymbolType {
 }
 
 pub trait EnvSymbolParser {
-    fn parse_symbol_as_value(&self, sym: &SymbolRef) -> ProcessConfigResult<Value>;
+    fn parse_symbol_as_value(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<Value>;
 
     fn parse_symbol_as_generator(
         &self,
-        sym: &SymbolRef,
-        cfg: Option<LazyStruct<AnyEncoding>>,
+        sym: &SymbolRef<'_>,
+        cfg: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
 
-    fn parse_symbol_as_text(&self, sym: &SymbolRef) -> ProcessConfigResult<String>;
+    fn parse_symbol_as_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String>;
 
     fn format_pattern(&self, pattern: &str) -> ProcessConfigResult<String>;
 

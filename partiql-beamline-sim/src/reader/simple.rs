@@ -108,8 +108,8 @@ impl SimpleScriptVariableKind {
 }
 
 fn range(
-    config: Option<LazyStruct<AnyEncoding>>,
-) -> ProcessConfigResult<Option<(ValueRef<AnyEncoding>, ValueRef<AnyEncoding>)>> {
+    config: Option<LazyStruct<'_, AnyEncoding>>,
+) -> ProcessConfigResult<Option<(ValueRef<'_, AnyEncoding>, ValueRef<'_, AnyEncoding>)>> {
     let low = config
         .and_then(|c| c.get(CONFIG_KEY_RANGE_LOW).transpose())
         .transpose()?;
@@ -127,7 +127,7 @@ fn range(
 }
 
 fn range_i64(
-    config: Option<LazyStruct<AnyEncoding>>,
+    config: Option<LazyStruct<'_, AnyEncoding>>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Option<(i64, i64)>> {
     let range = range(config)?;
@@ -142,7 +142,7 @@ fn range_i64(
 }
 
 fn range_f64(
-    config: Option<LazyStruct<AnyEncoding>>,
+    config: Option<LazyStruct<'_, AnyEncoding>>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Option<(f64, f64)>> {
     let range = range(config)?;
@@ -164,7 +164,7 @@ where
         &self,
         rng: R,
         meta: Meta,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let density = util::parse_density(config.as_ref(), symbol_parser)?;
@@ -262,7 +262,7 @@ impl SimpleScriptVariableKind {
         meta: Meta,
         density: Density,
         symbol_parser: &dyn EnvSymbolParser,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where
         R: Rng + Sized + Clone + 'static,
@@ -307,7 +307,7 @@ impl SimpleScriptVariableKind {
         meta: Meta,
         density: Density,
         _symbol_parser: &dyn EnvSymbolParser,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where
         R: Rng + Sized + Clone + 'static,
@@ -343,7 +343,7 @@ impl SimpleScriptVariableKind {
         meta: Meta,
         density: Density,
         symbol_parser: &dyn EnvSymbolParser,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where
         R: Rng + Sized + Clone + 'static,
@@ -362,8 +362,8 @@ impl SimpleScriptVariableKind {
         let min_size = config.get_expected("min_size")?;
         let max_size = config.get_expected("max_size")?;
 
-        let get_generator = |sym: &SymbolRef,
-                             cfg: Option<LazyStruct<AnyEncoding>>|
+        let get_generator = |sym: &SymbolRef<'_>,
+                             cfg: Option<LazyStruct<'_, AnyEncoding>>|
          -> ProcessConfigResult<Box<dyn ValueGenerator>> {
             let gen = symbol_parser.parse_symbol_as_generator(sym, cfg)?;
 
