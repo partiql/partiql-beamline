@@ -1,4 +1,4 @@
-use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
+use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::context::SimContext;
 
@@ -52,7 +52,7 @@ macro_rules! rv_ranged_discrete_new {
             R: Rng + Sized + Clone,
         {
             #[doc = concat!("Creates a generator that yields uniformly distributed ", stringify!($ty), " between `min` and `max` with the specified [`Density`].")]
-            pub fn new<I>(min: I, max: I, rng: R, density: Density) -> DataGenerationResult<Self>
+            pub fn new<I>(min: I, max: I, rng: R, meta: Meta, density: Density) -> DataGenerationResult<Self>
             where
                 I: Into<i64>,
             {
@@ -65,7 +65,7 @@ macro_rules! rv_ranged_discrete_new {
                     let min = <$ty>::try_from(min)?;
                     let max = <$ty>::try_from(max)?;
                     let inner = $inner { min, max, dist };
-                    RandomVariable::create(rng, density, inner)
+                    RandomVariable::create(rng, meta, density, inner)
                 }
             }
         }
@@ -144,13 +144,19 @@ where
 {
     /// Creates f64 generator that yields uniformly distributed f64s between `min` and `max`
     /// with the specified [`Density`].
-    pub fn new(min: f64, max: f64, rng: R, density: Density) -> DataGenerationResult<Self> {
+    pub fn new(
+        min: f64,
+        max: f64,
+        rng: R,
+        meta: Meta,
+        density: Density,
+    ) -> DataGenerationResult<Self> {
         if min < f64::MIN || max > f64::MAX {
             Err(DataGenerationError::BoundsF(min, max))
         } else {
             let dist = statrs::distribution::Uniform::new(min, max)?.into();
             let inner = SimpleF64Impl { min, max, dist };
-            RandomVariable::create(rng, density, inner)
+            RandomVariable::create(rng, meta, density, inner)
         }
     }
 }
@@ -176,7 +182,13 @@ where
 {
     /// Creates decimal generator that yields uniformly distributed decimals between `min` and `max`
     /// with the specified [`Density`].
-    pub fn new(min: f64, max: f64, rng: R, density: Density) -> DataGenerationResult<Self> {
+    pub fn new(
+        min: f64,
+        max: f64,
+        rng: R,
+        meta: Meta,
+        density: Density,
+    ) -> DataGenerationResult<Self> {
         if min < f64::MIN || max > f64::MAX {
             Err(DataGenerationError::BoundsF(min, max))
         } else {
@@ -208,7 +220,7 @@ where
                 scale,
                 dist,
             };
-            RandomVariable::create(rng, density, inner)
+            RandomVariable::create(rng, meta, density, inner)
         }
     }
 }

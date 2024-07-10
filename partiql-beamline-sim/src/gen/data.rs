@@ -1,4 +1,4 @@
-use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
+use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationResult, ValueGenerator};
 use crate::sim::context::SimContext;
 use partiql_types::{PartiqlShape, StructConstraint, StructField, StructType};
@@ -64,12 +64,12 @@ impl<R> SimpleRandomData<R>
 where
     R: Rng + Sized + Clone,
 {
-    pub fn new<I>(rng: R, density: Density, inner: I) -> DataGenerationResult<Self>
+    pub fn new<I>(rng: R, meta: Meta, density: Density, inner: I) -> DataGenerationResult<Self>
     where
         I: Into<SimpleRandomDataImpl>,
     {
         let inner = inner.into();
-        RandomVariable::create(rng, density, inner)
+        RandomVariable::create(rng, meta, density, inner)
     }
 }
 

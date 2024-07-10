@@ -68,14 +68,14 @@ pub use process::ProcessParser;
 #[cfg(test)]
 mod tests {
 
-    use crate::gen::process::RandomProcesses;
+    use crate::gen::process::RandomDataSets;
     use crate::reader::process::ProcessParser;
     use crate::sim::context::SimContext;
     use crate::sim::{SimConfigBuilder, SimConfigResult};
     use ion_rs::{AnyEncoding, Element, Reader};
 
     #[track_caller]
-    fn parse(ion_data: &str) -> SimConfigResult<RandomProcesses> {
+    fn parse(ion_data: &str) -> SimConfigResult<RandomDataSets> {
         let mut ion_bytes: Vec<u8> = vec![];
         Element::read_one(ion_data)?.encode_to(&mut ion_bytes, ion_rs::v1_0::Binary)?;
         let mut reader = Reader::new(AnyEncoding, ion_bytes.as_slice())?;
@@ -113,6 +113,24 @@ mod tests {
         let ion_data = include_str!("../../tests/scripts/client-service.ion");
         let processes = parse(ion_data)?;
         assert_eq!(processes.ids().len(), 14 * 2); // 14 clients; 14 instances of service
+
+        Ok(())
+    }
+
+    #[test]
+    fn transactions() -> SimConfigResult<()> {
+        let ion_data = include_str!("../../tests/scripts/transactions.ion");
+        let processes = parse(ion_data)?;
+        assert_eq!(processes.ids().len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn orders() -> SimConfigResult<()> {
+        let ion_data = include_str!("../../tests/scripts/orders.ion");
+        let processes = parse(ion_data)?;
+        assert_eq!(processes.ids().len(), 28);
 
         Ok(())
     }

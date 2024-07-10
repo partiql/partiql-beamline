@@ -81,6 +81,13 @@ impl Density {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct Meta {
+    pub script_path: String,
+}
+
+impl Meta {}
+
 pub trait InnerValueGenerator<R>: Debug + Clone
 where
     R: Rng + Sized + Clone,
@@ -98,6 +105,8 @@ where
     /// The source of randomness
     rng: RefCell<R>,
 
+    meta: Meta,
+
     /// The source of Null | Missing
     density: Density,
 
@@ -110,10 +119,16 @@ where
     R: Rng + Sized + Clone,
     Inner: InnerValueGenerator<R>,
 {
-    pub(crate) fn create(rng: R, density: Density, inner: Inner) -> DataGenerationResult<Self> {
+    pub(crate) fn create(
+        rng: R,
+        meta: Meta,
+        density: Density,
+        inner: Inner,
+    ) -> DataGenerationResult<Self> {
         let rng = RefCell::new(rng);
         Ok(RandomVariable {
             rng,
+            meta,
             density,
             inner,
         })
@@ -143,6 +158,7 @@ where
     fn clone(&self) -> Self {
         Self {
             rng: self.rng.clone(),
+            meta: self.meta.clone(),
             density: self.density.clone(),
             inner: self.inner.clone(),
         }

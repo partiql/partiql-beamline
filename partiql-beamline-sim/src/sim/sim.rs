@@ -12,7 +12,7 @@ use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
 use time::format_description::well_known::Iso8601;
 
-use crate::gen::process::RandomProcesses;
+use crate::gen::process::RandomDataSets;
 use crate::gen::DataSamplingError;
 use crate::primitives::{DataSetId, DataSetName, Event, ProcessId, Sample, Tick};
 use crate::reader::ProcessConfigError;
@@ -75,7 +75,7 @@ pub struct SimBuilder {
     root_rng: Pcg64Mcg,
 
     t0: Tick,
-    processes: RandomProcesses,
+    processes: RandomDataSets,
 }
 
 impl SimBuilder {
@@ -102,7 +102,7 @@ impl SimBuilder {
         seed: u64,
         script: &[u8],
         ctx: &SimContext,
-    ) -> SimConfigResult<RandomProcesses> {
+    ) -> SimConfigResult<RandomDataSets> {
         let registry = Default::default();
         let parser = ProcessParser::new(seed, registry, ctx)?;
         let mut reader = Reader::new(AnyEncoding, script)?;
@@ -137,14 +137,14 @@ pub trait ISim {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Sim {
     context: SimContext,
 
     #[allow(unused)]
     root_rng: Pcg64Mcg,
 
-    processes: RandomProcesses,
+    processes: RandomDataSets,
 
     time: Tick,
     timeline: Timeline,
@@ -273,7 +273,7 @@ impl IntoIterator for Sim {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultiSim {
     context: SimContext,
 
