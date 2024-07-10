@@ -11,7 +11,7 @@ pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
 pub(crate) const CONFIG_KEYS_DENSITY: [&str; 2] = [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
 
 pub(crate) fn parse_density(
-    config: Option<&LazyStruct<AnyEncoding>>,
+    config: Option<&LazyStruct<'_, AnyEncoding>>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Density> {
     let nullable_config = config
@@ -66,7 +66,7 @@ pub(crate) fn parse_density(
 }
 
 pub(crate) fn to_pct(
-    val: ValueRef<AnyEncoding>,
+    val: ValueRef<'_, AnyEncoding>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Option<f64>> {
     match val {
@@ -85,7 +85,7 @@ pub(crate) fn to_pct(
 }
 
 pub(crate) fn to_i64(
-    val: ValueRef<AnyEncoding>,
+    val: ValueRef<'_, AnyEncoding>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<i64> {
     match val {
@@ -99,7 +99,7 @@ pub(crate) fn to_i64(
 }
 
 pub(crate) fn to_f64(
-    val: ValueRef<AnyEncoding>,
+    val: ValueRef<'_, AnyEncoding>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<f64> {
     match val {
@@ -120,7 +120,7 @@ pub(crate) fn to_f64(
 }
 
 pub(crate) fn validate_config_keys<const N: usize>(
-    config: Option<LazyStruct<AnyEncoding>>,
+    config: Option<LazyStruct<'_, AnyEncoding>>,
     allowed_keys: [&[&'static str]; N],
 ) -> ProcessConfigResult<()> {
     let keys: HashSet<&'static str> = allowed_keys.into_iter().flatten().copied().collect();
@@ -128,7 +128,7 @@ pub(crate) fn validate_config_keys<const N: usize>(
 }
 
 pub(crate) fn validate_config_keyset(
-    config: Option<LazyStruct<AnyEncoding>>,
+    config: Option<LazyStruct<'_, AnyEncoding>>,
     allowed_keys: HashSet<&'static str>,
 ) -> ProcessConfigResult<()> {
     let mut seen: HashSet<String> = HashSet::default();

@@ -26,7 +26,7 @@ where
         &self,
         _rng: R,
         meta: Meta,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         if let Some(config) = config {
@@ -52,7 +52,7 @@ where
         &self,
         rng: R,
         meta: Meta,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let density = parse_density(config.as_ref(), symbol_parser)?;
@@ -78,7 +78,7 @@ where
         &self,
         rng: R,
         meta: Meta,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let density = parse_density(config.as_ref(), symbol_parser)?;
@@ -109,7 +109,7 @@ where
         &self,
         rng: R,
         meta: Meta,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let density = parse_density(config.as_ref(), symbol_parser)?;

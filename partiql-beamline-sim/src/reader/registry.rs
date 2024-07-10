@@ -17,7 +17,7 @@ where
         &self,
         rng: R,
         meta: Meta,
-        config: Option<LazyStruct<AnyEncoding>>,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
 }

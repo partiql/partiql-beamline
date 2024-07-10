@@ -1,4 +1,4 @@
-use crate::gen::distributions::{Density, InnerValueGenerator, RandomVariable};
+use crate::gen::distributions::{InnerValueGenerator, RandomVariable};
 use crate::gen::{DataGenerationResult, CURRENT_TICK};
 use crate::primitives::Tick;
 use crate::sim::context::{ConstantBindingValue, SimContext};
