@@ -1,5 +1,5 @@
 use crate::gen::{DataGenerationResult, ValueGenerator};
-use crate::sim::context::SimContext;
+use crate::sim::SimContext;
 use partiql_types::PartiqlShape;
 use partiql_value::Value;
 use rand::Rng;

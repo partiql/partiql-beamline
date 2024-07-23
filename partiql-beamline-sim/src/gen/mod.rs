@@ -1,6 +1,6 @@
 use crate::gen::distributions::Density;
 use crate::primitives::{Sample, Tick};
-use crate::sim::context::SimContext;
+use crate::sim::SimContext;
 use dyn_clone::DynClone;
 use partiql_types::PartiqlShape;
 use partiql_value::Value;
