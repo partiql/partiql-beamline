@@ -1,6 +1,6 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult};
-use crate::sim::context::SimContext;
+use crate::sim::SimContext;
 
 use partiql_types::{
     PartiqlShape, Static, TYPE_DOUBLE, TYPE_INT16, TYPE_INT32, TYPE_INT64, TYPE_INT8,

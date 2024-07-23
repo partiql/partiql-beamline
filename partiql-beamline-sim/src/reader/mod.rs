@@ -70,7 +70,7 @@ mod tests {
 
     use crate::gen::process::RandomDataSets;
     use crate::reader::process::ProcessParser;
-    use crate::sim::context::SimContext;
+    use crate::sim::SimContext;
     use crate::sim::{SimConfigBuilder, SimConfigResult};
     use ion_rs::{AnyEncoding, Element, Reader};
 

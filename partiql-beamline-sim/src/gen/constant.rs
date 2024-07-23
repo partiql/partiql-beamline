@@ -1,7 +1,7 @@
 use crate::gen::distributions::{Density, Meta};
 use crate::gen::util::ValueTypeInference;
 use crate::gen::ValueGenerator;
-use crate::sim::context::SimContext;
+use crate::sim::SimContext;
 use partiql_types::PartiqlShape;
 use partiql_value::Value;
 

@@ -1,6 +1,6 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationResult, ValueGenerator};
-use crate::sim::context::SimContext;
+use crate::sim::SimContext;
 use partiql_types::{PartiqlShape, StructConstraint, StructField, StructType};
 use partiql_value::{Tuple, Value};
 use rand::Rng;

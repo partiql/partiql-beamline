@@ -1,6 +1,6 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult};
-use crate::sim::context::SimContext;
+use crate::sim::SimContext;
 use lipsum::{lipsum_title_with_rng, lipsum_with_rng};
 use partiql_types::{PartiqlShape, TYPE_STRING};
 use partiql_value::Value;

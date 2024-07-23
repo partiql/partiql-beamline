@@ -1,6 +1,6 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
-use crate::sim::context::SimContext;
+use crate::sim::SimContext;
 use partiql_types::{ArrayType, PartiqlShape, TYPE_BOOL, TYPE_STRING};
 
 use partiql_value::{List, Value};

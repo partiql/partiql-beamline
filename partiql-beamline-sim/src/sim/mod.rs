@@ -1,8 +1,9 @@
 pub use config::*;
+pub use context::*;
 pub use sim::*;
 
 mod config;
 mod sim;
 
-pub(crate) mod context;
+mod context;
 mod timeline;
