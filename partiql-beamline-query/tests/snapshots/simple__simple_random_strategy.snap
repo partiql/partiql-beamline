@@ -1,0 +1,23 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: queries
+---
+SELECT *
+FROM test_data AS test_data
+WHERE true
+
+SELECT *
+FROM test_data AS test_data
+WHERE false
+
+SELECT *
+FROM test_data AS test_data
+WHERE false
+
+SELECT *
+FROM test_data AS test_data
+WHERE true
+
+SELECT *
+FROM test_data AS test_data
+WHERE true

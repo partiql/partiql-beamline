@@ -1,0 +1,18 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: queries
+---
+SELECT *
+FROM Table AS Table
+
+SELECT *
+FROM Table AS Table
+
+SELECT *
+FROM Table AS Table
+
+SELECT *
+FROM Table AS Table
+
+SELECT *
+FROM Table AS Table

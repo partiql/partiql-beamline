@@ -1,4 +1,3 @@
-
 [workspace.package]
 authors = ["PartiQL Team <partiql-team@amazon.com>"]
 description = "PartiQL Beamline"
@@ -22,6 +21,7 @@ version = "0.1.0"
 members = [
     "partiql-beamline-cli",
     "partiql-beamline-cliargs",
+    "partiql-beamline-query",
     "partiql-beamline-sim",
     "partiql-beamline-serde",
 ]
