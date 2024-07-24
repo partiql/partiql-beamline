@@ -1,9 +1,7 @@
 use itertools::Itertools;
 use miette::IntoDiagnostic;
 use partiql_ast::pretty::ToPretty;
-use partiql_beamline::sim::{
-    DatasetTypeMapping, ISim, SimBuilder, SimConfigBuilder, SimContext, DATETIME_FORMAT,
-};
+use partiql_beamline::sim::{DatasetTypeMapping, ISim, SimBuilder, SimConfigBuilder, SimContext};
 use partiql_beamline_query::generator::{AstGenContext, FromTable};
 use partiql_beamline_query::generator::{
     AstGenerator, AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter,
@@ -16,7 +14,6 @@ use partiql_beamline_query::strategy::StrategyBoxed;
 use partiql_types::{BagType, PartiqlShape, StaticType};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
-use time::macros::datetime;
 use time::OffsetDateTime;
 
 macro_rules! script_data {
@@ -67,8 +64,6 @@ fn query_text_test(
 #[test]
 fn simple_ast_gen() -> miette::Result<()> {
     use partiql_ast::ast;
-    use partiql_ast::builder::NodeBuilderWithAutoId;
-    use partiql_ast::pretty::ToPretty;
 
     let project = SelectStar {}.agboxed();
     let from = FromTable {

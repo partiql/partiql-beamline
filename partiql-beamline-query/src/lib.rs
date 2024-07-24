@@ -1,6 +1,6 @@
 use crate::strategy::StrategyError;
 use miette::Diagnostic;
-use partiql_beamline::sim::{ISim, MultiSim, SimError};
+use partiql_beamline::sim::SimError;
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -15,7 +15,7 @@ pub enum QueryGenError {
     Unknown(String),
 }
 
-/// Result of TODO
+/// Result of a Query Generation operation
 pub type QueryGenResult<T> = Result<T, QueryGenError>;
 
 pub mod generator;

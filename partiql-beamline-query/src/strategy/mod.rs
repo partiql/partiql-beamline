@@ -2,6 +2,7 @@ use crate::generator::DynAstGenerator;
 use dyn_clone::DynClone;
 use miette::Diagnostic;
 use partiql_ast::ast;
+use partiql_beamline::gen::DataGenerationError;
 use partiql_beamline::sim::{DatasetTypeMapping, NameAndShape};
 use rand_pcg::Pcg64Mcg;
 use std::fmt::Debug;
@@ -18,6 +19,8 @@ pub enum StrategyError {
     DataSetCardinality { expected: usize, actual: usize },
     #[error("Random Generator error: {0}")]
     Rand(#[from] rand::Error),
+    #[error("Data Generation error: {0}")]
+    DataGen(#[from] DataGenerationError),
     #[error("Other: {0}")]
     Other(String),
 }
@@ -27,6 +30,7 @@ pub type StrategyResult<T> = Result<T, StrategyError>;
 pub trait Strategy<Input, Ast>: Debug + DynClone {
     fn build(&self, input: Input, rng: Pcg64Mcg) -> StrategyResult<DynAstGenerator<Ast>>;
 }
+
 pub trait StrategyBoxed<Input, Ast>: Strategy<Input, Ast>
 where
     Self: 'static,

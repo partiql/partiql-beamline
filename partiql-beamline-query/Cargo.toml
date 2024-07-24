@@ -1,6 +1,6 @@
 [package]
 name = "partiql-beamline-query"
-description = "PartiQL Beamline Query Inferenct and Generation"
+description = "PartiQL Beamline Query Inference and Generation"
 readme.workspace = true
 authors.workspace = true
 license.workspace = true
