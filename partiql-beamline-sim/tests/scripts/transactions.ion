@@ -4,6 +4,11 @@ rand_processes::{
         $r: Uniform::{ choices: [5,10] },
         $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
 
+        $currency_price: {
+            value: UniformDecimal::{  low: 0.995, high: 499.9999, },
+            currency: Regex::{ pattern: "(USD)|(GBP)|(EUR)"},
+        },
+
         $data: {
             transaction_id: UUID,
             marketplace_id: UniformU8,
@@ -13,6 +18,7 @@ rand_processes::{
             completed: Bool,
             description: LoremIpsum::{ min_words:10, max_words:200 },
             price: UniformAnyOf::{ types: [
+                $currency_price,
                 UniformDecimal::{ low: 2.99, high: 9.99 },
                 UniformDecimal::{ low: 5.99, high: 25 },
                 UniformDecimal::{ low: 9.99, high: 54.99 },

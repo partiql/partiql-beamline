@@ -273,6 +273,14 @@ fn verify_repeatable_transactions() -> miette::Result<()> {
 }
 
 #[test]
+fn verify_repeatable_simple_transactions() -> miette::Result<()> {
+    let (script, _) = test_data!("simple_transactions");
+    verify_repeatable(script)?;
+    verify_repeatable_multi(script)?;
+    Ok(())
+}
+
+#[test]
 fn verify_repeatable_orders() -> miette::Result<()> {
     let (script, _) = test_data!("orders");
     verify_repeatable(script)?;
@@ -307,6 +315,14 @@ fn verify_repeatable_client_service() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_transactions() -> miette::Result<()> {
     let (script, exemplar) = test_data!("transactions");
+    verify_exemplar(script, exemplar)?;
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
+    Ok(())
+}
+
+#[test]
+fn verify_exemplar_simple_transactions() -> miette::Result<()> {
+    let (script, exemplar) = test_data!("simple_transactions");
     verify_exemplar(script, exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())

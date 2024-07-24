@@ -1,0 +1,17 @@
+rand_processes::{
+
+    test_data: rand_process::{
+        $r: Uniform::{ choices: [5,10] },
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+        $data: {
+            transaction_id: UUID::{ nullable: false },
+            marketplace_id: UniformU8::{ nullable: false },
+            country_code: Regex::{ pattern: "[A-Z]{2}" },
+            created_at: Instant,
+            completed: Bool,
+            description: LoremIpsum::{ min_words:10, max_words:200 },
+            price: UniformDecimal::{ low: 2.99, high: 99999.99, optional: true }
+        }
+    }
+}
