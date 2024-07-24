@@ -210,18 +210,17 @@ mod tests {
 
         if let Static::Bag(bag) = stype.ty() {
             if let Ok(struct_type) = bag.element_type().expect_struct() {
-                let fields: Vec<StructField> = struct_type
+                let fields: Vec<&StructField> = struct_type
                     .fields()
-                    .into_iter()
                     .filter(|f| f.name() == "w" || f.name() == "d")
                     .collect();
                 assert_eq!(fields.len(), 2);
                 fields.into_iter().for_each(|f| {
                     let stype = f.ty().expect_static().expect("struct type");
                     if f.name() == "w" {
-                        assert_eq!(stype.ty(), Static::DecimalP(5, 4));
+                        assert_eq!(stype.ty(), &Static::DecimalP(5, 4));
                     } else {
-                        assert_eq!(stype.ty(), Static::DecimalP(2, 0));
+                        assert_eq!(stype.ty(), &Static::DecimalP(2, 0));
                     }
                 });
             } else {

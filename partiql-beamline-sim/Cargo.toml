@@ -13,9 +13,9 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-partiql-value = "0.8"
-partiql-types = "0.8"
-partiql-extension-ion = "0.8"
+partiql-value = "0.9"
+partiql-types = "0.9"
+partiql-extension-ion = "0.9"
 
 # TODO: move to stable `ion-rs` once available
 ion-rs = { version = "1.0.0-rc.5", features = ["experimental"] }
@@ -49,6 +49,8 @@ regex-syntax = "0.8"
 debug-ignore = "1"
 
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
+
+indexmap = "2.2"
 
 [dev-dependencies]
 assert_matches = "1.5"

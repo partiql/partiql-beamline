@@ -11,6 +11,7 @@ use crate::reader::symbol::{EnvSymbolParser, SymbolType};
 use crate::reader::util::parse_density;
 use crate::reader::{ProcessConfigError, ProcessConfigResult};
 use crate::sim::SimContext;
+use indexmap::IndexMap;
 use ion_rs::{
     AnyEncoding, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef, ValueRef,
 };
@@ -511,7 +512,7 @@ impl ProcessParser {
 
                 if annot.is_empty() {
                     self.push_scope(scope_name)?;
-                    let mut kvs: HashMap<String, Box<_>> = Default::default();
+                    let mut kvs: IndexMap<String, Box<_>> = Default::default();
                     for field in strct.iter() {
                         let field = field?;
                         let name = self.parse_symbol_text(&field.name()?)?.to_string();
