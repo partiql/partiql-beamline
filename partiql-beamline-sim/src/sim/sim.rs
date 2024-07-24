@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use indexmap::IndexMap;
 use std::default::Default;
 use std::error::Error;
 
@@ -66,7 +66,67 @@ pub type SimResult<T> = Result<T, SimError>;
 
 pub type SimIterator = dyn Iterator<Item = SimResult<Sample>>;
 
-pub type DatasetTypeMapping = BTreeMap<String, PartiqlShape>;
+#[derive(Debug, Clone)]
+pub struct DatasetTypeMapping {
+    mapping: IndexMap<String, PartiqlShape>,
+}
+
+impl FromIterator<(String, PartiqlShape)> for DatasetTypeMapping {
+    fn from_iter<T: IntoIterator<Item = (String, PartiqlShape)>>(iter: T) -> Self {
+        let mapping = iter.into_iter().collect();
+        Self { mapping }
+    }
+}
+
+impl<const N: usize> From<[(String, PartiqlShape); N]> for DatasetTypeMapping {
+    fn from(value: [(String, PartiqlShape); N]) -> Self {
+        let mapping = IndexMap::from(value);
+        Self { mapping }
+    }
+}
+
+impl DatasetTypeMapping {
+    pub fn get_dataset(&self, key: &str) -> Option<NameAndShape> {
+        self.mapping.get(key).map(|shp| {
+            let name = key.to_string();
+            let shape = shp.clone();
+            NameAndShape { name, shape }
+        })
+    }
+    pub fn get_shape(&self, key: &str) -> Option<&PartiqlShape> {
+        self.mapping.get(key)
+    }
+
+    pub fn len(&self) -> usize {
+        self.mapping.len()
+    }
+
+    pub fn shapes(&self) -> impl Iterator<Item = &PartiqlShape> {
+        self.mapping.values()
+    }
+
+    pub fn names(&self) -> impl Iterator<Item = &String> {
+        self.mapping.keys()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &PartiqlShape)> {
+        self.mapping.iter()
+    }
+}
+
+impl IntoIterator for DatasetTypeMapping {
+    type Item = (String, PartiqlShape);
+    type IntoIter = indexmap::map::IntoIter<String, PartiqlShape>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.mapping.into_iter()
+    }
+}
+
+pub struct NameAndShape {
+    pub name: String,
+    pub shape: PartiqlShape,
+}
 
 pub struct SimBuilder {
     context: SimContext,

@@ -203,7 +203,9 @@ mod tests {
         let sim = sensor_sim();
         let _t0 = sim.config().t0;
         let datasets_mappings = sim.shape();
-        let sensors_shape = datasets_mappings.get("sensors").expect("sensors shape");
+        let sensors_shape = datasets_mappings
+            .get_shape("sensors")
+            .expect("sensors shape");
         assert!(sensors_shape.is_bag());
 
         let stype = sensors_shape.expect_static().expect("static type");

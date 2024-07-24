@@ -21,7 +21,6 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use regex::Regex;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 use time::Duration;
 
