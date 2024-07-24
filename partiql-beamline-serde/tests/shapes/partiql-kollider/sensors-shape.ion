@@ -12,18 +12,46 @@
         ],
         fields: [
           {
+            name: "tick",
+            type: "int8",
+          },
+          {
+            name: "i8",
+            type: "tinyint",
+          },
+          {
+             name: "f",
+             type: "double",
+          },
+          {
+            name: "w",
+            type: {
+                name: "decimal",
+                precision: 5,
+                scale: 4
+            }
+          },
+          {
+             name: "d",
+             type: {
+                name: "decimal",
+                precision: 2,
+                scale: 0
+             }
+          },
+          {
             name: "a",
             type: {
                 name: "union",
                 types: [
                     "int8",
+                    "double",
+                    "string",
                     {
                         name: "decimal",
                         precision: 5,
                         scale: 4
                     },
-                    "double",
-                    "string"
                 ]
              }
           },
@@ -71,45 +99,17 @@
                     name: "union",
                     types: [
                         "int8",
+                        "double",
+                        "string",
                         {
                             name: "decimal",
                             precision: 5,
                             scale: 4
                         },
-                        "double",
-                        "string"
                     ]
                 }
             }
           },
-          {
-             name: "d",
-             type: {
-                name: "decimal",
-                precision: 2,
-                scale: 0
-             }
-          },
-          {
-             name: "f",
-             type: "double",
-          },
-          {
-            name: "i8",
-            type: "tinyint",
-          },
-          {
-            name: "tick",
-            type: "int8",
-          },
-          {
-            name: "w",
-            type: {
-                name: "decimal",
-                precision: 5,
-                scale: 4
-            }
-          }
         ],
       }
     }

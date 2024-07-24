@@ -111,7 +111,7 @@ where
 
             self.writer.set_field_name("fields");
             self.writer.step_in(IonType::List)?;
-            for field in &strct.fields() {
+            for field in strct.fields() {
                 self.writer.step_in(IonType::Struct)?;
                 {
                     self.writer.set_field_name("name");

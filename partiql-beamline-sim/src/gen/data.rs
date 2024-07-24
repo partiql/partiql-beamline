@@ -1,16 +1,17 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationResult, ValueGenerator};
+
 use crate::sim::SimContext;
+use indexmap::IndexMap;
 use partiql_types::{PartiqlShape, StructConstraint, StructField, StructType};
 use partiql_value::{Tuple, Value};
 use rand::Rng;
-use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 
 #[derive(Clone)]
 pub enum SimpleRandomDataImpl {
     Single(Box<dyn ValueGenerator>),
-    Collection(HashMap<String, Box<dyn ValueGenerator>>),
+    Collection(IndexMap<String, Box<dyn ValueGenerator>>),
 }
 
 impl Debug for SimpleRandomDataImpl {
@@ -34,13 +35,13 @@ impl From<Box<dyn ValueGenerator>> for SimpleRandomDataImpl {
     }
 }
 
-impl<S, V> From<HashMap<S, V>> for SimpleRandomDataImpl
+impl<S, V> From<IndexMap<S, V>> for SimpleRandomDataImpl
 where
     S: Into<String>,
     V: Into<Box<dyn ValueGenerator>>,
 {
     #[inline]
-    fn from(kvs: HashMap<S, V>) -> Self {
+    fn from(kvs: IndexMap<S, V>) -> Self {
         let map = kvs.into_iter().map(|(s, v)| (s.into(), v.into())).collect();
         SimpleRandomDataImpl::Collection(map)
     }

@@ -1,9 +1,9 @@
 use crate::gen::{ArrivalTime, DataSamplingError, RandomProcess, ValueGenerator, CURRENT_TICK};
 use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
 use crate::sim::{ConstantBindingValue, DatasetTypeMapping, SimContext};
+use indexmap::map::Entry;
+use indexmap::IndexMap;
 use partiql_types::{BagType, PartiqlShape};
-use std::collections::hash_map::Entry;
-use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone)]
 pub struct SimpleProcess {
@@ -65,8 +65,8 @@ impl RandomDataSets {
             .collect()
     }
 
-    pub fn decompose(self) -> BTreeMap<DataSetName, RandomDataSets> {
-        let mut procs = BTreeMap::default();
+    pub fn decompose(self) -> IndexMap<DataSetName, RandomDataSets> {
+        let mut procs = IndexMap::default();
 
         for (d, p) in self.processes {
             let rp = procs
@@ -78,8 +78,8 @@ impl RandomDataSets {
         procs
     }
 
-    pub fn shape(&self) -> BTreeMap<String, PartiqlShape> {
-        let mut kvs: HashMap<&str, _> = HashMap::default();
+    pub fn shape(&self) -> DatasetTypeMapping {
+        let mut kvs: IndexMap<&str, _> = IndexMap::default();
         for (d, rp) in &self.processes {
             match kvs.entry(&d.0) {
                 Entry::Occupied(mut e) => {
