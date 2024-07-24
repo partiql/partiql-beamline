@@ -1,6 +1,6 @@
 use ion_rs::element::writer::TextKind;
 use ion_rs::element::Element;
-use partiql_beamline::sim::{ISim, SimBuilder, SimConfigBuilder};
+use partiql_beamline::sim::{ISim, NameAndShape, SimBuilder, SimConfigBuilder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
@@ -47,7 +47,10 @@ pub fn verify_correct_encoding() {
 
     assert_eq!(expected_struct, actual_struct);
 
-    let (_, sensors_ty) = shape.get_key_value("sensors").expect("sensors_type");
+    let NameAndShape {
+        name: _,
+        shape: sensors_ty,
+    } = shape.get_dataset("sensors").expect("sensors_type");
 
     let ddl_compact = PartiqlBasicDdlEncoder::new(DdlFormat::Compact);
     let ddl_expected = r#""tick" INT8,"i8" TINYINT,"f" DOUBLE,"w" OPTIONAL DECIMAL(5, 4),"d" DECIMAL(2, 0) NOT NULL,"a" UNION<INT8,DOUBLE,VARCHAR,DECIMAL(5, 4) NOT NULL>,"ar1" ARRAY<DECIMAL(2, 1)>,"ar2" ARRAY<VARCHAR>,"ar3" ARRAY<DECIMAL(5, 4)>,"ar4" ARRAY<TINYINT>,"ar5" ARRAY<UNION<INT8,DOUBLE,VARCHAR,DECIMAL(5, 4) NOT NULL>>"#;
