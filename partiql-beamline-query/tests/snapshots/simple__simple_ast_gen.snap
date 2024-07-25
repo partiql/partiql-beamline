@@ -1,0 +1,23 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: queries
+---
+SELECT *
+FROM Foo AS Foo
+WHERE (((5 + 8) > 7) AND ((5 + 8) > 7))
+
+SELECT *
+FROM Foo AS Foo
+WHERE (((5 + 8) > 7) AND ((5 + 8) > 7))
+
+SELECT *
+FROM Foo AS Foo
+WHERE (((5 + 8) > 7) AND ((5 + 8) > 7))
+
+SELECT *
+FROM Foo AS Foo
+WHERE (((5 + 8) > 7) AND ((5 + 8) > 7))
+
+SELECT *
+FROM Foo AS Foo
+WHERE (((5 + 8) > 7) AND ((5 + 8) > 7))
