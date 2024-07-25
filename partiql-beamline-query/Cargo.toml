@@ -41,7 +41,10 @@ statrs = "0.17"
 dyn-clone = "1.0.17"
 
 rust_decimal = "1.35"
+derive_builder = "0.20"
+
+indexmap = "2.2"
 
 
 [dev-dependencies]
-insta = "1.38.0"
+insta = "1"

@@ -1,0 +1,16 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: output
+---
+[
+    [*].*: AnyOf(AnyOf { types: {Static(StaticType { ty: String, nullable: false }), Static(StaticType { ty: Int64, nullable: false }), Static(StaticType { ty: String, nullable: true }), Static(StaticType { ty: DateTime, nullable: true }), Static(StaticType { ty: Bool, nullable: true }), Static(StaticType { ty: DecimalP(7, 2), nullable: true })} }),
+    [*].transaction_id: Static(StaticType { ty: String, nullable: false }),
+    [*].marketplace_id: Static(StaticType { ty: Int64, nullable: false }),
+    [*].country_code: Static(StaticType { ty: String, nullable: true }),
+    [*].created_at: Static(StaticType { ty: DateTime, nullable: true }),
+    [*].completed: Static(StaticType { ty: Bool, nullable: true }),
+    [*].description: Static(StaticType { ty: String, nullable: true }),
+    [*].price: Static(StaticType { ty: DecimalP(7, 2), nullable: true }),
+    [*]: Static(StaticType { ty: Struct(StructType { constraints: {Fields({StructField { optional: false, name: "transaction_id", ty: Static(StaticType { ty: String, nullable: false }) }, StructField { optional: false, name: "marketplace_id", ty: Static(StaticType { ty: Int64, nullable: false }) }, StructField { optional: false, name: "country_code", ty: Static(StaticType { ty: String, nullable: true }) }, StructField { optional: false, name: "created_at", ty: Static(StaticType { ty: DateTime, nullable: true }) }, StructField { optional: false, name: "completed", ty: Static(StaticType { ty: Bool, nullable: true }) }, StructField { optional: false, name: "description", ty: Static(StaticType { ty: String, nullable: true }) }, StructField { optional: true, name: "price", ty: Static(StaticType { ty: DecimalP(7, 2), nullable: true }) }})} }), nullable: true }),
+    : Static(StaticType { ty: Bag(BagType { element_type: Static(StaticType { ty: Struct(StructType { constraints: {Fields({StructField { optional: false, name: "transaction_id", ty: Static(StaticType { ty: String, nullable: false }) }, StructField { optional: false, name: "marketplace_id", ty: Static(StaticType { ty: Int64, nullable: false }) }, StructField { optional: false, name: "country_code", ty: Static(StaticType { ty: String, nullable: true }) }, StructField { optional: false, name: "created_at", ty: Static(StaticType { ty: DateTime, nullable: true }) }, StructField { optional: false, name: "completed", ty: Static(StaticType { ty: Bool, nullable: true }) }, StructField { optional: false, name: "description", ty: Static(StaticType { ty: String, nullable: true }) }, StructField { optional: true, name: "price", ty: Static(StaticType { ty: DecimalP(7, 2), nullable: true }) }})} }), nullable: true }) }), nullable: true }),
+]
