@@ -8,6 +8,7 @@ use rand_pcg::Pcg64Mcg;
 use std::fmt::Debug;
 use thiserror::Error;
 
+pub mod path;
 pub mod query;
 pub mod where_clause;
 

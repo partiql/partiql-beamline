@@ -8,12 +8,16 @@ use partiql_beamline_query::generator::{
 };
 use partiql_beamline_query::generator::{BinOp, ConstantLiteral};
 use partiql_beamline_query::generator::{DynAstGenerator, SelectStar};
+use partiql_beamline_query::strategy::path::{
+    PathGenSpec, PathGenSpecBuilder, PathStepFlags, PathTypeFlags,
+};
 use partiql_beamline_query::strategy::query::{SelectAllFromFilteredTable, SelectAllFromTable};
 use partiql_beamline_query::strategy::where_clause::RandomRowFilter;
 use partiql_beamline_query::strategy::StrategyBoxed;
 use partiql_types::{BagType, PartiqlShape, StaticType};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
+use std::collections::Bound;
 use time::OffsetDateTime;
 
 macro_rules! script_data {
@@ -152,6 +156,58 @@ fn simple_random_strategy() -> miette::Result<()> {
     let gen = strat.build(shape.clone(), rng).into_diagnostic()?;
 
     query_text_test("simple_random_strategy", &gen)?;
+
+    Ok(())
+}
+
+#[track_caller]
+#[inline]
+fn path_gen_test(
+    name: &str,
+    data: &DatasetTypeMapping,
+    path_spec: &PathGenSpec,
+) -> miette::Result<()> {
+    for (ds_name, shape) in data {
+        let name = format!("path_test_{name}_{ds_name}");
+        let paths = path_spec.paths_for_shape(shape).unwrap();
+
+        let output = format!("{paths:#?}");
+        insta::assert_snapshot!(name, output);
+    }
+
+    Ok(())
+}
+
+#[test]
+fn path_gen_tests() -> miette::Result<()> {
+    let simple = shape_from_script(SCRIPT_SIMPLE_TRANSACTIONS)?;
+    let complex = shape_from_script(SCRIPT_TRANSACTIONS)?;
+
+    let scalars = PathGenSpecBuilder::default()
+        .allowed_internal_steps(PathStepFlags::PathProject | PathStepFlags::PathForEach)
+        .allowed_final_types(PathTypeFlags::Scalar)
+        .build()
+        .unwrap();
+    path_gen_test("simple-scalars", &simple, &scalars)?;
+    path_gen_test("complex-scalars", &complex, &scalars)?;
+
+    let full = PathGenSpecBuilder::default().build().unwrap();
+    path_gen_test("simple-full", &simple, &full)?;
+    path_gen_test("complex-full", &complex, &full)?;
+
+    let full_project = PathGenSpecBuilder::default()
+        .allowed_internal_steps(PathStepFlags::PathProject | PathStepFlags::PathForEach)
+        .build()
+        .unwrap();
+    path_gen_test("simple-full-project", &simple, &full_project)?;
+    path_gen_test("complex-full-project", &complex, &full_project)?;
+
+    let full_depth2 = PathGenSpecBuilder::default()
+        .max_depth(Bound::Included(2))
+        .build()
+        .unwrap();
+    path_gen_test("simple-full-depth2", &simple, &full_depth2)?;
+    path_gen_test("complex-full-depth2", &complex, &full_depth2)?;
 
     Ok(())
 }

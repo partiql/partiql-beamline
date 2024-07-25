@@ -123,6 +123,15 @@ impl IntoIterator for DatasetTypeMapping {
     }
 }
 
+impl<'a> IntoIterator for &'a DatasetTypeMapping {
+    type Item = (&'a String, &'a PartiqlShape);
+    type IntoIter = indexmap::map::Iter<'a, String, PartiqlShape>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.mapping.iter()
+    }
+}
+
 pub struct NameAndShape {
     pub name: String,
     pub shape: PartiqlShape,
