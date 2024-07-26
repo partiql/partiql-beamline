@@ -1,0 +1,32 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: queries
+---
+SELECT test_data.completed,
+  test_data,
+  test_data.*,
+  test_data.test_nest_struct.*
+FROM test_data AS test_data
+
+SELECT test_data,
+  test_data.description,
+  test_data.test_nest_struct.nested_struct.nested_struct.nested_struct.nested_struct.nested_struct.test_int
+FROM test_data AS test_data
+
+SELECT test_data.price,
+  test_data.test_struct.*,
+  test_data.completed
+FROM test_data AS test_data
+
+SELECT test_data.transaction_id,
+  test_data.completed,
+  test_data.price.value,
+  test_data.test_nest_struct.nested_struct.*
+FROM test_data AS test_data
+
+SELECT test_data.test_nest_struct.nested_struct.nested_struct.nested_struct.nested_struct,
+  test_data.test_nest_struct,
+  test_data.test_nest_struct.nested_struct.nested_struct.nested_struct.nested_struct.nested_struct.test_int,
+  test_data.test_nest_struct.nested_struct.nested_struct.*,
+  test_data.test_nest_struct
+FROM test_data AS test_data

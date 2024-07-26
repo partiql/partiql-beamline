@@ -3,15 +3,14 @@ use miette::IntoDiagnostic;
 use partiql_ast::pretty::ToPretty;
 use partiql_beamline::sim::{DatasetTypeMapping, ISim, SimBuilder, SimConfigBuilder, SimContext};
 use partiql_beamline_query::generator::{AstGenContext, FromTable};
-use partiql_beamline_query::generator::{
-    AstGenerator, AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter,
-};
+use partiql_beamline_query::generator::{AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter};
 use partiql_beamline_query::generator::{BinOp, ConstantLiteral};
 use partiql_beamline_query::generator::{DynAstGenerator, SelectStar};
 use partiql_beamline_query::strategy::path::{
     PathGenSpec, PathGenSpecBuilder, PathStepFlags, PathTypeFlags,
 };
-use partiql_beamline_query::strategy::query::{SelectAllFromFilteredTable, SelectAllFromTable};
+use partiql_beamline_query::strategy::project::RandomProjectList;
+use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
 use partiql_beamline_query::strategy::where_clause::RandomRowFilter;
 use partiql_beamline_query::strategy::StrategyBoxed;
 use partiql_types::{BagType, PartiqlShape, StaticType};
@@ -19,6 +18,13 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use std::collections::Bound;
 use time::OffsetDateTime;
+
+#[cfg(test)]
+const SCRIPT_SIMPLE_TRANSACTIONS: &[u8] =
+    include_bytes!("../../partiql-beamline-sim/tests/scripts/simple_transactions.ion");
+#[cfg(test)]
+const SCRIPT_TRANSACTIONS: &[u8] =
+    include_bytes!("../../partiql-beamline-sim/tests/scripts/transactions.ion");
 
 macro_rules! script_data {
     ($file_basename:expr $(,)?) => {
@@ -57,7 +63,7 @@ fn query_text_test(
     let ctx = AstGenContext::new(ctx);
 
     let queries = (1..=5)
-        .map(|n| gen.gen_node(&ctx).to_pretty_string(20).unwrap())
+        .map(|_| gen.gen_node(&ctx).to_pretty_string(20).unwrap())
         .join("\n\n");
 
     insta::assert_snapshot!(name, queries);
@@ -108,13 +114,16 @@ fn simple_ast_gen() -> miette::Result<()> {
 #[test]
 fn simple_strategy() -> miette::Result<()> {
     let rng = Pcg64Mcg::seed_from_u64(1234);
-    let strat = SelectAllFromTable {}.sboxed();
+    let strat = SelectFromWhereBuilder::select_all()
+        .build()
+        .into_diagnostic()?
+        .sboxed();
 
     let shape = PartiqlShape::new_bag(BagType::new(Box::new(PartiqlShape::Static(
         StaticType::new(partiql_types::Static::Int),
     ))));
     let dataset = DatasetTypeMapping::from([("Table".to_string(), shape)]);
-    let gen = strat.build(dataset, rng).into_diagnostic()?;
+    let gen = strat.build(&dataset, rng).into_diagnostic()?;
 
     query_text_test("simple_strategy", &gen)
 }
@@ -136,24 +145,18 @@ fn shape_from_script(script: &[u8]) -> miette::Result<DatasetTypeMapping> {
     Ok(sim.shape())
 }
 
-#[cfg(test)]
-const SCRIPT_SIMPLE_TRANSACTIONS: &[u8] =
-    include_bytes!("../../partiql-beamline-sim/tests/scripts/simple_transactions.ion");
-#[cfg(test)]
-const SCRIPT_TRANSACTIONS: &[u8] =
-    include_bytes!("../../partiql-beamline-sim/tests/scripts/transactions.ion");
-
 #[test]
 fn simple_random_strategy() -> miette::Result<()> {
     let rng = Pcg64Mcg::seed_from_u64(123456);
     let shape = shape_from_script(SCRIPT_SIMPLE_TRANSACTIONS)?;
 
     let filter_strat = RandomRowFilter {}.sboxed();
-    let strat = SelectAllFromFilteredTable {
-        table_filter: filter_strat,
-    }
-    .sboxed();
-    let gen = strat.build(shape.clone(), rng).into_diagnostic()?;
+    let strat = SelectFromWhereBuilder::select_all()
+        .table_filter(filter_strat)
+        .build()
+        .into_diagnostic()?
+        .sboxed();
+    let gen = strat.build(&shape, rng).into_diagnostic()?;
 
     query_text_test("simple_random_strategy", &gen)?;
 
@@ -208,6 +211,27 @@ fn path_gen_tests() -> miette::Result<()> {
         .unwrap();
     path_gen_test("simple-full-depth2", &simple, &full_depth2)?;
     path_gen_test("complex-full-depth2", &complex, &full_depth2)?;
+
+    Ok(())
+}
+
+#[test]
+fn simple_project_strategy() -> miette::Result<()> {
+    let rng = Pcg64Mcg::seed_from_u64(123456);
+    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
+
+    let project = RandomProjectList {
+        min_items: 2,
+        max_items: 5,
+    };
+    let strat = SelectFromWhereBuilder::default()
+        .projections(project.sboxed())
+        .build()
+        .into_diagnostic()?
+        .sboxed();
+    let gen = strat.build(&shape, rng).into_diagnostic()?;
+
+    query_text_test("simple_project_strategy", &gen)?;
 
     Ok(())
 }

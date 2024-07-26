@@ -1,50 +1,45 @@
-use crate::generator::{AstGeneratorBoxed, BasicSFW, DynAstGenerator, FromTable, SelectStar};
-use crate::strategy::{Strategy, StrategyResult, TableFilter};
+use crate::generator::{AstGeneratorBoxed, BasicSFW, DynAstGenerator, FromTable};
+use crate::strategy::project::ProjectStar;
+use crate::strategy::{Projections, Strategy, StrategyBoxed, StrategyResult, TableFilter};
+use derive_builder::Builder;
 use partiql_ast::ast;
 use partiql_beamline::sim::NameAndShape;
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 
-#[derive(Debug, Clone)]
-pub struct SelectAllFromTable {}
+#[derive(Debug, Clone, Builder)]
+pub struct SelectFromWhere {
+    pub projections: Projections,
+    #[builder(setter(into, strip_option), default)]
+    pub table_filter: Option<TableFilter>,
+}
 
-impl Strategy<NameAndShape, ast::Query> for SelectAllFromTable {
-    fn build(
-        &self,
-        NameAndShape { name, shape }: NameAndShape,
-        rng: Pcg64Mcg,
-    ) -> StrategyResult<DynAstGenerator<ast::Query>> {
-        let project = SelectStar {}.agboxed();
-        let from = FromTable { name }.agboxed();
-        let where_clause = None;
-        let select_star = BasicSFW {
-            project,
-            from,
-            where_clause,
-        }
-        .agboxed();
-        Ok(select_star)
+impl SelectFromWhereBuilder {
+    pub fn select_all() -> Self {
+        let mut bld = Self::default();
+        bld.projections(ProjectStar {}.sboxed());
+        bld
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct SelectAllFromFilteredTable {
-    pub table_filter: TableFilter,
-}
-
-impl Strategy<NameAndShape, ast::Query> for SelectAllFromFilteredTable {
+impl Strategy<NameAndShape, ast::Query> for SelectFromWhere {
     fn build(
         &self,
-        input: NameAndShape,
+        data: &NameAndShape,
         rng: Pcg64Mcg,
     ) -> StrategyResult<DynAstGenerator<ast::Query>> {
-        let crng = Pcg64Mcg::from_rng(rng)?;
-        let project = SelectStar {}.agboxed();
+        let prng = Pcg64Mcg::from_rng(rng.clone())?;
+        let project = self.projections.build(data, prng)?;
         let from = FromTable {
-            name: input.name.clone(),
+            name: data.name.clone(),
         }
         .agboxed();
-        let where_clause = Some(self.table_filter.build(input, crng)?);
+        let wrng = Pcg64Mcg::from_rng(rng.clone())?;
+        let where_clause = self
+            .table_filter
+            .as_ref()
+            .map(|tf| tf.build(data, wrng))
+            .transpose()?;
         let select_star = BasicSFW {
             project,
             from,

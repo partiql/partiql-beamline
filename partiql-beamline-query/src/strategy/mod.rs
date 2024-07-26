@@ -1,4 +1,5 @@
 use crate::generator::DynAstGenerator;
+use crate::strategy::path::PathGenSpecBuilderError;
 use dyn_clone::DynClone;
 use miette::Diagnostic;
 use partiql_ast::ast;
@@ -9,6 +10,7 @@ use std::fmt::Debug;
 use thiserror::Error;
 
 pub mod path;
+pub mod project;
 pub mod query;
 pub mod where_clause;
 
@@ -18,8 +20,12 @@ pub mod where_clause;
 pub enum StrategyError {
     #[error("Dataset Cardinality Error: expected `{expected}`, but was `{actual}`")]
     DataSetCardinality { expected: usize, actual: usize },
+    #[error("Path Generation error: {0}")]
+    Path(#[from] PathGenSpecBuilderError),
     #[error("Random Generator error: {0}")]
     Rand(#[from] rand::Error),
+    #[error("Stats Generator error: {0}")]
+    Stats(#[from] statrs::StatsError),
     #[error("Data Generation error: {0}")]
     DataGen(#[from] DataGenerationError),
     #[error("Other: {0}")]
@@ -29,7 +35,7 @@ pub enum StrategyError {
 pub type StrategyResult<T> = Result<T, StrategyError>;
 
 pub trait Strategy<Input, Ast>: Debug + DynClone {
-    fn build(&self, input: Input, rng: Pcg64Mcg) -> StrategyResult<DynAstGenerator<Ast>>;
+    fn build(&self, input: &Input, rng: Pcg64Mcg) -> StrategyResult<DynAstGenerator<Ast>>;
 }
 
 pub trait StrategyBoxed<Input, Ast>: Strategy<Input, Ast>
@@ -53,6 +59,9 @@ dyn_clone::clone_trait_object!(Strategy<DatasetTypeMapping, ast::Query>);
 pub type SingleTableQueryStrategy = DynStrategy<NameAndShape, ast::Query>;
 dyn_clone::clone_trait_object!(Strategy<NameAndShape, ast::Query>);
 
+pub type Projections = DynStrategy<NameAndShape, ast::Projection>;
+dyn_clone::clone_trait_object!(Strategy<NameAndShape, ast::Projection>);
+
 pub type TableFilter = DynStrategy<NameAndShape, ast::WhereClause>;
 dyn_clone::clone_trait_object!(Strategy<NameAndShape, ast::WhereClause>);
 
@@ -63,7 +72,7 @@ where
 {
     fn build(
         &self,
-        input: DatasetTypeMapping,
+        input: &DatasetTypeMapping,
         rng: Pcg64Mcg,
     ) -> StrategyResult<DynAstGenerator<ast::Query>> {
         if input.len() != 1 {
@@ -73,7 +82,11 @@ where
             })
         } else {
             let (name, shape) = input.into_iter().next().unwrap();
-            self.build(NameAndShape { name, shape }, rng)
+            let data = NameAndShape {
+                name: name.clone(),
+                shape: shape.clone(),
+            };
+            self.build(&data, rng)
         }
     }
 }

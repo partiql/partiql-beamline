@@ -1,15 +1,12 @@
-use crate::generator::DynAstGenerator;
-use crate::strategy::{Strategy, StrategyResult};
+use crate::strategy::StrategyResult;
 use bitflags::bitflags;
 use derive_builder::Builder;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use partiql_ast::ast;
 use partiql_beamline::sim::NameAndShape;
-use partiql_types::{AnyOf, PartiqlShape, Static, StaticType};
-use rand_pcg::Pcg64Mcg;
+use partiql_types::{PartiqlShape, Static, StaticType};
 use std::fmt::{Debug, Formatter};
-use std::ops::{Bound, IndexMut, RangeBounds};
+use std::ops::{Bound, RangeBounds};
 
 bitflags! {
     #[derive(Debug, Copy, Clone)]
@@ -122,10 +119,13 @@ pub struct PathGenSpec {
 }
 
 impl PathGenSpec {
-    pub fn paths_for_dataset(&self, dataset: NameAndShape) -> StrategyResult<DatasetPaths> {
+    pub fn paths_for_dataset(&self, dataset: &NameAndShape) -> StrategyResult<DatasetPaths> {
         let NameAndShape { name, shape } = dataset;
-        let paths = self.paths_for_shape(&shape)?;
-        Ok(DatasetPaths { name, paths })
+        let paths = self.paths_for_shape(shape)?;
+        Ok(DatasetPaths {
+            name: name.clone(),
+            paths,
+        })
     }
 
     pub fn paths_for_shape(&self, ty: &PartiqlShape) -> StrategyResult<PathAndShapeSet> {
@@ -144,11 +144,7 @@ impl PathGenSpec {
         shape: &PartiqlShape,
         paths: &mut Vec<PathAndShape>,
     ) -> StrategyResult<()> {
-        fn append(
-            steps: &Vec<PathGenStep>,
-            step: PathGenStep,
-            shape: PartiqlShape,
-        ) -> PathAndShape {
+        fn append(steps: &[PathGenStep], step: PathGenStep, shape: PartiqlShape) -> PathAndShape {
             PathAndShape {
                 steps: steps.iter().cloned().chain(std::iter::once(step)).collect(),
                 shape,
@@ -192,13 +188,14 @@ impl PathGenSpec {
                     }
                     PartiqlShape::AnyOf(anyof) => {
                         // sort the children types by depth of path
-                        let by_depth: IndexMap<_, _> = anyof
-                            .types()
-                            .map(|s| (s.path_depth(), s))
-                            .fold(IndexMap::default(), |mut lookup, (depth, shape)| {
-                                lookup.entry(depth).or_insert_with(Vec::new).push(shape);
-                                lookup
-                            });
+                        let by_depth: IndexMap<(Bound<usize>, Bound<usize>), Vec<&PartiqlShape>> =
+                            anyof.types().map(|s| (s.path_depth(), s)).fold(
+                                IndexMap::default(),
+                                |mut lookup, (depth, shape)| {
+                                    lookup.entry(depth).or_default().push(shape);
+                                    lookup
+                                },
+                            );
 
                         // if all children have the same path depth, we can accept self
                         // if differing path depths, push inspection of each path depth and not self
