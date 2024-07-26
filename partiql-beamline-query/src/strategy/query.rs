@@ -1,6 +1,8 @@
 use crate::generator::{AstGeneratorBoxed, BasicSFW, DynAstGenerator, FromTable};
 use crate::strategy::project::ProjectStar;
-use crate::strategy::{Projections, Strategy, StrategyBoxed, StrategyResult, TableFilter};
+use crate::strategy::{
+    Exclusions, Projections, Strategy, StrategyBoxed, StrategyResult, TableFilter,
+};
 use derive_builder::Builder;
 use partiql_ast::ast;
 use partiql_beamline::sim::NameAndShape;
@@ -10,6 +12,8 @@ use rand_pcg::Pcg64Mcg;
 #[derive(Debug, Clone, Builder)]
 pub struct SelectFromWhere {
     pub projections: Projections,
+    #[builder(setter(into, strip_option), default)]
+    pub exclusions: Option<Exclusions>,
     #[builder(setter(into, strip_option), default)]
     pub table_filter: Option<TableFilter>,
 }
@@ -30,6 +34,12 @@ impl Strategy<NameAndShape, ast::Query> for SelectFromWhere {
     ) -> StrategyResult<DynAstGenerator<ast::Query>> {
         let prng = Pcg64Mcg::from_rng(rng.clone())?;
         let project = self.projections.build(data, prng)?;
+        let erng = Pcg64Mcg::from_rng(rng.clone())?;
+        let exclude = self
+            .exclusions
+            .as_ref()
+            .map(|ex| ex.build(data, erng))
+            .transpose()?;
         let from = FromTable {
             name: data.name.clone(),
         }
@@ -42,6 +52,7 @@ impl Strategy<NameAndShape, ast::Query> for SelectFromWhere {
             .transpose()?;
         let select_star = BasicSFW {
             project,
+            exclude,
             from,
             where_clause,
         }

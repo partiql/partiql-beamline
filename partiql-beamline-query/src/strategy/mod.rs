@@ -9,6 +9,7 @@ use rand_pcg::Pcg64Mcg;
 use std::fmt::Debug;
 use thiserror::Error;
 
+pub mod exclude;
 pub mod path;
 pub mod project;
 pub mod query;
@@ -61,6 +62,9 @@ dyn_clone::clone_trait_object!(Strategy<NameAndShape, ast::Query>);
 
 pub type Projections = DynStrategy<NameAndShape, ast::Projection>;
 dyn_clone::clone_trait_object!(Strategy<NameAndShape, ast::Projection>);
+
+pub type Exclusions = DynStrategy<NameAndShape, ast::Exclusion>;
+dyn_clone::clone_trait_object!(Strategy<NameAndShape, ast::Exclusion>);
 
 pub type TableFilter = DynStrategy<NameAndShape, ast::WhereClause>;
 dyn_clone::clone_trait_object!(Strategy<NameAndShape, ast::WhereClause>);

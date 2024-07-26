@@ -73,6 +73,8 @@ pub type LimitOffsetGenerator = DynAstGenerator<ast::LimitOffsetClause>;
 dyn_clone::clone_trait_object!(AstGenerator<ast::LimitOffsetClause>);
 pub type ProjectionGenerator = DynAstGenerator<ast::Projection>;
 dyn_clone::clone_trait_object!(AstGenerator<ast::Projection>);
+pub type ExcludeGenerator = DynAstGenerator<ast::Exclusion>;
+dyn_clone::clone_trait_object!(AstGenerator<ast::Exclusion>);
 pub type FromClauseGenerator = DynAstGenerator<ast::FromClause>;
 dyn_clone::clone_trait_object!(AstGenerator<ast::FromClause>);
 pub type WhereClauseGenerator = DynAstGenerator<ast::WhereClause>;

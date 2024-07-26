@@ -115,6 +115,8 @@ pub struct PathGenSpec {
     #[builder(default = "PathStepFlags::all()")]
     pub allowed_final_steps: PathStepFlags,
     #[builder(default = "Bound::Unbounded")]
+    pub min_depth: Bound<usize>,
+    #[builder(default = "Bound::Unbounded")]
     pub max_depth: Bound<usize>,
 }
 
@@ -151,9 +153,15 @@ impl PathGenSpec {
             }
         }
 
+        let min_depth = match self.min_depth {
+            Bound::Included(n) => n,
+            Bound::Excluded(n) => n.saturating_sub(1),
+            Bound::Unbounded => usize::MIN,
+        };
+
         let max_depth = match self.max_depth {
             Bound::Included(n) => n,
-            Bound::Excluded(n) => n - 1,
+            Bound::Excluded(n) => n.saturating_sub(1),
             Bound::Unbounded => usize::MAX,
         };
 
@@ -172,6 +180,7 @@ impl PathGenSpec {
                 continue 'candidate_queue;
             }
 
+            let accept_depth = depth >= min_depth;
             let accept_type = self.allowed_final_types.matches(&shape);
             let accept_step = steps
                 .last()
@@ -288,7 +297,7 @@ impl PathGenSpec {
             }
 
             // if this step is a valid termination point, add it to generated path list
-            if accept_type && accept_step {
+            if accept_depth && accept_type && accept_step {
                 paths.push(PathAndShape {
                     steps: steps.clone(),
                     shape: shape.clone(),
