@@ -22,7 +22,7 @@ pub struct GeneratedLiteral {
 
 impl AstGenerator<ast::Expr> for GeneratedLiteral {
     fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
-        let ty = self.value.value_type();
+        let _ty = self.value.value_type();
         let val = self.value.present_value(ctx.sim_ctx());
         let lit = match val {
             Value::Null => ast::Lit::Null,
@@ -244,7 +244,7 @@ pub struct StructExpr {
     // TODO
 }
 impl AstGenerator<ast::Expr> for StructExpr {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
+    fn gen_ast(&self, _ctx: &AstGenContext) -> ast::Expr {
         ast::Expr::Struct(todo!())
     }
 }
@@ -254,7 +254,7 @@ pub struct BagExpr {
     // TODO
 }
 impl AstGenerator<ast::Expr> for BagExpr {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
+    fn gen_ast(&self, _ctx: &AstGenContext) -> ast::Expr {
         ast::Expr::Bag(todo!())
     }
 }
@@ -264,7 +264,7 @@ pub struct ListExpr {
     // TODO
 }
 impl AstGenerator<ast::Expr> for ListExpr {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
+    fn gen_ast(&self, _ctx: &AstGenContext) -> ast::Expr {
         ast::Expr::List(todo!())
     }
 }
@@ -274,7 +274,7 @@ pub struct SexpExpr {
     // TODO
 }
 impl AstGenerator<ast::Expr> for SexpExpr {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
+    fn gen_ast(&self, _ctx: &AstGenContext) -> ast::Expr {
         ast::Expr::Sexp(todo!())
     }
 }
@@ -284,7 +284,7 @@ pub struct PathExpr {
     // TODO
 }
 impl AstGenerator<ast::Expr> for PathExpr {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
+    fn gen_ast(&self, _ctx: &AstGenContext) -> ast::Expr {
         ast::Expr::Path(todo!())
     }
 }
@@ -294,7 +294,7 @@ pub struct CallExpr {
     // TODO
 }
 impl AstGenerator<ast::Expr> for CallExpr {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
+    fn gen_ast(&self, _ctx: &AstGenContext) -> ast::Expr {
         ast::Expr::Call(todo!())
     }
 }
@@ -304,7 +304,7 @@ pub struct CallAggExpr {
     // TODO
 }
 impl AstGenerator<ast::Expr> for CallAggExpr {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
+    fn gen_ast(&self, _ctx: &AstGenContext) -> ast::Expr {
         ast::Expr::CallAgg(todo!())
     }
 }

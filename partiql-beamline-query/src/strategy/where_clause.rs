@@ -13,7 +13,7 @@ pub struct RandomRowFilter {}
 impl Strategy<NameAndShape, ast::WhereClause> for RandomRowFilter {
     fn build(
         &self,
-        _input: NameAndShape,
+        _input: &NameAndShape,
         rng: Pcg64Mcg,
     ) -> StrategyResult<DynAstGenerator<ast::WhereClause>> {
         let meta = Meta {
