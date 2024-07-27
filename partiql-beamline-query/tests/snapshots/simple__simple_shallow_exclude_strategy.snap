@@ -1,0 +1,35 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: queries
+---
+SELECT *
+EXCLUDE test_data.created_at,
+  test_data.*,
+  test_data.price,
+  test_data.transaction_id
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.price,
+  test_data.*
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.description,
+  test_data.transaction_id,
+  test_data.test_nest_struct,
+  test_data.transaction_id
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.country_code,
+  test_data.marketplace_id,
+  test_data.*
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.*,
+  test_data.*,
+  test_data.marketplace_id,
+  test_data.price
+FROM test_data AS test_data

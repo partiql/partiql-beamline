@@ -6,10 +6,11 @@ use partiql_beamline_query::generator::{AstGenContext, FromTable};
 use partiql_beamline_query::generator::{AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter};
 use partiql_beamline_query::generator::{BinOp, ConstantLiteral};
 use partiql_beamline_query::generator::{DynAstGenerator, SelectStar};
+use partiql_beamline_query::strategy::exclude::{RandomExcludeList, RandomExcludeListBuilder};
 use partiql_beamline_query::strategy::path::{
     PathGenSpec, PathGenSpecBuilder, PathStepFlags, PathTypeFlags,
 };
-use partiql_beamline_query::strategy::project::RandomProjectList;
+use partiql_beamline_query::strategy::project::{ProjectStar, RandomProjectList};
 use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
 use partiql_beamline_query::strategy::where_clause::RandomRowFilter;
 use partiql_beamline_query::strategy::StrategyBoxed;
@@ -103,6 +104,7 @@ fn simple_ast_gen() -> miette::Result<()> {
     let where_clause = Some(RowFilter { expr: and }.agboxed());
     let sfw = BasicSFW {
         project,
+        exclude: None,
         from,
         where_clause,
     };
@@ -220,18 +222,67 @@ fn simple_project_strategy() -> miette::Result<()> {
     let rng = Pcg64Mcg::seed_from_u64(123456);
     let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
 
-    let project = RandomProjectList {
+    let projections = RandomProjectList {
         min_items: 2,
         max_items: 5,
     };
     let strat = SelectFromWhereBuilder::default()
-        .projections(project.sboxed())
+        .projections(projections.sboxed())
         .build()
         .into_diagnostic()?
         .sboxed();
     let gen = strat.build(&shape, rng).into_diagnostic()?;
 
     query_text_test("simple_project_strategy", &gen)?;
+
+    Ok(())
+}
+
+#[test]
+fn simple_exclude_strategy() -> miette::Result<()> {
+    let rng = Pcg64Mcg::seed_from_u64(123456);
+    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
+
+    let projections = ProjectStar {};
+    let exclusions = RandomExcludeListBuilder::default()
+        .min_items(2)
+        .max_items(5)
+        .build()
+        .into_diagnostic()?;
+    let strat = SelectFromWhereBuilder::default()
+        .projections(projections.sboxed())
+        .exclusions(exclusions.sboxed())
+        .build()
+        .into_diagnostic()?
+        .sboxed();
+    let gen = strat.build(&shape, rng).into_diagnostic()?;
+
+    query_text_test("simple_exclude_strategy", &gen)?;
+
+    Ok(())
+}
+
+#[test]
+fn simple_shallow_exclude_strategy() -> miette::Result<()> {
+    let rng = Pcg64Mcg::seed_from_u64(123456);
+    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
+
+    let projections = ProjectStar {};
+    let exclusions = RandomExcludeListBuilder::default()
+        .min_items(2)
+        .max_items(5)
+        .max_depth(Bound::Included(2))
+        .build()
+        .into_diagnostic()?;
+    let strat = SelectFromWhereBuilder::default()
+        .projections(projections.sboxed())
+        .exclusions(exclusions.sboxed())
+        .build()
+        .into_diagnostic()?
+        .sboxed();
+    let gen = strat.build(&shape, rng).into_diagnostic()?;
+
+    query_text_test("simple_shallow_exclude_strategy", &gen)?;
 
     Ok(())
 }

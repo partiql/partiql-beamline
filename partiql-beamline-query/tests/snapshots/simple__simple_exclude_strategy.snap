@@ -1,0 +1,34 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: queries
+---
+SELECT *
+EXCLUDE test_data.*.nested_struct.nested_struct.nested_struct,
+  test_data.*.*.nested_struct.nested_struct.*.nested_struct.*,
+  test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct.*,
+  test_data.*.nested_struct.*.*.*.*.test_int
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct.*,
+  test_data.test_nest_struct.*.*.*.*.*.test_int
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.test_nest_struct.nested_struct.nested_struct.nested_struct.*.nested_struct.*,
+  test_data.*.nested_struct.*.*.*.*.test_int,
+  test_data.test_nest_struct.nested_struct
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.*.nested_struct.*,
+  test_data.*.nested_struct.nested_struct.nested_struct.*.*,
+  test_data.*.nested_struct.*.nested_struct.nested_struct.nested_struct
+FROM test_data AS test_data
+
+SELECT *
+EXCLUDE test_data.*.*.nested_struct.nested_struct.*.nested_struct,
+  test_data.*.nested_struct.*.nested_struct.*.*.*,
+  test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct,
+  test_data.test_nest_struct.nested_struct.nested_struct.*.nested_struct.nested_struct.*
+FROM test_data AS test_data

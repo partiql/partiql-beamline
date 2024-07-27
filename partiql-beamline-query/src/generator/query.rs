@@ -1,11 +1,13 @@
 use crate::generator::{
-    AstGenContext, AstGenerator, FromClauseGenerator, ProjectionGenerator, WhereClauseGenerator,
+    AstGenContext, AstGenerator, ExcludeGenerator, FromClauseGenerator, ProjectionGenerator,
+    WhereClauseGenerator,
 };
 use partiql_ast::ast;
 
 #[derive(Clone, Debug)]
 pub struct BasicSFW {
     pub project: ProjectionGenerator,
+    pub exclude: Option<ExcludeGenerator>,
     pub from: FromClauseGenerator,
     pub where_clause: Option<WhereClauseGenerator>,
 }
@@ -31,6 +33,7 @@ impl AstGenerator<ast::QuerySet> for BasicSFW {
 impl AstGenerator<ast::Select> for BasicSFW {
     fn gen_ast(&self, ctx: &AstGenContext) -> ast::Select {
         let project = self.project.gen_node(ctx);
+        let exclude = self.exclude.as_ref().map(|w| w.gen_node(ctx));
         let from = Some(self.from.gen_node(ctx));
         let where_clause = self
             .where_clause
@@ -38,6 +41,7 @@ impl AstGenerator<ast::Select> for BasicSFW {
             .map(|w| Box::new(w.gen_node(ctx)));
         ast::Select {
             project,
+            exclude: exclude,
             from,
             from_let: None,
             where_clause,
