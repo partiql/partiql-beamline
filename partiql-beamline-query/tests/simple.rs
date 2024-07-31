@@ -10,14 +10,18 @@ use partiql_beamline_query::strategy::exclude::{RandomExcludeList, RandomExclude
 use partiql_beamline_query::strategy::path::{
     PathGenSpec, PathGenSpecBuilder, PathStepFlags, PathTypeFlags,
 };
+use partiql_beamline_query::strategy::predicate::PredicateFlags;
 use partiql_beamline_query::strategy::project::{ProjectStar, RandomProjectList};
 use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
-use partiql_beamline_query::strategy::where_clause::RandomRowFilter;
+use partiql_beamline_query::strategy::where_clause::{
+    RandomRowFilter, RandomRowPredicate, RandomRowPredicateBuilder,
+};
 use partiql_beamline_query::strategy::StrategyBoxed;
 use partiql_types::{BagType, PartiqlShape, StaticType};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use std::collections::Bound;
+use std::ops::Sub;
 use time::OffsetDateTime;
 
 #[cfg(test)]
@@ -283,6 +287,76 @@ fn simple_shallow_exclude_strategy() -> miette::Result<()> {
     let gen = strat.build(&shape, rng).into_diagnostic()?;
 
     query_text_test("simple_shallow_exclude_strategy", &gen)?;
+
+    Ok(())
+}
+
+#[test]
+fn simple_random_row_filters() -> miette::Result<()> {
+    let rng = Pcg64Mcg::seed_from_u64(123456);
+    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
+
+    let projections = ProjectStar {};
+
+    let path_spec = PathGenSpecBuilder::default()
+        .min_depth(Bound::Included(2))
+        .max_depth(Bound::Unbounded)
+        .build()
+        .into_diagnostic()?;
+    let allowed_predicates = PredicateFlags::all()
+        .sub(PredicateFlags::flags_absent())
+        .sub(PredicateFlags::flags_logical_connectives());
+    let row_filters = RandomRowPredicateBuilder::default()
+        .allowed_predicates(allowed_predicates)
+        .min_items(2)
+        .max_items(5)
+        .path_spec(path_spec)
+        .build()
+        .into_diagnostic()?;
+    let strat = SelectFromWhereBuilder::default()
+        .projections(projections.sboxed())
+        .table_filter(row_filters.sboxed())
+        .build()
+        .into_diagnostic()?
+        .sboxed();
+    let gen = strat.build(&shape, rng).into_diagnostic()?;
+
+    query_text_test("simple_random_row_filters", &gen)?;
+
+    Ok(())
+}
+
+#[test]
+fn simple_random_scalar_row_filters() -> miette::Result<()> {
+    let rng = Pcg64Mcg::seed_from_u64(123456);
+    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
+
+    let projections = ProjectStar {};
+    let path_spec = PathGenSpecBuilder::default()
+        .min_depth(Bound::Included(2))
+        .max_depth(Bound::Included(2))
+        .allowed_final_types(PathTypeFlags::Scalar)
+        .build()
+        .into_diagnostic()?;
+    let allowed_predicates = PredicateFlags::all()
+        .sub(PredicateFlags::flags_absent())
+        .sub(PredicateFlags::flags_logical_connectives());
+    let row_filters = RandomRowPredicateBuilder::default()
+        .allowed_predicates(allowed_predicates)
+        .min_items(2)
+        .max_items(10)
+        .path_spec(path_spec)
+        .build()
+        .into_diagnostic()?;
+    let strat = SelectFromWhereBuilder::default()
+        .projections(projections.sboxed())
+        .table_filter(row_filters.sboxed())
+        .build()
+        .into_diagnostic()?
+        .sboxed();
+    let gen = strat.build(&shape, rng).into_diagnostic()?;
+
+    query_text_test("simple_random_scalar_row_filters", &gen)?;
 
     Ok(())
 }

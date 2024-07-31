@@ -1,3 +1,4 @@
+use crate::generator::{DatasetPaths, PathAndShape, PathAndShapeSet, PathGenStep};
 use crate::strategy::StrategyResult;
 use bitflags::bitflags;
 use derive_builder::Builder;
@@ -5,13 +6,13 @@ use indexmap::IndexMap;
 use itertools::Itertools;
 use partiql_beamline::sim::NameAndShape;
 use partiql_types::{PartiqlShape, Static, StaticType};
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 use std::ops::{Bound, RangeBounds};
 
 bitflags! {
     #[derive(Debug, Copy, Clone)]
     pub struct PathTypeFlags: u32 {
-        const Scalar = 1;
+        const Scalar = 1 << 0;
         const Sequence = 1 << 1;
         const Struct = 1 << 2;
     }
@@ -39,10 +40,10 @@ impl PathTypeFlags {
 bitflags! {
     #[derive(Debug, Copy, Clone)]
     pub struct PathStepFlags: u32 {
-        const  PathProject = 1; // e.g., `.foo`
-        const  PathIndex = 1<< 1;   // e.g., `[3]`
-        const  PathForEach = 1<< 2; // e.g., `[*]`
-        const  PathUnpivot = 1<< 3; // e.g., `.*`
+        const  PathProject = 1 << 0; // e.g., `.foo`
+        const  PathIndex = 1 << 1;   // e.g., `[3]`
+        const  PathForEach = 1 << 2; // e.g., `[*]`
+        const  PathUnpivot = 1 << 3; // e.g., `.*`
     }
 }
 
@@ -55,55 +56,6 @@ impl PathStepFlags {
             PathGenStep::PathUnpivot => self.contains(PathStepFlags::PathUnpivot),
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum PathGenStep {
-    PathProject(String),
-    PathIndex(u32),
-    PathForEach,
-    PathUnpivot,
-}
-
-#[derive(Clone)]
-pub struct PathAndShape {
-    pub steps: Vec<PathGenStep>,
-    pub shape: PartiqlShape,
-}
-
-impl Debug for PathAndShape {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut path = String::new();
-        for step in &self.steps {
-            match step {
-                PathGenStep::PathProject(k) => {
-                    path.push('.');
-                    path.push_str(k);
-                }
-                PathGenStep::PathIndex(i) => {
-                    path.push('[');
-                    path.push_str(&i.to_string());
-                    path.push(']');
-                }
-                PathGenStep::PathForEach => {
-                    path.push_str("[*]");
-                }
-                PathGenStep::PathUnpivot => {
-                    path.push_str(".*");
-                }
-            }
-        }
-        let shape = &self.shape;
-        write!(f, "{path}: {shape:?}")
-    }
-}
-
-type PathAndShapeSet = Vec<PathAndShape>;
-
-#[derive(Debug, Clone)]
-pub struct DatasetPaths {
-    pub name: String,
-    pub paths: PathAndShapeSet,
 }
 
 #[derive(Debug, Clone, Builder)]

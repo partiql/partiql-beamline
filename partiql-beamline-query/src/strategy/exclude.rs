@@ -14,7 +14,7 @@ use std::ops::Bound;
 pub struct RandomExcludeList {
     pub min_items: u8,
     pub max_items: u8,
-    #[builder(default = " Bound::Unbounded")]
+    #[builder(default = "Bound::Unbounded")]
     pub max_depth: Bound<usize>,
 }
 

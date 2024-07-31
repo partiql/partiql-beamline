@@ -1,0 +1,31 @@
+---
+source: partiql-beamline-query/tests/simple.rs
+expression: queries
+---
+SELECT *
+FROM test_data AS test_data
+WHERE (((test_data.*.*.nested_struct.nested_struct.*.nested_struct.* > -49) AND (test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct.* <> 32)) AND ((test_data.*.nested_struct.*.*.*.*.test_int <> 30) OR (test_data.*.nested_struct.nested_struct.nested_struct <> {
+      
+      })))
+
+SELECT *
+FROM test_data AS test_data
+WHERE ((test_data.*.nested_struct.nested_struct.nested_struct.*.*.test_int <= -26) AND ((test_data.test_nest_struct.nested_struct.nested_struct.*.nested_struct.nested_struct.* > -6) AND ((test_data.test_nest_struct.*.nested_struct.nested_struct.* = {
+        
+        }) OR (test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct <> {
+        
+        }))))
+
+SELECT *
+FROM test_data AS test_data
+WHERE ((test_data.test_nest_struct.*.*.nested_struct.*.* <> {
+    
+    }) AND ((test_data.test_nest_struct.*.nested_struct.nested_struct.nested_struct.*.test_int <> -1) OR test_data.* BETWEEN 43.85089837483024 AND -18.500156045187477))
+
+SELECT *
+FROM test_data AS test_data
+WHERE (((((test_data.*.*.nested_struct.nested_struct.*.nested_struct.* > 10) OR (test_data.*.nested_struct.nested_struct.*.*.*.* < 24)) AND (test_data.*.*.*.nested_struct.*.*.* >= 24)) OR test_data.*.nested_struct.nested_struct.nested_struct.nested_struct.*.test_int BETWEEN 9 AND -16) AND NOT (test_data.completed))
+
+SELECT *
+FROM test_data AS test_data
+WHERE ((test_data.test_nest_struct.*.nested_struct.nested_struct.*.nested_struct.test_int > 24) OR ((test_data.*.nested_struct.nested_struct.nested_struct.*.*.* < -11) AND (test_data.*.*.*.nested_struct.nested_struct.*.test_int <> -24)))
