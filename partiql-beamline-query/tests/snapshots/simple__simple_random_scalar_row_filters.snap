@@ -4,20 +4,76 @@ expression: queries
 ---
 SELECT *
 FROM test_data AS test_data
-WHERE ((((((test_data.created_at = UTCNOW()) OR ((test_data.price < -3.366382825624278) AND test_data.country_code LIKE 'Censet.')) OR (test_data.* < 20)) OR (test_data.description = 'Qui omnino avocent.')) OR NOT (test_data.description LIKE 'Meque ei responsum.')) OR (test_data.transaction_id <> 'Paene.'))
+WHERE ((((((test_data.created_at = UTCNOW())
+          OR
+          ((test_data.price < -3.366382825624278)
+            AND
+            test_data.country_code LIKE 'Censet.'))
+        OR
+        (test_data.* < 20))
+      OR
+      (test_data.description = 'Qui omnino avocent.'))
+    OR
+    NOT (test_data.description LIKE 'Meque ei responsum.'))
+  OR
+  (test_data.transaction_id <> 'Paene.'))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.* BETWEEN 43.85089837483024 AND -18.500156045187477 AND ((test_data.created_at <> UTCNOW()) OR test_data.test_address LIKE 'Quam gravis.')) OR ((test_data.* <> -0.7107001598470504) OR ((test_data.* BETWEEN UTCNOW() AND UTCNOW() AND ((test_data.price = -24.867905622684585) AND (test_data.description = 'Cum sit.'))) AND (test_data.price = 7.751876052900144))))
+WHERE ((test_data.* BETWEEN 43.85089837483024 AND -18.500156045187477
+    AND
+    ((test_data.created_at <> UTCNOW())
+      OR
+      test_data.test_address LIKE 'Quam gravis.'))
+  OR
+  ((test_data.* <> -0.7107001598470504)
+    OR
+    ((test_data.* BETWEEN UTCNOW() AND UTCNOW()
+        AND
+        ((test_data.price = -24.867905622684585)
+          AND
+          (test_data.description = 'Cum sit.')))
+      AND
+      (test_data.price = 7.751876052900144))))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.country_code LIKE 'Difficilem quandam.' OR (test_data.completed = false)) OR (((test_data.marketplace_id <= 16) AND (test_data.test_address LIKE 'Quoniam, cum.' OR NOT (test_data.test_address LIKE 'Id quidem facio.'))) OR ((test_data.* <> -29.25922952327972) OR (NOT (test_data.completed) AND (test_data.country_code LIKE 'Quapropter si.' AND test_data.price BETWEEN -40.22261432790022 AND -12.887309006507842)))))
+WHERE ((test_data.country_code LIKE 'Difficilem quandam.'
+    OR
+    (test_data.completed = false))
+  OR
+  (((test_data.marketplace_id <= 16)
+      AND
+      (test_data.test_address LIKE 'Quoniam, cum.'
+        OR
+        NOT (test_data.test_address LIKE 'Id quidem facio.')))
+    OR
+    ((test_data.* <> -29.25922952327972)
+      OR
+      (NOT (test_data.completed)
+        AND
+        (test_data.country_code LIKE 'Quapropter si.'
+          AND
+          test_data.price BETWEEN -40.22261432790022 AND -12.887309006507842)))))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((((test_data.country_code <> 'Distinctio.') AND ((test_data.* < false) AND (NOT (test_data.description LIKE 'Esse solam.') AND NOT (test_data.transaction_id LIKE 'Esset accusata.')))) OR (test_data.test_address <> 'Potest. Sed.')) AND (test_data.* > -28.146858383543243))
+WHERE ((((test_data.country_code <> 'Distinctio.')
+      AND
+      ((test_data.* < false)
+        AND
+        (NOT (test_data.description LIKE 'Esse solam.')
+          AND
+          NOT (test_data.transaction_id LIKE 'Esset accusata.'))))
+    OR
+    (test_data.test_address <> 'Potest. Sed.'))
+  AND
+  (test_data.* > -28.146858383543243))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.price >= 46.93949301573326) OR (test_data.price BETWEEN -44.10099486573995 AND -13.749193117828774 AND NOT (test_data.transaction_id LIKE 'Sit.')))
+WHERE ((test_data.price >= 46.93949301573326)
+  OR
+  (test_data.price BETWEEN -44.10099486573995 AND -13.749193117828774
+    AND
+    NOT (test_data.transaction_id LIKE 'Sit.')))

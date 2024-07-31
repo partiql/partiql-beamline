@@ -135,7 +135,6 @@ impl PredicateGen {
 
         let bool_dist = Bernoulli::new(0.5).expect("sample");
         let int_dist = DiscreteUniform::new(-50, 50).expect("sample");
-        //let uint_dist = DiscreteUniform::new(0, 50).expect("sample");
         let float_dist = Uniform::new(-50.0, 50.0).expect("sample");
         let len_dist = DiscreteUniform::new(1, 3).expect("sample");
 

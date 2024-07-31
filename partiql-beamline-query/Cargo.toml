@@ -16,7 +16,7 @@ version.workspace = true
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
 
 partiql-parser = "0.10"
-partiql-ast = "0.10"
+partiql-ast = "0.10.1"
 partiql-extension-ion = "0.10"
 partiql-value = "0.10"
 partiql-types = "0.10"
