@@ -1,5 +1,6 @@
 use crate::generator::DynAstGenerator;
 use crate::strategy::path::PathGenSpecBuilderError;
+use crate::strategy::predicate::{PathPredicateGenSpec, PathPredicateGenSpecBuilderError};
 use dyn_clone::DynClone;
 use miette::Diagnostic;
 use partiql_ast::ast;
@@ -11,6 +12,7 @@ use thiserror::Error;
 
 pub mod exclude;
 pub mod path;
+pub mod predicate;
 pub mod project;
 pub mod query;
 pub mod where_clause;
@@ -23,6 +25,8 @@ pub enum StrategyError {
     DataSetCardinality { expected: usize, actual: usize },
     #[error("Path Generation error: {0}")]
     Path(#[from] PathGenSpecBuilderError),
+    #[error("Predicate Generation error: {0}")]
+    Predicate(#[from] PathPredicateGenSpecBuilderError),
     #[error("Random Generator error: {0}")]
     Rand(#[from] rand::Error),
     #[error("Stats Generator error: {0}")]

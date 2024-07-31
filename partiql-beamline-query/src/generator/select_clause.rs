@@ -1,5 +1,5 @@
+use crate::generator::path::DatasetPaths;
 use crate::generator::{AstGenContext, AstGenerator};
-use crate::strategy::path::{DatasetPaths, PathAndShape, PathGenStep};
 use partiql_ast::ast;
 use rand::distributions::Distribution;
 use rand_pcg::Pcg64Mcg;
@@ -31,30 +31,15 @@ impl AstGenerator<ast::Projection> for SelectPaths {
         let mut rng = self.rng.borrow_mut();
         let rng = rng.deref_mut();
         let num = self.amount.sample(rng) as usize;
-
-        let root = ast::VarRef {
-            name: ast::SymbolPrimitive {
-                value: self.paths.name.clone(),
-                case: ast::CaseSensitivity::CaseInsensitive,
-            },
-            qualifier: ast::ScopeQualifier::Unqualified,
-        };
+        let name = self.paths.name.as_str();
 
         let path_sel =
             DiscreteUniform::new(0, (self.paths.paths.len() - 1) as i64).expect("sample");
         let mut items = Vec::with_capacity(num);
         for _ in 0..num {
-            let root = Box::new(ast::Expr::VarRef(ctx.node(root.clone())));
             let idx = path_sel.sample(rng) as usize;
-            let PathAndShape { steps, .. } = &self.paths.paths[idx];
-            let steps = steps.iter().skip(1).map(|step| step.gen_ast(ctx)).collect();
-            let path = ctx.node(ast::Path { root, steps });
-
-            let item = ast::ProjectItem::ProjectExpr(ast::ProjectExpr {
-                expr: Box::new(ast::Expr::Path(path)),
-                as_alias: None,
-            });
-            items.push(ctx.node(item));
+            let path_and_shape = &self.paths.paths[idx];
+            items.push((name, path_and_shape).gen_node(ctx));
         }
 
         ast::Projection {
@@ -76,75 +61,17 @@ impl AstGenerator<ast::Exclusion> for ExcludePaths {
         let mut rng = self.rng.borrow_mut();
         let rng = rng.deref_mut();
         let num = self.amount.sample(rng) as usize;
-
-        let root = ast::VarRef {
-            name: ast::SymbolPrimitive {
-                value: self.paths.name.clone(),
-                case: ast::CaseSensitivity::CaseInsensitive,
-            },
-            qualifier: ast::ScopeQualifier::Unqualified,
-        };
+        let name = self.paths.name.as_str();
 
         let path_sel =
             DiscreteUniform::new(0, (self.paths.paths.len() - 1) as i64).expect("sample");
         let mut items = Vec::with_capacity(num);
         for _ in 0..num {
-            let root = ctx.node(root.clone());
             let idx = path_sel.sample(rng) as usize;
-            let PathAndShape { steps, .. } = &self.paths.paths[idx];
-            let steps = steps.iter().skip(1).map(|step| step.gen_ast(ctx)).collect();
-            let path = ast::ExcludePath { root, steps };
-            items.push(ctx.node(path));
+            let path_and_shape = &self.paths.paths[idx];
+            items.push((name, path_and_shape).gen_node(ctx));
         }
 
         ast::Exclusion { items }
-    }
-}
-
-impl AstGenerator<ast::PathStep> for PathGenStep {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::PathStep {
-        match self {
-            PathGenStep::PathProject(name) => {
-                let name = ast::SymbolPrimitive {
-                    value: name.clone(),
-                    case: ast::CaseSensitivity::CaseInsensitive,
-                };
-                let varref = ast::VarRef {
-                    name,
-                    qualifier: ast::ScopeQualifier::Unqualified,
-                };
-                let index = Box::new(ast::Expr::VarRef(ctx.node(varref)));
-                let e = ast::PathExpr { index };
-                ast::PathStep::PathProject(e)
-            }
-            PathGenStep::PathIndex(i) => {
-                let idx = ast::Lit::Int64Lit(*i as i64);
-                let index = Box::new(ast::Expr::Lit(ctx.node(idx)));
-                let e = ast::PathExpr { index };
-                ast::PathStep::PathIndex(e)
-            }
-            PathGenStep::PathForEach => ast::PathStep::PathForEach,
-            PathGenStep::PathUnpivot => ast::PathStep::PathUnpivot,
-        }
-    }
-}
-
-impl AstGenerator<ast::ExcludePathStep> for PathGenStep {
-    fn gen_ast(&self, ctx: &AstGenContext) -> ast::ExcludePathStep {
-        match self {
-            PathGenStep::PathProject(name) => {
-                let name = ast::SymbolPrimitive {
-                    value: name.clone(),
-                    case: ast::CaseSensitivity::CaseInsensitive,
-                };
-                ast::ExcludePathStep::PathProject(ctx.node(name))
-            }
-            PathGenStep::PathIndex(i) => {
-                let idx = ast::Lit::Int64Lit(*i as i64);
-                ast::ExcludePathStep::PathIndex(ctx.node(idx))
-            }
-            PathGenStep::PathForEach => ast::ExcludePathStep::PathForEach,
-            PathGenStep::PathUnpivot => ast::ExcludePathStep::PathUnpivot,
-        }
     }
 }

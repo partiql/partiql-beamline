@@ -8,12 +8,16 @@ use partiql_ast::builder::NodeBuilderWithAutoId;
 
 mod expr;
 mod from_clause;
+mod path;
+mod predicate;
 mod query;
 mod select_clause;
 mod where_clause;
 
 pub use expr::*;
 pub use from_clause::*;
+pub use path::*;
+pub use predicate::*;
 pub use query::*;
 pub use select_clause::*;
 pub use where_clause::*;
