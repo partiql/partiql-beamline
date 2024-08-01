@@ -12,6 +12,8 @@ mod path;
 mod predicate;
 mod query;
 mod select_clause;
+mod types;
+mod value;
 mod where_clause;
 
 pub use expr::*;

@@ -4,76 +4,131 @@ expression: queries
 ---
 SELECT *
 FROM test_data AS test_data
-WHERE ((((((test_data.created_at = UTCNOW())
+WHERE ((((((test_data.created_at <> UTCNOW())
           OR
-          ((test_data.price < -3.366382825624278)
+          ((test_data.price > 32.86374064090276)
             AND
-            test_data.country_code LIKE 'Censet.'))
+            NOT (test_data.country_code IN [
+                'Censet.',
+                'Audiebamus.',
+                'Sit.',
+                'Et.'
+              ])))
         OR
-        (test_data.* < 20))
+        (test_data.* >= 20))
       OR
       (test_data.description = 'Qui omnino avocent.'))
     OR
-    NOT (test_data.description LIKE 'Meque ei responsum.'))
-  OR
-  (test_data.transaction_id <> 'Paene.'))
+    test_data.description IN [
+        'Voluptatem. Ut enim.',
+        'Ad.',
+        'Altera prompta et.',
+        'Qui blanditiis praesentium.',
+        'Quod inciderint in.'
+      ]) OR
+  NOT (test_data.transaction_id IN [
+      'Paene.',
+      'Virtutibus dicta.',
+      'Enim invenire.'
+    ]))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.* BETWEEN 43.85089837483024 AND -18.500156045187477
+WHERE (((test_data.* <= 43.85089837483024)
     AND
     ((test_data.created_at <> UTCNOW())
       OR
-      test_data.test_address LIKE 'Quam gravis.'))
+      NOT (test_data.test_address LIKE 'Quam gravis.')))
   OR
-  ((test_data.* <> -0.7107001598470504)
+  ((test_data.* <> -32.71774177160309)
     OR
-    ((test_data.* BETWEEN UTCNOW() AND UTCNOW()
+    (((test_data.* < -1)
         AND
-        ((test_data.price = -24.867905622684585)
+        ((test_data.price = -3.3159459625196135)
           AND
-          (test_data.description = 'Cum sit.')))
+          test_data.description LIKE 'Explicari.'))
       AND
       (test_data.price = 7.751876052900144))))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.country_code LIKE 'Difficilem quandam.'
-    OR
-    (test_data.completed = false))
+WHERE ((test_data.country_code IN [
+        'Sint coniuncta.',
+        'Existimant, quos.',
+        'Habemus, quae percipitur.',
+        'Multos alios in.'
+      ] OR
+    (test_data.completed <> false))
   OR
-  (((test_data.marketplace_id <= 16)
+  (((test_data.marketplace_id <> 16)
       AND
       (test_data.test_address LIKE 'Quoniam, cum.'
         OR
-        NOT (test_data.test_address LIKE 'Id quidem facio.')))
-    OR
-    ((test_data.* <> -29.25922952327972)
+        test_data.test_address IN [
+            'Poetarum.',
+            'Se et Consentinis.',
+            'Quidem nulli.',
+            'Dolemus angoribus.',
+            'Esse.'
+          ])) OR
+    ((test_data.* <= -30.650429593187862)
       OR
-      (NOT (test_data.completed)
-        AND
-        (test_data.country_code LIKE 'Quapropter si.'
+      (test_data.completed IN [
+            true,
+            true,
+            false
+          ] AND
+        ((test_data.country_code <> 'Quapropter si.')
           AND
-          test_data.price BETWEEN -40.22261432790022 AND -12.887309006507842)))))
+          test_data.price IN [
+              -9.841194400190098,
+              -23.129177491605226
+            ])))))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((((test_data.country_code <> 'Distinctio.')
+WHERE (((test_data.country_code LIKE 'Postulant in eo.'
       AND
-      ((test_data.* < false)
+      ((test_data.* >= false)
         AND
-        (NOT (test_data.description LIKE 'Esse solam.')
+        ((test_data.description <> 'Vacuitate.')
           AND
-          NOT (test_data.transaction_id LIKE 'Esset accusata.'))))
-    OR
-    (test_data.test_address <> 'Potest. Sed.'))
-  AND
-  (test_data.* > -28.146858383543243))
+          NOT (test_data.transaction_id IN [
+              'Res vero.',
+              'Est.',
+              'Semper utens nihil.',
+              'Esse.',
+              'Quod.'
+            ])))) OR
+    NOT (test_data.test_address IN [
+        'Potest. Sed.',
+        'Ex aeterno.',
+        'Illam.'
+      ])) AND
+  NOT (test_data.* IN [
+      {
+        'test_decimal': -14.90071600839881,
+        'test_string': 'Conspectum.'
+      },
+      39.281039004349964,
+      {
+        'test_decimal': 20.51269346264796,
+        'test_string': 'Alienus. Democritea.'
+      },
+      -30.29313164391198,
+      20.188900713417283
+    ]))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.price >= 46.93949301573326)
+WHERE ((test_data.price > 46.93949301573326)
   OR
-  (test_data.price BETWEEN -44.10099486573995 AND -13.749193117828774
-    AND
-    NOT (test_data.transaction_id LIKE 'Sit.')))
+  (test_data.price IN [
+        -31.89047822354056,
+        -44.10099486573995,
+        -9.053235555850478
+      ] AND
+    NOT (test_data.transaction_id IN [
+        'Expetendis, quid.',
+        'Si qua in.'
+      ])))

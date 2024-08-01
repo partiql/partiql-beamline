@@ -145,14 +145,15 @@ impl PredicateFlags {
                     }
                     Static::DateTime => flags,
                     Static::Struct(_) => flags,
-                    Static::Bag(_) => flags.union(PredicateFlags::flags_in()),
-                    Static::Array(_) => flags.union(PredicateFlags::flags_in()),
+                    Static::Bag(_) => flags,
+                    Static::Array(_) => flags,
                 }
             }
             PartiqlShape::Undefined => {
                 todo!("undefined type not supported")
             }
         }
+        .union(PredicateFlags::flags_in())
     }
 
     pub fn count(&self) -> usize {
@@ -193,7 +194,7 @@ impl PathPredicateGenSpec {
         let candidates = PredicateFlags::matching(&shape).intersection(self.allowed_predicates);
         candidates
             .iter_names()
-            .map(|(name, flag)| match flag.bits() {
+            .map(|(_name, flag)| match flag.bits() {
                 AND_BITS => Predicate::AND,
                 OR_BITS => Predicate::OR,
                 NOT_BITS => Predicate::NOT,

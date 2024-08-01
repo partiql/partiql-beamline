@@ -1,6 +1,5 @@
-use crate::generator::{AstGenContext, AstGenerator, PathAndShape, PathGenStep};
-use partiql_ast::ast;
-use partiql_types::PartiqlShape;
+use crate::generator::PathAndShape;
+
 use std::fmt::{Debug, Formatter};
 
 #[derive(Debug, Clone)]
