@@ -1,7 +1,7 @@
 use indexmap::IndexSet;
 use partiql_types::{PartiqlShape, Static};
 
-static SimpleDynamicVariants: [Static; 9] = [
+static SIMPLE_DYNAMIC_VARIANTS: [Static; 9] = [
     Static::Int,
     Static::Int8,
     Static::Int16,
@@ -29,7 +29,7 @@ pub(crate) fn flatten_types(shape: &PartiqlShape) -> IndexSet<&Static> {
     }
 
     if dynamic {
-        flat.extend(SimpleDynamicVariants.iter());
+        flat.extend(SIMPLE_DYNAMIC_VARIANTS.iter());
     }
 
     flat

@@ -1,6 +1,6 @@
 use crate::generator::DynAstGenerator;
 use crate::strategy::path::PathGenSpecBuilderError;
-use crate::strategy::predicate::{PathPredicateGenSpec, PathPredicateGenSpecBuilderError};
+use crate::strategy::predicate::PathPredicateGenSpecBuilderError;
 use dyn_clone::DynClone;
 use miette::Diagnostic;
 use partiql_ast::ast;

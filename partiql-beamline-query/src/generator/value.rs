@@ -1,8 +1,8 @@
-use crate::generator::{where_clause, AstGenContext};
+use crate::generator::AstGenContext;
 use lipsum::lipsum_words_with_rng;
 use partiql_ast::ast;
 use partiql_ast::ast::{CaseSensitivity, SymbolPrimitive};
-use partiql_types::{PartiqlShape, Static, StaticType, StructType};
+use partiql_types::{PartiqlShape, Static, StructType};
 use rand::distributions::Distribution;
 use rand::prelude::IteratorRandom;
 use rand_pcg::Pcg64Mcg;
@@ -51,7 +51,7 @@ impl SimpleRandomValueGenerator {
         Box::new(ast::Expr::Lit(ctx.node(ast::Lit::CharStringLit(txt))))
     }
 
-    pub fn rand_datetime(&self, rng: &mut Pcg64Mcg, ctx: &AstGenContext) -> Box<ast::Expr> {
+    pub fn rand_datetime(&self, _rng: &mut Pcg64Mcg, ctx: &AstGenContext) -> Box<ast::Expr> {
         // TODO datetime
         let utcnow = SymbolPrimitive {
             value: "UTCNOW".to_string(),

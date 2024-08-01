@@ -41,7 +41,7 @@ impl AstGenerator<ast::Select> for BasicSFW {
             .map(|w| Box::new(w.gen_node(ctx)));
         ast::Select {
             project,
-            exclude: exclude,
+            exclude,
             from,
             from_let: None,
             where_clause,
