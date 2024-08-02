@@ -1,11 +1,8 @@
 use crate::generator::{
-    AstGeneratorBoxed, DatasetPaths, DatasetPredicates, DynAstGenerator, GeneratedLiteral,
-    PathAndShape, PathPredicates, PathRowFilter, RowFilter,
+    AstGeneratorBoxed, DynAstGenerator, GeneratedLiteral, PathRowFilter, RowFilter,
 };
-use crate::strategy::path::{PathGenSpec, PathGenSpecBuilder};
-use crate::strategy::predicate::{
-    PathPredicateGenSpec, PathPredicateGenSpecBuilder, PredicateFlags,
-};
+use crate::strategy::path::PathGenSpec;
+use crate::strategy::predicate::{PathPredicateGenSpecBuilder, PredicateFlags};
 use crate::strategy::{Strategy, StrategyResult};
 use derive_builder::Builder;
 use partiql_ast::ast;
@@ -17,7 +14,6 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use statrs::distribution::DiscreteUniform;
 use std::cell::RefCell;
-use std::collections::Bound;
 
 #[derive(Debug, Clone)]
 pub struct RandomRowFilter {}

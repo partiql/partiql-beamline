@@ -1,19 +1,17 @@
 use crate::generator::{
-    DatasetPaths, DatasetPredicates, PathAndShape, PathAndShapeSet, PathPredicates, Predicate,
-    PredicateDirection,
+    DatasetPaths, DatasetPredicates, PathPredicates, Predicate, PredicateDirection,
 };
-use crate::strategy::path::{PathGenSpec, PathGenSpecBuilder, PathStepFlags};
+use crate::strategy::path::PathGenSpec;
 use crate::strategy::StrategyResult;
 use bitflags::bitflags;
 use bitvec::order::Msb0;
-use bitvec::{bits, BitArr};
+use bitvec::BitArr;
 use derive_builder::Builder;
-use indexmap::IndexMap;
 use itertools::Itertools;
 use partiql_beamline::sim::NameAndShape;
-use partiql_types::{PartiqlShape, Static, StaticType};
-use std::fmt::{Debug, Formatter};
-use std::ops::{Bound, RangeBounds, Sub};
+use partiql_types::{PartiqlShape, Static};
+use std::fmt::Debug;
+use std::ops::RangeBounds;
 
 type PredicateBits = BitArr!(for 17, in u32, Msb0);
 
@@ -124,7 +122,7 @@ impl PredicateFlags {
             PartiqlShape::Dynamic => Self::all(),
             PartiqlShape::AnyOf(anyof) => anyof
                 .types()
-                .map(|ty| Self::matching(ty))
+                .map(Self::matching)
                 .fold(Self::flags_absent(), |x, y| x | y),
             PartiqlShape::Static(sty) => {
                 let ty = sty.ty();
@@ -145,14 +143,15 @@ impl PredicateFlags {
                     }
                     Static::DateTime => flags,
                     Static::Struct(_) => flags,
-                    Static::Bag(_) => flags.union(PredicateFlags::flags_in()),
-                    Static::Array(_) => flags.union(PredicateFlags::flags_in()),
+                    Static::Bag(_) => flags,
+                    Static::Array(_) => flags,
                 }
             }
             PartiqlShape::Undefined => {
                 todo!("undefined type not supported")
             }
         }
+        .union(PredicateFlags::flags_in())
     }
 
     pub fn count(&self) -> usize {
@@ -190,10 +189,10 @@ impl PathPredicateGenSpec {
 
     fn predicates_for(&self, shape: &PartiqlShape) -> Vec<Predicate> {
         // determine applicable predicates & mask by allowed predicates
-        let candidates = PredicateFlags::matching(&shape).intersection(self.allowed_predicates);
+        let candidates = PredicateFlags::matching(shape).intersection(self.allowed_predicates);
         candidates
             .iter_names()
-            .map(|(name, flag)| match flag.bits() {
+            .map(|(_name, flag)| match flag.bits() {
                 AND_BITS => Predicate::AND,
                 OR_BITS => Predicate::OR,
                 NOT_BITS => Predicate::NOT,

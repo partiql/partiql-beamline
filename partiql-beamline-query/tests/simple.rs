@@ -6,16 +6,14 @@ use partiql_beamline_query::generator::{AstGenContext, FromTable};
 use partiql_beamline_query::generator::{AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter};
 use partiql_beamline_query::generator::{BinOp, ConstantLiteral};
 use partiql_beamline_query::generator::{DynAstGenerator, SelectStar};
-use partiql_beamline_query::strategy::exclude::{RandomExcludeList, RandomExcludeListBuilder};
+use partiql_beamline_query::strategy::exclude::RandomExcludeListBuilder;
 use partiql_beamline_query::strategy::path::{
     PathGenSpec, PathGenSpecBuilder, PathStepFlags, PathTypeFlags,
 };
 use partiql_beamline_query::strategy::predicate::PredicateFlags;
 use partiql_beamline_query::strategy::project::{ProjectStar, RandomProjectList};
 use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
-use partiql_beamline_query::strategy::where_clause::{
-    RandomRowFilter, RandomRowPredicate, RandomRowPredicateBuilder,
-};
+use partiql_beamline_query::strategy::where_clause::{RandomRowFilter, RandomRowPredicateBuilder};
 use partiql_beamline_query::strategy::StrategyBoxed;
 use partiql_types::{BagType, PartiqlShape, StaticType};
 use rand::SeedableRng;

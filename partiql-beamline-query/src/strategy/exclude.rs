@@ -1,5 +1,5 @@
-use crate::generator::{AstGeneratorBoxed, DynAstGenerator, ExcludePaths, SelectPaths, SelectStar};
-use crate::strategy::path::{PathGenSpecBuilder, PathStepFlags};
+use crate::generator::{AstGeneratorBoxed, DynAstGenerator, ExcludePaths};
+use crate::strategy::path::PathGenSpecBuilder;
 use crate::strategy::{Strategy, StrategyResult};
 use derive_builder::Builder;
 use partiql_ast::ast;

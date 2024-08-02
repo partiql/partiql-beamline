@@ -4,54 +4,96 @@ expression: queries
 ---
 SELECT *
 FROM test_data AS test_data
-WHERE (((test_data.*.*.nested_struct.nested_struct.*.nested_struct.* > -49)
-    AND
-    (test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct.* <> 32))
+WHERE ((test_data.*.*.nested_struct.nested_struct.*.nested_struct.* IN [
+        -5,
+        -43
+      ] AND
+    (test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct.* <= 32))
   AND
-  ((test_data.*.nested_struct.*.*.*.*.test_int <> 30)
-    OR
-    (test_data.*.nested_struct.nested_struct.nested_struct <> {
-        
-      })))
+  (test_data.*.nested_struct.*.*.*.*.test_int IN [
+        30,
+        7,
+        -26
+      ] OR
+    NOT (test_data.*.nested_struct.nested_struct.nested_struct IN [
+        {
+          'nested_struct': {
+            'nested_struct': {
+              'test_int': 23
+            }
+          }
+        },
+        {
+          'nested_struct': {
+            'nested_struct': {
+              'test_int': 13
+            }
+          }
+        },
+        {
+          'nested_struct': {
+            'nested_struct': {
+              'test_int': -48
+            }
+          }
+        },
+        {
+          'nested_struct': {
+            'nested_struct': {
+              'test_int': -33
+            }
+          }
+        }
+      ])))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.*.nested_struct.nested_struct.nested_struct.*.*.test_int <= -26)
+WHERE ((test_data.*.nested_struct.nested_struct.nested_struct.*.*.test_int < -26)
   AND
-  ((test_data.test_nest_struct.nested_struct.nested_struct.*.nested_struct.nested_struct.* > -6)
+  (test_data.test_nest_struct.nested_struct.nested_struct.*.nested_struct.nested_struct.* BETWEEN -6 AND 0
     AND
     ((test_data.test_nest_struct.*.nested_struct.nested_struct.* = {
-          
+          'nested_struct': {
+            'test_int': -3
+          }
         }) OR
-      (test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct <> {
-          
+      (test_data.test_nest_struct.nested_struct.*.*.nested_struct.nested_struct = {
+          'test_int': 44
         }))))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.test_nest_struct.*.*.nested_struct.*.* <> {
-      
+WHERE ((test_data.test_nest_struct.*.*.nested_struct.*.* = {
+      'test_int': 33
     }) AND
   ((test_data.test_nest_struct.*.nested_struct.nested_struct.nested_struct.*.test_int <> -1)
     OR
-    test_data.* BETWEEN 43.85089837483024 AND -18.500156045187477))
+    (test_data.* <= 43.85089837483024)))
 
 SELECT *
 FROM test_data AS test_data
-WHERE (((((test_data.*.*.nested_struct.nested_struct.*.nested_struct.* > 10)
+WHERE (((((test_data.*.*.nested_struct.nested_struct.*.nested_struct.* <= 40)
         OR
-        (test_data.*.nested_struct.nested_struct.*.*.*.* < 24))
+        (test_data.*.nested_struct.nested_struct.*.*.*.* >= 24))
       AND
-      (test_data.*.*.*.nested_struct.*.*.* >= 24))
-    OR
+      test_data.*.*.*.nested_struct.*.*.* IN [
+          4,
+          -32,
+          2
+        ]) OR
     test_data.*.nested_struct.nested_struct.nested_struct.nested_struct.*.test_int BETWEEN 9 AND -16)
   AND
-  NOT (test_data.completed))
+  (test_data.completed = false))
 
 SELECT *
 FROM test_data AS test_data
-WHERE ((test_data.test_nest_struct.*.nested_struct.nested_struct.*.nested_struct.test_int > 24)
-  OR
-  ((test_data.*.nested_struct.nested_struct.nested_struct.*.*.* < -11)
+WHERE (test_data.test_nest_struct.*.nested_struct.nested_struct.*.nested_struct.test_int IN [
+      -42,
+      -26,
+      28,
+      42,
+      13
+    ] OR
+  ((test_data.*.nested_struct.nested_struct.nested_struct.*.*.* >= -11)
     AND
     (test_data.*.*.*.nested_struct.nested_struct.*.test_int <> -24)))
