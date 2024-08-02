@@ -1,5 +1,6 @@
 use crate::generator::{AstGeneratorBoxed, DynAstGenerator, ExcludePaths};
 use crate::strategy::path::PathGenSpecBuilder;
+use crate::strategy::StrategyBuilderError;
 use crate::strategy::{Strategy, StrategyResult};
 use derive_builder::Builder;
 use partiql_ast::ast;
@@ -11,6 +12,7 @@ use std::cell::RefCell;
 use std::ops::Bound;
 
 #[derive(Debug, Clone, Builder)]
+#[builder(build_fn(error = "StrategyBuilderError"))]
 pub struct RandomExcludeList {
     pub min_items: u8,
     pub max_items: u8,

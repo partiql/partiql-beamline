@@ -1,6 +1,8 @@
 use crate::generator::{AstGeneratorBoxed, DynAstGenerator, SelectPaths, SelectStar};
 use crate::strategy::path::{PathGenSpecBuilder, PathStepFlags};
+use crate::strategy::StrategyBuilderError;
 use crate::strategy::{Strategy, StrategyResult};
+use derive_builder::Builder;
 use partiql_ast::ast;
 use partiql_beamline::sim::NameAndShape;
 use rand::SeedableRng;
@@ -8,7 +10,8 @@ use rand_pcg::Pcg64Mcg;
 use statrs::distribution::DiscreteUniform;
 use std::cell::RefCell;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Builder)]
+#[builder(build_fn(error = "StrategyBuilderError"))]
 pub struct ProjectStar {}
 
 impl Strategy<NameAndShape, ast::Projection> for ProjectStar {
@@ -21,7 +24,8 @@ impl Strategy<NameAndShape, ast::Projection> for ProjectStar {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Builder)]
+#[builder(build_fn(error = "StrategyBuilderError"))]
 pub struct RandomProjectList {
     pub min_items: u8,
     pub max_items: u8,
