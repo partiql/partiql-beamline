@@ -1,0 +1,68 @@
+use crate::sim_spec::{Script, Seed, StartTime};
+use clap::{Args, ValueEnum};
+
+/// Output format for the generated data
+#[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum DataOutputFormat {
+    Ion,
+    IonPretty,
+    Text,
+}
+
+/// Output format for the generated shape of data
+#[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[non_exhaustive]
+pub enum ShapeOutputFormat {
+    PartiqlKollider,
+    Text,
+    BasicDdl,
+}
+
+/// Number of samples to get created
+#[derive(Args, Debug, Copy, Clone, PartialEq, Eq)]
+#[group(required = false, multiple = false)]
+pub struct SampleCount {
+    /// Value for the number of samples
+    #[arg(long, default_value = "10", value_name = "SAMPLE_COUNT")]
+    pub sample_count: u64,
+}
+
+/// Initial state configuration for the generator.
+#[derive(Args, Debug, Clone, PartialEq, Eq)]
+pub struct KolliderDb {
+    #[command(flatten)]
+    pub seed: Seed,
+
+    #[command(flatten)]
+    pub start_time: StartTime,
+
+    #[command(flatten)]
+    pub script: Script,
+}
+
+#[derive(Args, Debug, Clone, PartialEq, Eq)]
+pub struct DbArgs {
+    #[clap(
+        short = 'c',
+        long = "output-format",
+        default_value = "beamline-catalog"
+    )]
+    pub catalog_name: String,
+
+    #[clap(short = 'p', long = "output-format", default_value = ".")]
+    pub catalog_path: String,
+
+    #[clap(long = "force", default_value = "false")]
+    pub force: bool,
+
+    #[clap(short = 'p', long = "output-format", default_value = "filesystem")]
+    pub target: DbTarget,
+}
+
+/// Output target for the generated Database
+#[derive(ValueEnum, Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum DbTarget {
+    Filesystem,
+}
