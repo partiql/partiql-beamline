@@ -1,5 +1,6 @@
 use crate::generator::{AstGeneratorBoxed, BasicSFW, DynAstGenerator, FromTable};
 use crate::strategy::project::ProjectStar;
+use crate::strategy::StrategyBuilderError;
 use crate::strategy::{
     Exclusions, Projections, Strategy, StrategyBoxed, StrategyResult, TableFilter,
 };
@@ -10,6 +11,7 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 
 #[derive(Debug, Clone, Builder)]
+#[builder(build_fn(error = "StrategyBuilderError"))]
 pub struct SelectFromWhere {
     pub projections: Projections,
     #[builder(setter(into, strip_option), default)]

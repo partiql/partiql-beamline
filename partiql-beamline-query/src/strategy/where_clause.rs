@@ -3,6 +3,7 @@ use crate::generator::{
 };
 use crate::strategy::path::PathGenSpec;
 use crate::strategy::predicate::{PathPredicateGenSpecBuilder, PredicateFlags};
+use crate::strategy::StrategyBuilderError;
 use crate::strategy::{Strategy, StrategyResult};
 use derive_builder::Builder;
 use partiql_ast::ast;
@@ -35,6 +36,7 @@ impl Strategy<NameAndShape, ast::WhereClause> for RandomRowFilter {
 }
 
 #[derive(Debug, Clone, Builder)]
+#[builder(build_fn(error = "StrategyBuilderError"))]
 pub struct RandomRowPredicate {
     #[builder(default = "PredicateFlags::all()")]
     pub allowed_predicates: PredicateFlags,

@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use miette::IntoDiagnostic;
-use partiql_ast::pretty::ToPretty;
 use partiql_beamline::sim::{DatasetTypeMapping, ISim, SimBuilder, SimConfigBuilder, SimContext};
 use partiql_beamline_query::generator::{AstGenContext, FromTable};
 use partiql_beamline_query::generator::{AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter};
@@ -14,7 +13,8 @@ use partiql_beamline_query::strategy::predicate::PredicateFlags;
 use partiql_beamline_query::strategy::project::{ProjectStar, RandomProjectList};
 use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
 use partiql_beamline_query::strategy::where_clause::{RandomRowFilter, RandomRowPredicateBuilder};
-use partiql_beamline_query::strategy::StrategyBoxed;
+use partiql_beamline_query::strategy::{QueryStrategy, StrategyBoxed};
+use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder};
 use partiql_types::{BagType, PartiqlShape, StaticType};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
@@ -59,15 +59,39 @@ macro_rules! test_data {
 #[inline]
 fn query_text_test(
     name: &str,
-    gen: &DynAstGenerator<partiql_ast::ast::Query>,
+    ast_gen: DynAstGenerator<partiql_ast::ast::Query>,
 ) -> miette::Result<()> {
     let config = SimConfigBuilder::default().build()?;
     let ctx = SimContext::new(config)?;
     let ctx = AstGenContext::new(ctx);
 
-    let queries = (1..=5)
-        .map(|_| gen.gen_node(&ctx).to_pretty_string(20).unwrap())
-        .join("\n\n");
+    let gen = QueryTextGenerator { ast_gen, ctx };
+    query_text_gen_test(name, gen)
+}
+
+#[track_caller]
+fn get_generator(
+    seed: u64,
+    script: &[u8],
+    strat: QueryStrategy,
+) -> miette::Result<QueryTextGenerator> {
+    let config = SimConfigBuilder::default().seed(seed).build()?;
+    let script = String::from_utf8_lossy(script).into_owned();
+
+    QueryTextGeneratorConfigBuilder::default()
+        .config(config)
+        .script(script)
+        .strategy(strat)
+        .build()
+        .into_diagnostic()?
+        .to_generator()
+        .into_diagnostic()
+}
+
+#[track_caller]
+#[inline]
+fn query_text_gen_test(name: &str, gen: QueryTextGenerator) -> miette::Result<()> {
+    let queries = (1..=5).map(|_| gen.generate(20).unwrap()).join("\n\n");
 
     insta::assert_snapshot!(name, queries);
 
@@ -112,7 +136,7 @@ fn simple_ast_gen() -> miette::Result<()> {
     };
     let sfw: QueryGenerator = sfw.agboxed();
 
-    query_text_test("simple_ast_gen", &sfw)
+    query_text_test("simple_ast_gen", sfw)
 }
 
 #[test]
@@ -129,7 +153,7 @@ fn simple_strategy() -> miette::Result<()> {
     let dataset = DatasetTypeMapping::from([("Table".to_string(), shape)]);
     let gen = strat.build(&dataset, rng).into_diagnostic()?;
 
-    query_text_test("simple_strategy", &gen)
+    query_text_test("simple_strategy", gen)
 }
 
 #[track_caller]
@@ -151,18 +175,17 @@ fn shape_from_script(script: &[u8]) -> miette::Result<DatasetTypeMapping> {
 
 #[test]
 fn simple_random_strategy() -> miette::Result<()> {
-    let rng = Pcg64Mcg::seed_from_u64(123456);
-    let shape = shape_from_script(SCRIPT_SIMPLE_TRANSACTIONS)?;
-
     let filter_strat = RandomRowFilter {}.sboxed();
     let strat = SelectFromWhereBuilder::select_all()
         .table_filter(filter_strat)
         .build()
         .into_diagnostic()?
         .sboxed();
-    let gen = strat.build(&shape, rng).into_diagnostic()?;
 
-    query_text_test("simple_random_strategy", &gen)?;
+    query_text_gen_test(
+        "simple_random_strategy",
+        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+    )?;
 
     Ok(())
 }
@@ -221,9 +244,6 @@ fn path_gen_tests() -> miette::Result<()> {
 
 #[test]
 fn simple_project_strategy() -> miette::Result<()> {
-    let rng = Pcg64Mcg::seed_from_u64(123456);
-    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
-
     let projections = RandomProjectList {
         min_items: 2,
         max_items: 5,
@@ -233,18 +253,17 @@ fn simple_project_strategy() -> miette::Result<()> {
         .build()
         .into_diagnostic()?
         .sboxed();
-    let gen = strat.build(&shape, rng).into_diagnostic()?;
 
-    query_text_test("simple_project_strategy", &gen)?;
+    query_text_gen_test(
+        "simple_project_strategy",
+        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+    )?;
 
     Ok(())
 }
 
 #[test]
 fn simple_exclude_strategy() -> miette::Result<()> {
-    let rng = Pcg64Mcg::seed_from_u64(123456);
-    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
-
     let projections = ProjectStar {};
     let exclusions = RandomExcludeListBuilder::default()
         .min_items(2)
@@ -257,18 +276,17 @@ fn simple_exclude_strategy() -> miette::Result<()> {
         .build()
         .into_diagnostic()?
         .sboxed();
-    let gen = strat.build(&shape, rng).into_diagnostic()?;
 
-    query_text_test("simple_exclude_strategy", &gen)?;
+    query_text_gen_test(
+        "simple_exclude_strategy",
+        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+    )?;
 
     Ok(())
 }
 
 #[test]
 fn simple_shallow_exclude_strategy() -> miette::Result<()> {
-    let rng = Pcg64Mcg::seed_from_u64(123456);
-    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
-
     let projections = ProjectStar {};
     let exclusions = RandomExcludeListBuilder::default()
         .min_items(2)
@@ -282,18 +300,17 @@ fn simple_shallow_exclude_strategy() -> miette::Result<()> {
         .build()
         .into_diagnostic()?
         .sboxed();
-    let gen = strat.build(&shape, rng).into_diagnostic()?;
 
-    query_text_test("simple_shallow_exclude_strategy", &gen)?;
+    query_text_gen_test(
+        "simple_shallow_exclude_strategy",
+        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+    )?;
 
     Ok(())
 }
 
 #[test]
 fn simple_random_row_filters() -> miette::Result<()> {
-    let rng = Pcg64Mcg::seed_from_u64(123456);
-    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
-
     let projections = ProjectStar {};
 
     let path_spec = PathGenSpecBuilder::default()
@@ -317,18 +334,17 @@ fn simple_random_row_filters() -> miette::Result<()> {
         .build()
         .into_diagnostic()?
         .sboxed();
-    let gen = strat.build(&shape, rng).into_diagnostic()?;
 
-    query_text_test("simple_random_row_filters", &gen)?;
+    query_text_gen_test(
+        "simple_random_row_filters",
+        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+    )?;
 
     Ok(())
 }
 
 #[test]
 fn simple_random_scalar_row_filters() -> miette::Result<()> {
-    let rng = Pcg64Mcg::seed_from_u64(123456);
-    let shape = shape_from_script(SCRIPT_TRANSACTIONS)?;
-
     let projections = ProjectStar {};
     let path_spec = PathGenSpecBuilder::default()
         .min_depth(Bound::Included(2))
@@ -352,9 +368,11 @@ fn simple_random_scalar_row_filters() -> miette::Result<()> {
         .build()
         .into_diagnostic()?
         .sboxed();
-    let gen = strat.build(&shape, rng).into_diagnostic()?;
 
-    query_text_test("simple_random_scalar_row_filters", &gen)?;
+    query_text_gen_test(
+        "simple_random_scalar_row_filters",
+        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+    )?;
 
     Ok(())
 }

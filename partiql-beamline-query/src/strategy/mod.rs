@@ -1,6 +1,7 @@
 use crate::generator::DynAstGenerator;
 use crate::strategy::path::PathGenSpecBuilderError;
 use crate::strategy::predicate::PathPredicateGenSpecBuilderError;
+use derive_builder::UninitializedFieldError;
 use dyn_clone::DynClone;
 use miette::Diagnostic;
 use partiql_ast::ast;
@@ -17,6 +18,27 @@ pub mod project;
 pub mod query;
 pub mod where_clause;
 
+#[doc = "Error type for Strategy Builders"]
+#[derive(Debug, Error, Diagnostic)]
+#[non_exhaustive]
+pub enum StrategyBuilderError {
+    #[error("Uninitialized field `{0}`")]
+    UninitializedField(&'static str),
+    #[error("Validate error `{0}`")]
+    ValidationError(String),
+}
+
+impl From<String> for StrategyBuilderError {
+    fn from(s: String) -> Self {
+        Self::ValidationError(s)
+    }
+}
+impl From<UninitializedFieldError> for StrategyBuilderError {
+    fn from(err: UninitializedFieldError) -> Self {
+        Self::UninitializedField(err.field_name())
+    }
+}
+
 #[derive(Debug, Error, Diagnostic)]
 #[error("Query Strategy Error")]
 #[non_exhaustive]
@@ -27,6 +49,8 @@ pub enum StrategyError {
     Path(#[from] PathGenSpecBuilderError),
     #[error("Predicate Generation error: {0}")]
     Predicate(#[from] PathPredicateGenSpecBuilderError),
+    #[error("Strategy Builder error: {0}")]
+    StrategyBuilder(#[from] StrategyBuilderError),
     #[error("Random Generator error: {0}")]
     Rand(#[from] rand::Error),
     #[error("Stats Generator error: {0}")]
