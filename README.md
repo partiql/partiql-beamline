@@ -1088,7 +1088,6 @@ Example output:
 | PartiQL Kollider | ParitQL Kollider (a testing suite for PartiQL) shape Format                            |
 
 ### Pending Features For Data Generator
-- Random PartiQL Query Generation Based on a Schema
 - Random Schema generation
 
 
