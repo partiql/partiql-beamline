@@ -22,6 +22,8 @@ pub mod where_clause;
 #[derive(Debug, Error, Diagnostic)]
 #[non_exhaustive]
 pub enum StrategyBuilderError {
+    #[error("Path Generation error: {0}")]
+    PathSpec(#[from] PathGenSpecBuilderError),
     #[error("Uninitialized field `{0}`")]
     UninitializedField(&'static str),
     #[error("Validate error `{0}`")]
@@ -57,6 +59,12 @@ pub enum StrategyError {
     Stats(#[from] statrs::StatsError),
     #[error("Data Generation error: {0}")]
     DataGen(#[from] DataGenerationError),
+    #[error("Projection Paths error: {0}")]
+    ProjectPaths(String),
+    #[error("Exclude Paths error: {0}")]
+    ExcludePaths(String),
+    #[error("Predicate Paths error: {0}")]
+    PredicatePaths(String),
     #[error("Other: {0}")]
     Other(String),
 }

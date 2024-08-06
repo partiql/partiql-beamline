@@ -4,6 +4,7 @@ mod kolliderdb;
 use crate::cli::{encode_ion_text, IonPrintMode};
 use clap::{Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
+use itertools::{Itertools, Position};
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
 use partiql_beamline::sim::{ISim, SimBuilder, DATETIME_FORMAT};
@@ -18,7 +19,9 @@ use crate::kolliderdb::{
 use partiql_beamline_cliargs::data_gen::{
     DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat,
 };
+use partiql_beamline_cliargs::query_gen::{IntoStrategy, QueryGenStrategy};
 use partiql_beamline_cliargs::sim_spec::SimSpec;
+use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder};
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
@@ -43,6 +46,9 @@ pub enum Commands {
         #[clap(short = 'f', long = "output-format", value_enum, default_value_t=ShapeOutputFormat::Text)]
         output_format: ShapeOutputFormat,
     },
+    /// Run the query generator
+    #[clap(subcommand)]
+    Query(QueryGen),
 }
 
 #[derive(Subcommand)]
@@ -80,6 +86,20 @@ pub enum Db {
     },
 }
 
+#[derive(Subcommand)]
+pub enum QueryGen {
+    Basic {
+        #[command(flatten)]
+        samples: SampleCount,
+        #[command(flatten)]
+        source: SimSpec,
+        #[clap(subcommand)]
+        strat: QueryGenStrategy,
+        //#[clap(flatten)]
+        //strat: QueryGenStratBasicRandomSFW,
+    },
+}
+
 // TODO rather than all the `.expect`s below, we should use miette errors/diagnostics for better error reporting
 fn main() -> miette::Result<()> {
     let args = Cli::parse();
@@ -90,6 +110,7 @@ fn main() -> miette::Result<()> {
             spec,
             output_format,
         } => handle_infer(spec, output_format)?,
+        Commands::Query(query) => handle_query(query)?,
     }
 
     Ok(())
@@ -267,4 +288,42 @@ fn handle_infer(spec: SimSpec, output_format: ShapeOutputFormat) -> miette::Resu
         }
     }
     Ok(())
+}
+
+fn handle_query(query: QueryGen) -> miette::Result<()> {
+    match query {
+        QueryGen::Basic {
+            samples,
+            source,
+            strat,
+        } => {
+            let (script, cfg) = source.to_script_and_config();
+            let (script, cfg) = (script.into_diagnostic()?, cfg.into_diagnostic()?);
+            let qg: QueryTextGenerator = QueryTextGeneratorConfigBuilder::default()
+                .config(cfg.clone())
+                .script(script)
+                .strategy(strat.into_strategy().into_diagnostic()?)
+                .build()
+                .into_diagnostic()?
+                .to_generator()
+                .into_diagnostic()?;
+
+            let queries: Result<Vec<_>, _> = std::iter::repeat_with(|| qg.generate(80))
+                .take(samples.sample_count as usize)
+                .collect();
+
+            for (pos, query) in queries?.iter().with_position() {
+                match pos {
+                    Position::First | Position::Only => {
+                        println!("{query}");
+                    }
+                    Position::Middle | Position::Last => {
+                        println!("\n\n{query}");
+                    }
+                }
+            }
+
+            Ok(())
+        }
+    }
 }

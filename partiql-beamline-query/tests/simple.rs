@@ -10,7 +10,7 @@ use partiql_beamline_query::strategy::path::{
     PathGenSpec, PathGenSpecBuilder, PathStepFlags, PathTypeFlags,
 };
 use partiql_beamline_query::strategy::predicate::PredicateFlags;
-use partiql_beamline_query::strategy::project::{ProjectStar, RandomProjectList};
+use partiql_beamline_query::strategy::project::{ProjectStar, RandomProjectListBuilder};
 use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
 use partiql_beamline_query::strategy::where_clause::{RandomRowFilter, RandomRowPredicateBuilder};
 use partiql_beamline_query::strategy::{QueryStrategy, StrategyBoxed};
@@ -244,10 +244,10 @@ fn path_gen_tests() -> miette::Result<()> {
 
 #[test]
 fn simple_project_strategy() -> miette::Result<()> {
-    let projections = RandomProjectList {
-        min_items: 2,
-        max_items: 5,
-    };
+    let projections = RandomProjectListBuilder::default()
+        .min_items(2)
+        .max_items(5)
+        .build()?;
     let strat = SelectFromWhereBuilder::default()
         .projections(projections.sboxed())
         .build()
@@ -288,10 +288,15 @@ fn simple_exclude_strategy() -> miette::Result<()> {
 #[test]
 fn simple_shallow_exclude_strategy() -> miette::Result<()> {
     let projections = ProjectStar {};
+    let path_spec = RandomExcludeListBuilder::default_paths()
+        .into_diagnostic()?
+        .max_depth(Bound::Included(2))
+        .build()
+        .into_diagnostic()?;
     let exclusions = RandomExcludeListBuilder::default()
         .min_items(2)
         .max_items(5)
-        .max_depth(Bound::Included(2))
+        .path_spec(path_spec)
         .build()
         .into_diagnostic()?;
     let strat = SelectFromWhereBuilder::default()

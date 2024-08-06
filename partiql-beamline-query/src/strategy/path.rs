@@ -60,16 +60,16 @@ impl PathStepFlags {
 
 #[derive(Debug, Clone, Builder)]
 pub struct PathGenSpec {
-    #[builder(default = "PathStepFlags::all()")]
-    pub allowed_internal_steps: PathStepFlags,
-    #[builder(default = "PathTypeFlags::all()")]
-    pub allowed_final_types: PathTypeFlags,
-    #[builder(default = "PathStepFlags::all()")]
-    pub allowed_final_steps: PathStepFlags,
     #[builder(default = "Bound::Unbounded")]
     pub min_depth: Bound<usize>,
     #[builder(default = "Bound::Unbounded")]
     pub max_depth: Bound<usize>,
+    #[builder(default = "PathStepFlags::all()")]
+    pub allowed_internal_steps: PathStepFlags,
+    #[builder(default = "PathStepFlags::all()")]
+    pub allowed_final_steps: PathStepFlags,
+    #[builder(default = "PathTypeFlags::all()")]
+    pub allowed_final_types: PathTypeFlags,
 }
 
 impl PathGenSpec {

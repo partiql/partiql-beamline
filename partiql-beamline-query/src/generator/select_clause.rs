@@ -33,6 +33,7 @@ impl AstGenerator<ast::Projection> for SelectPaths {
         let num = self.amount.sample(rng) as usize;
         let name = self.paths.name.as_str();
 
+        assert!(!self.paths.paths.is_empty());
         let path_sel =
             DiscreteUniform::new(0, (self.paths.paths.len() - 1) as i64).expect("sample");
         let mut items = Vec::with_capacity(num);
@@ -61,6 +62,7 @@ impl AstGenerator<ast::Exclusion> for ExcludePaths {
         let mut rng = self.rng.borrow_mut();
         let rng = rng.deref_mut();
         let num = self.amount.sample(rng) as usize;
+
         let name = self.paths.name.as_str();
 
         let path_sel =

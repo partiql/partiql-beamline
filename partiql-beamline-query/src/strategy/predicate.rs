@@ -1,8 +1,9 @@
 use crate::generator::{
-    DatasetPaths, DatasetPredicates, PathPredicates, Predicate, PredicateDirection,
+    DatasetPaths, DatasetPredicates, PathPredicates, PathPredicatesSet, Predicate,
+    PredicateDirection,
 };
 use crate::strategy::path::PathGenSpec;
-use crate::strategy::StrategyResult;
+use crate::strategy::{StrategyError, StrategyResult};
 use bitflags::bitflags;
 use bitvec::order::Msb0;
 use bitvec::BitArr;
@@ -89,14 +90,14 @@ impl PredicateFlags {
         Self::EQ.union(Self::NEQ)
     }
 
-    pub const fn flags_inequality() -> Self {
+    pub const fn flags_comparison() -> Self {
         Self::BETWEEN
             .union(Self::LTE.union(Self::LT))
             .union(Self::GTE.union(Self::GT))
     }
 
     pub const fn flags_numeric() -> Self {
-        Self::flags_equality().union(Self::flags_inequality())
+        Self::flags_equality().union(Self::flags_comparison())
     }
 
     pub const fn flags_like() -> Self {
@@ -173,7 +174,7 @@ impl PathPredicateGenSpec {
     ) -> StrategyResult<DatasetPredicates> {
         let DatasetPaths { name, paths } = self.path_spec.paths_for_dataset(data)?;
 
-        let paths = paths
+        let paths: PathPredicatesSet = paths
             .into_iter()
             .map(|path_and_shape| {
                 let predicates = self.predicates_for(&path_and_shape.shape);
@@ -182,9 +183,16 @@ impl PathPredicateGenSpec {
                     predicates,
                 }
             })
+            .filter(|path_predicates| !path_predicates.predicates.is_empty())
             .collect();
 
-        Ok(DatasetPredicates { name, paths })
+        if paths.is_empty() {
+            Err(StrategyError::PredicatePaths(
+                "Configuration leaves no valid paths available for use in predicates.".to_string(),
+            ))
+        } else {
+            Ok(DatasetPredicates { name, paths })
+        }
     }
 
     fn predicates_for(&self, shape: &PartiqlShape) -> Vec<Predicate> {
