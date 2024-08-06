@@ -19,7 +19,7 @@ pub enum ShapeOutputFormat {
     BasicDdl,
 }
 
-/// Number of samples to get created
+/// Number of samples to create
 #[derive(Args, Debug, Copy, Clone, PartialEq, Eq)]
 #[group(required = false, multiple = false)]
 pub struct SampleCount {

@@ -3,7 +3,8 @@ PartiQL Beamline is a tool for fast data generation for PartiQL testing and expe
 
 Currently, it includes the following components:
 1. Data Generator
-2. CLI
+2. Query Generator
+3. CLI
 
 ## Data Generator
 Data Generator creates reproducible pseudo-random data. Let's unpack this with an example:
@@ -1087,8 +1088,576 @@ Example output:
 | PartiQL Kollider | ParitQL Kollider (a testing suite for PartiQL) shape Format                            |
 
 ### Pending Features For Data Generator
-- Random PartiQL Query Generation Based on a Schema
 - Random Schema generation
+
+
+## Query Generator
+Query Generator creates reproducible PartiQL queries that match the shapes and types (and soon some of the value
+aspects) of data defined for the data generator. Let's unpack this with an example:
+
+### Example 1 -- `SELECT * FROM ... WHERE ...`
+Given a script like:
+```
+$ cat partiql-beamline-sim/tests/scripts/simple_transactions.ion
+rand_processes::{
+
+    test_data: rand_process::{
+        $r: Uniform::{ choices: [5,10] },
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+        $data: {
+            transaction_id: UUID::{ nullable: false },
+            marketplace_id: UniformU8::{ nullable: false },
+            country_code: Regex::{ pattern: "[A-Z]{2}" },
+            created_at: Instant,
+            completed: Bool,
+            description: LoremIpsum::{ min_words:10, max_words:200 },
+            price: UniformDecimal::{ low: 2.99, high: 99999.99, optional: true }
+        }
+    }
+}
+```
+
+We can generate queries to match the shape of the data as specified by the script.
+```
+$ cargo run query  \
+    basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion \
+           --sample-count 3 \
+    rand-select-all-fw \
+              --tbl-flt-rand-min 1 --tbl-flt-rand-max 1 \
+                  --tbl-flt-path-depth-max 1 \
+                  --tbl-flt-pathstep-internal-all \
+                  --tbl-flt-pathstep-final-project \
+                  --tbl-flt-type-final-scalar \
+                  --pred-lt   
+```
+
+And the above invocation results in:
+```
+SELECT * FROM test_data AS test_data WHERE (test_data.marketplace_id < -5)
+
+
+SELECT * FROM test_data AS test_data
+WHERE (test_data.price < 18.418581624952935)
+
+
+SELECT * FROM test_data AS test_data
+WHERE (test_data.price < 15.495327785402296)
+```
+
+Let's revisit the query generation command.
+1. We first specify the `query` command and its sub-command `basic`.
+   1. `basic` takes `seed`, `start`, `script`, and `sample-count` parameters just like data generation
+   2. `basic` has a sub-command `rand-select-all-fw` 
+      1. `rand-select-all-fw` generates queries like `SELECT * FROM <from> WHERE <where>` 
+      2. the `<from>` is based on  data sets defined in the generator script (corresponding to e.g., table names) 
+      3. the `<where>` predicates are randomly generated based on the shape of the dataset and various `tbl-flt-*` command line parameters
+      4. the parameters in detail:
+         1. `--tbl-flt-rand-min 1 --tbl-flt-rand-max 1` says to generate a random number of predicates between `1` and `1` (i.e., always a single predicate)
+         2. `--tbl-flt-path-depth-max 1` says to generate paths with at most one level of depth (e.g. `foo.bar`, but not `foo.bar.baz`)
+         3. `--tbl-flt-pathstep-internal-all` says that all types of path steps are valid at internal positions (e.g,. all 
+            the following are valid: `foo.bar.baz`, `foo.*.baz`, `foo[4].baz`, `foo[*].baz`)
+         3. `--tbl-flt-pathstep-final-project` says that only projection type path steps are valid for the final path component 
+            (e.g,. `foo.bar` is valid but the following are invalid: `foo.*`, `foo[4]`, `foo[*]`)
+         4. `--tbl-flt-type-final-scalar` says that the type of the value at the final step must be a scalar (not a struct
+            or sequence) (e.g., `9`, `'foo'`, `true`, etc.) 
+         5. `--pred-lt` says to generate only less-than (`<`) predicates
+```
+$ cargo run query  \
+    basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion \
+           --sample-count 3 \
+    rand-select-all-fw \
+              --tbl-flt-rand-min 1 --tbl-flt-rand-max 1 \
+                  --tbl-flt-path-depth-max 1 \
+                  --tbl-flt-pathstep-internal-all \
+                  --tbl-flt-pathstep-final-project \
+                  --tbl-flt-type-final-scalar \
+                  --pred-lt   
+```
+
+Running the command again with the same seed should yield the same query output.
+
+We can tweak `--tbl-flt-rand-min`, `--tbl-flt-rand-max`, and change `--pred-lt` to `--pred-all` to generate more 'interesting' queries
+```
+$ cargo run query  \
+    basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion \
+           --sample-count 3 \
+    rand-select-all-fw \
+              --tbl-flt-rand-min 3 --tbl-flt-rand-max 10 \
+                  --tbl-flt-path-depth-max 1 \
+                  --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-all \
+                  --pred-all  
+```
+
+Resulting in:
+```
+SELECT * FROM test_data AS test_data WHERE (test_data.country_code IN [
+      'Graecos quidem legendos.',
+      'Possit et sine.'
+    ] OR (NOT ((test_data.description IS MISSING)) OR
+    (test_data.description IS MISSING)))
+
+
+SELECT * FROM test_data AS test_data WHERE (((test_data.transaction_id IS NULL)
+    AND (test_data.created_at IS NULL)) OR (((test_data.completed IN [
+            false,
+            false
+          ] OR NOT ((test_data.completed IS NULL))) AND
+      ((NOT ((test_data.price IS NULL)) OR
+          (test_data.transaction_id LIKE 'Vidisse.' AND
+            (test_data.country_code IS NULL))) AND
+        NOT ((test_data.description IS MISSING)))) OR
+    (test_data.description <> 'Nec vero.')))
+
+
+SELECT * FROM test_data AS test_data
+WHERE (((((test_data.country_code <> 'Qua maxime ceterorum.') AND
+        (NOT (test_data.completed IN [ false, true, true ]) OR
+          (test_data.description = 'Non faciant.'))) AND
+      (NOT ((test_data.price IS MISSING)) AND (test_data.price IS MISSING))) OR
+    test_data.price IN [
+        -47.936734585045905,
+        -0.8509689800217544,
+        24.263479438050297,
+        -48.953369038690255
+      ]) OR ((test_data.created_at = UTCNOW()) OR
+    (NOT ((test_data.country_code IS MISSING)) AND
+      (test_data.description IS MISSING))))
+```
+
+
+### Example 2 -- `SELECT ... FROM ... WHERE ...`
+
+Using similar parameterization as we use for table filters (i.e., `tbl-flt-*`), we can parameterize the generation of
+projections in the select clause using the `rand-sfw` instead of the `rand-select-all-fw` sub-command.
+
+```
+$ cargo run query \
+    basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion \
+           --sample-count 3 \
+    rand-sfw \
+              --project-rand-min 2 --project-rand-max 5 \
+                  --project-path-depth-min 1 --project-path-depth-max 1 \
+                  --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all \
+              --tbl-flt-rand-min 2 --tbl-flt-rand-max 5 \
+                  --tbl-flt-path-depth-max 1 \
+                  --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar \
+                  --pred-all      
+```
+
+Results in:
+
+```
+SELECT test_data.completed, test_data.completed FROM test_data AS test_data
+WHERE (NOT (test_data.completed) OR NOT ((test_data.created_at IS MISSING)))
+
+
+SELECT test_data.completed, test_data.marketplace_id, test_data.created_at
+FROM test_data AS test_data WHERE (NOT ((test_data.transaction_id IS NULL)) OR
+  (((test_data.transaction_id IN [
+            'Iam in.',
+            'Se.',
+            'Sine amicitia firmam.',
+            'Notae sunt.'
+          ] OR (test_data.transaction_id IS NULL)) OR
+      NOT ((test_data.description IS NULL))) OR
+    (test_data.marketplace_id >= 28)))
+
+
+SELECT test_data, test_data.description FROM test_data AS test_data
+WHERE (test_data.completed IN [ false, false ] AND
+  (((test_data.price <= 5.761136291521325) AND
+      NOT ((test_data.transaction_id IS MISSING))) AND
+    (NOT ((test_data.created_at IS MISSING)) AND
+      (test_data.created_at IS NULL))))
+```
+
+### Example 3 -- `SELECT ... EXCLUDE ... FROM ... WHERE ...`
+
+Using similar parameterization as we use for table filters and projections, we can parameterize the generation of
+exclude items in the exclude clause using the `rand-sefw` instead of the `rand-sefw` sub-command.
+
+```
+$ cargo run query \
+    basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion \
+           --sample-count 3 \
+    rand-sefw \
+              --project-rand-min 2 --project-rand-max 5 \
+                  --project-path-depth-min 1 --project-path-depth-max 1 \
+                  --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all \
+              --tbl-flt-rand-min 2 --tbl-flt-rand-max 5 \
+                  --tbl-flt-path-depth-max 1 \
+                  --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar \
+                  --pred-all \
+              --exclude-rand-min 1 --exclude-rand-max 3 \
+                  --exclude-path-depth-min 1 --exclude-path-depth-max 1 \
+                  --exclude-pathstep-internal-all --exclude-pathstep-final-all --exclude-type-final-all      
+```
+
+Results in:
+
+```
+SELECT test_data.completed, test_data.completed
+EXCLUDE test_data.marketplace_id, test_data.*, test_data.completed
+FROM test_data AS test_data 
+WHERE (NOT (test_data.completed) OR
+  NOT ((test_data.created_at IS MISSING)))
+
+
+SELECT test_data.completed, test_data.marketplace_id, test_data.created_at
+EXCLUDE test_data.completed 
+FROM test_data AS test_data
+WHERE (NOT ((test_data.transaction_id IS NULL)) OR
+  (((test_data.transaction_id IN [
+            'Iam in.',
+            'Se.',
+            'Sine amicitia firmam.',
+            'Notae sunt.'
+          ] OR (test_data.transaction_id IS NULL)) OR
+      NOT ((test_data.description IS NULL))) OR
+    (test_data.marketplace_id >= 28)))
+
+
+SELECT test_data, test_data.description 
+EXCLUDE test_data.marketplace_id, test_data.completed, test_data.marketplace_id
+FROM test_data AS test_data 
+WHERE (test_data.completed IN [ false, false ] AND
+  (((test_data.price <= 5.761136291521325) AND
+      NOT ((test_data.transaction_id IS MISSING))) AND
+    (NOT ((test_data.created_at IS MISSING)) AND
+      (test_data.created_at IS NULL))))
+```
+
+### Example 4 -- `SELECT * EXCLUDE ... FROM ... WHERE ...`
+
+Similar to `rand-select-all-fw`, there is a `rand-select-all-efw` command that will generate `SELECT *` queries with
+`EXCLUDE` clauses.
+
+```
+$ cargo run query  \
+    basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion \
+           --sample-count 3 \
+    rand-select-all-efw \
+              --tbl-flt-rand-min 1 --tbl-flt-rand-max 1 \
+                  --tbl-flt-path-depth-max 1 \
+                  --tbl-flt-pathstep-internal-all \
+                  --tbl-flt-pathstep-final-project \
+                  --tbl-flt-type-final-scalar \
+                  --pred-lt \
+              --exclude-rand-min 1 --exclude-rand-max 3 \
+                  --exclude-path-depth-min 1 --exclude-path-depth-max 1 \
+                  --exclude-pathstep-internal-all --exclude-pathstep-final-all --exclude-type-final-all  
+```
+
+Results in:
+
+```
+SELECT * EXCLUDE test_data.marketplace_id, test_data.*, test_data.completed
+FROM test_data AS test_data WHERE (test_data.marketplace_id < -5)
+
+
+SELECT * EXCLUDE test_data.completed FROM test_data AS test_data
+WHERE (test_data.price < 18.418581624952935)
+
+
+SELECT * EXCLUDE test_data.marketplace_id, test_data.completed,
+  test_data.marketplace_id
+FROM test_data AS test_data WHERE (test_data.price < 15.495327785402296)
+```
+
+
+### Example 5 -- More deeply nested data
+
+Given a script file with more complicated and more deeply nested data, we can see how path depth parameters affect query generation.
+
+```
+cat ./partiql-beamline-sim/tests/scripts/transactions.ion
+rand_processes::{
+
+    test_data: rand_process::{
+        $r: Uniform::{ choices: [5,10] },
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+        $currency_price: {
+            value: UniformDecimal::{  low: 0.995, high: 499.9999, },
+            currency: Regex::{ pattern: "(USD)|(GBP)|(EUR)"},
+        },
+
+        $data: {
+            transaction_id: UUID,
+            marketplace_id: UniformU8,
+            country_code: Regex::{ pattern: "[A-Z]{2}" },
+            created_at: Instant,
+            test_address: Regex::{ pattern: "[1-9][[:digit:]]{1,4} (?:(?:[A-Z][a-z]{2,8})(?:[ -](?:[A-Z][a-z]{2,8})){0,3}) (?:Ave|St|Pl|Way)(?: (?:N|S|E|W|NE|NW|SE|SW))?"},
+            completed: Bool,
+            description: LoremIpsum::{ min_words:10, max_words:200 },
+            price: UniformAnyOf::{ types: [
+                $currency_price,
+                UniformDecimal::{ low: 2.99, high: 9.99 },
+                UniformDecimal::{ low: 5.99, high: 25 },
+                UniformDecimal::{ low: 9.99, high: 54.99 },
+                UniformDecimal::{ low: 34.99, high: 999.99 },
+            ] },
+            test_struct: {
+                test_decimal: UniformDecimal,
+                test_string: LoremIpsumTitle,
+            },
+            test_nest_struct: {
+                nested_struct: {
+                    nested_struct: {
+                        nested_struct: {
+                            nested_struct: {
+                                nested_struct: {
+                                    test_int: UniformI8::{ low: 0, high: 5 }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+```
+
+Compare a query generation command with `--project-path-depth-min 1 --project-path-depth-max 10`
+```
+$ cargo run query \
+    basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/transactions.ion \
+           --sample-count 3 \
+    rand-sefw \
+              --project-rand-min 2 --project-rand-max 5 \
+                  --project-path-depth-min 1 --project-path-depth-max 10 \
+                  --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all \
+              --tbl-flt-rand-min 2 --tbl-flt-rand-max 5 \
+                  --tbl-flt-path-depth-max 10 \
+                  --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar \
+                  --pred-all \
+              --exclude-rand-min 1 --exclude-rand-max 2 \
+                  --exclude-path-depth-min 3 --exclude-path-depth-max 4 \
+                  --exclude-pathstep-internal-all --exclude-pathstep-final-unpivot --exclude-type-final-all
+```
+
+Notice the length of paths generated for the select clause.
+
+```
+SELECT test_data.*.nested_struct.nested_struct.nested_struct.nested_struct.nested_struct.*,
+  test_data.test_nest_struct.*.*.nested_struct.nested_struct
+EXCLUDE test_data.*.*.*.*, test_data.price.* FROM test_data AS test_data
+WHERE ((test_data.test_nest_struct.*.*.*.nested_struct.*.test_int <> 19) OR
+  (test_data.test_nest_struct.*.*.nested_struct.*.*.test_int > 35))
+
+
+SELECT test_data.test_nest_struct.*.nested_struct.*.*.nested_struct.*,
+  test_data.test_nest_struct.*.*.nested_struct.nested_struct.*.*,
+  test_data.test_nest_struct.nested_struct.*.nested_struct.*,
+  test_data.test_nest_struct.*.nested_struct.nested_struct.nested_struct.*
+EXCLUDE test_data.test_nest_struct.*.*, test_data.test_nest_struct.*.*.*
+FROM test_data AS test_data
+WHERE ((test_data.*.*.nested_struct.*.*.*.test_int < 40) OR
+  (test_data.*.*.nested_struct.nested_struct.*.nested_struct.test_int >= -9))
+
+
+SELECT test_data.*.nested_struct.nested_struct.nested_struct.nested_struct.*,
+  test_data.*.nested_struct.nested_struct.nested_struct.*.*.test_int
+EXCLUDE test_data.*.nested_struct.*.*,
+  test_data.test_nest_struct.nested_struct.*.*
+FROM test_data AS test_data
+WHERE ((((test_data.price.value <= 6.206304713037888) OR
+      (test_data.*.nested_struct.nested_struct.*.nested_struct.*.test_int <> -29))
+    AND
+    (test_data.test_nest_struct.*.nested_struct.*.nested_struct.nested_struct.test_int < 6))
+  AND ((test_data.price > -44.666855950508584) OR
+    (test_data.*.*.*.nested_struct.*.*.test_int > -42)))
+```
+
+VS. a query generation command with `--project-path-depth-min 1 --project-path-depth-max 3`
+```
+$ cargo run query \
+    basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/transactions.ion \
+           --sample-count 3 \
+    rand-sefw \
+              --project-rand-min 2 --project-rand-max 5 \
+                  --project-path-depth-min 1 --project-path-depth-max 3 \
+                  --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all \
+              --tbl-flt-rand-min 2 --tbl-flt-rand-max 5 \
+                  --tbl-flt-path-depth-max 10 \
+                  --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar \
+                  --pred-all \
+              --exclude-rand-min 1 --exclude-rand-max 2 \
+                  --exclude-path-depth-min 3 --exclude-path-depth-max 4 \
+                  --exclude-pathstep-internal-all --exclude-pathstep-final-unpivot --exclude-type-final-all
+```
+
+Notice the length of paths generated for the select clause.
+
+```
+SELECT test_data.price, test_data.*.*.nested_struct EXCLUDE test_data.*.*.*.*,
+  test_data.price.*
+FROM test_data AS test_data
+WHERE ((test_data.test_nest_struct.*.*.*.nested_struct.*.test_int <> 19) OR
+  (test_data.test_nest_struct.*.*.nested_struct.*.*.test_int > 35))
+
+
+SELECT test_data.price, test_data.*.*.nested_struct, test_data.test_struct,
+  test_data.*.*.*
+EXCLUDE test_data.test_nest_struct.*.*, test_data.test_nest_struct.*.*.*
+FROM test_data AS test_data
+WHERE ((test_data.*.*.nested_struct.*.*.*.test_int < 40) OR
+  (test_data.*.*.nested_struct.nested_struct.*.nested_struct.test_int >= -9))
+
+
+SELECT test_data.transaction_id, test_data.*.nested_struct
+EXCLUDE test_data.*.nested_struct.*.*,
+  test_data.test_nest_struct.nested_struct.*.*
+FROM test_data AS test_data
+WHERE ((((test_data.price.value <= 6.206304713037888) OR
+      (test_data.*.nested_struct.nested_struct.*.nested_struct.*.test_int <> -29))
+    AND
+    (test_data.test_nest_struct.*.nested_struct.*.nested_struct.nested_struct.test_int < 6))
+  AND ((test_data.price > -44.666855950508584) OR
+    (test_data.*.*.*.nested_struct.*.*.test_int > -42)))
+```
+
+### Query Generation Commands
+
+| Command               | Description                                                                                  |
+|-----------------------|----------------------------------------------------------------------------------------------|
+| `rand-select-all-fw`  | A `SELECT *` query with randomly generated filters                                           |
+| `rand-sfw`            | A  Select-From-Where query with randomly generated projections and filters                   |
+| `rand-select-all-efw` | A `SELECT *` query with randomly generated excludes and filters                              |
+| `rand-sefw`           | A Select-Exclude-From-Where query with randomly generated projections, excludes, and filters |
+
+#### Query Generation Parameterization
+
+
+##### Table Filter Count
+
+| Parameter            | Description                                                     | Valid for<br/>`rand-select-all-fw` | Valid for<br/>`rand-sfw` | Valid for<br/>`rand-select-all-efw` | Valid for<br/>`rand-sefw` |
+|----------------------|-----------------------------------------------------------------|:----------------------------------:|:------------------------:|:-----------------------------------:|:-------------------------:|
+| `--tbl-flt-rand-min` | Minimum number of predicates in the filter. Valid values: 1-255 |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-rand-max` | Maximum number of predicates in the filter. Valid values: 1-255 |                 Y                  |            Y             |                  Y                  |             Y             |
+
+##### Table Filter Paths
+
+| Parameter                             | Description                                                                                                                               | Valid for<br/>`rand-select-all-fw` | Valid for<br/>`rand-sfw` | Valid for<br/>`rand-select-all-efw` | Valid for<br/>`rand-sefw` |
+|---------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------:|:------------------------:|:-----------------------------------:|:-------------------------:|
+| `--tbl-flt-rand-min`                  | Minimum number of predicates in the filter. Valid values: 1-255                                                                           |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-rand-max`                  | Maximum number of predicates in the filter. Valid values: 1-255                                                                           |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-path-depth-min`            | Minimum path depth. Valid values: 1-255; Default unbounded                                                                                |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-path-depth-max`            | Maximum path depth. Valid values: 1-255; Default unbounded                                                                                |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-internal-all`     | Enable generation of all variants of internal path steps                                                                                  |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-internal-project` | Enable generation of projection-type internal path steps (e.g., the `.foo` in `variable.foo`)                                             |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-internal-index`   | Enable generation of index-type internal path steps (e.g., the `[1]` in `variable[1]`)                                                    |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-internal-foreach` | Enable generation of for-each-type internal path steps (e.g., the `[*]` in `variable[*]`)                                                 |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-internal-unpivot` | Enable generation of unpivot-type internal path steps (e.g., the `.*` in `variable.*`)                                                    |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-final-all`        | Enable generation of all variants of final path steps                                                                                     |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-final-project`    | Enable generation of projection-type final path steps (e.g., the `.foo` in `variable.foo`)                                                |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-final-index`      | Enable generation of index-type final path steps (e.g., the `[1]` in `variable[1]`)                                                       |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-final-foreach`    | Enable generation of for-each-type final path steps (e.g., the `[*]` in `variable[*]`)                                                    |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-pathstep-final-unpivot`    | Enable generation of unpivot-type final path steps (e.g., the `.*` in `variable.*`)                                                       |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-type-final-all`            | Enable generation of all variants of final types in paths                                                                                 |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-type-final-scalar`         | Enable generation of scalar final types in paths (i.e., the type of a full path can be a scalar (e.g., `9`, `'foo'`, etc))                |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-type-final-sequence`       | Enable generation of sequence final types in paths (i.e., the type of a full path can be a sequence (e.g., `[1,2,3]`, `<1, 'foo'>`, etc)) |                 Y                  |            Y             |                  Y                  |             Y             |
+| `--tbl-flt-type-final-struct`         | Enable generation of struct final types in paths (i.e., the type of a full path can be a struct (e.g., `{'a': 9, 'b': []}}`, etc))        |                 Y                  |            Y             |                  Y                  |             Y             |
+
+##### Table Filter Predicates
+
+| Parameter             | Description                                                              | Valid for<br/>`rand-select-all-fw` | Valid for<br/>`rand-sfw` | Valid for<br/>`rand-select-all-efw` | Valid for<br/>`rand-sefw` |
+|-----------------------|--------------------------------------------------------------------------|:----------------------------------:|:------------------------:|:-----------------------------------:|:-------------------------:|
+| --pred-all            | Enable all predicates                                                    |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-none           | Enable no predicates                                                     |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-absent         | Enable `IS NULL` and `IS NOT NULL` and `IS MISSING` and `IS NOT MISSING` |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-nullable       | Enable `IS NULL` and `IS NOT NULL`                                       |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-is_null        | Enable `IS NULL`                                                         |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-is_not_null    | Enable `IS NOT NULL`                                                     |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-optional       | Enable `IS MISSING` and `IS NOT MISSING`                                 |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-is_missing     | Enable `IS MISSING`                                                      |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-is_not_missing | Enable `IS NOT MISSING`                                                  |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-equality       | Enable \[`=`, `<>``\]                                                    |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-eq             | Enable `=`                                                               |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-neq            | Enable `<>`                                                              |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-comparison     | Enable \[`<`, `<=`, `>`, `>=`, `BETWEEN`\]                               |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-lt             | Enable `<`                                                               |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-lte            | Enable `<=`                                                              |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-gt             | Enable `>`                                                               |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-gte            | Enable `>=`                                                              |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-between        | Enable `BETWEEN`                                                         |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-numeric        | Enable \[`=`, `<>`, `<`, `<=`, `>`, `>=`, `BETWEEN`\]                    |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-like_all       | Enable `LIKE` and `NOT LIKE`                                             |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-like           | Enable `LIKE`                                                            |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-not_like       | Enable `NOT LIKE`                                                        |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-in_all         | Enable `IN` and `NOT IN`                                                 |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-in             | Enable `IN`                                                              |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-not_in         | Enable `NOT IN`                                                          |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-logical_all    | Enable `AND` and `OR` and `NOT`                                          |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-logical_and    | Enable `AND`                                                             |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-logical_or     | Enable `OR`                                                              |                 Y                  |            Y             |                  Y                  |             Y             |
+| --pred-logical_not    | Enable `NOT`                                                             |                 Y                  |            Y             |                  Y                  |             Y             |
+
+
+##### Projection Count
+
+| Parameter            | Description                                                     | Valid for<br/>`rand-select-all-fw` | Valid for<br/>`rand-sfw` | Valid for<br/>`rand-select-all-efw` | Valid for<br/>`rand-sefw` |
+|----------------------|-----------------------------------------------------------------|:----------------------------------:|:------------------------:|:-----------------------------------:|:-------------------------:|
+| `--project-rand-min` | Minimum number of predicates in the filter. Valid values: 1-255 |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-rand-max` | Maximum number of predicates in the filter. Valid values: 1-255 |                 N                  |            Y             |                  N                  |             Y             |
+
+##### Projection Paths
+
+| Parameter                             | Description                                                                                                                               | Valid for<br/>`rand-select-all-fw` | Valid for<br/>`rand-sfw` | Valid for<br/>`rand-select-all-efw` | Valid for<br/>`rand-sefw` |
+|---------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------:|:------------------------:|:-----------------------------------:|:-------------------------:|
+| `--project-rand-min`                  | Minimum number of predicates in the filter. Valid values: 1-255                                                                           |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-rand-max`                  | Maximum number of predicates in the filter. Valid values: 1-255                                                                           |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-path-depth-min`            | Minimum path depth. Valid values: 1-255; Default unbounded                                                                                |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-path-depth-max`            | Maximum path depth. Valid values: 1-255; Default unbounded                                                                                |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-internal-all`     | Enable generation of all variants of internal path steps                                                                                  |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-internal-project` | Enable generation of projection-type internal path steps (e.g., the `.foo` in `variable.foo`)                                             |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-internal-index`   | Enable generation of index-type internal path steps (e.g., the `[1]` in `variable[1]`)                                                    |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-internal-foreach` | Enable generation of for-each-type internal path steps (e.g., the `[*]` in `variable[*]`)                                                 |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-internal-unpivot` | Enable generation of unpivot-type internal path steps (e.g., the `.*` in `variable.*`)                                                    |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-final-all`        | Enable generation of all variants of final path steps                                                                                     |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-final-project`    | Enable generation of projection-type final path steps (e.g., the `.foo` in `variable.foo`)                                                |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-final-index`      | Enable generation of index-type final path steps (e.g., the `[1]` in `variable[1]`)                                                       |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-final-foreach`    | Enable generation of for-each-type final path steps (e.g., the `[*]` in `variable[*]`)                                                    |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-pathstep-final-unpivot`    | Enable generation of unpivot-type final path steps (e.g., the `.*` in `variable.*`)                                                       |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-type-final-all`            | Enable generation of all variants of final types in paths                                                                                 |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-type-final-scalar`         | Enable generation of scalar final types in paths (i.e., the type of a full path can be a scalar (e.g., `9`, `'foo'`, etc))                |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-type-final-sequence`       | Enable generation of sequence final types in paths (i.e., the type of a full path can be a sequence (e.g., `[1,2,3]`, `<1, 'foo'>`, etc)) |                 N                  |            Y             |                  N                  |             Y             |
+| `--project-type-final-struct`         | Enable generation of struct final types in paths (i.e., the type of a full path can be a struct (e.g., `{'a': 9, 'b': []}}`, etc))        |                 N                  |            Y             |                  N                  |             Y             |
+
+
+##### Exclude Count
+
+| Parameter            | Description                                                     | Valid for<br/>`rand-select-all-fw` | Valid for<br/>`rand-sfw` | Valid for<br/>`rand-select-all-efw` | Valid for<br/>`rand-sefw` |
+|----------------------|-----------------------------------------------------------------|:----------------------------------:|:------------------------:|:-----------------------------------:|:-------------------------:|
+| `--exclude-rand-min` | Minimum number of predicates in the filter. Valid values: 1-255 |                 N                  |            Y             |                  N                  |             Y             |
+| `--exclude-rand-max` | Maximum number of predicates in the filter. Valid values: 1-255 |                 N                  |            N             |                  Y                  |             Y             |             |
+
+##### Exclude Paths
+
+| Parameter                             | Description                                                                                                                               | Valid for<br/>`rand-select-all-fw` | Valid for<br/>`rand-sfw` | Valid for<br/>`rand-select-all-efw` | Valid for<br/>`rand-sefw` |
+|---------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------:|:------------------------:|:-----------------------------------:|:-------------------------:|
+| `--exclude-rand-min`                  | Minimum number of predicates in the filter. Valid values: 1-255                                                                           |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-rand-max`                  | Maximum number of predicates in the filter. Valid values: 1-255                                                                           |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-path-depth-min`            | Minimum path depth. Valid values: 1-255; Default unbounded                                                                                |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-path-depth-max`            | Maximum path depth. Valid values: 1-255; Default unbounded                                                                                |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-internal-all`     | Enable generation of all variants of internal path steps                                                                                  |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-internal-exclude` | Enable generation of excludeion-type internal path steps (e.g., the `.foo` in `variable.foo`)                                             |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-internal-index`   | Enable generation of index-type internal path steps (e.g., the `[1]` in `variable[1]`)                                                    |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-internal-foreach` | Enable generation of for-each-type internal path steps (e.g., the `[*]` in `variable[*]`)                                                 |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-internal-unpivot` | Enable generation of unpivot-type internal path steps (e.g., the `.*` in `variable.*`)                                                    |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-final-all`        | Enable generation of all variants of final path steps                                                                                     |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-final-exclude`    | Enable generation of excludeion-type final path steps (e.g., the `.foo` in `variable.foo`)                                                |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-final-index`      | Enable generation of index-type final path steps (e.g., the `[1]` in `variable[1]`)                                                       |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-final-foreach`    | Enable generation of for-each-type final path steps (e.g., the `[*]` in `variable[*]`)                                                    |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-pathstep-final-unpivot`    | Enable generation of unpivot-type final path steps (e.g., the `.*` in `variable.*`)                                                       |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-type-final-all`            | Enable generation of all variants of final types in paths                                                                                 |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-type-final-scalar`         | Enable generation of scalar final types in paths (i.e., the type of a full path can be a scalar (e.g., `9`, `'foo'`, etc))                |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-type-final-sequence`       | Enable generation of sequence final types in paths (i.e., the type of a full path can be a sequence (e.g., `[1,2,3]`, `<1, 'foo'>`, etc)) |                 N                  |            N             |                  Y                  |             Y             |             |
+| `--exclude-type-final-struct`         | Enable generation of struct final types in paths (i.e., the type of a full path can be a struct (e.g., `{'a': 9, 'b': []}}`, etc))        |                 N                  |            N             |                  Y                  |             Y             |             |
+
 
 ## CLI
 `partiql-beamline-cli` is a CLI tool that enables interaction with the Beamline through command-line.

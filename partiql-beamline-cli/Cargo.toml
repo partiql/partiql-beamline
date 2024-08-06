@@ -16,6 +16,8 @@ version.workspace = true
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
 partiql-beamline-cliargs = { path = "../partiql-beamline-cliargs", version = "0.1" }
 partiql-beamline-serde = { path = "../partiql-beamline-serde", version = "0.1" }
+partiql-beamline-query = { path = "../partiql-beamline-query", version = "0.1" }
+
 partiql-extension-ddl = "0.10"
 partiql-extension-ion = "0.10"
 partiql-value = "0.10"
@@ -26,3 +28,5 @@ miette = { version = "7.2", features = ["fancy"] }
 ion-rs = "0.18.1"
 
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
+
+itertools = "0.13"

@@ -42,6 +42,7 @@ impl AstGenerator<ast::WhereClause> for PathRowFilter {
         let name = self.paths.name.as_str();
 
         let logical_sel = Bernoulli::new(0.5).expect("sample");
+        assert!(!self.paths.paths.is_empty());
         let path_sel =
             DiscreteUniform::new(0, (self.paths.paths.len() - 1) as i64).expect("sample");
         let idxs: Vec<usize> = std::iter::repeat_with(|| path_sel.sample(rng) as usize)
@@ -52,6 +53,7 @@ impl AstGenerator<ast::WhereClause> for PathRowFilter {
             .map(|idx| {
                 let rng = RefCell::new(Pcg64Mcg::from_rng(&mut rng).unwrap());
                 let predicates = self.paths.paths[idx].clone();
+                assert!(!predicates.predicates.is_empty());
                 Box::new(
                     PredicateGen {
                         dataset: name.to_string(),
@@ -103,7 +105,8 @@ impl AstGenerator<ast::Expr> for PredicateGen {
             path_and_shape,
             predicates,
         } = &self.predicates;
-        let pred_sel = DiscreteUniform::new(0, (predicates.len() - 1) as i64).expect("sample");
+        let pred_sel =
+            DiscreteUniform::new(0, (predicates.len().saturating_sub(1)) as i64).expect("sample");
         let pred_idx = pred_sel.sample(rng) as usize;
         let predicate = &predicates[pred_idx];
 

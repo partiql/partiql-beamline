@@ -1,7 +1,9 @@
 use crate::generator::{AstGeneratorBoxed, DynAstGenerator, SelectPaths, SelectStar};
-use crate::strategy::path::{PathGenSpecBuilder, PathStepFlags};
-use crate::strategy::StrategyBuilderError;
+use crate::strategy::path::{
+    PathGenSpec, PathGenSpecBuilder, PathGenSpecBuilderError, PathStepFlags,
+};
 use crate::strategy::{Strategy, StrategyResult};
+use crate::strategy::{StrategyBuilderError, StrategyError};
 use derive_builder::Builder;
 use partiql_ast::ast;
 use partiql_beamline::sim::NameAndShape;
@@ -29,6 +31,17 @@ impl Strategy<NameAndShape, ast::Projection> for ProjectStar {
 pub struct RandomProjectList {
     pub min_items: u8,
     pub max_items: u8,
+
+    #[builder(default = "Self::default_paths()?.build()?")]
+    pub path_spec: PathGenSpec,
+}
+
+impl RandomProjectListBuilder {
+    pub fn default_paths() -> Result<PathGenSpecBuilder, PathGenSpecBuilderError> {
+        let mut builder = PathGenSpecBuilder::default();
+        builder.allowed_internal_steps(PathStepFlags::all() - PathStepFlags::PathUnpivot);
+        Ok(builder)
+    }
 }
 
 impl Strategy<NameAndShape, ast::Projection> for RandomProjectList {
@@ -39,10 +52,14 @@ impl Strategy<NameAndShape, ast::Projection> for RandomProjectList {
     ) -> StrategyResult<DynAstGenerator<ast::Projection>> {
         let rng = RefCell::new(Pcg64Mcg::from_rng(rng.clone())?);
         let amount = DiscreteUniform::new(self.min_items as i64, self.max_items as i64)?;
-        let paths = PathGenSpecBuilder::default()
-            .allowed_internal_steps(PathStepFlags::all() - PathStepFlags::PathUnpivot)
-            .build()?
-            .paths_for_dataset(data)?;
-        Ok(SelectPaths { rng, amount, paths }.agboxed())
+        let paths = self.path_spec.paths_for_dataset(data)?;
+
+        if paths.paths.is_empty() {
+            Err(StrategyError::ProjectPaths(
+                "Configuration leaves no valid paths available for use in projections.".to_string(),
+            ))
+        } else {
+            Ok(SelectPaths { rng, amount, paths }.agboxed())
+        }
     }
 }
