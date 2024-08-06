@@ -5,7 +5,7 @@ use partiql_beamline::sim::NameAndShape;
 use partiql_beamline_query::strategy::path::{
     PathGenSpec, PathGenSpecBuilder, PathStepFlags, PathTypeFlags,
 };
-use partiql_beamline_query::strategy::project::{ProjectStarBuilder, RandomProjectListBuilder};
+use partiql_beamline_query::strategy::project::RandomProjectListBuilder;
 use partiql_beamline_query::strategy::StrategyError::ProjectPaths;
 use partiql_beamline_query::strategy::{DynStrategy, StrategyBoxed, StrategyResult};
 use std::collections::Bound;

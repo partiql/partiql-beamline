@@ -233,7 +233,7 @@ fn path_gen_tests() -> miette::Result<()> {
     path_gen_test("complex-full-project", &complex, &full_project)?;
 
     let full_depth2 = PathGenSpecBuilder::default()
-        .max_depth(Bound::Included(2))
+        .max_depth(Bound::Included(1))
         .build()
         .unwrap();
     path_gen_test("simple-full-depth2", &simple, &full_depth2)?;
@@ -268,6 +268,13 @@ fn simple_exclude_strategy() -> miette::Result<()> {
     let exclusions = RandomExcludeListBuilder::default()
         .min_items(2)
         .max_items(5)
+        .path_spec(
+            RandomExcludeListBuilder::default_paths()
+                .into_diagnostic()?
+                .min_depth(Bound::Included(2))
+                .build()
+                .into_diagnostic()?,
+        )
         .build()
         .into_diagnostic()?;
     let strat = SelectFromWhereBuilder::default()
@@ -290,7 +297,8 @@ fn simple_shallow_exclude_strategy() -> miette::Result<()> {
     let projections = ProjectStar {};
     let path_spec = RandomExcludeListBuilder::default_paths()
         .into_diagnostic()?
-        .max_depth(Bound::Included(2))
+        .max_depth(Bound::Included(1))
+        .min_depth(Bound::Included(2))
         .build()
         .into_diagnostic()?;
     let exclusions = RandomExcludeListBuilder::default()
@@ -352,8 +360,8 @@ fn simple_random_row_filters() -> miette::Result<()> {
 fn simple_random_scalar_row_filters() -> miette::Result<()> {
     let projections = ProjectStar {};
     let path_spec = PathGenSpecBuilder::default()
-        .min_depth(Bound::Included(2))
-        .max_depth(Bound::Included(2))
+        .min_depth(Bound::Included(1))
+        .max_depth(Bound::Included(1))
         .allowed_final_types(PathTypeFlags::Scalar)
         .build()
         .into_diagnostic()?;

@@ -35,7 +35,7 @@ impl RandomExcludeListBuilder {
     pub fn default_paths() -> Result<PathGenSpecBuilder, PathGenSpecBuilderError> {
         let mut builder: PathGenSpecBuilder = PathGenSpecBuilder::default();
         builder
-            .min_depth(Bound::Included(2))
+            .min_depth(Bound::Included(1))
             .max_depth(Bound::Unbounded);
         Ok(builder)
     }
