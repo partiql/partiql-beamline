@@ -14,10 +14,6 @@ use std::ops::RangeInclusive;
 /// Projection List Generation
 #[derive(Args, Debug, Clone, PartialEq, Eq)]
 pub struct ProjectListArg {
-    /// Project all (i.e., `SELECT *`)
-    #[arg(long)]
-    pub project_star: bool,
-
     #[command(flatten)]
     pub project_count: ProjectListCountArg,
 
@@ -28,21 +24,16 @@ pub struct ProjectListArg {
 impl IntoStrategy<NameAndShape, ast::Projection> for ProjectListArg {
     fn into_strategy(self) -> StrategyResult<DynStrategy<NameAndShape, ast::Projection>> {
         let ProjectListArg {
-            project_star,
             project_count,
             path_spec,
         } = self;
         let (min, max) = project_count.range()?.into_inner();
-        Ok(if project_star {
-            ProjectStarBuilder::default().build()?.sboxed()
-        } else {
-            RandomProjectListBuilder::default()
-                .min_items(min)
-                .max_items(max)
-                .path_spec(path_spec.spec()?)
-                .build()?
-                .sboxed()
-        })
+        Ok(RandomProjectListBuilder::default()
+            .min_items(min)
+            .max_items(max)
+            .path_spec(path_spec.spec()?)
+            .build()?
+            .sboxed())
     }
 }
 
@@ -50,10 +41,10 @@ impl IntoStrategy<NameAndShape, ast::Projection> for ProjectListArg {
 #[derive(Args, Debug, Clone, PartialEq, Eq)]
 pub struct ProjectListCountArg {
     /// Minimum number of projections. Valid values: 1-255
-    #[arg(long, conflicts_with = "project_star")]
+    #[arg(long)]
     pub project_rand_min: u8,
     /// Maximum number of projections. Valid values: 1-255
-    #[arg(long, conflicts_with = "project_star")]
+    #[arg(long)]
     pub project_rand_max: u8,
 }
 

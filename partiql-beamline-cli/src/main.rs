@@ -95,8 +95,6 @@ pub enum QueryGen {
         source: SimSpec,
         #[clap(subcommand)]
         strat: QueryGenStrategy,
-        //#[clap(flatten)]
-        //strat: QueryGenStratBasicRandomSFW,
     },
 }
 

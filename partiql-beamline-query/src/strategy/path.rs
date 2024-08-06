@@ -112,8 +112,8 @@ impl PathGenSpec {
         };
 
         let max_depth = match self.max_depth {
-            Bound::Included(n) => n,
-            Bound::Excluded(n) => n.saturating_sub(1),
+            Bound::Included(n) => n.saturating_add(1),
+            Bound::Excluded(n) => n,
             Bound::Unbounded => usize::MAX,
         };
 

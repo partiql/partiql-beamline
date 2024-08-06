@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Changed the command line hierarchy to separate data generation and shape inference.
 ### Added
+- Added generation of queries based on the shape of the data generator data
 - Added ability to script 'density' (i.e. `NULL` or `MISSING` possibility and probability)
 - Added Basic DDL to KolliderDB output as `.shape.sql` files and `infer-shape` as `basic-ddl`. 
 - Added `UniformAnyOf` support for `UniformArray`
