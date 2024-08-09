@@ -336,7 +336,7 @@ fn regex_gen(expr: &Hir) -> DataGenerationResult<ReStrategy> {
                 choices: choices?,
             })
         }
-        HirKind::Look(_) => return unsupported("Look-around not supported"),
+        HirKind::Look(_) => return unsupported("Look-around not supported for data generation"),
     })
 }
 

@@ -51,9 +51,11 @@ debug-ignore = "1"
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
 
 indexmap = "2.2"
+bitflags = "2.6.0"
 
 [dev-dependencies]
 assert_matches = "1.5"
+insta = "1"
 
 [features]
 default = []

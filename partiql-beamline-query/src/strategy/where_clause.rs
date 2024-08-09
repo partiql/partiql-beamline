@@ -27,6 +27,7 @@ impl Strategy<NameAndShape, ast::WhereClause> for RandomRowFilter {
     ) -> StrategyResult<DynAstGenerator<ast::WhereClause>> {
         let meta = Meta {
             script_path: "".to_string(),
+            name: "Bool".to_string(),
         };
         let density = Density::new(Some(0.0), None, 1.0).unwrap();
         let b = SimpleBool::new(0.5, rng, meta, density)?;

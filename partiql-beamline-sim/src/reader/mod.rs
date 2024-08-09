@@ -18,7 +18,7 @@ pub(crate) const DEFAULT_OPTIONALITY: Option<f64> = None;
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum ProcessConfigError {
-    #[error("Read error: `{0}`")]
+    #[error(transparent)]
     ReadError(#[from] IonError),
 
     #[error("Format string error: `{0}`")]
@@ -36,11 +36,26 @@ pub enum ProcessConfigError {
     #[error("No data for random process")]
     NoData,
 
+    #[error("`{0}` Generator Configuration: {1}")]
+    GeneratorConfig(String, Box<ProcessConfigError>),
+
+    #[error("Expected Configuration")]
+    ConfigExpected,
+
+    #[error("Unexpected Configuration")]
+    ConfigUnexpected,
+
     #[error("Duplicate Configuration key: `{0}`")]
     ConfigDuplicateKey(String),
 
     #[error("Unexpected Configuration key: `{0}`")]
     ConfigInvalidKey(String),
+
+    #[error("Did not find expected Configuration key: `{0}`")]
+    ConfigMissingKey(String),
+
+    #[error("When processing key: `{0}`, Error `{1}`")]
+    ConfigValue(String, Box<ProcessConfigError>),
 
     #[error("Error: `{0}`")]
     UnknownGenerator(String),
@@ -67,7 +82,6 @@ pub use process::ProcessParser;
 
 #[cfg(test)]
 mod tests {
-
     use crate::gen::process::RandomDataSets;
     use crate::reader::process::ProcessParser;
     use crate::sim::SimContext;

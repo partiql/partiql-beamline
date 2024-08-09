@@ -1,14 +1,137 @@
-use crate::gen::distributions::Density;
+use crate::gen::distributions::{Density, Meta};
+use crate::gen::ValueGenerator;
+use crate::reader::registry::{ValueGeneratorParser, ValueGeneratorParserBoxed};
 use crate::reader::symbol::EnvSymbolParser;
 use crate::reader::{ProcessConfigError, ProcessConfigResult};
 use ion_rs::{AnyEncoding, LazyStruct, ValueRef};
 use ion_rs_old::external::bigdecimal::ToPrimitive;
 use partiql_value::Value;
+use rand::Rng;
 use std::collections::HashSet;
+use std::marker::PhantomData;
 
 pub(crate) const CONFIG_KEY_NULLABLE: &str = "nullable";
 pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
-pub(crate) const CONFIG_KEYS_DENSITY: [&str; 2] = [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
+pub(crate) const CONFIG_KEYS_DENSITY: [&'static str; 2] =
+    [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
+
+pub(crate) struct BasicValueGeneratorParser<T, R>
+where
+    R: Rng + Sized + 'static,
+    T: ValueGeneratorParserImpl<R>,
+{
+    inner: T,
+    marker: PhantomData<R>,
+}
+
+pub(crate) trait ValueGeneratorParserImpl<R>
+where
+    R: Rng + Sized + 'static,
+{
+    fn parse_with_config(
+        &self,
+        _rng: R,
+        _meta: Meta,
+        _density: Density,
+        _config: LazyStruct<'_, AnyEncoding>,
+        _symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        Err(ProcessConfigError::ConfigUnexpected)
+    }
+
+    fn parse_default(
+        &self,
+        _rng: R,
+        _meta: Meta,
+        _density: Density,
+        _symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        Err(ProcessConfigError::ConfigExpected)
+    }
+
+    fn possible_config_keys(&self) -> &[&'static str] {
+        &[]
+    }
+}
+
+impl<T, R> From<T> for BasicValueGeneratorParser<T, R>
+where
+    R: Rng + Sized + 'static,
+    T: ValueGeneratorParserImpl<R>,
+{
+    fn from(inner: T) -> Self {
+        let marker = PhantomData::default();
+        BasicValueGeneratorParser { inner, marker }
+    }
+}
+
+impl<T, R> BasicValueGeneratorParser<T, R>
+where
+    R: Rng + Sized + 'static,
+    T: ValueGeneratorParserImpl<R>,
+{
+    fn parse_and_handle(
+        &self,
+        rng: R,
+        meta: Meta,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
+        symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let gen_name = meta.name.clone();
+        self.parse(rng, meta, config, symbol_parser)
+            .map_err(|e| ProcessConfigError::GeneratorConfig(gen_name, Box::new(e)))
+    }
+
+    fn parse(
+        &self,
+        rng: R,
+        meta: Meta,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
+        symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let inner = &self.inner;
+        let inner_keys = inner.possible_config_keys();
+        let status = validate_config_keys(config, inner_keys)?;
+
+        let density = parse_density(config.as_ref(), symbol_parser)?;
+
+        let config = if status.local_keys { config } else { None };
+        match config {
+            None => inner.parse_default(rng, meta, density, symbol_parser),
+            Some(config) => inner.parse_with_config(rng, meta, density, config, symbol_parser),
+        }
+    }
+}
+
+impl<T, R> ValueGeneratorParser<R> for BasicValueGeneratorParser<T, R>
+where
+    R: Rng + Sized + 'static,
+    T: ValueGeneratorParserImpl<R>,
+{
+    fn parse_generator(
+        &self,
+        rng: R,
+        meta: Meta,
+        config: Option<LazyStruct<'_, AnyEncoding>>,
+        symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        self.parse_and_handle(rng, meta, config, symbol_parser)
+    }
+}
+
+#[inline]
+pub(crate) fn require_key<'a>(
+    config: LazyStruct<'a, AnyEncoding>,
+    key: &'static str,
+) -> ProcessConfigResult<ValueRef<'a, AnyEncoding>> {
+    if let Ok(Some(value)) = config.find(key) {
+        value
+            .read()
+            .map_err(|e| ProcessConfigError::ConfigValue(key.to_string(), Box::new(e.into())))
+    } else {
+        Err(ProcessConfigError::ConfigMissingKey(key.to_string()))
+    }
+}
 
 pub(crate) fn parse_density(
     config: Option<&LazyStruct<'_, AnyEncoding>>,
@@ -119,31 +242,47 @@ pub(crate) fn to_f64(
     }
 }
 
-pub(crate) fn validate_config_keys<const N: usize>(
-    config: Option<LazyStruct<'_, AnyEncoding>>,
-    allowed_keys: [&[&'static str]; N],
-) -> ProcessConfigResult<()> {
-    let keys: HashSet<&'static str> = allowed_keys.into_iter().flatten().copied().collect();
-    validate_config_keyset(config, keys)
+#[derive(Debug, Copy, Clone, Default)]
+pub(crate) struct KeyValidation {
+    global_keys: bool,
+    local_keys: bool,
 }
 
-pub(crate) fn validate_config_keyset(
+pub(crate) fn validate_config_keys(
     config: Option<LazyStruct<'_, AnyEncoding>>,
-    allowed_keys: HashSet<&'static str>,
-) -> ProcessConfigResult<()> {
+    allowed_keys: &[&'static str],
+) -> ProcessConfigResult<KeyValidation> {
+    let global_keys: HashSet<&'static str> = CONFIG_KEYS_DENSITY.into_iter().by_ref().collect();
+    let local_keys: HashSet<&'static str> = allowed_keys.into_iter().map(|s| *s).collect();
+
+    validate_config_keyset(config, global_keys, local_keys)
+}
+
+fn validate_config_keyset(
+    config: Option<LazyStruct<'_, AnyEncoding>>,
+    global_keys: HashSet<&'static str>,
+    local_keys: HashSet<&'static str>,
+) -> ProcessConfigResult<KeyValidation> {
+    let mut status = KeyValidation::default();
     let mut seen: HashSet<String> = HashSet::default();
     if let Some(config) = config {
         for s in config.iter() {
             let s = s?;
             let name = s.name()?;
             let name = name.text().unwrap_or("");
-            if !allowed_keys.contains(name) {
+
+            if global_keys.contains(name) {
+                status.global_keys = true;
+            } else if local_keys.contains(name) {
+                status.local_keys = true;
+            } else {
                 return Err(ProcessConfigError::ConfigInvalidKey(name.to_string()));
             }
+
             if !seen.insert(name.to_string()) {
                 return Err(ProcessConfigError::ConfigDuplicateKey(name.to_string()));
             }
         }
     }
-    Ok(())
+    Ok(status)
 }

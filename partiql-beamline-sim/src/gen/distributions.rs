@@ -84,6 +84,7 @@ impl Density {
 #[derive(Clone, Debug)]
 pub struct Meta {
     pub script_path: String,
+    pub name: String,
 }
 
 impl Meta {}

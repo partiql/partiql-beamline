@@ -1,8 +1,9 @@
-use crate::gen::distributions::Meta;
+use crate::gen::distributions::{Density, Meta};
 use crate::gen::ValueGenerator;
 use crate::reader::simple::SimpleScriptVariableKind;
 use crate::reader::symbol::EnvSymbolParser;
 use crate::reader::text::{Formatter, LoremIpsum, LoremIpsumTitle, RegexFormatter};
+use crate::reader::util::BasicValueGeneratorParser;
 use crate::reader::{ProcessConfigError, ProcessConfigResult};
 use ion_rs::{AnyEncoding, LazyStruct};
 use rand::Rng;
@@ -20,6 +21,28 @@ where
         config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
+}
+
+pub trait ValueGeneratorParserBoxed<R>
+where
+    R: Rng + Sized + 'static,
+{
+    fn vgpboxed(self) -> Box<dyn ValueGeneratorParser<R>>
+    where
+        Self: Sized + 'static;
+}
+
+impl<R, T> ValueGeneratorParserBoxed<R> for T
+where
+    R: Rng + Sized + 'static,
+    T: ValueGeneratorParser<R>,
+{
+    fn vgpboxed(self) -> Box<dyn ValueGeneratorParser<R>>
+    where
+        Self: Sized + 'static,
+    {
+        Box::new(self)
+    }
 }
 
 pub struct ValueGeneratorRegistry<R>
@@ -42,13 +65,24 @@ where
                 .expect("static registry creation");
         }
 
-        let ps: [(&str, Box<dyn ValueGeneratorParser<R>>); 4] = [
-            ("Format", Box::new(Formatter {})),
-            ("Regex", Box::new(RegexFormatter {})),
-            ("LoremIpsum", Box::new(LoremIpsum {})),
-            ("LoremIpsumTitle", Box::new(LoremIpsumTitle {})),
-        ];
-        for (k, v) in ps {
+        for (k, v) in [
+            (
+                "Format",
+                BasicValueGeneratorParser::from(Formatter {}).vgpboxed(),
+            ),
+            (
+                "Regex",
+                BasicValueGeneratorParser::from(RegexFormatter {}).vgpboxed(),
+            ),
+            (
+                "LoremIpsum",
+                BasicValueGeneratorParser::from(LoremIpsum {}).vgpboxed(),
+            ),
+            (
+                "LoremIpsumTitle",
+                BasicValueGeneratorParser::from(LoremIpsumTitle {}).vgpboxed(),
+            ),
+        ] {
             registry.add_parser(k, v).expect("static registry creation");
         }
 
