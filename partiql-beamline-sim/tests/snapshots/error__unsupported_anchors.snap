@@ -1,0 +1,6 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Config error: Process Configuration error: `Regex` Generator Configuration: Random Variable error: `Error: `Regex Error: Unsupported Regex: Look-around not supported for data generation``
+  ╰─▶ Process Configuration error: `Regex` Generator Configuration: Random Variable error: `Error: `Regex Error: Unsupported Regex: Look-around not supported for data generation``

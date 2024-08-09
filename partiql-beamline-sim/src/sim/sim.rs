@@ -28,9 +28,6 @@ pub const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 #[error("Sim Error")]
 #[non_exhaustive]
 pub enum SimError {
-    #[error("Read error: `{0}`")]
-    ReadError(#[from] IonError),
-
     #[error("Config error: {0}")]
     ConfigError(#[from] SimConfigError),
 
@@ -64,7 +61,7 @@ pub enum SimError {
 
 pub type SimResult<T> = Result<T, SimError>;
 
-pub type SimIterator = dyn Iterator<Item = SimResult<Sample>>;
+pub type SimIterator = dyn Iterator<Item=SimResult<Sample>>;
 
 #[derive(Debug, Clone)]
 pub struct DatasetTypeMapping {
@@ -72,7 +69,7 @@ pub struct DatasetTypeMapping {
 }
 
 impl FromIterator<(String, PartiqlShape)> for DatasetTypeMapping {
-    fn from_iter<T: IntoIterator<Item = (String, PartiqlShape)>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item=(String, PartiqlShape)>>(iter: T) -> Self {
         let mapping = iter.into_iter().collect();
         Self { mapping }
     }
@@ -101,15 +98,15 @@ impl DatasetTypeMapping {
         self.mapping.len()
     }
 
-    pub fn shapes(&self) -> impl Iterator<Item = &PartiqlShape> {
+    pub fn shapes(&self) -> impl Iterator<Item=&PartiqlShape> {
         self.mapping.values()
     }
 
-    pub fn names(&self) -> impl Iterator<Item = &String> {
+    pub fn names(&self) -> impl Iterator<Item=&String> {
         self.mapping.keys()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &PartiqlShape)> {
+    pub fn iter(&self) -> impl Iterator<Item=(&String, &PartiqlShape)> {
         self.mapping.iter()
     }
 }
@@ -132,11 +129,13 @@ impl<'a> IntoIterator for &'a DatasetTypeMapping {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct NameAndShape {
     pub name: String,
     pub shape: PartiqlShape,
 }
 
+#[derive(Debug, Clone)]
 pub struct SimBuilder {
     context: SimContext,
 
@@ -372,7 +371,7 @@ impl MultiSim {
                 t0,
                 processes: p,
             }
-            .build_time_ordered()
+                .build_time_ordered()
         };
 
         let shape = processes.shape();

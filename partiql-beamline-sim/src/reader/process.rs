@@ -482,12 +482,15 @@ impl ProcessParser {
         scope_name: &str,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let script_path = self.env_stack.curr_path(Some(scope_name))?;
-        let meta = Meta { script_path };
         match value {
             ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
                 SymbolType::VarRef(var) => {
                     let gen: Box<dyn ValueGenerator> = match self.env_stack.get(&var)? {
                         EnvBindingValue::Value(v) => {
+                            let meta = Meta {
+                                script_path,
+                                name: "<constant>".to_string(),
+                            };
                             Box::new(ConstantGenerator::new(meta, v.clone()))
                         }
                         EnvBindingValue::Generator(g) => g.clone(),
@@ -498,6 +501,7 @@ impl ProcessParser {
                 SymbolType::Str(name) => {
                     if let Some(parser) = self.registry.get_parser(&name) {
                         let crng = self.child_rng()?;
+                        let meta = Meta { script_path, name };
                         parser.parse_generator(crng, meta, None, self)
                     } else {
                         Err(ProcessConfigError::UnknownGenerator(name))
@@ -521,6 +525,10 @@ impl ProcessParser {
                     }
                     self.pop_scope()?;
                     let rng = self.child_rng()?;
+                    let meta = Meta {
+                        script_path,
+                        name: "<struct>".to_string(),
+                    };
                     Ok(Box::new(SimpleRandomData::new(rng, meta, density, kvs)?)
                         as Box<dyn ValueGenerator>)
                 } else {
@@ -533,6 +541,7 @@ impl ProcessParser {
                             if self.registry.has_parser(&name) {
                                 let crng = self.child_rng()?;
                                 let parser = self.registry.get_parser(&name).unwrap();
+                                let meta = Meta { script_path, name };
                                 parser.parse_generator(crng, meta, Some(*strct), self)
                             } else {
                                 Err(ProcessConfigError::UnknownGenerator(name))
@@ -546,6 +555,10 @@ impl ProcessParser {
             ))),
             other => {
                 let constant = self.parse_immediate(other)?;
+                let meta = Meta {
+                    script_path,
+                    name: "<constant>".to_string(),
+                };
                 Ok(Box::new(ConstantGenerator::new(meta, constant)))
             }
         }
@@ -626,7 +639,7 @@ impl EnvSymbolParser for ProcessParser {
                 if let Some(parser) = self.registry.get_parser(&name) {
                     let crng = self.child_rng()?;
                     let script_path = self.env_stack.curr_path(sym.text())?;
-                    let meta = Meta { script_path };
+                    let meta = Meta { script_path, name };
                     parser.parse_generator(crng, meta, cfg, self)
                 } else {
                     Err(ProcessConfigError::UnknownGenerator(name))

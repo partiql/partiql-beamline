@@ -164,6 +164,7 @@ fn verify_exemplar_partial(
     nullability: Option<f64>,
     optionality: Option<f64>,
 ) -> miette::Result<()> {
+    let allow_absent = nullability.is_some() || optionality.is_some();
     let seed = 90; // thanks random.org
     let t0 = datetime!(2024-05-24 20:39:13 UTC);
     let config = SimConfigBuilder::default()
@@ -207,13 +208,22 @@ fn verify_exemplar_partial(
     let k_data = BindingsName::CaseInsensitive("data".into());
     assert_eq!(data.get(&k_seed), exemplar.get(&k_seed));
     assert_eq!(data.get(&k_start), exemplar.get(&k_start));
-    compare_present(data.get(&k_data).unwrap(), exemplar.get(&k_data).unwrap());
+    compare_present(
+        allow_absent,
+        data.get(&k_data).unwrap(),
+        exemplar.get(&k_data).unwrap(),
+    );
 
     Ok(())
 }
 
-fn compare_present(data: &Value, exemplar: &Value) {
+fn compare_present(allow_absent: bool, data: &Value, exemplar: &Value) {
     if data.is_absent() && !exemplar.is_absent() {
+        if allow_absent {
+            // data is allowed to be absent in this test
+        } else {
+            panic!("Expected non-absent data");
+        }
     } else {
         match (data, exemplar) {
             (Value::Tuple(data), Value::Tuple(exemplar)) => {
@@ -223,20 +233,20 @@ fn compare_present(data: &Value, exemplar: &Value) {
                     let ev = ekvs.get(k);
                     assert!(ev.is_some());
                     if !v.is_absent() {
-                        compare_present(v, ev.unwrap());
+                        compare_present(allow_absent, v, ev.unwrap());
                     }
                 }
             }
             (Value::List(data), Value::List(exemplar)) => {
                 assert_eq!(data.len(), exemplar.len());
                 for (data, exemplar) in data.iter().zip(exemplar.iter()) {
-                    compare_present(data, exemplar);
+                    compare_present(allow_absent, data, exemplar);
                 }
             }
             (Value::Bag(data), Value::Bag(exemplar)) => {
                 assert_eq!(data.len(), exemplar.len());
                 for (data, exemplar) in data.iter().zip(exemplar.iter()) {
-                    compare_present(data, exemplar);
+                    compare_present(allow_absent, data, exemplar);
                 }
             }
             (data, exemplar) => {
