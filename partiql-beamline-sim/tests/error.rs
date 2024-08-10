@@ -21,16 +21,9 @@ use thiserror::Error;
 use time::macros::datetime;
 
 #[track_caller]
-fn repeatable_sims(source: SimSource) -> SimResult<(SimBuilder, SimBuilder)> {
+fn get_sim(source: SimSource) -> SimResult<SimBuilder> {
     let config = SimConfigBuilder::default().build()?;
-    let t0 = config.t0;
-    let seed = config.seed;
-    let config2 = SimConfigBuilder::default().t0(t0).seed(seed).build()?;
-
-    Ok((
-        SimBuilder::from_config(config, source.clone())?,
-        SimBuilder::from_config(config2, source)?,
-    ))
+    Ok(SimBuilder::from_config(config, source)?)
 }
 
 struct FormatTester<T, E>
@@ -55,8 +48,9 @@ where
 #[track_caller]
 #[inline]
 fn assert_script_error_snapshot(name: &str, script: String) -> miette::Result<()> {
-    let source = SimSource::new(name, script)?;
-    let result = repeatable_sims(source);
+    let source_name = format!("{name}.script");
+    let source = SimSource::new(source_name, script)?;
+    let result = get_sim(source);
     assert!(result.is_err());
     assert_error_output_snapshot(name, result.unwrap_err())
 }
@@ -67,9 +61,10 @@ fn assert_error_output_snapshot<E>(name: &str, err: E) -> miette::Result<()>
 where
     E: Diagnostic,
 {
+    dbg!(&err);
     let handler =
         miette::GraphicalReportHandler::new().with_theme(GraphicalTheme::unicode_nocolor());
-    dbg!(&err);
+
     let tester = FormatTester { handler, err };
     let output = format!("{:?}", tester);
     println!("{output}");

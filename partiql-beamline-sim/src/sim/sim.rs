@@ -25,7 +25,6 @@ pub const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
 /// Error during simulation
 #[derive(Debug, Error, Diagnostic)]
-//#[error("Sim Error")]
 #[non_exhaustive]
 pub enum SimError {
     #[error(transparent)]

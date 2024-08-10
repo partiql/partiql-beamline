@@ -4,9 +4,13 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × `Regex` Generator Configuration: When processing key: `pattern`, Error `invalid escape sequence '\100`
-  ├─▶   × When processing key: `pattern`, Error `invalid escape sequence '\100`
+Error:   × `Regex` Generator Configuration
+  ├─▶   × Configuration Key `pattern`
   │   
-  ├─▶   × invalid escape sequence '\100
-  │   
-  ╰─▶ invalid escape sequence '\100
+  ╰─▶   × Ion Decoding Error: invalid escape sequence '\100
+         ╭─[bad_escapes.script:8:53]
+       7 │             $data: {
+       8 │                 bad: Regex::{ pattern: "^some val \b\d{1,4}\b$" },
+         ·                                                     ▲
+       9 │             }
+         ╰────
