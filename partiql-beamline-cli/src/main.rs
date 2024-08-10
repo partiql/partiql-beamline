@@ -325,3 +325,223 @@ fn handle_query(query: QueryGen) -> miette::Result<()> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::Error;
+    use std::ffi::OsString;
+    use std::fmt::Debug;
+
+    #[inline]
+    #[track_caller]
+    fn assert_args<I, T>(args: I)
+    where
+        I: IntoIterator<Item=T> + Debug,
+        T: Into<OsString> + Clone,
+    {
+        let result = Cli::try_parse_from(args);
+        if let Err(err) = result {
+            panic!("Expected to parse, but found: {err}");
+        }
+    }
+
+    #[inline]
+    #[track_caller]
+    fn assert_cmdline(cmd: impl AsRef<str>) {
+        assert_args(cmd.as_ref().split_whitespace())
+    }
+
+    #[test]
+    fn parse_data_gen_cmdline() {
+        assert_cmdline(
+            r##"partiql-beamline gen data
+                        --seed-auto --start-auto --sample-count 2
+                        --script-path partiql-beamline-sim/tests/scripts/sensors.ion"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline gen data
+                        --seed 12328924104731257599 --start-auto --sample-count 2
+                        --script-path partiql-beamline-sim/tests/scripts/sensors.ion"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline gen data
+                        --seed 12328924104731257599  --start-iso 2024-01-20T20:51:02.000000000Z --sample-count 2
+                        --script-path partiql-beamline-sim/tests/scripts/sensors.ion"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline gen data
+                        --seed-auto --start-auto --sample-count 3
+                        --script-path partiql-beamline-sim/tests/scripts/sensors-nested.ion
+                        --output-format ion-pretty"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline gen data
+                        --seed 45121008347100595
+                        --start-iso 2020-06-16T14:41:51.000000000Z
+                        --script-path partiql-beamline-sim/tests/scripts/client-service.ion
+                        --sample-count 10
+                        --dataset service --dataset client_1
+                        --output-format ion-pretty"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline gen data
+                        --seed 1234
+                        --start-iso 2019-08-01T00:00:01-07:00
+                        --script-path ./partiql-beamline-sim/tests/scripts/orders.ion
+                        --sample-count 30
+                        --output-format text"##,
+        );
+    }
+
+    #[test]
+    fn parse_infer_shape_cmdline() {
+        assert_cmdline(
+            r##"partiql-beamline infer-shape
+                        --seed-auto --start-auto
+                        --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline infer-shape
+                      --seed 7844265201457918498
+                      --start-auto 
+                      --script-path partiql-beamline-sim/tests/scripts/sensors-nested.ion
+                      --output-format basic-ddl"##,
+        );
+    }
+
+    #[test]
+    fn parse_gen_db_cmdline() {
+        assert_cmdline(
+            r##"partiql-beamline gen db kollider
+                       --seed-auto --start-auto 
+                       --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline gen db kollider
+                       --seed-auto --start-auto
+                       --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion"##,
+        );
+    }
+
+    #[test]
+    fn parse_query_cmdline() {
+        assert_cmdline(
+            r##"partiql-beamline query 
+                        basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion
+                               --sample-count 3
+                        rand-select-all-fw
+                                  --tbl-flt-rand-min 1 --tbl-flt-rand-max 1
+                                      --tbl-flt-path-depth-max 1
+                                      --tbl-flt-pathstep-internal-all
+                                      --tbl-flt-pathstep-final-project
+                                      --tbl-flt-type-final-scalar
+                                      --pred-lt   "##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline query
+                        basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion
+                               --sample-count 3
+                        rand-select-all-fw
+                                  --tbl-flt-rand-min 1 --tbl-flt-rand-max 1
+                                      --tbl-flt-path-depth-max 1
+                                      --tbl-flt-pathstep-internal-all
+                                      --tbl-flt-pathstep-final-project
+                                      --tbl-flt-type-final-scalar
+                                      --pred-lt
+            "##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline query
+                        basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion
+                               --sample-count 3
+                        rand-select-all-fw
+                                  --tbl-flt-rand-min 3 --tbl-flt-rand-max 10
+                                      --tbl-flt-path-depth-max 1
+                                      --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-all
+                                      --pred-all
+            "##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline query
+                        basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion
+                               --sample-count 3
+                        rand-sfw
+                                  --project-rand-min 2 --project-rand-max 5
+                                      --project-path-depth-min 1 --project-path-depth-max 1
+                                      --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all
+                                  --tbl-flt-rand-min 2 --tbl-flt-rand-max 5
+                                      --tbl-flt-path-depth-max 1
+                                      --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar
+                                      --pred-all
+            "##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline query
+                        basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion
+                               --sample-count 3
+                        rand-sefw
+                                  --project-rand-min 2 --project-rand-max 5
+                                      --project-path-depth-min 1 --project-path-depth-max 1
+                                      --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all
+                                  --tbl-flt-rand-min 2 --tbl-flt-rand-max 5
+                                      --tbl-flt-path-depth-max 1
+                                      --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar
+                                      --pred-all
+                                  --exclude-rand-min 1 --exclude-rand-max 3
+                                      --exclude-path-depth-min 1 --exclude-path-depth-max 1
+                                      --exclude-pathstep-internal-all --exclude-pathstep-final-all --exclude-type-final-all
+            "##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline query
+                        basic  --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/simple_transactions.ion
+                               --sample-count 3
+                        rand-select-all-efw
+                                  --tbl-flt-rand-min 1 --tbl-flt-rand-max 1
+                                      --tbl-flt-path-depth-max 1
+                                      --tbl-flt-pathstep-internal-all
+                                      --tbl-flt-pathstep-final-project
+                                      --tbl-flt-type-final-scalar
+                                      --pred-lt
+                                  --exclude-rand-min 1 --exclude-rand-max 3
+                                      --exclude-path-depth-min 1 --exclude-path-depth-max 1
+                                      --exclude-pathstep-internal-all --exclude-pathstep-final-all --exclude-type-final-all
+            "##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline query
+                        basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/transactions.ion
+                               --sample-count 3
+                        rand-sefw
+                                  --project-rand-min 2 --project-rand-max 5
+                                      --project-path-depth-min 1 --project-path-depth-max 10
+                                      --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all
+                                  --tbl-flt-rand-min 2 --tbl-flt-rand-max 5
+                                      --tbl-flt-path-depth-max 10
+                                      --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar
+                                      --pred-all
+                                  --exclude-rand-min 1 --exclude-rand-max 2
+                                      --exclude-path-depth-min 3 --exclude-path-depth-max 4
+                                      --exclude-pathstep-internal-all --exclude-pathstep-final-unpivot --exclude-type-final-all
+            "##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline query
+                        basic --seed 1234 --start-auto --script-path ./partiql-beamline-sim/tests/scripts/transactions.ion
+                               --sample-count 3
+                        rand-sefw
+                                  --project-rand-min 2 --project-rand-max 5
+                                      --project-path-depth-min 1 --project-path-depth-max 3
+                                      --project-pathstep-internal-all --project-pathstep-final-all --project-type-final-all
+                                  --tbl-flt-rand-min 2 --tbl-flt-rand-max 5
+                                      --tbl-flt-path-depth-max 10
+                                      --tbl-flt-pathstep-internal-all --tbl-flt-pathstep-final-project --tbl-flt-type-final-scalar
+                                      --pred-all
+                                  --exclude-rand-min 1 --exclude-rand-max 2
+                                      --exclude-path-depth-min 3 --exclude-path-depth-max 4
+                                      --exclude-pathstep-internal-all --exclude-pathstep-final-unpivot --exclude-type-final-all
+            "##,
+        );
+    }
+}

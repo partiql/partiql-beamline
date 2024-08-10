@@ -851,7 +851,7 @@ $ cargo run gen data \
     --start-iso "2019-08-01T00:00:01-07:00" \
     --script-path ./partiql-beamline-sim/tests/scripts/orders.ion \
     --sample-count 30 \
-    --output=format text
+    --output-format text
 ```
 
 Notice that the output generates 5 customers (and thus 5 entries in the `customer_table`), and then the requested 30 
