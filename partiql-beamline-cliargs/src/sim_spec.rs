@@ -1,5 +1,6 @@
 use clap::Args;
 use partiql_beamline::sim::{SimConfig, SimConfigBuildResult, SimConfigBuilder};
+use partiql_beamline::source::{SimSource, SimSourceResult};
 use std::fs;
 use std::num::ParseIntError;
 use std::path::PathBuf;
@@ -97,10 +98,10 @@ pub struct Script {
 }
 
 impl Script {
-    pub fn extract(self) -> std::io::Result<String> {
+    pub fn extract(self) -> SimSourceResult<SimSource> {
         match (self.script_path, self.script) {
-            (None, Some(data)) => Ok(data),
-            (Some(path), None) => fs::read_to_string(path),
+            (None, Some(data)) => SimSource::new("<stdin>", data),
+            (Some(path), None) => SimSource::from_path(path),
             _ => unreachable!(),
         }
     }
@@ -128,7 +129,7 @@ pub struct SimSpec {
 impl SimSpec {
     pub fn to_script_and_config(
         self,
-    ) -> (std::io::Result<String>, SimConfigBuildResult<SimConfig>) {
+    ) -> (SimSourceResult<SimSource>, SimConfigBuildResult<SimConfig>) {
         let SimSpec {
             seed,
             start_time,

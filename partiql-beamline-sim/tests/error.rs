@@ -1,65 +1,36 @@
 use assert_matches::assert_matches;
+use ion_rs::IonError;
 use itertools::Itertools;
-use miette::{Diagnostic, GraphicalTheme, IntoDiagnostic, MietteHandler, ReportHandler};
+use miette::{
+    Diagnostic, GraphicalTheme, IntoDiagnostic, LabeledSpan, MietteHandler, ReportHandler,
+    Severity, SourceCode, SourceSpan,
+};
+use partiql_beamline::reader::error::ProcessConfigError;
 use partiql_beamline::sim::{
     ISim, SimBuilder, SimConfigBuilder, SimError, SimResult, DATETIME_FORMAT,
 };
+use partiql_beamline::source::SimSource;
 use partiql_extension_ion::decode::{IonDecoderBuilder, IonDecoderConfig};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding::PartiqlEncodedAsIon;
 use partiql_value::{tuple, BindingsName, List, Value};
 use std::collections::HashMap;
 use std::fmt;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
+use thiserror::Error;
 use time::macros::datetime;
 
 #[track_caller]
-fn repeatable_sims(script: &[u8]) -> SimResult<(SimBuilder, SimBuilder)> {
+fn repeatable_sims(source: SimSource) -> SimResult<(SimBuilder, SimBuilder)> {
     let config = SimConfigBuilder::default().build()?;
     let t0 = config.t0;
     let seed = config.seed;
     let config2 = SimConfigBuilder::default().t0(t0).seed(seed).build()?;
 
     Ok((
-        SimBuilder::from_config(config, script)?,
-        SimBuilder::from_config(config2, script)?,
+        SimBuilder::from_config(config, source.clone())?,
+        SimBuilder::from_config(config2, source)?,
     ))
-}
-
-#[track_caller]
-fn verify_repeatable(script: &[u8]) -> SimResult<()> {
-    let (sim, sim2) = repeatable_sims(script)?;
-    let mut sim = sim.build_time_ordered()?;
-    let mut sim2 = sim2.build_time_ordered()?;
-
-    for (sample1, sample2) in sim.iter_mut().zip(sim2.iter_mut()).take(100) {
-        assert_eq!(sample1?, sample2?);
-    }
-
-    let _test_final = sim.next_sample();
-
-    Ok(())
-}
-
-#[track_caller]
-fn verify_repeatable_multi(script: &[u8]) -> SimResult<()> {
-    let (sim, sim2) = repeatable_sims(script)?;
-    let mut sim = sim.build_multi_dataset()?;
-    let mut sim2 = sim2.build_multi_dataset()?;
-
-    let ds1 = sim.datasets();
-    let ds2 = sim2.datasets();
-    assert_eq!(ds1, ds2);
-
-    for (id, _n) in ds1 {
-        for (sample1, sample2) in
-            std::iter::zip(sim.for_dataset(id)?, sim2.for_dataset(id)?).take(100)
-        {
-            assert_eq!(sample1?, sample2?);
-        }
-    }
-
-    Ok(())
 }
 
 struct FormatTester<T, E>
@@ -83,13 +54,22 @@ where
 
 #[track_caller]
 #[inline]
-fn assert_error_output_snapshot(name: &str, script: String) -> miette::Result<()> {
-    let result = repeatable_sims(script.as_bytes());
+fn assert_script_error_snapshot(name: &str, script: String) -> miette::Result<()> {
+    let source = SimSource::new(name, script)?;
+    let result = repeatable_sims(source);
     assert!(result.is_err());
+    assert_error_output_snapshot(name, result.unwrap_err())
+}
 
+#[track_caller]
+#[inline]
+fn assert_error_output_snapshot<E>(name: &str, err: E) -> miette::Result<()>
+where
+    E: Diagnostic,
+{
     let handler =
         miette::GraphicalReportHandler::new().with_theme(GraphicalTheme::unicode_nocolor());
-    let err = result.unwrap_err();
+    dbg!(&err);
     let tester = FormatTester { handler, err };
     let output = format!("{:?}", tester);
     println!("{output}");
@@ -98,6 +78,7 @@ fn assert_error_output_snapshot(name: &str, script: String) -> miette::Result<()
 
     Ok(())
 }
+
 #[test]
 fn verify_parse_error_regex() -> miette::Result<()> {
     let script_template = r##"
@@ -114,14 +95,14 @@ fn verify_parse_error_regex() -> miette::Result<()> {
     "##;
 
     let bad_escapes = script_template.replace("$$PATTERN$$", r##"^some val \b\d{1,4}\b$"##);
-    assert_error_output_snapshot("bad_escapes", bad_escapes)?;
+    assert_script_error_snapshot("bad_escapes", bad_escapes)?;
 
     let unsupported_lookaround =
         script_template.replace("$$PATTERN$$", r##"^some val \\b\\d{1,4}\\b$"##);
-    assert_error_output_snapshot("unsupported_lookaround", unsupported_lookaround)?;
+    assert_script_error_snapshot("unsupported_lookaround", unsupported_lookaround)?;
 
     let unsupported_anchors = script_template.replace("$$PATTERN$$", r##"^some val \\d{1,4}$"##);
-    assert_error_output_snapshot("unsupported_anchors", unsupported_anchors)?;
+    assert_script_error_snapshot("unsupported_anchors", unsupported_anchors)?;
 
     Ok(())
 }

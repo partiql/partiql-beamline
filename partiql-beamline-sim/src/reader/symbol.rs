@@ -1,5 +1,5 @@
 use crate::gen::ValueGenerator;
-use crate::reader::ProcessConfigResult;
+use crate::reader::error::ProcessConfigResult;
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef};
 use partiql_value::Value;
 

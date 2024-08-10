@@ -1,8 +1,7 @@
-use crate::gen::DataGenerationError;
-use ion_rs::IonError;
-use thiserror::Error;
-
+use miette::{Diagnostic, SourceCode};
+use std::fmt::Display;
 mod env;
+pub mod error;
 mod process;
 mod registry;
 mod simple;
@@ -15,69 +14,6 @@ pub(crate) const DEFAULT_NULLABILITY: Option<f64> = Some(0.0);
 /// By default, no types are optional (i.e. will never be missing)
 pub(crate) const DEFAULT_OPTIONALITY: Option<f64> = None;
 
-#[derive(Debug, Error)]
-#[non_exhaustive]
-pub enum ProcessConfigError {
-    #[error(transparent)]
-    ReadError(#[from] IonError),
-
-    #[error("Format string error: `{0}`")]
-    FormatStringError(String),
-
-    #[error("Nullability/Optionality config error: `{0}`")]
-    DensityError(String),
-
-    #[error("Random Variable error: `{0}`")]
-    RandomVariableError(#[from] DataGenerationError),
-
-    #[error("No $arrival for random process")]
-    NoArrival,
-
-    #[error("No data for random process")]
-    NoData,
-
-    #[error("`{0}` Generator Configuration: {1}")]
-    GeneratorConfig(String, Box<ProcessConfigError>),
-
-    #[error("Expected Configuration")]
-    ConfigExpected,
-
-    #[error("Unexpected Configuration")]
-    ConfigUnexpected,
-
-    #[error("Duplicate Configuration key: `{0}`")]
-    ConfigDuplicateKey(String),
-
-    #[error("Unexpected Configuration key: `{0}`")]
-    ConfigInvalidKey(String),
-
-    #[error("Did not find expected Configuration key: `{0}`")]
-    ConfigMissingKey(String),
-
-    #[error("When processing key: `{0}`, Error `{1}`")]
-    ConfigValue(String, Box<ProcessConfigError>),
-
-    #[error("Error: `{0}`")]
-    UnknownGenerator(String),
-
-    #[error("Error: `{0}`")]
-    UnknownArrival(String),
-
-    #[error("Error: `{0}`")]
-    UnknownImmediate(String),
-
-    #[error("Error: {0}")]
-    NoConfig(String),
-
-    #[error("Error: `{0}`")]
-    Other(String),
-
-    #[error("Fatal Internal Error: `{0}`")]
-    Fatal(String),
-}
-
-type ProcessConfigResult<T> = Result<T, ProcessConfigError>;
-
 pub use process::ProcessParser;
 
 #[cfg(test)]
@@ -86,13 +22,18 @@ mod tests {
     use crate::reader::process::ProcessParser;
     use crate::sim::SimContext;
     use crate::sim::{SimConfigBuilder, SimConfigResult};
-    use ion_rs::{AnyEncoding, Element, Reader};
+    use crate::source::SimSource;
+    use ion_rs::Element;
 
     #[track_caller]
-    fn parse(ion_data: &str) -> SimConfigResult<RandomDataSets> {
+    fn parse(name: &str, ion_data: &str) -> SimConfigResult<RandomDataSets> {
         let mut ion_bytes: Vec<u8> = vec![];
-        Element::read_one(ion_data)?.encode_to(&mut ion_bytes, ion_rs::v1_0::Binary)?;
-        let mut reader = Reader::new(AnyEncoding, ion_bytes.as_slice())?;
+        Element::read_one(ion_data)
+            .expect("ion decode")
+            .encode_to(&mut ion_bytes, ion_rs::v1_0::Binary)
+            .expect("ion encode");
+
+        let source = SimSource::new(name, ion_bytes)?;
 
         let registry = Default::default();
         let seed = 5; // Chosen via roll of a fair die.
@@ -101,13 +42,13 @@ mod tests {
         let ctx = SimContext::new(config)?;
 
         let parser = ProcessParser::new(seed, registry, &ctx)?;
-        Ok(parser.parse(&mut reader)?)
+        Ok(parser.parse(source)?)
     }
 
     #[test]
     fn sensors() -> SimConfigResult<()> {
         let ion_data = include_str!("../..//tests/scripts/sensors.ion");
-        let processes = parse(ion_data)?;
+        let processes = parse("sensors.ion", ion_data)?;
         assert_eq!(processes.ids().len(), 7);
 
         Ok(())
@@ -116,7 +57,7 @@ mod tests {
     #[test]
     fn sensors_alternate() -> SimConfigResult<()> {
         let ion_data = include_str!("../../tests/scripts/sensors-alternate.ion");
-        let processes = parse(ion_data)?;
+        let processes = parse("sensors-alternate.ion", ion_data)?;
         assert_eq!(processes.ids().len(), 7);
 
         Ok(())
@@ -125,7 +66,7 @@ mod tests {
     #[test]
     fn client_service() -> SimConfigResult<()> {
         let ion_data = include_str!("../../tests/scripts/client-service.ion");
-        let processes = parse(ion_data)?;
+        let processes = parse("client-service.ion", ion_data)?;
         assert_eq!(processes.ids().len(), 14 * 2); // 14 clients; 14 instances of service
 
         Ok(())
@@ -134,7 +75,7 @@ mod tests {
     #[test]
     fn transactions() -> SimConfigResult<()> {
         let ion_data = include_str!("../../tests/scripts/transactions.ion");
-        let processes = parse(ion_data)?;
+        let processes = parse("transactions.ion", ion_data)?;
         assert_eq!(processes.ids().len(), 1);
 
         Ok(())
@@ -143,7 +84,7 @@ mod tests {
     #[test]
     fn orders() -> SimConfigResult<()> {
         let ion_data = include_str!("../../tests/scripts/orders.ion");
-        let processes = parse(ion_data)?;
+        let processes = parse("orders.ion", ion_data)?;
         assert_eq!(processes.ids().len(), 28);
 
         Ok(())

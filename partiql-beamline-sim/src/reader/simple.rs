@@ -12,9 +12,10 @@ use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
 
-use crate::reader::{util, ProcessConfigError, ProcessConfigResult};
+use crate::reader::util;
 
-use crate::reader::util::{to_f64, to_i64, validate_config_keys, CONFIG_KEYS_DENSITY};
+use crate::reader::error::{ProcessConfigError, ProcessConfigResult};
+use crate::reader::util::{to_f64, to_i64, validate_config_keys};
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
 use partiql_value::Value;
 use rand::Rng;
@@ -268,9 +269,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["types"])?;
-        let config = config.ok_or_else(|| {
-            ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
-        })?;
+        let config = config.ok_or(ProcessConfigError::ConfigExpected)?;
 
         let lst = config.get_expected("types")?.expect_list()?;
 
@@ -313,9 +312,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["choices"])?;
-        let config = config.ok_or_else(|| {
-            ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
-        })?;
+        let config = config.ok_or(ProcessConfigError::ConfigExpected)?;
 
         let choices = config.get_expected("choices")?.expect_list()?;
         let mut choice_values = vec![];
@@ -349,9 +346,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["element_type", "min_size", "max_size"])?;
-        let config = config.ok_or_else(|| {
-            ProcessConfigError::NoConfig(format!("Usage of {self:?} with no config is unsupported"))
-        })?;
+        let config = config.ok_or(ProcessConfigError::ConfigExpected)?;
 
         let min_size = config.get_expected("min_size")?;
         let max_size = config.get_expected("max_size")?;

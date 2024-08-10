@@ -5,15 +5,17 @@ pub mod sim;
 pub mod gen;
 pub mod primitives;
 pub mod reader;
+pub mod source;
 
 #[cfg(test)]
 mod tests {
     use crate::primitives::{Sample, Tick};
 
-    use crate::reader::ProcessConfigError;
+    use crate::reader::error::{ProcessConfigError, ProcessParseError};
     use crate::sim::{
         ISim, Sim, SimBuilder, SimConfigBuilder, SimConfigError, SimError, SimResult,
     };
+    use crate::source::SimSource;
     use assert_matches::assert_matches;
     use partiql_types::{Static, StructField};
     use partiql_value::{list, tuple, Value};
@@ -49,9 +51,11 @@ mod tests {
     fn config_error_invalid_key_low() {
         assert_matches!(
             sim_from_script(&format_simple_script("{low_val: 5, high_val: 6}")),
-            Err(SimError::ConfigError(SimConfigError::ProcessConfig(
-                ProcessConfigError::ConfigInvalidKey(msg),
-            ))) if msg == "low_val"
+            Err(SimError::ConfigError(SimConfigError::ProcessConfig(ProcessParseError{related,..}))) =>{
+                assert_matches!(
+                    &related[0], ProcessConfigError::ConfigInvalidKey(msg) if msg == "low_val"
+                );
+            }
         );
     }
 
@@ -59,9 +63,11 @@ mod tests {
     fn config_error_invalid_key_high() {
         assert_matches!(
             sim_from_script(&format_simple_script("{low: 5, high_val: 6}")),
-            Err(SimError::ConfigError(SimConfigError::ProcessConfig(
-                ProcessConfigError::ConfigInvalidKey(msg),
-            ))) if msg == "high_val"
+            Err(SimError::ConfigError(SimConfigError::ProcessConfig(ProcessParseError{related,..}))) =>{
+                assert_matches!(
+                    &related[0], ProcessConfigError::ConfigInvalidKey(msg)  if msg == "high_val"
+                );
+            }
         );
     }
 
@@ -69,9 +75,11 @@ mod tests {
     fn config_error_duplicate_key_high() {
         assert_matches!(
             sim_from_script(&format_simple_script("{low: 5, high: 6, high: 9}")),
-            Err(SimError::ConfigError(SimConfigError::ProcessConfig(
-                ProcessConfigError::ConfigDuplicateKey(msg),
-            ))) if msg == "high"
+            Err(SimError::ConfigError(SimConfigError::ProcessConfig(ProcessParseError{ related,..}))) =>{
+                assert_matches!(
+                    &related[0], ProcessConfigError::ConfigDuplicateKey(msg)  if msg == "high"
+                );
+            }
         );
     }
 
@@ -149,7 +157,8 @@ mod tests {
             .t0(t0)
             .build()?;
 
-        let sim = SimBuilder::from_config(config, script.as_bytes())?.build_time_ordered()?;
+        let source = SimSource::new("test_data", script)?;
+        let sim = SimBuilder::from_config(config, source)?.build_time_ordered()?;
         Ok(sim)
     }
 

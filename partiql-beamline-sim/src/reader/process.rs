@@ -6,11 +6,14 @@ use crate::gen::process::{RandomDataSets, SimpleProcess};
 use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
+use crate::reader::error::{
+    ProcessConfigError, ProcessConfigResult, ProcessParseError, ProcessParseResult,
+};
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
 use crate::reader::util::parse_density;
-use crate::reader::{ProcessConfigError, ProcessConfigResult};
 use crate::sim::SimContext;
+use crate::source::SimSource;
 use indexmap::IndexMap;
 use ion_rs::{
     AnyEncoding, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef, ValueRef,
@@ -46,7 +49,7 @@ impl ProcessParser {
         seed: u64,
         registry: ValueGeneratorRegistry<Pcg64Mcg>,
         ctx: &SimContext,
-    ) -> ProcessConfigResult<Self> {
+    ) -> ProcessParseResult<Self> {
         Ok(Self {
             registry,
             rng_stack: Rc::new(RefCell::new(vec![Pcg64Mcg::seed_from_u64(seed)])),
@@ -56,10 +59,15 @@ impl ProcessParser {
         })
     }
 
-    pub fn parse(
-        mut self,
-        reader: &mut Reader<AnyEncoding, &[u8]>,
-    ) -> ProcessConfigResult<RandomDataSets> {
+    pub fn parse(mut self, source: SimSource) -> ProcessParseResult<RandomDataSets> {
+        self.do_parse(&source).map_err(|err| ProcessParseError {
+            script: Some(source),
+            related: vec![err],
+        })
+    }
+
+    fn do_parse(mut self, source: &SimSource) -> ProcessConfigResult<RandomDataSets> {
+        let mut reader = Reader::new(AnyEncoding, source.data())?;
         let top_lvl = reader.expect_next()?;
 
         let top_lvl = top_lvl.read()?;

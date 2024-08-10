@@ -2,7 +2,6 @@ use std::error::Error;
 
 use crate::gen::DataGenerationError;
 use derive_builder::Builder;
-use ion_rs::IonError;
 use miette::Diagnostic;
 use rand::{thread_rng, Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -11,56 +10,34 @@ use thiserror::Error;
 use time::macros::datetime;
 use time::OffsetDateTime;
 
-use crate::reader::{ProcessConfigError, DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY};
+use crate::reader::error::ProcessParseError;
+use crate::reader::{DEFAULT_NULLABILITY, DEFAULT_OPTIONALITY};
+use crate::source::SimSourceError;
 
 /// Error in simulation configuration.
 #[derive(Debug, Error, Diagnostic)]
-#[error("Sim Config Error")]
 #[non_exhaustive]
 pub enum SimConfigError {
     #[error("Rand error: {0}")]
-    RandError(rand::Error),
+    RandError(#[from] rand::Error),
 
-    #[error("Process Configuration error: {0}")]
-    ProcessConfig(ProcessConfigError),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    ProcessConfig(#[from] ProcessParseError),
+
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    SimSourceError(#[from] SimSourceError),
+
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    DataGeneration(#[from] DataGenerationError),
 
     #[error("Rand error: {0}")]
-    TimeError(time::error::Error),
+    TimeError(#[from] time::error::Error),
 
     #[error("Unknown Error: {0}")]
     UnknownError(Box<dyn Error + Send + Sync + 'static>),
-}
-
-impl From<DataGenerationError> for SimConfigError {
-    fn from(value: DataGenerationError) -> Self {
-        let pe: ProcessConfigError = value.into();
-        pe.into()
-    }
-}
-
-impl From<rand::Error> for SimConfigError {
-    fn from(e: rand::Error) -> Self {
-        SimConfigError::RandError(e)
-    }
-}
-
-impl From<time::error::Error> for SimConfigError {
-    fn from(e: time::error::Error) -> Self {
-        SimConfigError::TimeError(e)
-    }
-}
-
-impl From<ProcessConfigError> for SimConfigError {
-    fn from(e: ProcessConfigError) -> Self {
-        SimConfigError::ProcessConfig(e)
-    }
-}
-
-impl From<IonError> for SimConfigError {
-    fn from(e: IonError) -> Self {
-        let pce: ProcessConfigError = e.into();
-        pce.into()
-    }
 }
 
 impl From<Box<dyn Error + Send + Sync + 'static>> for SimConfigError {

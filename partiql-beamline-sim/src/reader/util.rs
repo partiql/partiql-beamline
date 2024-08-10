@@ -1,8 +1,10 @@
 use crate::gen::distributions::{Density, Meta};
 use crate::gen::ValueGenerator;
-use crate::reader::registry::{ValueGeneratorParser, ValueGeneratorParserBoxed};
+use crate::reader::error::{
+    ConfigValueError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult,
+};
+use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
-use crate::reader::{ProcessConfigError, ProcessConfigResult};
 use ion_rs::{AnyEncoding, LazyStruct, ValueRef};
 use ion_rs_old::external::bigdecimal::ToPrimitive;
 use partiql_value::Value;
@@ -77,9 +79,10 @@ where
         config: Option<LazyStruct<'_, AnyEncoding>>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let gen_name = meta.name.clone();
-        self.parse(rng, meta, config, symbol_parser)
-            .map_err(|e| ProcessConfigError::GeneratorConfig(gen_name, Box::new(e)))
+        let generator = meta.name.clone();
+        self.parse(rng, meta, config, symbol_parser).map_err(|err| {
+            ProcessConfigError::GeneratorConfig(Box::new(GeneratorConfigError { generator, err }))
+        })
     }
 
     fn parse(
@@ -125,9 +128,12 @@ pub(crate) fn require_key<'a>(
     key: &'static str,
 ) -> ProcessConfigResult<ValueRef<'a, AnyEncoding>> {
     if let Ok(Some(value)) = config.find(key) {
-        value
-            .read()
-            .map_err(|e| ProcessConfigError::ConfigValue(key.to_string(), Box::new(e.into())))
+        value.read().map_err(|e| {
+            ProcessConfigError::ConfigValue(Box::new(ConfigValueError {
+                key: key.to_string(),
+                err: e.into(),
+            }))
+        })
     } else {
         Err(ProcessConfigError::ConfigMissingKey(key.to_string()))
     }

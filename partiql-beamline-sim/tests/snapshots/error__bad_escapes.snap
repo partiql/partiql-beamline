@@ -2,5 +2,11 @@
 source: partiql-beamline-sim/tests/error.rs
 expression: output
 ---
-  × Config error: Process Configuration error: `Regex` Generator Configuration: When processing key: `pattern`, Error `invalid escape sequence '\100`
-  ╰─▶ Process Configuration error: `Regex` Generator Configuration: When processing key: `pattern`, Error `invalid escape sequence '\100`
+  × Error in process configuration
+
+Error:   × `Regex` Generator Configuration: When processing key: `pattern`, Error `invalid escape sequence '\100`
+  ├─▶   × When processing key: `pattern`, Error `invalid escape sequence '\100`
+  │   
+  ├─▶   × invalid escape sequence '\100
+  │   
+  ╰─▶ invalid escape sequence '\100

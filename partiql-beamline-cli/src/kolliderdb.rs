@@ -1,6 +1,7 @@
 use crate::cli::{encode_ion_text, get_multi_sim, IonPrintMode};
 use ion_rs::element::writer::TextKind;
 use partiql_beamline::sim::{ISim, SimConfig, DATETIME_FORMAT};
+use partiql_beamline::source::SimSource;
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;
 use partiql_extension_ddl::ddl::{DdlSyntax, PartiqlDdlEncoder};
@@ -15,7 +16,7 @@ pub(crate) fn create_kollider_db(
     cfg: SimConfig,
     catalog_name: &str,
     catalog_path: &str,
-    script: &str,
+    script: SimSource,
     sample_count: u64,
     ddl_shape_encoder: &dyn PartiqlDdlEncoder<Output = String>,
 ) -> miette::Result<()> {
@@ -149,13 +150,14 @@ pub(crate) fn create_manifest_file(
     Ok(())
 }
 
-pub(crate) fn create_script_file(catalog_full_path: &str, script: &str) -> miette::Result<()> {
+pub(crate) fn create_script_file(
+    catalog_full_path: &str,
+    script: &SimSource,
+) -> miette::Result<()> {
     let script_filename = format!("{:}.beamline-script", catalog_full_path);
     print!("writing script file {:} ...", &script_filename);
     let mut script_file = fs::File::create(&script_filename).expect("script file");
-    script_file
-        .write_all(script.as_bytes())
-        .expect("script file");
+    script_file.write_all(script.data()).expect("script file");
 
     println!("[COMPLETED]");
 

@@ -1,5 +1,6 @@
 use miette::IntoDiagnostic;
 use partiql_beamline::sim::{ISim, SimBuilder, SimConfigBuilder, SimResult, DATETIME_FORMAT};
+use partiql_beamline::source::SimSource;
 use partiql_extension_ion::decode::{IonDecoderBuilder, IonDecoderConfig};
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding::PartiqlEncodedAsIon;
@@ -8,21 +9,21 @@ use std::collections::HashMap;
 use time::macros::datetime;
 
 #[track_caller]
-fn repeatable_sims(script: &[u8]) -> SimResult<(SimBuilder, SimBuilder)> {
+fn repeatable_sims(source: SimSource) -> SimResult<(SimBuilder, SimBuilder)> {
     let config = SimConfigBuilder::default().build()?;
     let t0 = config.t0;
     let seed = config.seed;
     let config2 = SimConfigBuilder::default().t0(t0).seed(seed).build()?;
 
     Ok((
-        SimBuilder::from_config(config, script)?,
-        SimBuilder::from_config(config2, script)?,
+        SimBuilder::from_config(config, source.clone())?,
+        SimBuilder::from_config(config2, source)?,
     ))
 }
 
 #[track_caller]
-fn verify_repeatable(script: &[u8]) -> SimResult<()> {
-    let (sim, sim2) = repeatable_sims(script)?;
+fn verify_repeatable(source: SimSource) -> SimResult<()> {
+    let (sim, sim2) = repeatable_sims(source)?;
     let mut sim = sim.build_time_ordered()?;
     let mut sim2 = sim2.build_time_ordered()?;
 
@@ -36,8 +37,8 @@ fn verify_repeatable(script: &[u8]) -> SimResult<()> {
 }
 
 #[track_caller]
-fn verify_repeatable_multi(script: &[u8]) -> SimResult<()> {
-    let (sim, sim2) = repeatable_sims(script)?;
+fn verify_repeatable_multi(source: SimSource) -> SimResult<()> {
+    let (sim, sim2) = repeatable_sims(source)?;
     let mut sim = sim.build_multi_dataset()?;
     let mut sim2 = sim2.build_multi_dataset()?;
 
@@ -90,7 +91,7 @@ pub(crate) fn decode_ion(buff: &[u8]) -> Result<Value, IonEncodeError> {
 }
 
 #[track_caller]
-fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
+fn verify_exemplar(source: SimSource, exemplar: &[u8]) -> miette::Result<()> {
     let seed = 90; // thanks random.org
     let t0 = datetime!(2024-05-24 20:39:13 UTC);
     let config = SimConfigBuilder::default().t0(t0).seed(seed).build()?;
@@ -101,7 +102,7 @@ fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
     let start = t0.format(&DATETIME_FORMAT).expect("start datetime string");
     let seed = config.seed;
 
-    let mut sim = SimBuilder::from_config(config, script)?.build_multi_dataset()?;
+    let mut sim = SimBuilder::from_config(config, source)?.build_multi_dataset()?;
 
     let datasets = sim.datasets();
     let mut tp = tuple!();
@@ -137,7 +138,7 @@ fn verify_exemplar(script: &[u8], exemplar: &[u8]) -> miette::Result<()> {
 
 #[track_caller]
 fn verify_exemplar_partials(
-    script: &[u8],
+    source: SimSource,
     exemplar: &[u8],
     max_null: f64,
     max_optional: f64,
@@ -150,7 +151,12 @@ fn verify_exemplar_partials(
             let scale = 1.0_f64.max(npct + opct) * 1.0;
             let nullability = npct / scale;
             let optionality = opct / scale;
-            verify_exemplar_partial(script, exemplar, Some(nullability), Some(optionality))?;
+            verify_exemplar_partial(
+                source.clone(),
+                exemplar,
+                Some(nullability),
+                Some(optionality),
+            )?;
         }
     }
 
@@ -159,7 +165,7 @@ fn verify_exemplar_partials(
 
 #[track_caller]
 fn verify_exemplar_partial(
-    script: &[u8],
+    source: SimSource,
     exemplar: &[u8],
     nullability: Option<f64>,
     optionality: Option<f64>,
@@ -180,7 +186,7 @@ fn verify_exemplar_partial(
     let start = t0.format(&DATETIME_FORMAT).expect("start datetime string");
     let seed = config.seed;
 
-    let mut sim = SimBuilder::from_config(config, script)?.build_multi_dataset()?;
+    let mut sim = SimBuilder::from_config(config, source)?.build_multi_dataset()?;
 
     let datasets = sim.datasets();
     let mut tp = tuple!();
@@ -258,7 +264,10 @@ fn compare_present(allow_absent: bool, data: &Value, exemplar: &Value) {
 
 macro_rules! script_data {
     ($file_basename:expr $(,)?) => {
-        include_bytes!(concat!("scripts/", $file_basename, ".ion"))
+        SimSource::new(
+            $file_basename,
+            include_bytes!(concat!("scripts/", $file_basename, ".ion")),
+        )?
     };
 }
 
@@ -277,7 +286,7 @@ macro_rules! test_data {
 #[test]
 fn verify_repeatable_transactions() -> miette::Result<()> {
     let (script, _) = test_data!("transactions");
-    verify_repeatable(script)?;
+    verify_repeatable(script.clone())?;
     verify_repeatable_multi(script)?;
     Ok(())
 }
@@ -285,7 +294,7 @@ fn verify_repeatable_transactions() -> miette::Result<()> {
 #[test]
 fn verify_repeatable_simple_transactions() -> miette::Result<()> {
     let (script, _) = test_data!("simple_transactions");
-    verify_repeatable(script)?;
+    verify_repeatable(script.clone())?;
     verify_repeatable_multi(script)?;
     Ok(())
 }
@@ -293,7 +302,7 @@ fn verify_repeatable_simple_transactions() -> miette::Result<()> {
 #[test]
 fn verify_repeatable_orders() -> miette::Result<()> {
     let (script, _) = test_data!("orders");
-    verify_repeatable(script)?;
+    verify_repeatable(script.clone())?;
     verify_repeatable_multi(script)?;
     Ok(())
 }
@@ -301,7 +310,7 @@ fn verify_repeatable_orders() -> miette::Result<()> {
 #[test]
 fn verify_repeatable_sensors() -> miette::Result<()> {
     let (script, _) = test_data!("sensors");
-    verify_repeatable(script)?;
+    verify_repeatable(script.clone())?;
     verify_repeatable_multi(script)?;
     Ok(())
 }
@@ -309,7 +318,7 @@ fn verify_repeatable_sensors() -> miette::Result<()> {
 #[test]
 fn verify_repeatable_sensors_alternate() -> miette::Result<()> {
     let (script, _) = test_data!("sensors-alternate");
-    verify_repeatable(script)?;
+    verify_repeatable(script.clone())?;
     verify_repeatable_multi(script)?;
     Ok(())
 }
@@ -317,7 +326,7 @@ fn verify_repeatable_sensors_alternate() -> miette::Result<()> {
 #[test]
 fn verify_repeatable_client_service() -> miette::Result<()> {
     let (script, _) = test_data!("client-service");
-    verify_repeatable(script)?;
+    verify_repeatable(script.clone())?;
     verify_repeatable_multi(script)?;
     Ok(())
 }
@@ -325,7 +334,7 @@ fn verify_repeatable_client_service() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_transactions() -> miette::Result<()> {
     let (script, exemplar) = test_data!("transactions");
-    verify_exemplar(script, exemplar)?;
+    verify_exemplar(script.clone(), exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())
 }
@@ -333,7 +342,7 @@ fn verify_exemplar_transactions() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_simple_transactions() -> miette::Result<()> {
     let (script, exemplar) = test_data!("simple_transactions");
-    verify_exemplar(script, exemplar)?;
+    verify_exemplar(script.clone(), exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())
 }
@@ -341,7 +350,7 @@ fn verify_exemplar_simple_transactions() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_orders() -> miette::Result<()> {
     let (script, exemplar) = test_data!("orders");
-    verify_exemplar(script, exemplar)?;
+    verify_exemplar(script.clone(), exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())
 }
@@ -349,7 +358,7 @@ fn verify_exemplar_orders() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_sensors() -> miette::Result<()> {
     let (script, exemplar) = test_data!("sensors");
-    verify_exemplar(script, exemplar)?;
+    verify_exemplar(script.clone(), exemplar)?;
     // The sensors script uses a max of 0.75 for null scripting, so cap the optional at 0.25
     verify_exemplar_partials(script, exemplar, 1.0, 0.25 - f64::EPSILON)?;
     Ok(())
@@ -358,7 +367,7 @@ fn verify_exemplar_sensors() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_sensors_alternate() -> miette::Result<()> {
     let (script, exemplar) = test_data!("sensors-alternate");
-    verify_exemplar(script, exemplar)?;
+    verify_exemplar(script.clone(), exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())
 }
@@ -366,7 +375,7 @@ fn verify_exemplar_sensors_alternate() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_client_service() -> miette::Result<()> {
     let (script, exemplar) = test_data!("client-service");
-    verify_exemplar(script, exemplar)?;
+    verify_exemplar(script.clone(), exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())
 }
