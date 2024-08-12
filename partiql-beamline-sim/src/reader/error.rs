@@ -1,4 +1,5 @@
 use crate::gen::DataGenerationError;
+use crate::reader::util::ToSourceSpan;
 use crate::source::SimSource;
 use ion_rs::IonError;
 use miette::{
@@ -271,7 +272,14 @@ impl From<IonError> for SimIonError {
 }
 impl Display for SimIonError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Ion Decoding Error: {}", self.0)
+        match &self.0 {
+            IonError::Io(e) => write!(f, "Ion Io Error: {}", e),
+            IonError::Incomplete(_) => write!(f, "Ion Incomplete Error"),
+            IonError::Encoding(e) => write!(f, "Ion Encoding Error: {}", e),
+            IonError::Decoding(_) => write!(f, "Ion Decoding Error"),
+            IonError::IllegalOperation(e) => write!(f, "Ion Illegal Operation Error: {}", e),
+            other => write!(f, "Unknown Ion Error: {other}"),
+        }
     }
 }
 
@@ -283,21 +291,9 @@ impl Error for SimIonError {
 
 impl Diagnostic for SimIonError {
     fn labels(&self) -> Option<Box<dyn Iterator<Item=LabeledSpan> + '_>> {
-        let position = match &self.0 {
-            IonError::Incomplete(e) => Some(e.position()),
-            IonError::Decoding(e) => e.position(),
-            _ => None,
-        };
-
-        position.map(|pos| {
-            let start = pos.byte_offset();
-            let len = pos.byte_length();
-            let end = start + len.unwrap_or(0);
-            let range: SourceSpan = (start..end).into();
-            let lspan = LabeledSpan::new_with_span(None, range);
-            let iter = std::iter::once(lspan);
-            let bx: Box<dyn Iterator<Item=LabeledSpan>> = Box::new(iter);
-            bx
-        })
+        let name = self.0.to_string();
+        let span = LabeledSpan::new_with_span(Some(name), self.0.source_span()?);
+        let bx: Box<dyn Iterator<Item=LabeledSpan>> = Box::new(std::iter::once(span));
+        Some(bx)
     }
 }

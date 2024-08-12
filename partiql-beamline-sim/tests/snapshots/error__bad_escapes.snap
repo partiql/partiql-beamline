@@ -7,10 +7,11 @@ expression: output
 Error:   × `Regex` Generator Configuration
   ├─▶   × Configuration Key `pattern`
   │   
-  ╰─▶   × Ion Decoding Error: invalid escape sequence '\100
+  ╰─▶   × Ion Decoding Error
          ╭─[bad_escapes.script:8:53]
        7 │             $data: {
        8 │                 bad: Regex::{ pattern: "^some val \b\d{1,4}\b$" },
          ·                                                     ▲
+         ·                                                     ╰── invalid escape sequence '\100
        9 │             }
          ╰────

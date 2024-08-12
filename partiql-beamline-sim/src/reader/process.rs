@@ -11,12 +11,13 @@ use crate::reader::error::{
 };
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
-use crate::reader::util::parse_density;
+use crate::reader::util::{parse_density, IonSpan};
 use crate::sim::SimContext;
 use crate::source::SimSource;
 use indexmap::IndexMap;
 use ion_rs::{
-    AnyEncoding, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef, ValueRef,
+    AnyEncoding, HasSpan, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef,
+    ValueRef,
 };
 use once_cell::sync::Lazy;
 use partiql_value::Value;
