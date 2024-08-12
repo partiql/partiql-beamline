@@ -1,7 +1,6 @@
 use clap::Args;
 use partiql_beamline::sim::{SimConfig, SimConfigBuildResult, SimConfigBuilder};
 use partiql_beamline::source::{SimSource, SimSourceResult};
-use std::fs;
 use std::num::ParseIntError;
 use std::path::PathBuf;
 use std::str::FromStr;

@@ -1,5 +1,3 @@
-use miette::{Diagnostic, SourceCode};
-use std::fmt::Display;
 mod env;
 pub mod error;
 mod process;

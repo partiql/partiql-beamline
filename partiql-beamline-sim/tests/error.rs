@@ -1,29 +1,13 @@
-use assert_matches::assert_matches;
-use ion_rs::IonError;
-use itertools::Itertools;
-use miette::{
-    Diagnostic, GraphicalTheme, IntoDiagnostic, LabeledSpan, MietteHandler, ReportHandler,
-    Severity, SourceCode, SourceSpan,
-};
-use partiql_beamline::reader::error::ProcessConfigError;
-use partiql_beamline::sim::{
-    ISim, SimBuilder, SimConfigBuilder, SimError, SimResult, DATETIME_FORMAT,
-};
+use miette::{Diagnostic, GraphicalTheme, ReportHandler};
+use partiql_beamline::sim::{SimBuilder, SimConfigBuilder, SimResult};
 use partiql_beamline::source::SimSource;
-use partiql_extension_ion::decode::{IonDecoderBuilder, IonDecoderConfig};
-use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
-use partiql_extension_ion::Encoding::PartiqlEncodedAsIon;
-use partiql_value::{tuple, BindingsName, List, Value};
-use std::collections::HashMap;
 use std::fmt;
-use std::fmt::{Debug, Display, Formatter};
-use thiserror::Error;
-use time::macros::datetime;
+use std::fmt::Debug;
 
 #[track_caller]
 fn get_sim(source: SimSource) -> SimResult<SimBuilder> {
     let config = SimConfigBuilder::default().build()?;
-    Ok(SimBuilder::from_config(config, source)?)
+    SimBuilder::from_config(config, source)
 }
 
 struct FormatTester<T, E>

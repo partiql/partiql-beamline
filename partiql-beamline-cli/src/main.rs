@@ -144,9 +144,9 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
                         for (id, name) in sim_datasets {
                             for _c in 0..sample_count {
                                 if let Ok(Some(Sample {
-                                                   tick: Tick(t),
-                                                   value,
-                                               })) = sim.for_dataset(id)?.next_sample()
+                                    tick: Tick(t),
+                                    value,
+                                })) = sim.for_dataset(id)?.next_sample()
                                 {
                                     let time = t0.add(Duration::milliseconds(t as i64));
                                     let name = name.clone().0;
@@ -159,9 +159,9 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
                             if let Some(id) = sim.get_dataset_id(&DataSetName(dataset.clone())) {
                                 for _c in 0..sample_count {
                                     if let Ok(Some(Sample {
-                                                       tick: Tick(t),
-                                                       value,
-                                                   })) = sim.for_dataset(id)?.next_sample()
+                                        tick: Tick(t),
+                                        value,
+                                    })) = sim.for_dataset(id)?.next_sample()
                                     {
                                         let time = t0.add(Duration::milliseconds(t as i64));
                                         println!("[{time}] : {dataset:?} {value:?}");
@@ -202,12 +202,12 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
             Db::Kollider {
                 spec,
                 db_args:
-                DbArgs {
-                    catalog_name,
-                    catalog_path,
-                    force,
-                    target,
-                },
+                    DbArgs {
+                        catalog_name,
+                        catalog_path,
+                        force,
+                        target,
+                    },
                 sample_count,
             } => {
                 if let DbTarget::Filesystem = target {
@@ -328,7 +328,7 @@ fn handle_query(query: QueryGen) -> miette::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use clap::Error;
+
     use std::ffi::OsString;
     use std::fmt::Debug;
 
@@ -336,7 +336,7 @@ mod tests {
     #[track_caller]
     fn assert_args<I, T>(args: I)
     where
-        I: IntoIterator<Item=T> + Debug,
+        I: IntoIterator<Item = T> + Debug,
         T: Into<OsString> + Clone,
     {
         let result = Cli::try_parse_from(args);

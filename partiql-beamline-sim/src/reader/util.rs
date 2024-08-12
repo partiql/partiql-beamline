@@ -9,7 +9,7 @@ use ion_rs::{
     AnyEncoding, HasSpan, IonError, LazyField, LazyList, LazyStruct, LazyValue, Span, ValueRef,
 };
 use ion_rs_old::external::bigdecimal::ToPrimitive;
-use miette::{ByteOffset, LabeledSpan, SourceSpan};
+use miette::SourceSpan;
 use partiql_value::Value;
 use rand::Rng;
 use std::collections::HashSet;
@@ -17,8 +17,7 @@ use std::marker::PhantomData;
 
 pub(crate) const CONFIG_KEY_NULLABLE: &str = "nullable";
 pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
-pub(crate) const CONFIG_KEYS_DENSITY: [&'static str; 2] =
-    [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
+pub(crate) const CONFIG_KEYS_DENSITY: [&str; 2] = [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
 
 pub(crate) struct BasicValueGeneratorParser<T, R>
 where
@@ -65,7 +64,7 @@ where
     T: ValueGeneratorParserImpl<R>,
 {
     fn from(inner: T) -> Self {
-        let marker = PhantomData::default();
+        let marker = PhantomData;
         BasicValueGeneratorParser { inner, marker }
     }
 }
@@ -262,7 +261,7 @@ pub(crate) fn validate_config_keys(
     allowed_keys: &[&'static str],
 ) -> ProcessConfigResult<KeyValidation> {
     let global_keys: HashSet<&'static str> = CONFIG_KEYS_DENSITY.into_iter().by_ref().collect();
-    let local_keys: HashSet<&'static str> = allowed_keys.into_iter().map(|s| *s).collect();
+    let local_keys: HashSet<&'static str> = allowed_keys.iter().copied().collect();
 
     validate_config_keyset(config, global_keys, local_keys)
 }

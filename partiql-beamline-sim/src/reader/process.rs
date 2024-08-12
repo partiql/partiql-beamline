@@ -11,13 +11,12 @@ use crate::reader::error::{
 };
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
-use crate::reader::util::{parse_density, IonSpan};
+use crate::reader::util::parse_density;
 use crate::sim::SimContext;
 use crate::source::SimSource;
 use indexmap::IndexMap;
 use ion_rs::{
-    AnyEncoding, HasSpan, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef,
-    ValueRef,
+    AnyEncoding, IonResult, IonType, LazyList, LazyStruct, LazyValue, Reader, SymbolRef, ValueRef,
 };
 use once_cell::sync::Lazy;
 use partiql_value::Value;
@@ -60,7 +59,7 @@ impl ProcessParser {
         })
     }
 
-    pub fn parse(mut self, source: SimSource) -> ProcessParseResult<RandomDataSets> {
+    pub fn parse(self, source: SimSource) -> ProcessParseResult<RandomDataSets> {
         self.do_parse(&source)
             .map_err(|err| ProcessParseError::new(source, [err]))
     }
