@@ -1,6 +1,7 @@
 use ion_rs::element::writer::TextKind;
 use ion_rs::element::Element;
 use partiql_beamline::sim::{ISim, NameAndShape, SimBuilder, SimConfigBuilder};
+use partiql_beamline::source::SimSource;
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
@@ -16,7 +17,8 @@ pub fn verify_correct_encoding() {
         .build()
         .expect("sim config");
 
-    let sim = SimBuilder::from_config(cfg.clone(), script)
+    let source = SimSource::new("sensors.ion", script).expect("source");
+    let sim = SimBuilder::from_config(cfg.clone(), source)
         .expect("auto sim")
         .build_multi_dataset()
         .expect("auto sim");

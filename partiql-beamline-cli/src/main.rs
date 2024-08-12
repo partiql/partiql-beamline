@@ -43,7 +43,8 @@ pub enum Commands {
     InferShape {
         #[command(flatten)]
         spec: SimSpec,
-        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=ShapeOutputFormat::Text)]
+        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=ShapeOutputFormat::Text
+        )]
         output_format: ShapeOutputFormat,
     },
     /// Run the query generator
@@ -61,7 +62,8 @@ pub enum Gen {
         #[command(flatten)]
         sample_count: SampleCount,
 
-        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=DataOutputFormat::Text)]
+        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=DataOutputFormat::Text
+        )]
         output_format: DataOutputFormat,
 
         #[clap(short = 'd', long = "dataset")]
@@ -132,7 +134,7 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
                     println!("Seed: {}", cfg.seed);
                     println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
 
-                    let mut sim = SimBuilder::from_config(cfg.clone(), script.clone().as_bytes())
+                    let mut sim = SimBuilder::from_config(cfg.clone(), script)
                         .expect("auto sim")
                         .build_multi_dataset()
                         .expect("auto sim");
@@ -142,9 +144,9 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
                         for (id, name) in sim_datasets {
                             for _c in 0..sample_count {
                                 if let Ok(Some(Sample {
-                                    tick: Tick(t),
-                                    value,
-                                })) = sim.for_dataset(id)?.next_sample()
+                                                   tick: Tick(t),
+                                                   value,
+                                               })) = sim.for_dataset(id)?.next_sample()
                                 {
                                     let time = t0.add(Duration::milliseconds(t as i64));
                                     let name = name.clone().0;
@@ -157,9 +159,9 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
                             if let Some(id) = sim.get_dataset_id(&DataSetName(dataset.clone())) {
                                 for _c in 0..sample_count {
                                     if let Ok(Some(Sample {
-                                        tick: Tick(t),
-                                        value,
-                                    })) = sim.for_dataset(id)?.next_sample()
+                                                       tick: Tick(t),
+                                                       value,
+                                                   })) = sim.for_dataset(id)?.next_sample()
                                     {
                                         let time = t0.add(Duration::milliseconds(t as i64));
                                         println!("[{time}] : {dataset:?} {value:?}");
@@ -200,17 +202,17 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
             Db::Kollider {
                 spec,
                 db_args:
-                    DbArgs {
-                        catalog_name,
-                        catalog_path,
-                        force,
-                        target,
-                    },
+                DbArgs {
+                    catalog_name,
+                    catalog_path,
+                    force,
+                    target,
+                },
                 sample_count,
             } => {
                 if let DbTarget::Filesystem = target {
                     let (script, cfg) = spec.to_script_and_config();
-                    let (script, cfg) = (script.into_diagnostic()?, cfg.into_diagnostic()?);
+                    let (script, cfg) = (script?, cfg?);
                     let sample_count = sample_count.sample_count;
                     let catalog_full_path = catalog_full_path(&catalog_name, &catalog_path);
 
@@ -224,7 +226,7 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
                         cfg,
                         &catalog_name,
                         &catalog_path,
-                        &script,
+                        script,
                         sample_count,
                         &ddl_encoder,
                     )?
@@ -243,10 +245,7 @@ fn handle_infer(spec: SimSpec, output_format: ShapeOutputFormat) -> miette::Resu
 
     let t0 = cfg.t0;
 
-    let sim = SimBuilder::from_config(cfg.clone(), script.clone().as_bytes())
-        .expect("auto sim")
-        .build_multi_dataset()
-        .expect("auto sim");
+    let sim = SimBuilder::from_config(cfg.clone(), script)?.build_multi_dataset()?;
 
     match output_format {
         ShapeOutputFormat::PartiqlKollider => {

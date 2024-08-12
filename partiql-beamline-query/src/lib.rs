@@ -4,6 +4,7 @@ use derive_builder::Builder;
 use miette::Diagnostic;
 use partiql_ast::pretty::{ToPretty, ToPrettyError};
 use partiql_beamline::sim::{ISim, SimBuilder, SimConfig, SimConfigError, SimContext, SimError};
+use partiql_beamline::source::SimSource;
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use thiserror::Error;
@@ -32,14 +33,14 @@ pub type QueryGenResult<T> = Result<T, QueryGenError>;
 #[derive(Debug, Clone, Builder)]
 pub struct QueryTextGeneratorConfig {
     config: SimConfig,
-    script: String,
+    script: SimSource,
     strategy: QueryStrategy,
 }
 
 impl QueryTextGeneratorConfig {
     pub fn to_generator(self) -> QueryGenResult<QueryTextGenerator> {
         let root_rng = Pcg64Mcg::seed_from_u64(self.config.seed);
-        let shape = SimBuilder::from_config(self.config.clone(), self.script.as_bytes())?
+        let shape = SimBuilder::from_config(self.config.clone(), self.script)?
             .build_multi_dataset()?
             .shape();
         let ast_gen = self.strategy.build(&shape, root_rng)?;

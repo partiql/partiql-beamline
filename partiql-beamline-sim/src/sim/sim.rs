@@ -3,7 +3,6 @@ use std::default::Default;
 use std::error::Error;
 
 use crate::gen;
-use ion_rs::{AnyEncoding, IonError, Reader};
 use miette::Diagnostic;
 use partiql_types::PartiqlShape;
 
@@ -15,27 +14,34 @@ use time::format_description::well_known::Iso8601;
 use crate::gen::process::RandomDataSets;
 use crate::gen::DataSamplingError;
 use crate::primitives::{DataSetId, DataSetName, Event, ProcessId, Sample, Tick};
-use crate::reader::ProcessConfigError;
+use crate::reader::error::ProcessParseError;
 use crate::reader::ProcessParser;
 use crate::sim::context::{ConstantBindingValue, SimContext, SimContextError};
 use crate::sim::timeline::Timeline;
 use crate::sim::{SimConfig, SimConfigBuilderError, SimConfigError, SimConfigResult};
+use crate::source::{SimSource, SimSourceError};
 
 pub const DATETIME_FORMAT: Iso8601 = Iso8601::DEFAULT;
 
 /// Error during simulation
 #[derive(Debug, Error, Diagnostic)]
-#[error("Sim Error")]
+//#[error("Sim Error")]
 #[non_exhaustive]
 pub enum SimError {
-    #[error("Config error: {0}")]
+    #[error(transparent)]
+    #[diagnostic(transparent)]
     ConfigError(#[from] SimConfigError),
+
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    SimSourceError(#[from] SimSourceError),
 
     #[error("Config error: {0}")]
     ConfigBuilderError(#[from] SimConfigBuilderError),
 
-    #[error("Config error: {0}")]
-    ProcessConfigError(#[from] ProcessConfigError),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    ProcessError(#[from] ProcessParseError),
 
     #[error("Rand error: {0}")]
     RandError(#[from] rand::Error),
@@ -148,7 +154,7 @@ pub struct SimBuilder {
 
 impl SimBuilder {
     /// Create a [`SimBuilder`] from the provided [`SimConfig`]
-    pub fn from_config(config: SimConfig, script: &[u8]) -> SimResult<Self> {
+    pub fn from_config(config: SimConfig, source: SimSource) -> SimResult<Self> {
         let seed = config.seed;
         let root_rng = Pcg64Mcg::seed_from_u64(seed);
         let t0 = Tick(0);
@@ -156,7 +162,7 @@ impl SimBuilder {
         // Set the initial bindings
         context.overwrite_binding(gen::CURRENT_TICK, &ConstantBindingValue::Tick(t0));
 
-        let processes = Self::parse_processes(seed, script, &context)?;
+        let processes = Self::parse_processes(seed, source, &context)?;
 
         Ok(SimBuilder {
             context,
@@ -168,13 +174,12 @@ impl SimBuilder {
 
     fn parse_processes(
         seed: u64,
-        script: &[u8],
+        source: SimSource,
         ctx: &SimContext,
     ) -> SimConfigResult<RandomDataSets> {
         let registry = Default::default();
         let parser = ProcessParser::new(seed, registry, ctx)?;
-        let mut reader = Reader::new(AnyEncoding, script)?;
-        Ok(parser.parse(&mut reader)?)
+        Ok(parser.parse(source)?)
     }
 
     pub fn build_time_ordered(self) -> SimResult<Sim> {

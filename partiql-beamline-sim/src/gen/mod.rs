@@ -2,6 +2,7 @@ use crate::gen::distributions::Density;
 use crate::primitives::{Sample, Tick};
 use crate::sim::SimContext;
 use dyn_clone::DynClone;
+use miette::Diagnostic;
 use partiql_types::PartiqlShape;
 use partiql_value::Value;
 use statrs::StatsError;
@@ -24,7 +25,7 @@ mod util;
 
 pub const CURRENT_TICK: &str = "current_tick";
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Diagnostic)]
 #[non_exhaustive]
 pub enum DataGenerationError {
     #[error("Stats Error: `{0}-{0}`")]

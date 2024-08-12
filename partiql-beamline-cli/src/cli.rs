@@ -1,24 +1,25 @@
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetId, DataSetName};
 use partiql_beamline::sim::{ISim, MultiSim, SimBuilder, SimConfig, SimResult, DATETIME_FORMAT};
+use partiql_beamline::source::SimSource;
 use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncoderConfig};
 use partiql_extension_ion::Encoding;
 use partiql_value::{tuple, List, Value};
 
-pub(crate) fn get_multi_sim(cfg: SimConfig, script: &str) -> SimResult<MultiSim> {
-    SimBuilder::from_config(cfg, script.as_bytes())?.build_multi_dataset()
+pub(crate) fn get_multi_sim(cfg: SimConfig, script: SimSource) -> SimResult<MultiSim> {
+    SimBuilder::from_config(cfg, script)?.build_multi_dataset()
 }
 
 pub(crate) fn execute(
     cfg: SimConfig,
-    script: String,
+    script: SimSource,
     sample_count: u64,
     datasets: Vec<String>,
 ) -> miette::Result<Value> {
     let seed = cfg.seed;
     let start = cfg.t0.format(&DATETIME_FORMAT).into_diagnostic()?;
 
-    let mut sim = get_multi_sim(cfg, script.as_str()).into_diagnostic()?;
+    let mut sim = get_multi_sim(cfg, script).into_diagnostic()?;
 
     let tp = get_values(&mut sim, sample_count as usize, datasets)?;
 

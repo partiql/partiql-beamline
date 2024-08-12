@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use miette::IntoDiagnostic;
 use partiql_beamline::sim::{DatasetTypeMapping, ISim, SimBuilder, SimConfigBuilder, SimContext};
+use partiql_beamline::source::SimSource;
 use partiql_beamline_query::generator::{AstGenContext, FromTable};
 use partiql_beamline_query::generator::{AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter};
 use partiql_beamline_query::generator::{BinOp, ConstantLiteral};
@@ -72,15 +73,16 @@ fn query_text_test(
 #[track_caller]
 fn get_generator(
     seed: u64,
+    name: &str,
     script: &[u8],
     strat: QueryStrategy,
 ) -> miette::Result<QueryTextGenerator> {
     let config = SimConfigBuilder::default().seed(seed).build()?;
-    let script = String::from_utf8_lossy(script).into_owned();
+    let source = SimSource::new(name, script)?;
 
     QueryTextGeneratorConfigBuilder::default()
         .config(config)
-        .script(script)
+        .script(source)
         .strategy(strat)
         .build()
         .into_diagnostic()?
@@ -157,7 +159,7 @@ fn simple_strategy() -> miette::Result<()> {
 }
 
 #[track_caller]
-fn shape_from_script(script: &[u8]) -> miette::Result<DatasetTypeMapping> {
+fn shape_from_script(name: &str, script: &[u8]) -> miette::Result<DatasetTypeMapping> {
     let t0 = OffsetDateTime::from_unix_timestamp(1712358177).into_diagnostic()?;
     let cfg = SimConfigBuilder::default()
         .t0(t0)
@@ -165,7 +167,8 @@ fn shape_from_script(script: &[u8]) -> miette::Result<DatasetTypeMapping> {
         .build()
         .into_diagnostic()?;
 
-    let sim = SimBuilder::from_config(cfg.clone(), script)
+    let source = SimSource::new(name, script)?;
+    let sim = SimBuilder::from_config(cfg.clone(), source)
         .into_diagnostic()?
         .build_multi_dataset()
         .into_diagnostic()?;
@@ -184,7 +187,7 @@ fn simple_random_strategy() -> miette::Result<()> {
 
     query_text_gen_test(
         "simple_random_strategy",
-        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+        get_generator(123456, "transactions", SCRIPT_TRANSACTIONS, strat)?,
     )?;
 
     Ok(())
@@ -210,8 +213,8 @@ fn path_gen_test(
 
 #[test]
 fn path_gen_tests() -> miette::Result<()> {
-    let simple = shape_from_script(SCRIPT_SIMPLE_TRANSACTIONS)?;
-    let complex = shape_from_script(SCRIPT_TRANSACTIONS)?;
+    let simple = shape_from_script("simple_transactions", SCRIPT_SIMPLE_TRANSACTIONS)?;
+    let complex = shape_from_script("transactions", SCRIPT_TRANSACTIONS)?;
 
     let scalars = PathGenSpecBuilder::default()
         .allowed_internal_steps(PathStepFlags::PathProject | PathStepFlags::PathForEach)
@@ -256,7 +259,7 @@ fn simple_project_strategy() -> miette::Result<()> {
 
     query_text_gen_test(
         "simple_project_strategy",
-        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+        get_generator(123456, "transactions", SCRIPT_TRANSACTIONS, strat)?,
     )?;
 
     Ok(())
@@ -286,7 +289,7 @@ fn simple_exclude_strategy() -> miette::Result<()> {
 
     query_text_gen_test(
         "simple_exclude_strategy",
-        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+        get_generator(123456, "transactions", SCRIPT_TRANSACTIONS, strat)?,
     )?;
 
     Ok(())
@@ -316,7 +319,7 @@ fn simple_shallow_exclude_strategy() -> miette::Result<()> {
 
     query_text_gen_test(
         "simple_shallow_exclude_strategy",
-        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+        get_generator(123456, "transactions", SCRIPT_TRANSACTIONS, strat)?,
     )?;
 
     Ok(())
@@ -350,7 +353,7 @@ fn simple_random_row_filters() -> miette::Result<()> {
 
     query_text_gen_test(
         "simple_random_row_filters",
-        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+        get_generator(123456, "transactions", SCRIPT_TRANSACTIONS, strat)?,
     )?;
 
     Ok(())
@@ -384,7 +387,7 @@ fn simple_random_scalar_row_filters() -> miette::Result<()> {
 
     query_text_gen_test(
         "simple_random_scalar_row_filters",
-        get_generator(123456, SCRIPT_TRANSACTIONS, strat)?,
+        get_generator(123456, "transactions", SCRIPT_TRANSACTIONS, strat)?,
     )?;
 
     Ok(())
