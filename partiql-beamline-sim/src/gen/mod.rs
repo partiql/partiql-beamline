@@ -37,13 +37,16 @@ pub enum DataGenerationError {
     #[error("Bounds Error: `{0}-{0}`")]
     BoundsF(f64, f64),
 
-    #[error("Error: {0}")]
+    #[error("No Config Error: {0}")]
     NoConfig(String),
 
     #[error("Integer Conversion Error: {0}")]
     IntConversionError(#[from] TryFromIntError),
 
-    #[error("Error: `{0}`")]
+    #[error("Regex Error: {0}")]
+    Regex(String),
+
+    #[error("Unknown Error: {0}")]
     Other(String),
 }
 

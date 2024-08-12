@@ -84,15 +84,15 @@ pub struct RegexImpl {
 
 pub type RegexGenerator<R> = RandomVariable<R, RegexImpl>;
 
-fn regex_err(error: &str) -> DataGenerationError {
-    DataGenerationError::Other(format!("Regex Error: {error}"))
+fn regex_err(error: String) -> DataGenerationError {
+    DataGenerationError::Regex(error)
 }
 fn unsupported<T>(error: &str) -> Result<T, DataGenerationError> {
-    Err(regex_err(&format!("Unsupported Regex: {error}")))
+    Err(regex_err(format!("Unsupported Regex: {error}")))
 }
 impl From<regex_syntax::Error> for DataGenerationError {
-    fn from(value: regex_syntax::Error) -> Self {
-        regex_err(&value.to_string())
+    fn from(err: regex_syntax::Error) -> Self {
+        regex_err(err.to_string())
     }
 }
 
@@ -346,7 +346,7 @@ fn to_len(rep: &Repetition) -> DataGenerationResult<DiscreteUniform> {
         if n < REP_MAX {
             Ok(n)
         } else {
-            unsupported(&format!("Max length is {REP_MAX}"))
+            unsupported(&format!("Max repetitions is {REP_MAX}"))
         }
     };
     let (min, max) = match (rep.min, rep.max) {

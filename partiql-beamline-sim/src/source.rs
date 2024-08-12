@@ -1,9 +1,5 @@
-use crate::gen::DataGenerationError;
-use crate::reader::error::{ProcessConfigError, ProcessParseError, ProcessParseResult};
-use crate::sim::SimConfigError;
-use ion_rs::{AnyEncoding, IonEncoding, IonResult, Reader};
+use ion_rs::IonEncoding;
 use miette::{Diagnostic, MietteError, MietteSpanContents, SourceCode, SourceSpan, SpanContents};
-use std::cell::RefCell;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
@@ -42,7 +38,7 @@ impl std::fmt::Debug for SimSource {
 impl SimSource {
     pub fn from_path(path: impl AsRef<Path>) -> SimSourceResult<Self> {
         let path = path.as_ref();
-        let data = fs::read(&path)?;
+        let data = fs::read(path)?;
         let name = path.to_string_lossy();
         Self::new(name, data)
     }

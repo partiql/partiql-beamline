@@ -49,6 +49,7 @@ impl RandomDataSets {
         id
     }
 
+    #[inline]
     pub fn get(&self, pid: ProcessId) -> Option<(&DataSetName, &dyn RandomProcess)> {
         self.processes.get(pid.0).map(|(d, rp)| (d, rp.as_ref()))
     }

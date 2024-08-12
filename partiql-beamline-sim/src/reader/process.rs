@@ -59,11 +59,9 @@ impl ProcessParser {
         })
     }
 
-    pub fn parse(mut self, source: SimSource) -> ProcessParseResult<RandomDataSets> {
-        self.do_parse(&source).map_err(|err| ProcessParseError {
-            script: Some(source),
-            related: vec![err],
-        })
+    pub fn parse(self, source: SimSource) -> ProcessParseResult<RandomDataSets> {
+        self.do_parse(&source)
+            .map_err(|err| ProcessParseError::new(source, [err]))
     }
 
     fn do_parse(mut self, source: &SimSource) -> ProcessConfigResult<RandomDataSets> {

@@ -5,8 +5,11 @@ use crate::reader::error::{
 };
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
-use ion_rs::{AnyEncoding, LazyStruct, ValueRef};
+use ion_rs::{
+    AnyEncoding, HasSpan, IonError, LazyField, LazyList, LazyStruct, LazyValue, Span, ValueRef,
+};
 use ion_rs_old::external::bigdecimal::ToPrimitive;
+use miette::SourceSpan;
 use partiql_value::Value;
 use rand::Rng;
 use std::collections::HashSet;
@@ -14,8 +17,7 @@ use std::marker::PhantomData;
 
 pub(crate) const CONFIG_KEY_NULLABLE: &str = "nullable";
 pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
-pub(crate) const CONFIG_KEYS_DENSITY: [&'static str; 2] =
-    [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
+pub(crate) const CONFIG_KEYS_DENSITY: [&str; 2] = [CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL];
 
 pub(crate) struct BasicValueGeneratorParser<T, R>
 where
@@ -62,7 +64,7 @@ where
     T: ValueGeneratorParserImpl<R>,
 {
     fn from(inner: T) -> Self {
-        let marker = PhantomData::default();
+        let marker = PhantomData;
         BasicValueGeneratorParser { inner, marker }
     }
 }
@@ -259,7 +261,7 @@ pub(crate) fn validate_config_keys(
     allowed_keys: &[&'static str],
 ) -> ProcessConfigResult<KeyValidation> {
     let global_keys: HashSet<&'static str> = CONFIG_KEYS_DENSITY.into_iter().by_ref().collect();
-    let local_keys: HashSet<&'static str> = allowed_keys.into_iter().map(|s| *s).collect();
+    let local_keys: HashSet<&'static str> = allowed_keys.iter().copied().collect();
 
     validate_config_keyset(config, global_keys, local_keys)
 }
@@ -291,4 +293,81 @@ fn validate_config_keyset(
         }
     }
     Ok(status)
+}
+
+pub(crate) trait ToSourceSpan {
+    fn source_span(&self) -> Option<SourceSpan>;
+}
+
+impl<'a, T> ToSourceSpan for T
+where
+    T: IonSpan<'a>,
+{
+    #[inline]
+    fn source_span(&self) -> Option<SourceSpan> {
+        let span = self.ion_span()?;
+        let offset = span.range();
+        Some((offset.start, offset.end).into())
+    }
+}
+
+// TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+pub(crate) trait IonSpan<'a> {
+    fn ion_span(&self) -> Option<Span<'a>>;
+}
+
+impl<'a> IonSpan<'a> for LazyValue<'a, AnyEncoding> {
+    #[inline]
+    fn ion_span(&self) -> Option<Span<'a>> {
+        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+        Some(self.raw()?.span())
+    }
+}
+
+impl<'a> IonSpan<'a> for LazyStruct<'a, AnyEncoding> {
+    #[inline]
+    fn ion_span(&self) -> Option<Span<'a>> {
+        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+        self.as_value().ion_span()
+    }
+}
+
+impl<'a> IonSpan<'a> for LazyList<'a, AnyEncoding> {
+    #[inline]
+    fn ion_span(&self) -> Option<Span<'a>> {
+        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+        None
+    }
+}
+
+impl<'a> IonSpan<'a> for LazyField<'a, AnyEncoding> {
+    #[inline]
+    fn ion_span(&self) -> Option<Span<'a>> {
+        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+        None
+    }
+}
+
+impl<'a> IonSpan<'a> for ValueRef<'a, AnyEncoding> {
+    #[inline]
+    fn ion_span(&self) -> Option<Span<'a>> {
+        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+        None
+    }
+}
+
+impl ToSourceSpan for IonError {
+    #[inline]
+    fn source_span(&self) -> Option<SourceSpan> {
+        let pos = match &self {
+            IonError::Incomplete(e) => e.position(),
+            IonError::Decoding(e) => e.position()?,
+            _ => None?,
+        };
+
+        let start = pos.byte_offset();
+        let len = pos.byte_length();
+        let end = start + len.unwrap_or(0);
+        Some((start..end).into())
+    }
 }

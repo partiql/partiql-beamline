@@ -18,9 +18,9 @@ pub struct LoremIpsum {}
 
 pub struct LoremIpsumTitle {}
 
-const KEY_PATTERN: &'static str = "pattern";
-const KEY_MIN_WORDS: &'static str = "min_words";
-const KEY_MAX_WORDS: &'static str = "max_words";
+const KEY_PATTERN: &str = "pattern";
+const KEY_MIN_WORDS: &str = "min_words";
+const KEY_MAX_WORDS: &str = "max_words";
 
 impl<R> ValueGeneratorParserImpl<R> for Formatter
 where
@@ -37,7 +37,7 @@ where
         let pattern = require_key(config, KEY_PATTERN)?.expect_string()?;
         let constant = Value::from(symbol_parser.format_pattern(pattern.text())?);
         let gen = ConstantGenerator::new(meta, constant);
-        return Ok(Box::new(gen));
+        Ok(Box::new(gen))
     }
 
     fn possible_config_keys(&self) -> &[&'static str] {
