@@ -43,20 +43,16 @@ pub struct KolliderDb {
 
 #[derive(Args, Debug, Clone, PartialEq, Eq)]
 pub struct DbArgs {
-    #[clap(
-        short = 'c',
-        long = "output-format",
-        default_value = "beamline-catalog"
-    )]
+    #[clap(short = 'c', long = "catalog_name", default_value = "beamline-catalog")]
     pub catalog_name: String,
 
-    #[clap(short = 'p', long = "output-format", default_value = ".")]
+    #[clap(short = 'p', long = "catalog_path", default_value = ".")]
     pub catalog_path: String,
 
     #[clap(long = "force", default_value = "false")]
     pub force: bool,
 
-    #[clap(short = 'p', long = "output-format", default_value = "filesystem")]
+    #[clap(short = 't', long = "target", default_value = "filesystem")]
     pub target: DbTarget,
 }
 
