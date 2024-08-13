@@ -1,0 +1,33 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Error in process configuration
+
+Error:   × Ion Decoding Error
+    ╭─[missing_comma.script:2:25]
+  1 │     
+  2 │ ╭─▶         rand_processes::{
+  3 │ │               sensor: [
+  4 │ │                   {
+  5 │ │                       $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+  6 │ │                       sensor: rand_process::{
+  7 │ │                           $data: {
+  8 │ │                               id: '1'
+  9 │ │                               tick: Tick,
+ 10 │ │                           }
+ 11 │ │                       }
+ 12 │ │                   }
+ 13 │ │               ],
+ 14 │ │           }
+ 15 │ ├─▶     
+    · ╰──┤ invalid Ion syntax encountered; buffer: tick: Tick,
+    ·    │                     ... while matching a struct; buffer: {
+    ·    │                             id... while matching a struct; buffer: {
+    ·    │                         $data:... while matching a struct; buffer: {
+    ·    │                     $arrival: ... while matching a list; buffer: [
+    ·    │                 {
+    ·    │             ... while matching a struct; buffer: {
+    ·    │             sensor: [
+    ·    │         ...
+    ╰────

@@ -7,11 +7,12 @@ use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
 use crate::reader::error::{
-    ProcessConfigError, ProcessConfigResult, ProcessParseError, ProcessParseResult,
+    ProcessConfigError, ProcessConfigResult, ProcessParseError, ProcessParseResult, Sourceable,
+    UnknownGeneratorError,
 };
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
-use crate::reader::util::parse_density;
+use crate::reader::util::{parse_density, ToSourceSpan};
 use crate::sim::SimContext;
 use crate::source::SimSource;
 use indexmap::IndexMap;
@@ -199,20 +200,25 @@ impl ProcessParser {
         for field in processes.iter() {
             let field = field?;
             let name = self.parse_symbol_type(&field.name()?)?;
-            let value = field.value().read()?;
+            let value = field.value();
+            let span = value.source_span();
+            let value = value.read()?;
 
             match name {
                 SymbolType::VarRef(name) => {
                     match name.as_str() {
                         PROCESS_KEY_ARRIVAL => {
-                            arrival = Some(self.parse_arrival(&value)?);
+                            arrival = Some(self.parse_arrival(&value).with_context(span)?);
                         }
                         PROCESS_KEY_DATA => {
-                            data = Some(self.parse_generator(&value, PROCESS_KEY_DATA)?);
+                            data = Some(
+                                self.parse_generator(&value, PROCESS_KEY_DATA)
+                                    .with_context(span)?,
+                            );
                         }
                         _ => {
                             // variable definition
-                            let val = self.parse_binding_value(&value, &name)?;
+                            let val = self.parse_binding_value(&value, &name).with_context(span)?;
                             self.env_stack.assign(name, val)?;
                         }
                     }
@@ -241,8 +247,11 @@ impl ProcessParser {
             }
         }
 
-        let arrival = arrival.ok_or_else(|| ProcessConfigError::NoArrival)?;
-        let data = data.ok_or_else(|| ProcessConfigError::NoData)?;
+        let span = processes.source_span();
+        let arrival = arrival.ok_or_else(|| ProcessConfigError::NoArrival(span.into()))?;
+        let data = data
+            .ok_or_else(|| ProcessConfigError::NoData(Default::default()))
+            .with_context(span)?;
 
         Ok(Box::new(SimpleProcess { arrival, data }))
     }
@@ -487,6 +496,7 @@ impl ProcessParser {
         value: &ValueRef<'_, AnyEncoding>,
         scope_name: &str,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let span = value.source_span();
         let script_path = self.env_stack.curr_path(Some(scope_name))?;
         match value {
             ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
@@ -510,7 +520,7 @@ impl ProcessParser {
                         let meta = Meta { script_path, name };
                         parser.parse_generator(crng, meta, None, self)
                     } else {
-                        Err(ProcessConfigError::UnknownGenerator(name))
+                        Err(UnknownGeneratorError::new(name).into()).with_context(span)
                     }
                 }
             },
@@ -550,7 +560,7 @@ impl ProcessParser {
                                 let meta = Meta { script_path, name };
                                 parser.parse_generator(crng, meta, Some(*strct), self)
                             } else {
-                                Err(ProcessConfigError::UnknownGenerator(name))
+                                Err(UnknownGeneratorError::new(name).into())
                             }
                         }
                     }
@@ -648,7 +658,7 @@ impl EnvSymbolParser for ProcessParser {
                     let meta = Meta { script_path, name };
                     parser.parse_generator(crng, meta, cfg, self)
                 } else {
-                    Err(ProcessConfigError::UnknownGenerator(name))
+                    Err(UnknownGeneratorError::new(name).into())
                 }
             }
         }

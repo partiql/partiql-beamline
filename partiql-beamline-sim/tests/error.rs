@@ -31,7 +31,7 @@ where
 
 #[track_caller]
 #[inline]
-fn assert_script_error_snapshot(name: &str, script: String) -> miette::Result<()> {
+fn assert_script_error_snapshot(name: &str, script: impl Into<Vec<u8>>) -> miette::Result<()> {
     let source_name = format!("{name}.script");
     let source = SimSource::new(source_name, script)?;
     let result = get_sim(source);
@@ -84,4 +84,74 @@ fn verify_parse_error_regex() -> miette::Result<()> {
     assert_script_error_snapshot("unsupported_anchors", unsupported_anchors)?;
 
     Ok(())
+}
+
+#[test]
+fn parse_error_missing_comma() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "missing_comma",
+        r##"
+        rand_processes::{
+            sensor: [
+                {
+                    $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+                    sensor: rand_process::{
+                        $data: {
+                            id: '1'
+                            tick: Tick,
+                        }
+                    }
+                }
+            ],
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_unknown_generator() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "unknown_generator",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    ok: UniformI8,
+                    unknown_generator: UniformNonsense,
+                    ok2: UniformI8,
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_no_arrival() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "no_arrival",
+        r##"
+        rand_processes::{
+            sensor: rand_process::{
+                $data: {
+                    ok: UniformI8,
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_no_data() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "no_data",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{}
+        }
+    "##,
+    )
 }

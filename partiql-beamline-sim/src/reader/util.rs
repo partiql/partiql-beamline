@@ -1,12 +1,12 @@
 use crate::gen::distributions::{Density, Meta};
 use crate::gen::ValueGenerator;
 use crate::reader::error::{
-    ConfigValueError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult,
+    ConfigValueError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult, Sourceable,
 };
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
 use ion_rs::{
-    AnyEncoding, HasSpan, IonError, LazyField, LazyList, LazyStruct, LazyValue, Span, ValueRef,
+    AnyEncoding, HasRange, IonError, LazyField, LazyList, LazyStruct, LazyValue, ValueRef,
 };
 use ion_rs_old::external::bigdecimal::ToPrimitive;
 use miette::SourceSpan;
@@ -14,6 +14,7 @@ use partiql_value::Value;
 use rand::Rng;
 use std::collections::HashSet;
 use std::marker::PhantomData;
+use std::ops::Range;
 
 pub(crate) const CONFIG_KEY_NULLABLE: &str = "nullable";
 pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
@@ -103,7 +104,12 @@ where
         let config = if status.local_keys { config } else { None };
         match config {
             None => inner.parse_default(rng, meta, density, symbol_parser),
-            Some(config) => inner.parse_with_config(rng, meta, density, config, symbol_parser),
+            Some(config) => {
+                let source_span = config.source_span();
+                inner
+                    .parse_with_config(rng, meta, density, config, symbol_parser)
+                    .map_err(|err| err.with_context(source_span))
+            }
         }
     }
 }
@@ -301,56 +307,54 @@ pub(crate) trait ToSourceSpan {
 
 impl<'a, T> ToSourceSpan for T
 where
-    T: IonSpan<'a>,
+    T: IonRange,
 {
     #[inline]
     fn source_span(&self) -> Option<SourceSpan> {
-        let span = self.ion_span()?;
-        let offset = span.range();
-        Some((offset.start, offset.end).into())
+        self.ion_range().map(SourceSpan::from)
     }
 }
 
 // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-pub(crate) trait IonSpan<'a> {
-    fn ion_span(&self) -> Option<Span<'a>>;
+pub(crate) trait IonRange {
+    fn ion_range(&self) -> Option<Range<usize>>;
 }
 
-impl<'a> IonSpan<'a> for LazyValue<'a, AnyEncoding> {
+impl<'a> IonRange for LazyValue<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-        Some(self.raw()?.span())
+        self.raw().as_ref().map(HasRange::range)
     }
 }
 
-impl<'a> IonSpan<'a> for LazyStruct<'a, AnyEncoding> {
+impl<'a> IonRange for LazyStruct<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-        self.as_value().ion_span()
+        self.as_value().ion_range()
     }
 }
 
-impl<'a> IonSpan<'a> for LazyList<'a, AnyEncoding> {
+impl<'a> IonRange for LazyList<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
-        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-        None
-    }
-}
-
-impl<'a> IonSpan<'a> for LazyField<'a, AnyEncoding> {
-    #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
         None
     }
 }
 
-impl<'a> IonSpan<'a> for ValueRef<'a, AnyEncoding> {
+impl<'a> IonRange for LazyField<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
+        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+        None
+    }
+}
+
+impl<'a> IonRange for ValueRef<'a, AnyEncoding> {
+    #[inline]
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
         None
     }
@@ -366,8 +370,7 @@ impl ToSourceSpan for IonError {
         };
 
         let start = pos.byte_offset();
-        let len = pos.byte_length();
-        let end = start + len.unwrap_or(0);
-        Some((start..end).into())
+        let len = pos.byte_length().unwrap_or(0);
+        Some(SourceSpan::new(start.into(), len))
     }
 }
