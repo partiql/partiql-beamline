@@ -1,5 +1,5 @@
 use crate::gen::{ArrivalTime, ValueGenerator};
-use crate::reader::error::{ProcessConfigError, ProcessConfigResult};
+use crate::reader::error::{NotKnownError, ProcessConfigError, ProcessConfigResult};
 use itertools::Itertools;
 use partiql_value::Value;
 use std::collections::hash_map::Entry;
@@ -17,7 +17,7 @@ pub(crate) trait EnvLookup {
 
     fn get(&self, name: &str) -> ProcessConfigResult<&EnvBindingValue> {
         self.find(name)
-            .ok_or_else(|| ProcessConfigError::Other(format!("Unknown variable `{name}`")))
+            .ok_or_else(|| NotKnownError::Variable(name.to_string()).into())
     }
 }
 

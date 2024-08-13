@@ -2,7 +2,7 @@ use crate::gen::constant::ConstantGenerator;
 use crate::gen::distributions::{Density, Meta};
 use crate::gen::text::{LoremIpsumGenerator, LoremIpsumTitleGenerator, RegexGenerator};
 use crate::gen::{ValueGenerator, ValueGeneratorBoxed};
-use crate::reader::error::ProcessConfigResult;
+use crate::reader::error::{ProcessConfigError, ProcessConfigResult, Sourceable};
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
 use crate::reader::util::{parse_density, require_key, ValueGeneratorParserImpl};
@@ -34,8 +34,12 @@ where
         config: LazyStruct<'_, AnyEncoding>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let pattern = require_key(config, KEY_PATTERN)?.expect_string()?;
-        let constant = Value::from(symbol_parser.format_pattern(pattern.text())?);
+        let (pattern, span) = require_key(config, KEY_PATTERN)?;
+        let pattern = pattern.expect_string()?;
+        let formatted = symbol_parser
+            .format_pattern(pattern.text())
+            .with_context(span)?;
+        let constant = Value::from(formatted);
         let gen = ConstantGenerator::new(meta, constant);
         Ok(Box::new(gen))
     }
@@ -57,8 +61,12 @@ where
         config: LazyStruct<'_, AnyEncoding>,
         symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let pattern = require_key(config, KEY_PATTERN)?.expect_string()?;
-        let gen = RegexGenerator::new(rng, meta, density, pattern.text())?;
+        let (pattern, span) = require_key(config, KEY_PATTERN)?;
+        let pattern = pattern.expect_string()?;
+        let gen = RegexGenerator::new(rng, meta, density, pattern.text())
+            .map_err(ProcessConfigError::from)
+            .with_context(span)?;
+
         Ok(Box::new(gen))
     }
 
@@ -79,8 +87,8 @@ where
         config: LazyStruct<'_, AnyEncoding>,
         _symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        let min = require_key(config, KEY_MIN_WORDS)?.expect_i64()? as u8;
-        let max = require_key(config, KEY_MAX_WORDS)?.expect_i64()? as u8;
+        let min = require_key(config, KEY_MIN_WORDS)?.0.expect_i64()? as u8;
+        let max = require_key(config, KEY_MAX_WORDS)?.0.expect_i64()? as u8;
 
         Ok(LoremIpsumGenerator::new(rng, meta, density, min, max)?.boxed())
     }

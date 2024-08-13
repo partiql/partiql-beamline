@@ -6,3 +6,9 @@ expression: output
 
 Error:   × `Regex` Generator Configuration
   ╰─▶   × Regex Error: Unsupported Regex: Look-around not supported for data generation
+         ╭─[unsupported_anchors.script:8:40]
+       7 │             $data: {
+       8 │                 bad: Regex::{ pattern: "^some val \\d{1,4}$" },
+         ·                                        ─────────────────────
+       9 │             }
+         ╰────

@@ -1,12 +1,13 @@
 use crate::gen::distributions::{Density, Meta};
 use crate::gen::ValueGenerator;
 use crate::reader::error::{
-    ConfigValueError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult,
+    ConfigValueError, DensityError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult,
+    Sourceable,
 };
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
 use ion_rs::{
-    AnyEncoding, HasSpan, IonError, LazyField, LazyList, LazyStruct, LazyValue, Span, ValueRef,
+    AnyEncoding, HasRange, IonError, LazyField, LazyList, LazyStruct, LazyValue, ValueRef,
 };
 use ion_rs_old::external::bigdecimal::ToPrimitive;
 use miette::SourceSpan;
@@ -14,6 +15,7 @@ use partiql_value::Value;
 use rand::Rng;
 use std::collections::HashSet;
 use std::marker::PhantomData;
+use std::ops::Range;
 
 pub(crate) const CONFIG_KEY_NULLABLE: &str = "nullable";
 pub(crate) const CONFIG_KEY_OPTIONAL: &str = "optional";
@@ -37,10 +39,11 @@ where
         _rng: R,
         _meta: Meta,
         _density: Density,
-        _config: LazyStruct<'_, AnyEncoding>,
+        config: LazyStruct<'_, AnyEncoding>,
         _symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        Err(ProcessConfigError::ConfigUnexpected)
+        let span = config.source_span();
+        Err(ProcessConfigError::ConfigUnexpected(span.into()))
     }
 
     fn parse_default(
@@ -50,7 +53,7 @@ where
         _density: Density,
         _symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        Err(ProcessConfigError::ConfigExpected)
+        Err(ProcessConfigError::ConfigExpected(Default::default()))
     }
 
     fn possible_config_keys(&self) -> &[&'static str] {
@@ -103,7 +106,12 @@ where
         let config = if status.local_keys { config } else { None };
         match config {
             None => inner.parse_default(rng, meta, density, symbol_parser),
-            Some(config) => inner.parse_with_config(rng, meta, density, config, symbol_parser),
+            Some(config) => {
+                let source_span = config.source_span();
+                inner
+                    .parse_with_config(rng, meta, density, config, symbol_parser)
+                    .map_err(|err| err.with_context(source_span))
+            }
         }
     }
 }
@@ -128,9 +136,10 @@ where
 pub(crate) fn require_key<'a>(
     config: LazyStruct<'a, AnyEncoding>,
     key: &'static str,
-) -> ProcessConfigResult<ValueRef<'a, AnyEncoding>> {
+) -> ProcessConfigResult<(ValueRef<'a, AnyEncoding>, Option<SourceSpan>)> {
     if let Ok(Some(value)) = config.find(key) {
-        value.read().map_err(|e| {
+        let span = value.source_span();
+        value.read().map(|val| (val, span)).map_err(|e| {
             ProcessConfigError::ConfigValue(Box::new(ConfigValueError {
                 key: key.to_string(),
                 err: e.into(),
@@ -145,6 +154,7 @@ pub(crate) fn parse_density(
     config: Option<&LazyStruct<'_, AnyEncoding>>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Density> {
+    let span = config.and_then(|cfg| cfg.source_span());
     let nullable_config = config
         .and_then(|c| c.get(CONFIG_KEY_NULLABLE).transpose())
         .transpose()?;
@@ -170,27 +180,13 @@ pub(crate) fn parse_density(
     let present = 1.0 - pct_absent;
 
     if !(0.0..=1.0).contains(&present) {
-        let fmt_msg = |name: &str, val: Option<f64>, default: bool| {
-            format!(
-                "{}: `{}`{}",
-                name,
-                val.unwrap_or(0.0),
-                if default {
-                    "(from simulation default)"
-                } else {
-                    ""
-                }
-            )
+        let err = DensityError {
+            nullable,
+            nullable_default,
+            optional,
+            optional_default,
         };
-
-        let nullability = fmt_msg(CONFIG_KEY_NULLABLE, nullable, nullable_default);
-        let optionality = fmt_msg(CONFIG_KEY_OPTIONAL, optional, optional_default);
-
-        let msg = format!(
-            "Combined Nullability and Optionality Percents must be between 0.0 and 1.0; {}; {}.",
-            nullability, optionality
-        );
-        Err(ProcessConfigError::DensityError(msg))?
+        Err(ProcessConfigError::from(err).with_context(span))?
     } else {
         Ok(Density::new(nullable, optional, present)?)
     }
@@ -301,56 +297,54 @@ pub(crate) trait ToSourceSpan {
 
 impl<'a, T> ToSourceSpan for T
 where
-    T: IonSpan<'a>,
+    T: IonRange,
 {
     #[inline]
     fn source_span(&self) -> Option<SourceSpan> {
-        let span = self.ion_span()?;
-        let offset = span.range();
-        Some((offset.start, offset.end).into())
+        self.ion_range().map(SourceSpan::from)
     }
 }
 
 // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-pub(crate) trait IonSpan<'a> {
-    fn ion_span(&self) -> Option<Span<'a>>;
+pub(crate) trait IonRange {
+    fn ion_range(&self) -> Option<Range<usize>>;
 }
 
-impl<'a> IonSpan<'a> for LazyValue<'a, AnyEncoding> {
+impl<'a> IonRange for LazyValue<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-        Some(self.raw()?.span())
+        self.raw().as_ref().map(HasRange::range)
     }
 }
 
-impl<'a> IonSpan<'a> for LazyStruct<'a, AnyEncoding> {
+impl<'a> IonRange for LazyStruct<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-        self.as_value().ion_span()
+        self.as_value().ion_range()
     }
 }
 
-impl<'a> IonSpan<'a> for LazyList<'a, AnyEncoding> {
+impl<'a> IonRange for LazyList<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
-        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
-        None
-    }
-}
-
-impl<'a> IonSpan<'a> for LazyField<'a, AnyEncoding> {
-    #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
         None
     }
 }
 
-impl<'a> IonSpan<'a> for ValueRef<'a, AnyEncoding> {
+impl<'a> IonRange for LazyField<'a, AnyEncoding> {
     #[inline]
-    fn ion_span(&self) -> Option<Span<'a>> {
+    fn ion_range(&self) -> Option<Range<usize>> {
+        // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
+        None
+    }
+}
+
+impl<'a> IonRange for ValueRef<'a, AnyEncoding> {
+    #[inline]
+    fn ion_range(&self) -> Option<Range<usize>> {
         // TODO fix if/when addressed: https://github.com/amazon-ion/ion-rust/issues/810
         None
     }
@@ -366,8 +360,7 @@ impl ToSourceSpan for IonError {
         };
 
         let start = pos.byte_offset();
-        let len = pos.byte_length();
-        let end = start + len.unwrap_or(0);
-        Some((start..end).into())
+        let len = pos.byte_length().unwrap_or(0);
+        Some(SourceSpan::new(start.into(), len))
     }
 }

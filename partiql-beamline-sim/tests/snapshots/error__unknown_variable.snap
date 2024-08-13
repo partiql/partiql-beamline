@@ -1,0 +1,13 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Error in process configuration
+
+Error:   × Unknown Variable $unknown_variable
+   ╭─[unknown_variable.script:6:26]
+ 5 │                 $data: {
+ 6 │                     err: $unknown_variable,
+   ·                          ─────────────────
+ 7 │                 }
+   ╰────

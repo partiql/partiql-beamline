@@ -1,0 +1,14 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Error in process configuration
+
+Error:   × `HomogeneousPoisson` Arrival Configuration
+  ╰─▶   × Ion Decoding Error
+         ╭─[arrival_missing_config.script:3:23]
+       2 │         rand_processes::{
+       3 │             $arrival: HomogeneousPoisson:: { nonsense: 5 },
+         ·                       ────────────────────────────────────
+       4 │             sensor: rand_process::{
+         ╰────

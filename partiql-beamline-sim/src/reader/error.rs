@@ -1,10 +1,10 @@
 use crate::gen::DataGenerationError;
-use crate::reader::util::ToSourceSpan;
+use crate::reader::util::{ToSourceSpan, CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL};
 use crate::source::SimSource;
 use ion_rs::IonError;
-use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
+use miette::{Diagnostic, LabeledSpan, Severity, SourceCode, SourceSpan};
 use std::error::Error;
-use std::fmt::{Display, Formatter, Pointer};
+use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -22,7 +22,7 @@ pub struct ProcessParseError {
 
 impl Display for ProcessParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        "Error in process configuration".fmt(f)
+        std::fmt::Display::fmt("Error in process configuration", f)
     }
 }
 
@@ -57,34 +57,37 @@ pub enum ProcessConfigError {
     #[diagnostic(transparent)]
     ReadError(#[from] ProcessConfigIonError),
 
-    #[error("Script contains no data")]
-    EmptyReadError,
-
-    #[error("Format string error: `{0}`")]
-    FormatStringError(String),
-
-    #[error("Nullability/Optionality config error: `{0}`")]
-    DensityError(String),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    DensityError(#[from] SourcedErrorWrapper<DensityError>),
 
     #[error(transparent)]
     #[diagnostic(transparent)]
-    RandomVariableError(#[from] DataGenerationError),
+    RandomVariableError(#[from] SourcedErrorWrapper<DataGenerationError>),
 
-    #[error("No $arrival for random process")]
-    NoArrival,
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    NoArrival(#[from] SourcedErrorWrapper<NoArrivalError>),
 
-    #[error("No data for random process")]
-    NoData,
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    NoData(#[from] SourcedErrorWrapper<NoDataError>),
+
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    ArrivalConfig(Box<ArrivalConfigError>),
 
     #[error(transparent)]
     #[diagnostic(transparent)]
     GeneratorConfig(Box<GeneratorConfigError>),
 
-    #[error("Expected Configuration")]
-    ConfigExpected,
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    ConfigExpected(#[from] SourcedErrorWrapper<ConfigExpectedError>),
 
-    #[error("Unexpected Configuration")]
-    ConfigUnexpected,
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    ConfigUnexpected(#[from] SourcedErrorWrapper<ConfigUnexpectedError>),
 
     #[error("Duplicate Configuration key: `{0}`")]
     ConfigDuplicateKey(String),
@@ -99,14 +102,9 @@ pub enum ProcessConfigError {
     #[diagnostic(transparent)]
     ConfigValue(Box<ConfigValueError>),
 
-    #[error("Unknown Generator `{0}`")]
-    UnknownGenerator(String),
-
-    #[error("Unknown Arrival `{0}`")]
-    UnknownArrival(String),
-
-    #[error("Unknown Immediate Value `{0}`")]
-    UnknownImmediate(String),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    NotKnown(#[from] SourcedErrorWrapper<NotKnownError>),
 
     #[error("Unknown Error: `{0}`")]
     Other(String),
@@ -115,14 +113,150 @@ pub enum ProcessConfigError {
     Fatal(String),
 }
 
-impl ProcessConfigError {
-    pub(crate) fn add_source(&mut self, source: Arc<SimSource>) {
+pub(crate) trait Sourceable: Sized {
+    fn add_source(&mut self, source: Arc<SimSource>);
+    fn add_context(&mut self, span: Option<SourceSpan>);
+
+    fn with_source(mut self, source: Arc<SimSource>) -> Self {
+        self.add_source(source);
+        self
+    }
+
+    fn with_context(mut self, span: Option<SourceSpan>) -> Self {
+        self.add_context(span);
+        self
+    }
+}
+
+impl<T, E> Sourceable for Result<T, E>
+where
+    E: Sourceable,
+{
+    fn add_source(&mut self, source: Arc<SimSource>) {
+        if let Err(err) = self {
+            err.add_source(source);
+        }
+    }
+
+    fn add_context(&mut self, span: Option<SourceSpan>) {
+        if let Err(err) = self {
+            err.add_context(span);
+        }
+    }
+}
+
+impl Sourceable for ProcessConfigError {
+    fn add_source(&mut self, source: Arc<SimSource>) {
         match self {
             ProcessConfigError::ReadError(e) => e.add_source(source),
+            ProcessConfigError::DensityError(e) => e.add_source(source),
+            ProcessConfigError::RandomVariableError(e) => e.add_source(source),
+            ProcessConfigError::NotKnown(e) => e.add_source(source),
+            ProcessConfigError::ArrivalConfig(e) => e.add_source(source),
             ProcessConfigError::GeneratorConfig(e) => e.add_source(source),
             ProcessConfigError::ConfigValue(e) => e.add_source(source),
+            ProcessConfigError::NoData(e) => e.add_source(source),
+            ProcessConfigError::NoArrival(e) => e.add_source(source),
+            ProcessConfigError::ConfigExpected(e) => e.add_source(source),
+            ProcessConfigError::ConfigUnexpected(e) => e.add_source(source),
             _ => {}
         }
+    }
+
+    fn add_context(&mut self, span: Option<SourceSpan>) {
+        match self {
+            ProcessConfigError::ReadError(e) => e.add_context(span),
+            ProcessConfigError::DensityError(e) => e.add_context(span),
+            ProcessConfigError::RandomVariableError(e) => e.add_context(span),
+            ProcessConfigError::NotKnown(e) => e.add_context(span),
+            ProcessConfigError::ArrivalConfig(e) => e.add_context(span),
+            ProcessConfigError::GeneratorConfig(e) => e.add_context(span),
+            ProcessConfigError::ConfigValue(e) => e.add_context(span),
+            ProcessConfigError::NoData(e) => e.add_context(span),
+            ProcessConfigError::NoArrival(e) => e.add_context(span),
+            ProcessConfigError::ConfigExpected(e) => e.add_context(span),
+            ProcessConfigError::ConfigUnexpected(e) => e.add_context(span),
+            _ => {}
+        }
+    }
+}
+
+#[derive(Error, Debug, Diagnostic)]
+#[non_exhaustive]
+// Deliberately not `pub`
+pub(crate) enum NotKnownError {
+    #[error("Unknown Generator {0}")]
+    Generator(String),
+    #[error("Unknown Arrival {0}")]
+    Arrival(String),
+    #[error("Unknown Immediate {0}")]
+    Immediate(String),
+    #[error("Unknown Binding {0}")]
+    Binding(String),
+    #[error("Unknown Variable {0}")]
+    Variable(String),
+}
+
+impl From<NotKnownError> for ProcessConfigError {
+    fn from(err: NotKnownError) -> Self {
+        SourcedErrorWrapper::wrap(err).into()
+    }
+}
+
+#[derive(Error, Default, Debug, Diagnostic)]
+#[error("No $arrival for random process")]
+pub struct NoArrivalError {}
+
+#[derive(Error, Default, Debug, Diagnostic)]
+#[error("No data for random process")]
+pub struct NoDataError {}
+
+#[derive(Error, Default, Debug, Diagnostic)]
+#[error("Expected Configuration")]
+pub struct ConfigExpectedError {}
+
+#[derive(Error, Default, Debug, Diagnostic)]
+#[error("Unexpected Configuration")]
+pub struct ConfigUnexpectedError {}
+
+#[derive(Error, Debug, Diagnostic)]
+pub struct DensityError {
+    pub nullable: Option<f64>,
+    pub nullable_default: bool,
+    pub optional: Option<f64>,
+    pub optional_default: bool,
+}
+
+impl Display for DensityError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let fmt_msg = |name: &str, val: Option<f64>, default: bool| {
+            format!(
+                "{}: `{}`{}",
+                name,
+                val.unwrap_or(0.0),
+                if default {
+                    "(from simulation default)"
+                } else {
+                    ""
+                }
+            )
+        };
+
+        let nullability = fmt_msg(CONFIG_KEY_NULLABLE, self.nullable, self.nullable_default);
+        let optionality = fmt_msg(CONFIG_KEY_OPTIONAL, self.optional, self.optional_default);
+
+        let msg = format!(
+            "Combined Nullability and Optionality Percents must be between 0.0 and 1.0; {}; {}.",
+            nullability, optionality
+        );
+
+        std::fmt::Display::fmt(&msg, f)
+    }
+}
+
+impl From<DensityError> for ProcessConfigError {
+    fn from(err: DensityError) -> Self {
+        ProcessConfigError::DensityError(SourcedErrorWrapper::wrap(err))
     }
 }
 
@@ -136,9 +270,33 @@ pub struct ConfigValueError {
     pub err: ProcessConfigError,
 }
 
-impl ConfigValueError {
-    pub(crate) fn add_source(&mut self, source: Arc<SimSource>) {
+impl Sourceable for ConfigValueError {
+    fn add_source(&mut self, source: Arc<SimSource>) {
         self.err.add_source(source);
+    }
+
+    fn add_context(&mut self, span: Option<SourceSpan>) {
+        self.err.add_context(span);
+    }
+}
+
+#[derive(Debug, Error, Diagnostic)]
+#[error("`{arrival}` Arrival Configuration")]
+pub struct ArrivalConfigError {
+    pub arrival: String,
+    #[source]
+    #[diagnostic_source]
+    #[diagnostic(transparent)]
+    pub err: ProcessConfigError,
+}
+
+impl Sourceable for ArrivalConfigError {
+    fn add_source(&mut self, source: Arc<SimSource>) {
+        self.err.add_source(source);
+    }
+
+    fn add_context(&mut self, span: Option<SourceSpan>) {
+        self.err.add_context(span);
     }
 }
 
@@ -152,9 +310,19 @@ pub struct GeneratorConfigError {
     pub err: ProcessConfigError,
 }
 
-impl GeneratorConfigError {
-    pub(crate) fn add_source(&mut self, source: Arc<SimSource>) {
+impl Sourceable for GeneratorConfigError {
+    fn add_source(&mut self, source: Arc<SimSource>) {
         self.err.add_source(source);
+    }
+
+    fn add_context(&mut self, span: Option<SourceSpan>) {
+        self.err.add_context(span);
+    }
+}
+
+impl From<DataGenerationError> for ProcessConfigError {
+    fn from(err: DataGenerationError) -> Self {
+        SourcedErrorWrapper::wrap(err).into()
     }
 }
 
@@ -165,6 +333,25 @@ where
 {
     pub inner: T,
     pub source_code: Option<Arc<SimSource>>,
+    pub source_span: Vec<SourceSpan>,
+}
+
+impl<T> Default for SourcedErrorWrapper<T>
+where
+    T: std::error::Error + Diagnostic + Default,
+{
+    fn default() -> Self {
+        Self::wrap(T::default())
+    }
+}
+
+impl<T> From<Option<SourceSpan>> for SourcedErrorWrapper<T>
+where
+    T: std::error::Error + Diagnostic + Default,
+{
+    fn from(span: Option<SourceSpan>) -> Self {
+        Self::default().with_context(span)
+    }
 }
 
 impl<T> SourcedErrorWrapper<T>
@@ -175,11 +362,25 @@ where
         Self {
             inner,
             source_code: None,
+            source_span: Vec::default(),
         }
     }
-
-    pub(crate) fn add_source(&mut self, source: Arc<SimSource>) {
+}
+impl<T> Sourceable for SourcedErrorWrapper<T>
+where
+    T: std::error::Error + Diagnostic,
+{
+    fn add_source(&mut self, source: Arc<SimSource>) {
         self.source_code = Some(source);
+    }
+
+    fn add_context(&mut self, span: Option<SourceSpan>) {
+        // If not empty, context has already been provided deeper in the stack
+        if self.source_span.is_empty() {
+            if let Some(span) = span {
+                self.source_span.push(span);
+            }
+        }
     }
 }
 
@@ -226,7 +427,13 @@ where
     }
 
     fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
-        self.inner.labels()
+        self.inner.labels().or_else(|| {
+            let labels = self
+                .source_span
+                .iter()
+                .map(|span| LabeledSpan::new_with_span(None, *span));
+            Some(Box::new(labels))
+        })
     }
 
     fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item = &'a dyn Diagnostic> + 'a>> {
@@ -235,18 +442,6 @@ where
 
     fn diagnostic_source(&self) -> Option<&dyn Diagnostic> {
         self.inner.diagnostic_source()
-    }
-}
-
-impl<T> From<T> for SourcedErrorWrapper<T>
-where
-    T: std::error::Error + Diagnostic,
-{
-    fn from(inner: T) -> Self {
-        SourcedErrorWrapper {
-            inner,
-            source_code: None,
-        }
     }
 }
 

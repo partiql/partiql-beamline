@@ -37,9 +37,6 @@ pub enum DataGenerationError {
     #[error("Bounds Error: `{0}-{0}`")]
     BoundsF(f64, f64),
 
-    #[error("No Config Error: {0}")]
-    NoConfig(String),
-
     #[error("Integer Conversion Error: {0}")]
     IntConversionError(#[from] TryFromIntError),
 

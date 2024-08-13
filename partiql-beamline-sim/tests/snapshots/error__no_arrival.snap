@@ -1,0 +1,16 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Error in process configuration
+
+Error:   × No $arrival for random process
+   ╭─[no_arrival.script:3:21]
+ 2 │             rand_processes::{
+ 3 │ ╭─▶             sensor: rand_process::{
+ 4 │ │                   $data: {
+ 5 │ │                       ok: UniformI8,
+ 6 │ │                   }
+ 7 │ ╰─▶             }
+ 8 │             }
+   ╰────

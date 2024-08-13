@@ -31,7 +31,7 @@ where
 
 #[track_caller]
 #[inline]
-fn assert_script_error_snapshot(name: &str, script: String) -> miette::Result<()> {
+fn assert_script_error_snapshot(name: &str, script: impl Into<Vec<u8>>) -> miette::Result<()> {
     let source_name = format!("{name}.script");
     let source = SimSource::new(source_name, script)?;
     let result = get_sim(source);
@@ -84,4 +84,176 @@ fn verify_parse_error_regex() -> miette::Result<()> {
     assert_script_error_snapshot("unsupported_anchors", unsupported_anchors)?;
 
     Ok(())
+}
+
+#[test]
+fn parse_error_missing_comma() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "missing_comma",
+        r##"
+        rand_processes::{
+            sensor: [
+                {
+                    $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+                    sensor: rand_process::{
+                        $data: {
+                            id: '1'
+                            tick: Tick,
+                        }
+                    }
+                }
+            ],
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_unknown_generator() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "unknown_generator",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    ok: UniformI8,
+                    unknown_generator: UniformNonsense,
+                    ok2: UniformI8,
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_no_arrival() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "no_arrival",
+        r##"
+        rand_processes::{
+            sensor: rand_process::{
+                $data: {
+                    ok: UniformI8,
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_no_data() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "no_data",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{}
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_density() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "density",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: UniformI8::{nullable:0.7, optional: 0.7},
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_config_expected() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "config_expected",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: Regex,
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_unknown_arrival() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "unknown_arrival",
+        r##"
+        rand_processes::{
+            $arrival: NonsenseArrival:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    ok: UniformI8,
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_arrival_missing_config() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "arrival_missing_config",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { nonsense: 5 },
+            sensor: rand_process::{
+                $data: {
+                    ok: UniformI8,
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_unknown_immediate() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "unknown_immediate",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: {{ }},
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_unknown_variable() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "unknown_variable",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: $unknown_variable,
+                }
+            }
+        }
+    "##,
+    )
 }
