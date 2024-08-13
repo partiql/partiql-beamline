@@ -1,0 +1,13 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Error in process configuration
+
+Error:   × Combined Nullability and Optionality Percents must be between 0.0 and 1.0; nullable: `0.7`; optional: `0.7`.
+   ╭─[density.script:6:26]
+ 5 │                 $data: {
+ 6 │                     err: UniformI8::{nullable:0.7, optional: 0.7},
+   ·                          ────────────────────────────────────────
+ 7 │                 }
+   ╰────

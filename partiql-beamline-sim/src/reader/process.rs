@@ -7,8 +7,8 @@ use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
 use crate::reader::error::{
-    ProcessConfigError, ProcessConfigResult, ProcessParseError, ProcessParseResult, Sourceable,
-    UnknownGeneratorError,
+    ArrivalConfigError, NotKnownError, ProcessConfigError, ProcessConfigResult, ProcessParseError,
+    ProcessParseResult, Sourceable,
 };
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
@@ -249,9 +249,7 @@ impl ProcessParser {
 
         let span = processes.source_span();
         let arrival = arrival.ok_or_else(|| ProcessConfigError::NoArrival(span.into()))?;
-        let data = data
-            .ok_or_else(|| ProcessConfigError::NoData(Default::default()))
-            .with_context(span)?;
+        let data = data.ok_or_else(|| ProcessConfigError::NoData(span.into()))?;
 
         Ok(Box::new(SimpleProcess { arrival, data }))
     }
@@ -264,16 +262,17 @@ impl ProcessParser {
             let field = field?;
             let name = self.parse_symbol_type(&field.name()?)?;
             let value = field.value();
+            let span = value.source_span();
             let value = value.read()?;
 
             match name {
                 SymbolType::VarRef(name) => {
                     // variable definition
-                    let val = self.parse_binding_value(&value, &name)?;
+                    let val = self.parse_binding_value(&value, &name).with_context(span)?;
                     self.env_stack.assign(name, val)?;
                 }
                 SymbolType::Str(name) => {
-                    self.parse_scope(name, value)?;
+                    self.parse_scope(name, value).with_context(span)?;
                 }
             }
         }
@@ -285,45 +284,50 @@ impl ProcessParser {
         value: &ValueRef<'_, AnyEncoding>,
         scope_name: &str,
     ) -> ProcessConfigResult<EnvBindingValue> {
+        let span = value.source_span();
         match self.parse_arrival(value) {
-            Err(ProcessConfigError::UnknownArrival(_)) => {
-                // continue to try Generator
-            }
+            Err(ProcessConfigError::NotKnown(wrap))
+            if matches!(wrap.inner, NotKnownError::Arrival(_)) =>
+                {
+                    // continue to try Generator
+                }
             Ok(arrival) => {
                 return Ok(arrival.into());
             }
             Err(e) => {
-                return Err(e);
+                return Err(e).with_context(span);
             }
         }
 
         match self.parse_generator(value, scope_name) {
-            Err(ProcessConfigError::UnknownGenerator(_)) => {
-                // continue to try immediate
-            }
+            Err(ProcessConfigError::NotKnown(wrap))
+            if matches!(wrap.inner, NotKnownError::Generator(_)) =>
+                {
+                    // continue to try immediate
+                }
             Ok(gen) => {
                 return Ok(gen.into());
             }
             Err(e) => {
-                return Err(e);
+                return Err(e).with_context(span);
             }
         }
 
         match self.parse_immediate(value) {
-            Err(ProcessConfigError::UnknownImmediate(_)) => {
-                // continue to error at end
-            }
+            Err(ProcessConfigError::NotKnown(wrap))
+            if matches!(wrap.inner, NotKnownError::Immediate(_)) =>
+                {
+                    // continue to error at end
+                }
             Ok(immediate) => {
                 return Ok(immediate.into());
             }
             Err(e) => {
-                return Err(e);
+                return Err(e).with_context(span);
             }
         }
 
-        Err(ProcessConfigError::Other(format!(
-            "Unknown binding `{value:?}`" // TODO This debug-print can panic here due to https://github.com/amazon-ion/ion-rust/issues/770
-        )))
+        Err(NotKnownError::Binding(format!("{value:?}")).into()).with_context(span)
     }
 
     fn parse_list_parameterized<S: Into<String>>(
@@ -378,6 +382,7 @@ impl ProcessParser {
     }
 
     fn parse_immediate(&mut self, value: &ValueRef<'_, AnyEncoding>) -> ProcessConfigResult<Value> {
+        let span = value.source_span();
         let ion_type = value.ion_type();
         match value {
             ValueRef::Bool(b) => Ok((*b).into()),
@@ -395,8 +400,9 @@ impl ProcessParser {
                     }
                 }
             }
-            _ => Err(ProcessConfigError::UnknownImmediate(ion_type.to_string())),
+            _ => Err(NotKnownError::Immediate(format!("of Ion type `{}`", ion_type)).into()),
         }
+            .with_context(span)
     }
 
     fn parse_duration(
@@ -462,33 +468,43 @@ impl ProcessParser {
         &mut self,
         value: &ValueRef<'_, AnyEncoding>,
     ) -> ProcessConfigResult<Box<dyn ArrivalTime>> {
+        let span = value.source_span();
         let ion_type = value.ion_type();
-        match value {
+        let result: Result<Box<dyn ArrivalTime>, _> = match value {
             ValueRef::Struct(strct) => {
+                let span = strct.source_span();
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
 
-                let kind = annot.first().ok_or_else(|| {
-                    ProcessConfigError::UnknownArrival("No Arrival type".to_string())
-                })?;
+                let kind = annot
+                    .first()
+                    .ok_or_else(|| NotKnownError::Arrival("<no name>".to_string()))?;
                 let kind = self.parse_symbol_text(kind)?;
                 match kind.as_str() {
-                    "HomogeneousPoisson" => {
-                        let interarrival =
-                            self.parse_duration(&strct.find_expected("interarrival")?)?;
-
-                        Ok(Box::new(HomogeneousPoisson::from_interarrival_time(
-                            self.child_rng()?,
-                            interarrival,
-                        )))
-                    }
-                    _ => Err(ProcessConfigError::UnknownArrival(kind.to_string())),
+                    "HomogeneousPoisson" => self.parse_homogeneous_poisson(&strct).map_err(|err| {
+                        ProcessConfigError::ArrivalConfig(Box::new(ArrivalConfigError {
+                            arrival: "HomogeneousPoisson".to_string(),
+                            err,
+                        }))
+                    }),
+                    _ => Err(NotKnownError::Arrival(kind).into()),
                 }
+                    .with_context(span)
             }
-            _ => Err(ProcessConfigError::UnknownArrival(format!(
-                "ion type: {}",
-                ion_type
-            ))),
-        }
+            _ => Err(NotKnownError::Arrival(format!("ion type: {}", ion_type)).into()),
+        };
+        result.with_context(span)
+    }
+
+    fn parse_homogeneous_poisson(
+        &mut self,
+        config: &LazyStruct<'_, AnyEncoding>,
+    ) -> Result<Box<dyn ArrivalTime>, ProcessConfigError> {
+        let interarrival = self.parse_duration(&config.find_expected("interarrival")?)?;
+
+        Ok(Box::new(HomogeneousPoisson::from_interarrival_time(
+            self.child_rng()?,
+            interarrival,
+        )))
     }
 
     fn parse_generator(
@@ -501,17 +517,18 @@ impl ProcessParser {
         match value {
             ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
                 SymbolType::VarRef(var) => {
-                    let gen: Box<dyn ValueGenerator> = match self.env_stack.get(&var)? {
-                        EnvBindingValue::Value(v) => {
-                            let meta = Meta {
-                                script_path,
-                                name: "<constant>".to_string(),
-                            };
-                            Box::new(ConstantGenerator::new(meta, v.clone()))
-                        }
-                        EnvBindingValue::Generator(g) => g.clone(),
-                        EnvBindingValue::Arrival(_) => todo!("arrival generator reference"),
-                    };
+                    let gen: Box<dyn ValueGenerator> =
+                        match self.env_stack.get(&var).with_context(span)? {
+                            EnvBindingValue::Value(v) => {
+                                let meta = Meta {
+                                    script_path,
+                                    name: "<constant>".to_string(),
+                                };
+                                Box::new(ConstantGenerator::new(meta, v.clone()))
+                            }
+                            EnvBindingValue::Generator(g) => g.clone(),
+                            EnvBindingValue::Arrival(_) => todo!("arrival generator reference"),
+                        };
                     Ok(gen)
                 }
                 SymbolType::Str(name) => {
@@ -520,7 +537,7 @@ impl ProcessParser {
                         let meta = Meta { script_path, name };
                         parser.parse_generator(crng, meta, None, self)
                     } else {
-                        Err(UnknownGeneratorError::new(name).into()).with_context(span)
+                        Err(NotKnownError::Generator(name).into())
                     }
                 }
             },
@@ -560,7 +577,7 @@ impl ProcessParser {
                                 let meta = Meta { script_path, name };
                                 parser.parse_generator(crng, meta, Some(*strct), self)
                             } else {
-                                Err(UnknownGeneratorError::new(name).into())
+                                Err(NotKnownError::Generator(name).into())
                             }
                         }
                     }
@@ -570,14 +587,16 @@ impl ProcessParser {
                 "Unable to parse `{lst:?}`"
             ))),
             other => {
-                let constant = self.parse_immediate(other)?;
+                let constant = self.parse_immediate(other).with_context(span)?;
                 let meta = Meta {
                     script_path,
                     name: "<constant>".to_string(),
                 };
-                Ok(Box::new(ConstantGenerator::new(meta, constant)))
+                let gen: Box<dyn ValueGenerator> = Box::new(ConstantGenerator::new(meta, constant));
+                Ok(gen)
             }
         }
+            .with_context(span)
     }
 
     fn parse_symbol_type(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<SymbolType> {
@@ -646,6 +665,7 @@ impl EnvSymbolParser for ProcessParser {
         sym: &SymbolRef<'_>,
         cfg: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let span = cfg.and_then(|cfg| cfg.source_span());
         match self.parse_symbol_type(sym)? {
             SymbolType::VarRef(name) => match self.env_stack.get(&name)? {
                 EnvBindingValue::Generator(gen) => Ok(gen.clone()),
@@ -658,10 +678,11 @@ impl EnvSymbolParser for ProcessParser {
                     let meta = Meta { script_path, name };
                     parser.parse_generator(crng, meta, cfg, self)
                 } else {
-                    Err(UnknownGeneratorError::new(name).into())
+                    Err(NotKnownError::Generator(name).into())
                 }
             }
         }
+            .with_context(span)
     }
 
     fn parse_symbol_as_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String> {

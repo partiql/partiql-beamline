@@ -4,7 +4,7 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × Unknown Generator `UniformNonsense`
+Error:   × Unknown Generator UniformNonsense
     ╭─[unknown_generator.script:5:24]
   4 │                 sensor: rand_process::{
   5 │ ╭─▶                 $data: {

@@ -1,7 +1,8 @@
 use crate::gen::distributions::{Density, Meta};
 use crate::gen::ValueGenerator;
 use crate::reader::error::{
-    ConfigValueError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult, Sourceable,
+    ConfigValueError, DensityError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult,
+    Sourceable,
 };
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
@@ -38,10 +39,11 @@ where
         _rng: R,
         _meta: Meta,
         _density: Density,
-        _config: LazyStruct<'_, AnyEncoding>,
+        config: LazyStruct<'_, AnyEncoding>,
         _symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        Err(ProcessConfigError::ConfigUnexpected)
+        let span = config.source_span();
+        Err(ProcessConfigError::ConfigUnexpected(span.into()))
     }
 
     fn parse_default(
@@ -51,7 +53,7 @@ where
         _density: Density,
         _symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        Err(ProcessConfigError::ConfigExpected)
+        Err(ProcessConfigError::ConfigExpected(Default::default()))
     }
 
     fn possible_config_keys(&self) -> &[&'static str] {
@@ -151,6 +153,7 @@ pub(crate) fn parse_density(
     config: Option<&LazyStruct<'_, AnyEncoding>>,
     symbol_parser: &dyn EnvSymbolParser,
 ) -> ProcessConfigResult<Density> {
+    let span = config.and_then(|cfg| cfg.source_span());
     let nullable_config = config
         .and_then(|c| c.get(CONFIG_KEY_NULLABLE).transpose())
         .transpose()?;
@@ -176,27 +179,13 @@ pub(crate) fn parse_density(
     let present = 1.0 - pct_absent;
 
     if !(0.0..=1.0).contains(&present) {
-        let fmt_msg = |name: &str, val: Option<f64>, default: bool| {
-            format!(
-                "{}: `{}`{}",
-                name,
-                val.unwrap_or(0.0),
-                if default {
-                    "(from simulation default)"
-                } else {
-                    ""
-                }
-            )
+        let err = DensityError {
+            nullable,
+            nullable_default,
+            optional,
+            optional_default,
         };
-
-        let nullability = fmt_msg(CONFIG_KEY_NULLABLE, nullable, nullable_default);
-        let optionality = fmt_msg(CONFIG_KEY_OPTIONAL, optional, optional_default);
-
-        let msg = format!(
-            "Combined Nullability and Optionality Percents must be between 0.0 and 1.0; {}; {}.",
-            nullability, optionality
-        );
-        Err(ProcessConfigError::DensityError(msg))?
+        Err(ProcessConfigError::from(err).with_context(span))?
     } else {
         Ok(Density::new(nullable, optional, present)?)
     }

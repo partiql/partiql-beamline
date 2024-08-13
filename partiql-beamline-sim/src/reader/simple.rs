@@ -269,7 +269,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["types"])?;
-        let config = config.ok_or(ProcessConfigError::ConfigExpected)?;
+        let config = config.ok_or(ProcessConfigError::ConfigExpected(Default::default()))?;
 
         let lst = config.get_expected("types")?.expect_list()?;
 
@@ -312,7 +312,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["choices"])?;
-        let config = config.ok_or(ProcessConfigError::ConfigExpected)?;
+        let config = config.ok_or(ProcessConfigError::ConfigExpected(Default::default()))?;
 
         let choices = config.get_expected("choices")?.expect_list()?;
         let mut choice_values = vec![];
@@ -346,7 +346,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["element_type", "min_size", "max_size"])?;
-        let config = config.ok_or(ProcessConfigError::ConfigExpected)?;
+        let config = config.ok_or(ProcessConfigError::ConfigExpected(Default::default()))?;
 
         let min_size = config.get_expected("min_size")?;
         let max_size = config.get_expected("max_size")?;
