@@ -5,12 +5,9 @@ expression: output
   × Error in process configuration
 
 Error:   × Unknown Generator UniformNonsense
-    ╭─[unknown_generator.script:5:24]
-  4 │                 sensor: rand_process::{
-  5 │ ╭─▶                 $data: {
-  6 │ │                       ok: UniformI8,
-  7 │ │                       unknown_generator: UniformNonsense,
-  8 │ │                       ok2: UniformI8,
-  9 │ ╰─▶                 }
- 10 │                 }
-    ╰────
+   ╭─[unknown_generator.script:7:40]
+ 6 │                     ok: UniformI8,
+ 7 │                     unknown_generator: UniformNonsense,
+   ·                                        ───────────────
+ 8 │                     ok2: UniformI8,
+   ╰────

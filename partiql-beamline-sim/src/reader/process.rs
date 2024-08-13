@@ -118,12 +118,12 @@ impl ProcessParser {
     fn parse_scope<S: Into<String>>(
         &mut self,
         scope_name: S,
-        value: ValueRef<'_, AnyEncoding>,
+        value: LazyValue<'_, AnyEncoding>,
     ) -> ProcessConfigResult<()> {
         let ion_type = value.ion_type();
         match value.ion_type() {
-            IonType::List => self.parse_scope_list(scope_name, value.expect_list()?),
-            IonType::Struct => self.parse_scope_struct(scope_name, value.expect_struct()?),
+            IonType::List => self.parse_scope_list(scope_name, value.read()?.expect_list()?),
+            IonType::Struct => self.parse_scope_struct(scope_name, value.read()?.expect_struct()?),
             _ => Err(ProcessConfigError::Other(format!(
                 "TODO: unhandled scope type `{ion_type}`"
             ))),
@@ -202,23 +202,22 @@ impl ProcessParser {
             let name = self.parse_symbol_type(&field.name()?)?;
             let value = field.value();
             let span = value.source_span();
-            let value = value.read()?;
 
             match name {
                 SymbolType::VarRef(name) => {
                     match name.as_str() {
                         PROCESS_KEY_ARRIVAL => {
-                            arrival = Some(self.parse_arrival(&value).with_context(span)?);
+                            arrival = Some(self.parse_arrival(value).with_context(span)?);
                         }
                         PROCESS_KEY_DATA => {
                             data = Some(
-                                self.parse_generator(&value, PROCESS_KEY_DATA)
+                                self.parse_generator(value, PROCESS_KEY_DATA)
                                     .with_context(span)?,
                             );
                         }
                         _ => {
                             // variable definition
-                            let val = self.parse_binding_value(&value, &name).with_context(span)?;
+                            let val = self.parse_binding_value(value, &name).with_context(span)?;
                             self.env_stack.assign(name, val)?;
                         }
                     }
@@ -260,15 +259,15 @@ impl ProcessParser {
     ) -> ProcessConfigResult<()> {
         for field in processes.iter() {
             let field = field?;
+            let span = field.source_span();
             let name = self.parse_symbol_type(&field.name()?)?;
             let value = field.value();
             let span = value.source_span();
-            let value = value.read()?;
 
             match name {
                 SymbolType::VarRef(name) => {
                     // variable definition
-                    let val = self.parse_binding_value(&value, &name).with_context(span)?;
+                    let val = self.parse_binding_value(value, &name).with_context(span)?;
                     self.env_stack.assign(name, val)?;
                 }
                 SymbolType::Str(name) => {
@@ -281,7 +280,7 @@ impl ProcessParser {
 
     fn parse_binding_value(
         &mut self,
-        value: &ValueRef<'_, AnyEncoding>,
+        value: LazyValue<'_, AnyEncoding>,
         scope_name: &str,
     ) -> ProcessConfigResult<EnvBindingValue> {
         let span = value.source_span();
@@ -327,7 +326,7 @@ impl ProcessParser {
             }
         }
 
-        Err(NotKnownError::Binding(format!("{value:?}")).into()).with_context(span)
+        Err(NotKnownError::Binding(format!("{:?}", value.read()?)).into()).with_context(span)
     }
 
     fn parse_list_parameterized<S: Into<String>>(
@@ -356,7 +355,7 @@ impl ProcessParser {
                         self.push_scope(scope_index_name)?;
                         self.env_stack.assign(index, Value::from(i))?;
                         for val in list.iter() {
-                            self.parse_scope(&scope_name, val?.read()?)?;
+                            self.parse_scope(&scope_name, val?)?;
                         }
                         self.pop_scope()?;
                     }
@@ -381,13 +380,13 @@ impl ProcessParser {
         todo!("parse_list_unparameterized list")
     }
 
-    fn parse_immediate(&mut self, value: &ValueRef<'_, AnyEncoding>) -> ProcessConfigResult<Value> {
+    fn parse_immediate(&mut self, value: LazyValue<'_, AnyEncoding>) -> ProcessConfigResult<Value> {
         let span = value.source_span();
         let ion_type = value.ion_type();
-        match value {
-            ValueRef::Bool(b) => Ok((*b).into()),
+        match value.read()? {
+            ValueRef::Bool(b) => Ok((b).into()),
             ValueRef::Int(i) => Ok(i.as_i64().unwrap().into()),
-            ValueRef::Float(f) => Ok((*f).into()),
+            ValueRef::Float(f) => Ok((f).into()),
             ValueRef::String(s) => Ok(s.text().into()),
             ValueRef::SExp(sexp) => {
                 let annot = sexp.annotations().collect::<IonResult<Vec<_>>>()?;
@@ -466,11 +465,11 @@ impl ProcessParser {
 
     fn parse_arrival(
         &mut self,
-        value: &ValueRef<'_, AnyEncoding>,
+        value: LazyValue<'_, AnyEncoding>,
     ) -> ProcessConfigResult<Box<dyn ArrivalTime>> {
         let span = value.source_span();
         let ion_type = value.ion_type();
-        let result: Result<Box<dyn ArrivalTime>, _> = match value {
+        let result: Result<Box<dyn ArrivalTime>, _> = match value.read()? {
             ValueRef::Struct(strct) => {
                 let span = strct.source_span();
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
@@ -509,13 +508,13 @@ impl ProcessParser {
 
     fn parse_generator(
         &mut self,
-        value: &ValueRef<'_, AnyEncoding>,
+        value: LazyValue<'_, AnyEncoding>,
         scope_name: &str,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let span = value.source_span();
         let script_path = self.env_stack.curr_path(Some(scope_name))?;
-        match value {
-            ValueRef::Symbol(sym) => match self.parse_symbol_type(sym)? {
+        match value.read()? {
+            ValueRef::Symbol(sym) => match self.parse_symbol_type(&sym)? {
                 SymbolType::VarRef(var) => {
                     let gen: Box<dyn ValueGenerator> =
                         match self.env_stack.get(&var).with_context(span)? {
@@ -542,7 +541,7 @@ impl ProcessParser {
                 }
             },
             ValueRef::Struct(strct) => {
-                let density = parse_density(Some(strct), self)?;
+                let density = parse_density(Some(&strct), self)?;
 
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
 
@@ -552,8 +551,7 @@ impl ProcessParser {
                     for field in strct.iter() {
                         let field = field?;
                         let name = self.parse_symbol_text(&field.name()?)?.to_string();
-                        let value_ref = field.value().read()?;
-                        let value_generator = self.parse_generator(&value_ref, &name)?;
+                        let value_generator = self.parse_generator(field.value(), &name)?;
                         kvs.insert(name, value_generator);
                     }
                     self.pop_scope()?;
@@ -575,7 +573,7 @@ impl ProcessParser {
                                 let crng = self.child_rng()?;
                                 let parser = self.registry.get_parser(&name).unwrap();
                                 let meta = Meta { script_path, name };
-                                parser.parse_generator(crng, meta, Some(*strct), self)
+                                parser.parse_generator(crng, meta, Some(strct), self)
                             } else {
                                 Err(NotKnownError::Generator(name).into())
                             }
@@ -586,8 +584,8 @@ impl ProcessParser {
             ValueRef::List(lst) => Err(ProcessConfigError::Other(format!(
                 "Unable to parse `{lst:?}`"
             ))),
-            other => {
-                let constant = self.parse_immediate(other).with_context(span)?;
+            _ => {
+                let constant = self.parse_immediate(value).with_context(span)?;
                 let meta = Meta {
                     script_path,
                     name: "<constant>".to_string(),

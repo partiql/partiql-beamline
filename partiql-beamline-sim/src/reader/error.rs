@@ -1,7 +1,7 @@
 use crate::gen::DataGenerationError;
 use crate::reader::util::{ToSourceSpan, CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL};
 use crate::source::SimSource;
-use ion_rs::IonError;
+use ion_rs::{IonError, IonResult};
 use miette::{Diagnostic, LabeledSpan, Severity, SourceCode, SourceSpan};
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Pointer};

@@ -6,10 +6,9 @@ expression: output
 
 Error:   × `Regex` Generator Configuration
   ╰─▶   × Expected Configuration
-         ╭─[config_expected.script:5:24]
-       4 │                 sensor: rand_process::{
-       5 │ ╭─▶                 $data: {
-       6 │ │                       err: Regex,
-       7 │ ╰─▶                 }
-       8 │                 }
+         ╭─[config_expected.script:6:26]
+       5 │                 $data: {
+       6 │                     err: Regex,
+         ·                          ─────
+       7 │                 }
          ╰────

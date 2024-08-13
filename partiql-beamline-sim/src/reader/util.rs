@@ -136,9 +136,10 @@ where
 pub(crate) fn require_key<'a>(
     config: LazyStruct<'a, AnyEncoding>,
     key: &'static str,
-) -> ProcessConfigResult<ValueRef<'a, AnyEncoding>> {
+) -> ProcessConfigResult<(ValueRef<'a, AnyEncoding>, Option<SourceSpan>)> {
     if let Ok(Some(value)) = config.find(key) {
-        value.read().map_err(|e| {
+        let span = value.source_span();
+        value.read().map(|val| (val, span)).map_err(|e| {
             ProcessConfigError::ConfigValue(Box::new(ConfigValueError {
                 key: key.to_string(),
                 err: e.into(),

@@ -16,10 +16,8 @@ pub(crate) trait EnvLookup {
     fn find(&self, name: &str) -> Option<&EnvBindingValue>;
 
     fn get(&self, name: &str) -> ProcessConfigResult<&EnvBindingValue> {
-        self.find(name).ok_or_else(|| {
-            println!("hello");
-            NotKnownError::Variable(name.to_string()).into()
-        })
+        self.find(name)
+            .ok_or_else(|| NotKnownError::Variable(name.to_string()).into())
     }
 }
 
