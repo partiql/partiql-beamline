@@ -5,7 +5,7 @@ use crate::gen::{ValueGenerator, ValueGeneratorBoxed};
 use crate::reader::error::{ProcessConfigError, ProcessConfigResult, Sourceable};
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
-use crate::reader::util::{parse_density, require_key, ToSourceSpan, ValueGeneratorParserImpl};
+use crate::reader::util::{parse_density, require_key, ValueGeneratorParserImpl};
 use ion_rs::{AnyEncoding, LazyStruct};
 use partiql_value::Value;
 use rand::Rng;

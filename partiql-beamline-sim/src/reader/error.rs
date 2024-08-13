@@ -1,10 +1,10 @@
 use crate::gen::DataGenerationError;
 use crate::reader::util::{ToSourceSpan, CONFIG_KEY_NULLABLE, CONFIG_KEY_OPTIONAL};
 use crate::source::SimSource;
-use ion_rs::{IonError, IonResult};
+use ion_rs::IonError;
 use miette::{Diagnostic, LabeledSpan, Severity, SourceCode, SourceSpan};
 use std::error::Error;
-use std::fmt::{Debug, Display, Formatter, Pointer};
+use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -35,7 +35,7 @@ impl std::error::Error for ProcessParseError {
 impl ProcessParseError {
     pub fn new<I>(source: SimSource, related: I) -> Self
     where
-        I: IntoIterator<Item=ProcessConfigError>,
+        I: IntoIterator<Item = ProcessConfigError>,
     {
         let source = Arc::new(source);
         let mut related: Vec<ProcessConfigError> = related.into_iter().collect();
@@ -426,7 +426,7 @@ where
         self.source_code.as_ref().map(|sc| sc as &dyn SourceCode)
     }
 
-    fn labels(&self) -> Option<Box<dyn Iterator<Item=LabeledSpan> + '_>> {
+    fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
         self.inner.labels().or_else(|| {
             let labels = self
                 .source_span
@@ -436,7 +436,7 @@ where
         })
     }
 
-    fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item=&'a dyn Diagnostic> + 'a>> {
+    fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item = &'a dyn Diagnostic> + 'a>> {
         self.inner.related()
     }
 
@@ -481,10 +481,10 @@ impl Error for SimIonError {
 }
 
 impl Diagnostic for SimIonError {
-    fn labels(&self) -> Option<Box<dyn Iterator<Item=LabeledSpan> + '_>> {
+    fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
         let name = self.0.to_string();
         let span = LabeledSpan::new_with_span(Some(name), self.0.source_span()?);
-        let bx: Box<dyn Iterator<Item=LabeledSpan>> = Box::new(std::iter::once(span));
+        let bx: Box<dyn Iterator<Item = LabeledSpan>> = Box::new(std::iter::once(span));
         Some(bx)
     }
 }

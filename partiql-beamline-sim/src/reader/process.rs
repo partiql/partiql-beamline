@@ -286,10 +286,10 @@ impl ProcessParser {
         let span = value.source_span();
         match self.parse_arrival(value) {
             Err(ProcessConfigError::NotKnown(wrap))
-            if matches!(wrap.inner, NotKnownError::Arrival(_)) =>
-                {
-                    // continue to try Generator
-                }
+                if matches!(wrap.inner, NotKnownError::Arrival(_)) =>
+            {
+                // continue to try Generator
+            }
             Ok(arrival) => {
                 return Ok(arrival.into());
             }
@@ -300,10 +300,10 @@ impl ProcessParser {
 
         match self.parse_generator(value, scope_name) {
             Err(ProcessConfigError::NotKnown(wrap))
-            if matches!(wrap.inner, NotKnownError::Generator(_)) =>
-                {
-                    // continue to try immediate
-                }
+                if matches!(wrap.inner, NotKnownError::Generator(_)) =>
+            {
+                // continue to try immediate
+            }
             Ok(gen) => {
                 return Ok(gen.into());
             }
@@ -314,10 +314,10 @@ impl ProcessParser {
 
         match self.parse_immediate(value) {
             Err(ProcessConfigError::NotKnown(wrap))
-            if matches!(wrap.inner, NotKnownError::Immediate(_)) =>
-                {
-                    // continue to error at end
-                }
+                if matches!(wrap.inner, NotKnownError::Immediate(_)) =>
+            {
+                // continue to error at end
+            }
             Ok(immediate) => {
                 return Ok(immediate.into());
             }
@@ -401,7 +401,7 @@ impl ProcessParser {
             }
             _ => Err(NotKnownError::Immediate(format!("of Ion type `{}`", ion_type)).into()),
         }
-            .with_context(span)
+        .with_context(span)
     }
 
     fn parse_duration(
@@ -487,7 +487,7 @@ impl ProcessParser {
                     }),
                     _ => Err(NotKnownError::Arrival(kind).into()),
                 }
-                    .with_context(span)
+                .with_context(span)
             }
             _ => Err(NotKnownError::Arrival(format!("ion type: {}", ion_type)).into()),
         };
@@ -594,7 +594,7 @@ impl ProcessParser {
                 Ok(gen)
             }
         }
-            .with_context(span)
+        .with_context(span)
     }
 
     fn parse_symbol_type(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<SymbolType> {
@@ -680,7 +680,7 @@ impl EnvSymbolParser for ProcessParser {
                 }
             }
         }
-            .with_context(span)
+        .with_context(span)
     }
 
     fn parse_symbol_as_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String> {
