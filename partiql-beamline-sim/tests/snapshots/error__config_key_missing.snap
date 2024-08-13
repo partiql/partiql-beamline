@@ -1,0 +1,14 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Error in process configuration
+
+Error:   × `LoremIpsum` Generator Configuration
+  ╰─▶   × Expected key `max_words`
+         ╭─[config_key_missing.script:6:26]
+       5 │                 $data: {
+       6 │                     err: LoremIpsum::{ min_words: 2 },
+         ·                          ────────────────────────────
+       7 │                 }
+         ╰────

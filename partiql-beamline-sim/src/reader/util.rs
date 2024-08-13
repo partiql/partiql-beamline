@@ -1,8 +1,8 @@
 use crate::gen::distributions::{Density, Meta};
 use crate::gen::ValueGenerator;
 use crate::reader::error::{
-    ConfigValueError, DensityError, GeneratorConfigError, ProcessConfigError, ProcessConfigResult,
-    Sourceable,
+    ConfigKeyError, ConfigValueError, DensityError, GeneralConfigError, GeneratorConfigError,
+    ProcessConfigError, ProcessConfigResult, Sourceable,
 };
 use crate::reader::registry::ValueGeneratorParser;
 use crate::reader::symbol::EnvSymbolParser;
@@ -43,7 +43,10 @@ where
         _symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let span = config.source_span();
-        Err(ProcessConfigError::ConfigUnexpected(span.into()))
+        Err(ProcessConfigError::from(
+            GeneralConfigError::ConfigUnexpected,
+        ))
+        .with_context(span)
     }
 
     fn parse_default(
@@ -53,7 +56,7 @@ where
         _density: Density,
         _symbol_parser: &dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
-        Err(ProcessConfigError::ConfigExpected(Default::default()))
+        Err(ProcessConfigError::from(GeneralConfigError::ConfigExpected))
     }
 
     fn possible_config_keys(&self) -> &[&'static str] {
@@ -101,11 +104,27 @@ where
         let inner_keys = inner.possible_config_keys();
         let status = validate_config_keys(config, inner_keys)?;
 
+        let keys_expected = !inner_keys.is_empty() && config.is_some();
+
         let density = parse_density(config.as_ref(), symbol_parser)?;
 
-        let config = if status.local_keys { config } else { None };
-        match config {
-            None => inner.parse_default(rng, meta, density, symbol_parser),
+        let local_config = if status.local_keys { config } else { None };
+        match local_config {
+            None => {
+                let result = inner.parse_default(rng, meta, density, symbol_parser);
+                match result {
+                    Err(ProcessConfigError::GeneralConfigError(wrapped))
+                        if keys_expected
+                            && matches!(wrapped.inner, GeneralConfigError::ConfigExpected) =>
+                    {
+                        let local_keys = inner_keys.iter().map(|s| String::from(*s)).collect();
+                        Err(ProcessConfigError::from(ConfigKeyError::ConfigMissingKeys(
+                            local_keys,
+                        )))
+                    }
+                    other => other,
+                }
+            }
             Some(config) => {
                 let source_span = config.source_span();
                 inner
@@ -137,6 +156,7 @@ pub(crate) fn require_key<'a>(
     config: LazyStruct<'a, AnyEncoding>,
     key: &'static str,
 ) -> ProcessConfigResult<(ValueRef<'a, AnyEncoding>, Option<SourceSpan>)> {
+    let span = config.source_span();
     if let Ok(Some(value)) = config.find(key) {
         let span = value.source_span();
         value.read().map(|val| (val, span)).map_err(|e| {
@@ -146,7 +166,7 @@ pub(crate) fn require_key<'a>(
             }))
         })
     } else {
-        Err(ProcessConfigError::ConfigMissingKey(key.to_string()))
+        Err(ConfigKeyError::ConfigMissingKey(key.to_string()).into()).with_context(span)
     }
 }
 
@@ -203,8 +223,8 @@ pub(crate) fn to_pct(
             if (0.0..=1.0).contains(&pct) {
                 Ok(Some(pct))
             } else {
-                Err(ProcessConfigError::Other(
-                    "Percent must be between 0.0 and 1.0".to_string(),
+                Err(ProcessConfigError::other(
+                    "Percent must be between 0.0 and 1.0",
                 ))?
             }
         }
@@ -234,7 +254,7 @@ pub(crate) fn to_f64(
         ValueRef::Float(f) => Ok(f),
         ValueRef::Decimal(d) => match d.to_string().parse::<f64>() {
             Ok(f) => Ok(f),
-            Err(e) => Err(ProcessConfigError::Other(e.to_string())),
+            Err(e) => Err(ProcessConfigError::other(e.to_string())),
         },
         ValueRef::Symbol(sym) => Ok(match symbol_parser.parse_symbol_as_value(&sym)? {
             Value::Integer(i) => i as f64,
@@ -270,6 +290,7 @@ fn validate_config_keyset(
     let mut status = KeyValidation::default();
     let mut seen: HashSet<String> = HashSet::default();
     if let Some(config) = config {
+        let span = config.source_span();
         for s in config.iter() {
             let s = s?;
             let name = s.name()?;
@@ -280,11 +301,13 @@ fn validate_config_keyset(
             } else if local_keys.contains(name) {
                 status.local_keys = true;
             } else {
-                return Err(ProcessConfigError::ConfigInvalidKey(name.to_string()));
+                return Err(ConfigKeyError::ConfigInvalidKey(name.to_string()).into())
+                    .with_context(span);
             }
 
             if !seen.insert(name.to_string()) {
-                return Err(ProcessConfigError::ConfigDuplicateKey(name.to_string()));
+                return Err(ConfigKeyError::ConfigDuplicateKey(name.to_string()).into())
+                    .with_context(span);
             }
         }
     }

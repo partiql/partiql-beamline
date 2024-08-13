@@ -7,8 +7,8 @@ use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
 use crate::reader::error::{
-    ArrivalConfigError, NotKnownError, ProcessConfigError, ProcessConfigResult, ProcessParseError,
-    ProcessParseResult, Sourceable,
+    ArrivalConfigError, GeneralConfigError, NotKnownError, OtherError, ProcessConfigError,
+    ProcessConfigResult, ProcessParseError, ProcessParseResult, Sourceable,
 };
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
@@ -89,14 +89,14 @@ impl ProcessParser {
     fn curr_rng(&self) -> ProcessConfigResult<RefCell<Pcg64Mcg>> {
         let mut rng = self.rng_stack.borrow_mut();
         Ok(RefCell::new(rng.last_mut().cloned().ok_or_else(|| {
-            ProcessConfigError::Fatal("RNG underflow".to_string())
+            ProcessConfigError::fatal("RNG underflow")
         })?))
     }
 
     fn child_rng(&self) -> ProcessConfigResult<Pcg64Mcg> {
         let curr = self.curr_rng()?;
         Pcg64Mcg::from_rng(curr.into_inner())
-            .map_err(|_e| ProcessConfigError::Fatal("Error allocation RNG".to_string()))
+            .map_err(|_e| ProcessConfigError::fatal("Error allocation RNG"))
     }
     fn push_scope<S: Into<String>>(&mut self, name: S) -> ProcessConfigResult<()> {
         let name = name.into();
@@ -111,7 +111,7 @@ impl ProcessParser {
         self.rng_stack
             .borrow_mut()
             .pop()
-            .ok_or_else(|| ProcessConfigError::Fatal("Rng Stack Underflow".to_string()))?;
+            .ok_or_else(|| ProcessConfigError::fatal("Rng Stack Underflow"))?;
         self.env_stack.pop()
     }
 
@@ -124,7 +124,7 @@ impl ProcessParser {
         match value.ion_type() {
             IonType::List => self.parse_scope_list(scope_name, value.read()?.expect_list()?),
             IonType::Struct => self.parse_scope_struct(scope_name, value.read()?.expect_struct()?),
-            _ => Err(ProcessConfigError::Other(format!(
+            _ => Err(ProcessConfigError::other(format!(
                 "TODO: unhandled scope type `{ion_type}`"
             ))),
         }
@@ -223,7 +223,7 @@ impl ProcessParser {
                     }
                 }
                 SymbolType::Str(name) => {
-                    return Err(ProcessConfigError::Other(format!(
+                    return Err(ProcessConfigError::other(format!(
                         "Unexpected scope in process `{name}`"
                     )));
                 }
@@ -247,8 +247,12 @@ impl ProcessParser {
         }
 
         let span = processes.source_span();
-        let arrival = arrival.ok_or_else(|| ProcessConfigError::NoArrival(span.into()))?;
-        let data = data.ok_or_else(|| ProcessConfigError::NoData(span.into()))?;
+        let arrival = arrival
+            .ok_or_else(|| ProcessConfigError::from(GeneralConfigError::NoArrival))
+            .with_context(span)?;
+        let data = data
+            .ok_or_else(|| ProcessConfigError::from(GeneralConfigError::NoData))
+            .with_context(span)?;
 
         Ok(Box::new(SimpleProcess { arrival, data }))
     }
@@ -286,10 +290,10 @@ impl ProcessParser {
         let span = value.source_span();
         match self.parse_arrival(value) {
             Err(ProcessConfigError::NotKnown(wrap))
-                if matches!(wrap.inner, NotKnownError::Arrival(_)) =>
-            {
-                // continue to try Generator
-            }
+            if matches!(wrap.inner, NotKnownError::Arrival(_)) =>
+                {
+                    // continue to try Generator
+                }
             Ok(arrival) => {
                 return Ok(arrival.into());
             }
@@ -300,10 +304,10 @@ impl ProcessParser {
 
         match self.parse_generator(value, scope_name) {
             Err(ProcessConfigError::NotKnown(wrap))
-                if matches!(wrap.inner, NotKnownError::Generator(_)) =>
-            {
-                // continue to try immediate
-            }
+            if matches!(wrap.inner, NotKnownError::Generator(_)) =>
+                {
+                    // continue to try immediate
+                }
             Ok(gen) => {
                 return Ok(gen.into());
             }
@@ -314,10 +318,10 @@ impl ProcessParser {
 
         match self.parse_immediate(value) {
             Err(ProcessConfigError::NotKnown(wrap))
-                if matches!(wrap.inner, NotKnownError::Immediate(_)) =>
-            {
-                // continue to error at end
-            }
+            if matches!(wrap.inner, NotKnownError::Immediate(_)) =>
+                {
+                    // continue to error at end
+                }
             Ok(immediate) => {
                 return Ok(immediate.into());
             }
@@ -361,7 +365,7 @@ impl ProcessParser {
                     }
                 }
                 _ => {
-                    return Err(ProcessConfigError::Other(format!(
+                    return Err(ProcessConfigError::other(format!(
                         "Unsupported list parameterization `{list_param:?}`"
                     )));
                 }
@@ -401,7 +405,7 @@ impl ProcessParser {
             }
             _ => Err(NotKnownError::Immediate(format!("of Ion type `{}`", ion_type)).into()),
         }
-        .with_context(span)
+            .with_context(span)
     }
 
     fn parse_duration(
@@ -421,26 +425,26 @@ impl ProcessParser {
                         match v {
                             Value::Integer(i) => i,
                             other => {
-                                return Err(ProcessConfigError::Other(format!(
+                                return Err(ProcessConfigError::other(format!(
                                     "Unexpected generated variable type in duration `{other:?}`"
                                 )));
                             }
                         }
                     }
                     other => {
-                        return Err(ProcessConfigError::Other(format!(
+                        return Err(ProcessConfigError::other(format!(
                             "Unexpected variable type in duration `{other:?}`"
                         )));
                     }
                 },
                 SymbolType::Str(name) => {
-                    return Err(ProcessConfigError::Other(format!(
+                    return Err(ProcessConfigError::other(format!(
                         "Unexpected symbol in duration `{name}`"
                     )));
                 }
             },
             _ => {
-                return Err(ProcessConfigError::Other(format!(
+                return Err(ProcessConfigError::other(format!(
                     "TODO: unhandled duration type `{ion_type}`"
                 )));
             }
@@ -455,11 +459,11 @@ impl ProcessParser {
                 "seconds" => Ok(Duration::seconds(duration)),
                 "milliseconds" => Ok(Duration::milliseconds(duration)),
                 "microseconds" => Ok(Duration::microseconds(duration)),
-                unknown => Err(ProcessConfigError::Other(format!(
+                unknown => Err(ProcessConfigError::other(format!(
                     "Bad duration type `{unknown}`"
                 ))),
             },
-            _ => Err(ProcessConfigError::Other("Bad duration type".to_string())),
+            _ => Err(ProcessConfigError::other("Bad duration type".to_string())),
         }
     }
 
@@ -487,7 +491,7 @@ impl ProcessParser {
                     }),
                     _ => Err(NotKnownError::Arrival(kind).into()),
                 }
-                .with_context(span)
+                    .with_context(span)
             }
             _ => Err(NotKnownError::Arrival(format!("ion type: {}", ion_type)).into()),
         };
@@ -581,7 +585,7 @@ impl ProcessParser {
                     }
                 }
             }
-            ValueRef::List(lst) => Err(ProcessConfigError::Other(format!(
+            ValueRef::List(lst) => Err(ProcessConfigError::other(format!(
                 "Unable to parse `{lst:?}`"
             ))),
             _ => {
@@ -594,7 +598,7 @@ impl ProcessParser {
                 Ok(gen)
             }
         }
-        .with_context(span)
+            .with_context(span)
     }
 
     fn parse_symbol_type(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<SymbolType> {
@@ -610,7 +614,7 @@ impl ProcessParser {
     fn parse_symbol_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String> {
         let txt = sym
             .text()
-            .ok_or_else(|| ProcessConfigError::Other("Non-text symbol".to_string()))?;
+            .ok_or_else(|| ProcessConfigError::other("Non-text symbol".to_string()))?;
 
         self.format_str(txt)
     }
@@ -680,7 +684,7 @@ impl EnvSymbolParser for ProcessParser {
                 }
             }
         }
-        .with_context(span)
+            .with_context(span)
     }
 
     fn parse_symbol_as_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String> {

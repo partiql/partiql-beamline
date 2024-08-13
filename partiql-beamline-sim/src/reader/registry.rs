@@ -106,7 +106,7 @@ where
         parser: Box<dyn ValueGeneratorParser<R>>,
     ) -> ProcessConfigResult<&Box<dyn ValueGeneratorParser<R>>> {
         match self.generators.entry(name.to_string()) {
-            Occupied(_) => Err(ProcessConfigError::Other(format!(
+            Occupied(_) => Err(ProcessConfigError::other(format!(
                 "`{name}` parser already exists"
             ))),
             Vacant(entry) => Ok(entry.insert(parser)),

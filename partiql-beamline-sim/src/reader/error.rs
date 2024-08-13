@@ -67,11 +67,7 @@ pub enum ProcessConfigError {
 
     #[error(transparent)]
     #[diagnostic(transparent)]
-    NoArrival(#[from] SourcedErrorWrapper<NoArrivalError>),
-
-    #[error(transparent)]
-    #[diagnostic(transparent)]
-    NoData(#[from] SourcedErrorWrapper<NoDataError>),
+    GeneralConfigError(#[from] SourcedErrorWrapper<GeneralConfigError>),
 
     #[error(transparent)]
     #[diagnostic(transparent)]
@@ -83,20 +79,7 @@ pub enum ProcessConfigError {
 
     #[error(transparent)]
     #[diagnostic(transparent)]
-    ConfigExpected(#[from] SourcedErrorWrapper<ConfigExpectedError>),
-
-    #[error(transparent)]
-    #[diagnostic(transparent)]
-    ConfigUnexpected(#[from] SourcedErrorWrapper<ConfigUnexpectedError>),
-
-    #[error("Duplicate Configuration key: `{0}`")]
-    ConfigDuplicateKey(String),
-
-    #[error("Unexpected Configuration key: `{0}`")]
-    ConfigInvalidKey(String),
-
-    #[error("Did not find expected Configuration key: `{0}`")]
-    ConfigMissingKey(String),
+    ConfigKeyError(#[from] SourcedErrorWrapper<ConfigKeyError>),
 
     #[error(transparent)]
     #[diagnostic(transparent)]
@@ -106,11 +89,19 @@ pub enum ProcessConfigError {
     #[diagnostic(transparent)]
     NotKnown(#[from] SourcedErrorWrapper<NotKnownError>),
 
-    #[error("Unknown Error: `{0}`")]
-    Other(String),
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Other(#[from] SourcedErrorWrapper<OtherError>),
+}
 
-    #[error("Fatal Internal Error: `{0}`")]
-    Fatal(String),
+impl ProcessConfigError {
+    pub fn fatal(msg: impl Into<String>) -> Self {
+        Self::from(OtherError::Fatal(msg.into()))
+    }
+
+    pub fn other(msg: impl Into<String>) -> Self {
+        Self::from(OtherError::Other(msg.into()))
+    }
 }
 
 pub(crate) trait Sourceable: Sized {
@@ -155,10 +146,8 @@ impl Sourceable for ProcessConfigError {
             ProcessConfigError::ArrivalConfig(e) => e.add_source(source),
             ProcessConfigError::GeneratorConfig(e) => e.add_source(source),
             ProcessConfigError::ConfigValue(e) => e.add_source(source),
-            ProcessConfigError::NoData(e) => e.add_source(source),
-            ProcessConfigError::NoArrival(e) => e.add_source(source),
-            ProcessConfigError::ConfigExpected(e) => e.add_source(source),
-            ProcessConfigError::ConfigUnexpected(e) => e.add_source(source),
+            ProcessConfigError::GeneralConfigError(e) => e.add_source(source),
+            ProcessConfigError::ConfigKeyError(e) => e.add_source(source),
             _ => {}
         }
     }
@@ -172,10 +161,8 @@ impl Sourceable for ProcessConfigError {
             ProcessConfigError::ArrivalConfig(e) => e.add_context(span),
             ProcessConfigError::GeneratorConfig(e) => e.add_context(span),
             ProcessConfigError::ConfigValue(e) => e.add_context(span),
-            ProcessConfigError::NoData(e) => e.add_context(span),
-            ProcessConfigError::NoArrival(e) => e.add_context(span),
-            ProcessConfigError::ConfigExpected(e) => e.add_context(span),
-            ProcessConfigError::ConfigUnexpected(e) => e.add_context(span),
+            ProcessConfigError::GeneralConfigError(e) => e.add_context(span),
+            ProcessConfigError::ConfigKeyError(e) => e.add_context(span),
             _ => {}
         }
     }
@@ -203,21 +190,64 @@ impl From<NotKnownError> for ProcessConfigError {
     }
 }
 
-#[derive(Error, Default, Debug, Diagnostic)]
-#[error("No $arrival for random process")]
-pub struct NoArrivalError {}
+#[derive(Error, Debug, Diagnostic)]
+#[non_exhaustive]
+// Deliberately not `pub`
+pub(crate) enum GeneralConfigError {
+    #[error("No $arrival for random process")]
+    NoArrival,
+    #[error("No data for random process")]
+    NoData,
+    #[error("Expected Configuration")]
+    ConfigExpected,
+    #[error("Unexpected Configuration")]
+    ConfigUnexpected,
+}
 
-#[derive(Error, Default, Debug, Diagnostic)]
-#[error("No data for random process")]
-pub struct NoDataError {}
+impl From<GeneralConfigError> for ProcessConfigError {
+    fn from(err: GeneralConfigError) -> Self {
+        SourcedErrorWrapper::wrap(err).into()
+    }
+}
 
-#[derive(Error, Default, Debug, Diagnostic)]
-#[error("Expected Configuration")]
-pub struct ConfigExpectedError {}
+#[derive(Error, Debug, Diagnostic)]
+#[non_exhaustive]
+// Deliberately not `pub`
+pub(crate) enum OtherError {
+    #[error("Unknown Error: `{0}`")]
+    Other(String),
+    #[error("Fatal Internal Error: `{0}`")]
+    Fatal(String),
+}
 
-#[derive(Error, Default, Debug, Diagnostic)]
-#[error("Unexpected Configuration")]
-pub struct ConfigUnexpectedError {}
+impl From<OtherError> for ProcessConfigError {
+    fn from(err: OtherError) -> Self {
+        SourcedErrorWrapper::wrap(err).into()
+    }
+}
+
+#[derive(Error, Debug, Diagnostic)]
+#[non_exhaustive]
+// Deliberately not `pub`
+pub(crate) enum ConfigKeyError {
+    #[error("Duplicate key `{0}`")]
+    ConfigDuplicateKey(String),
+
+    #[error("Unexpected key `{0}`")]
+    ConfigInvalidKey(String),
+
+    #[error("Expected key `{0}`")]
+    ConfigMissingKey(String),
+
+    #[error("Expected one of key `{0:?}`")]
+    ConfigMissingKeys(Vec<String>),
+}
+
+impl From<ConfigKeyError> for ProcessConfigError {
+    fn from(err: ConfigKeyError) -> Self {
+        SourcedErrorWrapper::wrap(err).into()
+    }
+}
 
 #[derive(Error, Debug, Diagnostic)]
 pub struct DensityError {

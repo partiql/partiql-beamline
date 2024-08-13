@@ -45,10 +45,11 @@ pub enum SimError {
     #[error("Rand error: {0}")]
     RandError(#[from] rand::Error),
 
-    #[error("Rand error: {0}")]
+    #[error("Time error: {0}")]
     TimeError(#[from] time::error::Error),
 
-    #[error("Rand error: {0}")]
+    #[error(transparent)]
+    #[diagnostic(transparent)]
     ContextError(SimContextError),
 
     #[error("Unknown Process: {0:?}")]
@@ -57,7 +58,8 @@ pub enum SimError {
     #[error("Unknown DataSet: {0:?}")]
     UnknownDataSet(DataSetId),
 
-    #[error("Unknown Process: {0:?}")]
+    #[error(transparent)]
+    #[diagnostic(transparent)]
     ProcessSamplingError(#[from] DataSamplingError),
 
     #[error("Unknown Error: {0}")]

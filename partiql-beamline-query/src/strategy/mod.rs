@@ -47,24 +47,34 @@ impl From<UninitializedFieldError> for StrategyBuilderError {
 pub enum StrategyError {
     #[error("Dataset Cardinality Error: expected `{expected}`, but was `{actual}`")]
     DataSetCardinality { expected: usize, actual: usize },
+
     #[error("Path Generation error: {0}")]
     Path(#[from] PathGenSpecBuilderError),
+
     #[error("Predicate Generation error: {0}")]
     Predicate(#[from] PathPredicateGenSpecBuilderError),
+
     #[error("Strategy Builder error: {0}")]
     StrategyBuilder(#[from] StrategyBuilderError),
+
     #[error("Random Generator error: {0}")]
     Rand(#[from] rand::Error),
+
     #[error("Stats Generator error: {0}")]
     Stats(#[from] statrs::StatsError),
+
     #[error("Data Generation error: {0}")]
     DataGen(#[from] DataGenerationError),
+
     #[error("Projection Paths error: {0}")]
     ProjectPaths(String),
+
     #[error("Exclude Paths error: {0}")]
     ExcludePaths(String),
+
     #[error("Predicate Paths error: {0}")]
     PredicatePaths(String),
+
     #[error("Other: {0}")]
     Other(String),
 }
