@@ -9,6 +9,18 @@ pub struct Tick(pub u128);
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct DataSetName(pub String);
 
+impl From<String> for DataSetName {
+    fn from(value: String) -> Self {
+        DataSetName(value)
+    }
+}
+
+impl From<&str> for DataSetName {
+    fn from(value: &str) -> Self {
+        DataSetName(value.to_owned())
+    }
+}
+
 /// A data set's id within the simulation.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct DataSetId(pub usize);

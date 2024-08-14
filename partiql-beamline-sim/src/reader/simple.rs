@@ -166,7 +166,7 @@ where
         rng: R,
         meta: Meta,
         config: Option<LazyStruct<'_, AnyEncoding>>,
-        symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &mut dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let density = util::parse_density(config.as_ref(), symbol_parser)?;
 
@@ -262,7 +262,7 @@ impl SimpleScriptVariableKind {
         rng: R,
         meta: Meta,
         density: Density,
-        symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &mut dyn EnvSymbolParser,
         config: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where
@@ -339,7 +339,7 @@ impl SimpleScriptVariableKind {
         rng: R,
         meta: Meta,
         density: Density,
-        symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &mut dyn EnvSymbolParser,
         config: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>
     where

@@ -9,6 +9,7 @@ use ion_rs::{AnyEncoding, LazyStruct};
 use rand::Rng;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub trait ValueGeneratorParser<R>
 where
@@ -19,7 +20,7 @@ where
         rng: R,
         meta: Meta,
         config: Option<LazyStruct<'_, AnyEncoding>>,
-        symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &mut dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;
 }
 
@@ -27,7 +28,7 @@ pub trait ValueGeneratorParserBoxed<R>
 where
     R: Rng + Sized + 'static,
 {
-    fn vgpboxed(self) -> Box<dyn ValueGeneratorParser<R>>
+    fn vgpboxed(self) -> Arc<dyn ValueGeneratorParser<R>>
     where
         Self: Sized + 'static;
 }
@@ -37,11 +38,11 @@ where
     R: Rng + Sized + 'static,
     T: ValueGeneratorParser<R>,
 {
-    fn vgpboxed(self) -> Box<dyn ValueGeneratorParser<R>>
+    fn vgpboxed(self) -> Arc<dyn ValueGeneratorParser<R>>
     where
         Self: Sized + 'static,
     {
-        Box::new(self)
+        Arc::new(self)
     }
 }
 
@@ -49,7 +50,7 @@ pub struct ValueGeneratorRegistry<R>
 where
     R: Rng + Sized + 'static,
 {
-    generators: HashMap<String, Box<dyn ValueGeneratorParser<R>>>,
+    generators: HashMap<String, Arc<dyn ValueGeneratorParser<R>>>,
 }
 
 impl<R> Default for ValueGeneratorRegistry<R>
@@ -61,7 +62,7 @@ where
 
         for (k, v) in SimpleScriptVariableKind::named().expect("static registry creation") {
             registry
-                .add_parser(&k, Box::new(v))
+                .add_parser(&k, Arc::new(v))
                 .expect("static registry creation");
         }
 
@@ -103,8 +104,8 @@ where
     pub fn add_parser(
         &mut self,
         name: &str,
-        parser: Box<dyn ValueGeneratorParser<R>>,
-    ) -> ProcessConfigResult<&Box<dyn ValueGeneratorParser<R>>> {
+        parser: Arc<dyn ValueGeneratorParser<R>>,
+    ) -> ProcessConfigResult<&Arc<dyn ValueGeneratorParser<R>>> {
         match self.generators.entry(name.to_string()) {
             Occupied(_) => Err(ProcessConfigError::other(format!(
                 "`{name}` parser already exists"
@@ -113,8 +114,8 @@ where
         }
     }
 
-    pub fn get_parser(&self, name: &str) -> Option<&Box<dyn ValueGeneratorParser<R>>> {
-        self.generators.get(name)
+    pub fn get_parser(&self, name: &str) -> Option<Arc<dyn ValueGeneratorParser<R>>> {
+        self.generators.get(name).cloned()
     }
 
     pub fn has_parser(&self, name: &str) -> bool {

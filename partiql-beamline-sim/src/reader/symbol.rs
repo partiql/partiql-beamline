@@ -13,7 +13,7 @@ pub trait EnvSymbolParser {
     fn parse_symbol_as_value(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<Value>;
 
     fn parse_symbol_as_generator(
-        &self,
+        &mut self,
         sym: &SymbolRef<'_>,
         cfg: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>>;

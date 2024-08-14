@@ -145,7 +145,7 @@ where
         rng: R,
         meta: Meta,
         config: Option<LazyStruct<'_, AnyEncoding>>,
-        symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &mut dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         self.parse_and_handle(rng, meta, config, symbol_parser)
     }
