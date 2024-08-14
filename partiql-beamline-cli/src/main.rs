@@ -1,8 +1,9 @@
 mod cli;
 mod kolliderdb;
+mod writer;
 
 use crate::cli::{encode_ion_text, IonPrintMode};
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
 use itertools::{Itertools, Position};
 use miette::IntoDiagnostic;
@@ -55,23 +56,27 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum Gen {
     /// Run the data generator
-    Data {
-        #[command(flatten)]
-        spec: SimSpec,
-
-        #[command(flatten)]
-        sample_count: SampleCount,
-
-        #[clap(short = 'f', long = "output-format", value_enum, default_value_t=DataOutputFormat::Text
-        )]
-        output_format: DataOutputFormat,
-
-        #[clap(short = 'd', long = "dataset")]
-        datasets: Vec<String>,
-    },
+    Data(Data),
     #[clap(subcommand)]
     /// Run the Db generator with both data and schema(s)
     Db(Db),
+}
+
+#[derive(Args)]
+/// Run the data generator
+pub struct Data {
+    #[command(flatten)]
+    spec: SimSpec,
+
+    #[command(flatten)]
+    sample_count: SampleCount,
+
+    #[clap(short = 'f', long = "output-format", value_enum, default_value_t=DataOutputFormat::Text
+    )]
+    output_format: DataOutputFormat,
+
+    #[clap(short = 'd', long = "dataset")]
+    datasets: Vec<String>,
 }
 
 #[derive(Subcommand)]
@@ -116,114 +121,116 @@ fn main() -> miette::Result<()> {
 }
 fn handle_gen(gen: Gen) -> miette::Result<()> {
     match gen {
-        Gen::Data {
-            spec,
-            sample_count,
-            output_format,
-            datasets,
-        } => {
-            let (script, cfg) = spec.to_script_and_config();
-            let (script, cfg) = (script.into_diagnostic()?, cfg.into_diagnostic()?);
-            let t0 = cfg.t0;
+        Gen::Data(data) => handle_gen_data(data),
+        Gen::Db(db) => handle_gen_db(db),
+    }
+}
+fn handle_gen_data(
+    Data {
+        spec,
+        sample_count,
+        output_format,
+        datasets,
+    }: Data,
+) -> miette::Result<()> {
+    let (script, cfg) = spec.to_script_and_config();
+    let (script, cfg) = (script.into_diagnostic()?, cfg.into_diagnostic()?);
+    let t0 = cfg.t0;
 
-            let sample_count = sample_count.sample_count;
+    let sample_count = sample_count.sample_count;
 
-            match output_format {
-                DataOutputFormat::Text => {
-                    let mut sim =
-                        SimBuilder::from_config(cfg.clone(), script)?.build_multi_dataset()?;
+    match output_format {
+        DataOutputFormat::Text => {
+            let mut sim = SimBuilder::from_config(cfg.clone(), script)?.build_multi_dataset()?;
 
-                    println!("Seed: {}", cfg.seed);
-                    println!("Start: {}", t0.format(&DATETIME_FORMAT).into_diagnostic()?);
+            println!("Seed: {}", cfg.seed);
+            println!("Start: {}", t0.format(&DATETIME_FORMAT).into_diagnostic()?);
 
-                    let datasets = if datasets.is_empty() {
-                        sim.datasets()
-                    } else {
-                        datasets
-                            .into_iter()
-                            .map(DataSetName)
-                            .filter_map(|ds| sim.get_dataset_id(&ds).map(|id| (id, ds)))
-                            .collect()
-                    };
+            let datasets = if datasets.is_empty() {
+                sim.datasets()
+            } else {
+                datasets
+                    .into_iter()
+                    .map(DataSetName)
+                    .filter_map(|ds| sim.get_dataset_id(&ds).map(|id| (id, ds)))
+                    .collect()
+            };
 
-                    for (id, dataset) in datasets {
-                        for _c in 0..sample_count {
-                            if let Ok(Some(Sample {
-                                               tick: Tick(t),
-                                               value,
-                                           })) = sim.for_dataset(id)?.next_sample()
-                            {
-                                let time = t0.add(Duration::milliseconds(t as i64));
-                                println!("[{time}] : {dataset:?} {value:?}");
-                            }
-                        }
+            for (id, dataset) in datasets {
+                for _c in 0..sample_count {
+                    if let Ok(Some(Sample {
+                                       tick: Tick(t),
+                                       value,
+                                   })) = sim.for_dataset(id)?.next_sample()
+                    {
+                        let time = t0.add(Duration::milliseconds(t as i64));
+                        println!("[{time}] : {dataset:?} {value:?}");
                     }
-                }
-                DataOutputFormat::Ion => {
-                    let res = encode_ion_text(
-                        IonPrintMode::Compact,
-                        &cli::execute(cfg, script, sample_count, datasets)?,
-                        Encoding::Ion,
-                    );
-                    match res {
-                        Ok(out) => println!("{:}", &out),
-                        Err(e) => println!("{:?}", e),
-                    }
-                }
-                DataOutputFormat::IonPretty => {
-                    let res = encode_ion_text(
-                        IonPrintMode::Pretty,
-                        &cli::execute(cfg, script, sample_count, datasets)?,
-                        Encoding::Ion,
-                    );
-                    match res {
-                        Ok(out) => println!("{:}", &out),
-                        Err(e) => println!("{:?}", e),
-                    }
-                }
-                _ => {
-                    todo!("Unsupported output format")
                 }
             }
         }
-        Gen::Db(db) => match db {
-            Db::Kollider {
-                spec,
-                db_args:
-                DbArgs {
-                    catalog_name,
-                    catalog_path,
-                    force,
-                    target,
-                },
-                sample_count,
-            } => {
-                if let DbTarget::Filesystem = target {
-                    let (script, cfg) = spec.to_script_and_config();
-                    let (script, cfg) = (script?, cfg?);
-                    let sample_count = sample_count.sample_count;
-                    let catalog_full_path = catalog_full_path(&catalog_name, &catalog_path);
-
-                    create_catalog_dir(force, &catalog_name, &catalog_path)?;
-
-                    let ddl_encoder = PartiqlBasicDdlEncoder::new(DdlFormat::Pretty);
-                    create_manifest_file(&cfg, &catalog_full_path, &ddl_encoder.syntax())?;
-
-                    create_script_file(&catalog_full_path, &script)?;
-                    create_kollider_db(
-                        cfg,
-                        &catalog_name,
-                        &catalog_path,
-                        script,
-                        sample_count,
-                        &ddl_encoder,
-                    )?
-                } else {
-                    todo!("Generating database on a target other than filesystem is unsupported")
-                }
+        DataOutputFormat::Ion => {
+            let res = encode_ion_text(
+                IonPrintMode::Compact,
+                &cli::execute(cfg, script, sample_count, datasets)?,
+                Encoding::Ion,
+            );
+            match res {
+                Ok(out) => println!("{:}", &out),
+                Err(e) => println!("{:?}", e),
             }
-        },
+        }
+        DataOutputFormat::IonPretty => {
+            let res = encode_ion_text(
+                IonPrintMode::Pretty,
+                &cli::execute(cfg, script, sample_count, datasets)?,
+                Encoding::Ion,
+            );
+            match res {
+                Ok(out) => println!("{:}", &out),
+                Err(e) => println!("{:?}", e),
+            }
+        }
     }
+
+    Ok(())
+}
+
+fn handle_gen_db(db: Db) -> miette::Result<()> {
+    match db {
+        Db::Kollider {
+            spec,
+            db_args:
+            DbArgs {
+                catalog_name,
+                catalog_path,
+                force,
+                target: DbTarget::Filesystem,
+            },
+            sample_count,
+        } => {
+            let (script, cfg) = spec.to_script_and_config();
+            let (script, cfg) = (script?, cfg?);
+            let sample_count = sample_count.sample_count;
+            let catalog_full_path = catalog_full_path(&catalog_name, &catalog_path);
+
+            create_catalog_dir(force, &catalog_name, &catalog_path)?;
+
+            let ddl_encoder = PartiqlBasicDdlEncoder::new(DdlFormat::Pretty);
+            create_manifest_file(&cfg, &catalog_full_path, &ddl_encoder.syntax())?;
+
+            create_script_file(&catalog_full_path, &script)?;
+            create_kollider_db(
+                cfg,
+                &catalog_name,
+                &catalog_path,
+                script,
+                sample_count,
+                &ddl_encoder,
+            )?
+        }
+    }
+
     Ok(())
 }
 
