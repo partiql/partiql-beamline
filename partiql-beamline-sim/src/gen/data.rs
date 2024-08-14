@@ -3,7 +3,7 @@ use crate::gen::{DataGenerationResult, ValueGenerator};
 
 use crate::sim::SimContext;
 use indexmap::IndexMap;
-use partiql_types::{PartiqlShape, StructConstraint, StructField, StructType};
+use partiql_types::{PartiqlShape, PartiqlShapeBuilder, StructConstraint, StructField, StructType};
 use partiql_value::{Tuple, Value};
 use rand::Rng;
 use std::fmt::{Debug, Formatter};
@@ -109,7 +109,13 @@ where
                         }
                     })
                     .collect();
-                PartiqlShape::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
+                PartiqlShapeBuilder::init_or_get().new_struct(StructType::new(
+                    [
+                        StructConstraint::Fields(fields),
+                        StructConstraint::Open(false),
+                    ]
+                    .into(),
+                ))
             }
         }
     }

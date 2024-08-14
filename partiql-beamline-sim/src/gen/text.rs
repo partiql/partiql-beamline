@@ -2,7 +2,7 @@ use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariab
 use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::SimContext;
 use lipsum::{lipsum_title_with_rng, lipsum_with_rng};
-use partiql_types::{PartiqlShape, TYPE_STRING};
+use partiql_types::{type_string, PartiqlShape};
 use partiql_value::Value;
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -46,7 +46,7 @@ where
     }
 
     fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+        type_string!()
     }
 }
 
@@ -73,7 +73,7 @@ where
     }
 
     fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+        type_string!()
     }
 }
 
@@ -118,7 +118,7 @@ where
     }
 
     fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+        type_string!()
     }
 }
 

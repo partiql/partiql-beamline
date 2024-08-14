@@ -1,6 +1,6 @@
 use crate::gen::{DataGenerationResult, ValueGenerator};
 use crate::sim::SimContext;
-use partiql_types::PartiqlShape;
+use partiql_types::{PartiqlShape, PartiqlShapeBuilder};
 use partiql_value::Value;
 use rand::Rng;
 use rand_distr::Distribution;
@@ -197,7 +197,9 @@ where
         if self.density().null.is_some() {
             inner_type
         } else {
-            inner_type.as_non_nullable().unwrap_or(inner_type)
+            PartiqlShapeBuilder::init_or_get()
+                .as_non_nullable(&inner_type)
+                .expect("non-nullable")
         }
     }
 

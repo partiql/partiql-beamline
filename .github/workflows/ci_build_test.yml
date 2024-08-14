@@ -30,7 +30,7 @@ jobs:
       - name: Cargo Build
         run: cargo build --verbose --workspace
       - name: Cargo Test
-        run: cargo test --verbose --workspace
+        run: cargo test --verbose --workspace --no-fail-fast
       # Cache the `cargo build` so future jobs can reuse build
       - name: Cache cargo build
         if: matrix.os == 'ubuntu-latest'

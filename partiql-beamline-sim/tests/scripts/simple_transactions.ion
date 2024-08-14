@@ -5,8 +5,8 @@ rand_processes::{
         $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
 
         $data: {
-            transaction_id: UUID::{ nullable: false },
-            marketplace_id: UniformU8::{ nullable: false },
+            transaction_id: UUID::{ nullable: false, optional:false },
+            marketplace_id: UniformU8::{ nullable: false, optional:false },
             country_code: Regex::{ pattern: "[A-Z]{2}" },
             created_at: Instant,
             completed: Bool,

@@ -16,7 +16,7 @@ use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
 use partiql_beamline_query::strategy::where_clause::{RandomRowFilter, RandomRowPredicateBuilder};
 use partiql_beamline_query::strategy::{QueryStrategy, StrategyBoxed};
 use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder};
-use partiql_types::{BagType, PartiqlShape, StaticType};
+use partiql_types::{BagType, PartiqlShapeBuilder};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use std::collections::Bound;
@@ -149,9 +149,9 @@ fn simple_strategy() -> miette::Result<()> {
         .into_diagnostic()?
         .sboxed();
 
-    let shape = PartiqlShape::new_bag(BagType::new(Box::new(PartiqlShape::Static(
-        StaticType::new(partiql_types::Static::Int),
-    ))));
+    let shape = PartiqlShapeBuilder::init_or_get().new_bag(BagType::new(Box::new(
+        PartiqlShapeBuilder::init_or_get().new_static(partiql_types::Static::Int),
+    )));
     let dataset = DatasetTypeMapping::from([("Table".to_string(), shape)]);
     let gen = strat.build(&dataset, rng).into_diagnostic()?;
 

@@ -40,7 +40,7 @@ impl Debug for PathAndShape {
             }
         }
         let shape = &self.shape;
-        write!(f, "{path}: {shape:?}")
+        write!(f, "{path}: {shape}")
     }
 }
 

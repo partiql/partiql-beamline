@@ -1,7 +1,7 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::SimContext;
-use partiql_types::{ArrayType, PartiqlShape, TYPE_BOOL, TYPE_STRING};
+use partiql_types::{type_bool, type_string, ArrayType, PartiqlShape, PartiqlShapeBuilder};
 
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
@@ -35,7 +35,7 @@ where
         density: Density,
     ) -> DataGenerationResult<Self> {
         let types: Vec<PartiqlShape> = generators.iter().map(|gen| gen.value_type()).collect();
-        let types = PartiqlShape::any_of(types);
+        let types = PartiqlShapeBuilder::init_or_get().any_of(types);
         let dist =
             statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?.into();
         RandomVariable::create(
@@ -90,7 +90,8 @@ where
                 "Empty choice vector".to_string(),
             ));
         }
-        let types = PartiqlShape::any_of(choices.iter().map(|v| v.infer_shape()));
+        let types =
+            PartiqlShapeBuilder::init_or_get().any_of(choices.iter().map(|v| v.infer_shape()));
         RandomVariable::create(rng, meta, density, SimpleChooseImpl { choices, types })
     }
 }
@@ -137,8 +138,8 @@ where
             Err(DataGenerationError::Bounds(min, max))
         } else {
             let dist = statrs::distribution::DiscreteUniform::new(min, max)?.into();
-            let types =
-                PartiqlShape::new_array(ArrayType::new(Box::new(elem_generator.value_type())));
+            let types = PartiqlShapeBuilder::init_or_get()
+                .new_array(ArrayType::new(Box::new(elem_generator.value_type())));
             RandomVariable::create(
                 rng,
                 meta,
@@ -200,7 +201,7 @@ where
     }
 
     fn value_type(&self) -> PartiqlShape {
-        TYPE_BOOL
+        type_bool!()
     }
 }
 
@@ -219,6 +220,6 @@ where
     }
 
     fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+        type_string!()
     }
 }

@@ -3,7 +3,7 @@ use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
 use crate::sim::{ConstantBindingValue, DatasetTypeMapping, SimContext};
 use indexmap::map::Entry;
 use indexmap::IndexMap;
-use partiql_types::{BagType, PartiqlShape};
+use partiql_types::{BagType, PartiqlShape, PartiqlShapeBuilder};
 
 #[derive(Debug, Clone)]
 pub struct SimpleProcess {
@@ -99,7 +99,7 @@ impl RandomDataSets {
             .map(|(k, v)| {
                 (
                     k.to_string(),
-                    PartiqlShape::new_bag(BagType::new(Box::new(v))),
+                    PartiqlShapeBuilder::init_or_get().new_bag(BagType::new(Box::new(v))),
                 )
             })
             .collect()
