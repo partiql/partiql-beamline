@@ -7,8 +7,8 @@ use crate::gen::{ArrivalBoxed, ArrivalTime, RandomProcess, ValueGenerator};
 use crate::primitives::{DataSetName, Tick};
 use crate::reader::env::{Env, EnvBindingValue, EnvLookup};
 use crate::reader::error::{
-    ArrivalConfigError, GeneralConfigError, NotKnownError, OtherError, ProcessConfigError,
-    ProcessConfigResult, ProcessParseError, ProcessParseResult, Sourceable,
+    ArrivalConfigError, GeneralConfigError, NotKnownError, ProcessConfigError, ProcessConfigResult,
+    ProcessParseError, ProcessParseResult, Sourceable,
 };
 use crate::reader::registry::ValueGeneratorRegistry;
 use crate::reader::symbol::{EnvSymbolParser, SymbolType};
@@ -24,8 +24,6 @@ use partiql_value::Value;
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use regex::Regex;
-use std::cell::RefCell;
-use std::rc::Rc;
 use time::Duration;
 
 const PROCESS_KEY_ARRIVAL: &str = "$arrival";
@@ -39,7 +37,7 @@ static FORMAT_STRING_RE: Lazy<Regex> =
 
 pub struct ProcessParser {
     registry: ValueGeneratorRegistry<Pcg64Mcg>,
-    rng_stack: Rc<RefCell<Vec<Pcg64Mcg>>>,
+    rng_stack: Vec<Pcg64Mcg>,
     env_stack: Env,
     sim_context: SimContext,
     processes: RandomDataSets,
@@ -53,7 +51,7 @@ impl ProcessParser {
     ) -> ProcessParseResult<Self> {
         Ok(Self {
             registry,
-            rng_stack: Rc::new(RefCell::new(vec![Pcg64Mcg::seed_from_u64(seed)])),
+            rng_stack: vec![Pcg64Mcg::seed_from_u64(seed)],
             env_stack: Env::new(),
             sim_context: ctx.clone(),
             processes: Default::default(),
@@ -86,30 +84,27 @@ impl ProcessParser {
         Ok(self.sim_context.density().optionality())
     }
 
-    fn curr_rng(&self) -> ProcessConfigResult<RefCell<Pcg64Mcg>> {
-        let mut rng = self.rng_stack.borrow_mut();
-        Ok(RefCell::new(rng.last_mut().cloned().ok_or_else(|| {
-            ProcessConfigError::fatal("RNG underflow")
-        })?))
+    fn curr_rng(&mut self) -> ProcessConfigResult<&mut Pcg64Mcg> {
+        self.rng_stack
+            .last_mut()
+            .ok_or_else(|| ProcessConfigError::fatal("RNG underflow"))
     }
-
-    fn child_rng(&self) -> ProcessConfigResult<Pcg64Mcg> {
-        let curr = self.curr_rng()?;
-        Pcg64Mcg::from_rng(curr.into_inner())
+    fn child_rng(&mut self) -> ProcessConfigResult<Pcg64Mcg> {
+        Pcg64Mcg::from_rng(self.curr_rng()?)
             .map_err(|_e| ProcessConfigError::fatal("Error allocation RNG"))
     }
+
     fn push_scope<S: Into<String>>(&mut self, name: S) -> ProcessConfigResult<()> {
         let name = name.into();
         self.env_stack.push_scope(name.clone());
         let scope_rng = self.child_rng()?;
-        self.rng_stack.borrow_mut().push(scope_rng);
+        self.rng_stack.push(scope_rng);
 
         Ok(())
     }
 
     fn pop_scope(&mut self) -> ProcessConfigResult<String> {
         self.rng_stack
-            .borrow_mut()
             .pop()
             .ok_or_else(|| ProcessConfigError::fatal("Rng Stack Underflow"))?;
         self.env_stack.pop()
@@ -290,10 +285,10 @@ impl ProcessParser {
         let span = value.source_span();
         match self.parse_arrival(value) {
             Err(ProcessConfigError::NotKnown(wrap))
-            if matches!(wrap.inner, NotKnownError::Arrival(_)) =>
-                {
-                    // continue to try Generator
-                }
+                if matches!(wrap.inner, NotKnownError::Arrival(_)) =>
+            {
+                // continue to try Generator
+            }
             Ok(arrival) => {
                 return Ok(arrival.into());
             }
@@ -304,10 +299,10 @@ impl ProcessParser {
 
         match self.parse_generator(value, scope_name) {
             Err(ProcessConfigError::NotKnown(wrap))
-            if matches!(wrap.inner, NotKnownError::Generator(_)) =>
-                {
-                    // continue to try immediate
-                }
+                if matches!(wrap.inner, NotKnownError::Generator(_)) =>
+            {
+                // continue to try immediate
+            }
             Ok(gen) => {
                 return Ok(gen.into());
             }
@@ -318,10 +313,10 @@ impl ProcessParser {
 
         match self.parse_immediate(value) {
             Err(ProcessConfigError::NotKnown(wrap))
-            if matches!(wrap.inner, NotKnownError::Immediate(_)) =>
-                {
-                    // continue to error at end
-                }
+                if matches!(wrap.inner, NotKnownError::Immediate(_)) =>
+            {
+                // continue to error at end
+            }
             Ok(immediate) => {
                 return Ok(immediate.into());
             }
@@ -405,7 +400,7 @@ impl ProcessParser {
             }
             _ => Err(NotKnownError::Immediate(format!("of Ion type `{}`", ion_type)).into()),
         }
-            .with_context(span)
+        .with_context(span)
     }
 
     fn parse_duration(
@@ -491,7 +486,7 @@ impl ProcessParser {
                     }),
                     _ => Err(NotKnownError::Arrival(kind).into()),
                 }
-                    .with_context(span)
+                .with_context(span)
             }
             _ => Err(NotKnownError::Arrival(format!("ion type: {}", ion_type)).into()),
         };
@@ -598,7 +593,7 @@ impl ProcessParser {
                 Ok(gen)
             }
         }
-            .with_context(span)
+        .with_context(span)
     }
 
     fn parse_symbol_type(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<SymbolType> {
@@ -663,7 +658,7 @@ impl EnvSymbolParser for ProcessParser {
         }
     }
     fn parse_symbol_as_generator(
-        &self,
+        &mut self,
         sym: &SymbolRef<'_>,
         cfg: Option<LazyStruct<'_, AnyEncoding>>,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
@@ -684,7 +679,7 @@ impl EnvSymbolParser for ProcessParser {
                 }
             }
         }
-            .with_context(span)
+        .with_context(span)
     }
 
     fn parse_symbol_as_text(&self, sym: &SymbolRef<'_>) -> ProcessConfigResult<String> {

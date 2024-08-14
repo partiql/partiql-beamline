@@ -107,7 +107,7 @@ where
         rng: R,
         meta: Meta,
         config: Option<LazyStruct<'_, AnyEncoding>>,
-        symbol_parser: &dyn EnvSymbolParser,
+        symbol_parser: &mut dyn EnvSymbolParser,
     ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
         let density = parse_density(config.as_ref(), symbol_parser)?;
 

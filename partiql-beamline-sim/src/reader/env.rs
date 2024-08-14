@@ -1,5 +1,5 @@
 use crate::gen::{ArrivalTime, ValueGenerator};
-use crate::reader::error::{NotKnownError, OtherError, ProcessConfigError, ProcessConfigResult};
+use crate::reader::error::{NotKnownError, OtherError, ProcessConfigResult};
 use itertools::Itertools;
 use partiql_value::Value;
 use std::collections::hash_map::Entry;

@@ -11,12 +11,9 @@ pub mod source;
 mod tests {
     use crate::primitives::{Sample, Tick};
 
-    use crate::reader::error::{ProcessConfigError, ProcessParseError};
-    use crate::sim::{
-        ISim, Sim, SimBuilder, SimConfigBuilder, SimConfigError, SimError, SimResult,
-    };
+    use crate::sim::{ISim, Sim, SimBuilder, SimConfigBuilder, SimResult};
     use crate::source::SimSource;
-    use assert_matches::assert_matches;
+
     use partiql_types::{Static, StructField};
     use partiql_value::{list, tuple, Value};
     use std::ops::Add;
