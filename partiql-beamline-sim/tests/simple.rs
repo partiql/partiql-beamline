@@ -379,3 +379,57 @@ fn verify_exemplar_client_service() -> miette::Result<()> {
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())
 }
+
+#[test]
+fn verify_no_duplicates_client_service() -> miette::Result<()> {
+    let script = r##"
+rand_processes::{
+    $n: 3,
+
+    requests: $n::[
+        // each iteration of the loop will assign an index from 1..=$n to the variable $@n
+        {
+            // customer $@n will arrive every $r milliseconds
+            $r: UniformU8::{low:20, high:150},
+            $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+            $rate: UniformF64::{ low:0.995e0, high:1.0e0 },
+            $weight: UniformDecimal::{ low: 1.995, high: 4.9999 },
+            $anyof: UniformAnyOf::{ types: [Tick, UniformDecimal::{ low: 1.995, high: 4.9999 }, UniformI8] },
+            $array: UniformArray::{ min_size: 2, max_size: 4, element_type: UniformI8 },
+            $success: Bool::{ p: $rate },
+
+            service: rand_process::{
+                $data: {
+                    StartTime: Instant,
+                    Program: "FancyService",
+                    Operation: "GetMyData",
+                    Weight: $weight,
+                    Distance: UniformDecimal::{ low: 0d0, high: 4.2d1 },
+                    success: $success,
+                    anyof: $anyof,
+                    array: $array
+                }
+            },
+        }
+    ]
+}
+""##;
+    let source = SimSource::new("verify_no_duplicates_client_service", script)?;
+
+    let config = SimConfigBuilder::default()
+        .seed(5599165213374806994)
+        .build()?;
+    let mut multisim = SimBuilder::from_config(config, source)?.build_multi_dataset()?;
+    let sim = multisim.for_dataset_name("service")?;
+
+    let samples: SimResult<Vec<_>> = sim.into_iter().take(3).collect();
+    let samples = samples?;
+    for i in 0..samples.len() {
+        for j in i + 1..samples.len() {
+            assert_ne!(samples[i], samples[j]);
+        }
+    }
+
+    Ok(())
+}

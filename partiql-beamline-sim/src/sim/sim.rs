@@ -58,6 +58,9 @@ pub enum SimError {
     #[error("Unknown DataSet: {0:?}")]
     UnknownDataSet(DataSetId),
 
+    #[error("Unknown DataSet name: {0:?}")]
+    UnknownDataSetName(DataSetName),
+
     #[error(transparent)]
     #[diagnostic(transparent)]
     ProcessSamplingError(#[from] DataSamplingError),
@@ -402,6 +405,13 @@ impl MultiSim {
         self.sims
             .get_mut(id.0)
             .ok_or_else(|| SimError::UnknownDataSet(id))
+    }
+
+    pub fn for_dataset_name<'a>(&mut self, name: impl Into<DataSetName>) -> SimResult<&mut Sim> {
+        let name = name.into();
+        self.get_dataset_id(&name)
+            .ok_or_else(|| SimError::UnknownDataSetName(name))
+            .and_then(|id| self.for_dataset(id))
     }
 
     /// Generate the next sample from this simulation
