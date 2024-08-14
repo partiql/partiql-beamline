@@ -14,7 +14,7 @@ use crate::reader::symbol::EnvSymbolParser;
 
 use crate::reader::util;
 
-use crate::reader::error::{ProcessConfigError, ProcessConfigResult};
+use crate::reader::error::{GeneralConfigError, ProcessConfigError, ProcessConfigResult};
 use crate::reader::util::{to_f64, to_i64, validate_config_keys};
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
 use partiql_value::Value;
@@ -121,8 +121,8 @@ fn range(
     match (low, high) {
         (Some(low), Some(high)) => Ok(Some((low, high))),
         (None, None) => Ok(None),
-        _ => Err(ProcessConfigError::Other(
-            "If specifying range, both 'low' and 'high' are required".to_string(),
+        _ => Err(ProcessConfigError::other(
+            "If specifying range, both 'low' and 'high' are required",
         )),
     }
 }
@@ -269,7 +269,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["types"])?;
-        let config = config.ok_or(ProcessConfigError::ConfigExpected(Default::default()))?;
+        let config = config.ok_or(GeneralConfigError::ConfigExpected)?;
 
         let lst = config.get_expected("types")?.expect_list()?;
 
@@ -282,14 +282,14 @@ impl SimpleScriptVariableKind {
                 ValueRef::Struct(strct) => {
                     let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
                     if annot.is_empty() {
-                        Err(ProcessConfigError::Other(format!(
+                        Err(ProcessConfigError::other(format!(
                             "Unsupported type for {strct:?}"
                         )))?
                     } else {
                         symbol_parser.parse_symbol_as_generator(&annot[0], Some(strct))?
                     }
                 }
-                _ => Err(ProcessConfigError::Other(format!(
+                _ => Err(ProcessConfigError::other(format!(
                     "Unsupported `type` {gen_value:?} in `UniformAnyOf` definition"
                 )))?,
             };
@@ -312,7 +312,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["choices"])?;
-        let config = config.ok_or(ProcessConfigError::ConfigExpected(Default::default()))?;
+        let config = config.ok_or(GeneralConfigError::ConfigExpected)?;
 
         let choices = config.get_expected("choices")?.expect_list()?;
         let mut choice_values = vec![];
@@ -324,7 +324,7 @@ impl SimpleScriptVariableKind {
                 ValueRef::Int(i) => Ok(i.as_i64().unwrap().into()),
                 ValueRef::Float(f) => Ok(f.into()),
                 ValueRef::String(s) => Ok(s.text().into()),
-                _ => Err(ProcessConfigError::Other(format!(
+                _ => Err(ProcessConfigError::other(format!(
                     "Unsupported Type for `Uniform` `{ion_type}`"
                 ))),
             }?;
@@ -346,7 +346,7 @@ impl SimpleScriptVariableKind {
         R: Rng + Sized + Clone + 'static,
     {
         validate_config_keys(config, &["element_type", "min_size", "max_size"])?;
-        let config = config.ok_or(ProcessConfigError::ConfigExpected(Default::default()))?;
+        let config = config.ok_or(GeneralConfigError::ConfigExpected)?;
 
         let min_size = config.get_expected("min_size")?;
         let max_size = config.get_expected("max_size")?;
@@ -368,14 +368,14 @@ impl SimpleScriptVariableKind {
             ValueRef::Struct(strct) => {
                 let annot = strct.annotations().collect::<Result<Vec<_>, _>>()?;
                 if annot.is_empty() {
-                    Err(ProcessConfigError::Other(format!(
+                    Err(ProcessConfigError::other(format!(
                         "Unsupported type for {strct:?}"
                     )))?
                 } else {
                     get_generator(&annot[0], Some(strct))?
                 }
             }
-            _ => Err(ProcessConfigError::Other(format!(
+            _ => Err(ProcessConfigError::other(format!(
                 "Unsupported `element_type` {elem_type:?} in `UniformArray` definition"
             )))?,
         })

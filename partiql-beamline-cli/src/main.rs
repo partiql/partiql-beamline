@@ -100,7 +100,6 @@ pub enum QueryGen {
     },
 }
 
-// TODO rather than all the `.expect`s below, we should use miette errors/diagnostics for better error reporting
 fn main() -> miette::Result<()> {
     let args = Cli::parse();
 
@@ -131,42 +130,31 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
 
             match output_format {
                 DataOutputFormat::Text => {
+                    let mut sim =
+                        SimBuilder::from_config(cfg.clone(), script)?.build_multi_dataset()?;
+
                     println!("Seed: {}", cfg.seed);
-                    println!("Start: {}", t0.format(&DATETIME_FORMAT).expect("t0 print"));
+                    println!("Start: {}", t0.format(&DATETIME_FORMAT).into_diagnostic()?);
 
-                    let mut sim = SimBuilder::from_config(cfg.clone(), script)
-                        .expect("auto sim")
-                        .build_multi_dataset()
-                        .expect("auto sim");
-
-                    if datasets.is_empty() {
-                        let sim_datasets = sim.datasets();
-                        for (id, name) in sim_datasets {
-                            for _c in 0..sample_count {
-                                if let Ok(Some(Sample {
-                                    tick: Tick(t),
-                                    value,
-                                })) = sim.for_dataset(id)?.next_sample()
-                                {
-                                    let time = t0.add(Duration::milliseconds(t as i64));
-                                    let name = name.clone().0;
-                                    println!("[{time}] : {name:?} {value:?}");
-                                }
-                            }
-                        }
+                    let datasets = if datasets.is_empty() {
+                        sim.datasets()
                     } else {
-                        for dataset in datasets {
-                            if let Some(id) = sim.get_dataset_id(&DataSetName(dataset.clone())) {
-                                for _c in 0..sample_count {
-                                    if let Ok(Some(Sample {
-                                        tick: Tick(t),
-                                        value,
-                                    })) = sim.for_dataset(id)?.next_sample()
-                                    {
-                                        let time = t0.add(Duration::milliseconds(t as i64));
-                                        println!("[{time}] : {dataset:?} {value:?}");
-                                    }
-                                }
+                        datasets
+                            .into_iter()
+                            .map(DataSetName)
+                            .filter_map(|ds| sim.get_dataset_id(&ds).map(|id| (id, ds)))
+                            .collect()
+                    };
+
+                    for (id, dataset) in datasets {
+                        for _c in 0..sample_count {
+                            if let Ok(Some(Sample {
+                                               tick: Tick(t),
+                                               value,
+                                           })) = sim.for_dataset(id)?.next_sample()
+                            {
+                                let time = t0.add(Duration::milliseconds(t as i64));
+                                println!("[{time}] : {dataset:?} {value:?}");
                             }
                         }
                     }
@@ -202,12 +190,12 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
             Db::Kollider {
                 spec,
                 db_args:
-                    DbArgs {
-                        catalog_name,
-                        catalog_path,
-                        force,
-                        target,
-                    },
+                DbArgs {
+                    catalog_name,
+                    catalog_path,
+                    force,
+                    target,
+                },
                 sample_count,
             } => {
                 if let DbTarget::Filesystem = target {
@@ -239,6 +227,7 @@ fn handle_gen(gen: Gen) -> miette::Result<()> {
     Ok(())
 }
 
+// TODO rather than all the `.expect`s below, we should use miette errors/diagnostics for better error reporting
 fn handle_infer(spec: SimSpec, output_format: ShapeOutputFormat) -> miette::Result<()> {
     let (script, cfg) = spec.to_script_and_config();
     let (script, cfg) = (script.into_diagnostic()?, cfg.into_diagnostic()?);
@@ -336,7 +325,7 @@ mod tests {
     #[track_caller]
     fn assert_args<I, T>(args: I)
     where
-        I: IntoIterator<Item = T> + Debug,
+        I: IntoIterator<Item=T> + Debug,
         T: Into<OsString> + Clone,
     {
         let result = Cli::try_parse_from(args);

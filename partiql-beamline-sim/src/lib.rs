@@ -23,66 +23,6 @@ mod tests {
     use time::macros::datetime;
     use time::Duration;
 
-    fn format_simple_script(config: &'static str) -> String {
-        format!(
-            r#"
-            rand_processes::{{
-              $n:UniformU8::{{
-                low:2,
-                high:4
-              }},
-              sensors:$n::[
-                rand_process::{{
-                  $r:Uniform::{{ choices: [2, 3] }},
-                  $arrival:HomogeneousPoisson::{{
-                    interarrival:minutes::$r
-                  }},
-                  $data:{{
-                    i8:UniformI8::{config},
-                  }}
-                }}
-              ]
-            }}
-        "#
-        )
-    }
-
-    #[test]
-    fn config_error_invalid_key_low() {
-        assert_matches!(
-            sim_from_script(&format_simple_script("{low_val: 5, high_val: 6}")),
-            Err(SimError::ConfigError(SimConfigError::ProcessConfig(ProcessParseError{related,..}))) =>{
-                assert_matches!(
-                    &related[0], ProcessConfigError::ConfigInvalidKey(msg) if msg == "low_val"
-                );
-            }
-        );
-    }
-
-    #[test]
-    fn config_error_invalid_key_high() {
-        assert_matches!(
-            sim_from_script(&format_simple_script("{low: 5, high_val: 6}")),
-            Err(SimError::ConfigError(SimConfigError::ProcessConfig(ProcessParseError{related,..}))) =>{
-                assert_matches!(
-                    &related[0], ProcessConfigError::ConfigInvalidKey(msg)  if msg == "high_val"
-                );
-            }
-        );
-    }
-
-    #[test]
-    fn config_error_duplicate_key_high() {
-        assert_matches!(
-            sim_from_script(&format_simple_script("{low: 5, high: 6, high: 9}")),
-            Err(SimError::ConfigError(SimConfigError::ProcessConfig(ProcessParseError{ related,..}))) =>{
-                assert_matches!(
-                    &related[0], ProcessConfigError::ConfigDuplicateKey(msg)  if msg == "high"
-                );
-            }
-        );
-    }
-
     fn sensor_script() -> &'static str {
         r#"
             rand_processes::{

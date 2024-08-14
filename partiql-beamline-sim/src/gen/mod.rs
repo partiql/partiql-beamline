@@ -53,7 +53,7 @@ impl From<Infallible> for DataGenerationError {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Diagnostic)]
 #[non_exhaustive]
 pub enum DataSamplingError {
     #[error("Invalid Tick Error: {0}")]

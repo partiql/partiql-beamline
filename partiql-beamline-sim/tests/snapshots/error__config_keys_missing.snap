@@ -1,0 +1,14 @@
+---
+source: partiql-beamline-sim/tests/error.rs
+expression: output
+---
+  × Error in process configuration
+
+Error:   × `Regex` Generator Configuration
+  ╰─▶   × Expected one of key `["pattern"]`
+         ╭─[config_keys_missing.script:6:26]
+       5 │                 $data: {
+       6 │                     err: Regex::{  },
+         ·                          ───────────
+       7 │                 }
+         ╰────

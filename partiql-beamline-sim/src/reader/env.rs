@@ -1,5 +1,5 @@
 use crate::gen::{ArrivalTime, ValueGenerator};
-use crate::reader::error::{NotKnownError, ProcessConfigError, ProcessConfigResult};
+use crate::reader::error::{NotKnownError, OtherError, ProcessConfigError, ProcessConfigResult};
 use itertools::Itertools;
 use partiql_value::Value;
 use std::collections::hash_map::Entry;
@@ -34,13 +34,13 @@ impl Env {
         self.vars
             .pop()
             .map(|(name, _)| name)
-            .ok_or_else(|| ProcessConfigError::Fatal("Env Stack Underflow".to_string()))
+            .ok_or_else(|| OtherError::Fatal("Env Stack Underflow".to_string()).into())
     }
 
     fn curr(&mut self) -> ProcessConfigResult<&mut (String, EnvBindings)> {
         self.vars
             .last_mut()
-            .ok_or_else(|| ProcessConfigError::Fatal("Env Stack Underflow".to_string()))
+            .ok_or_else(|| OtherError::Fatal("Env Stack Underflow".to_string()).into())
     }
 
     pub fn assign<S: Into<String>, V: Into<EnvBindingValue>>(
@@ -51,10 +51,9 @@ impl Env {
         let name = name.into();
         let (_scope, vars) = self.curr()?;
         match vars.entry(name) {
-            Entry::Occupied(e) => Err(ProcessConfigError::Other(format!(
-                "`{0}` bindings already exist",
-                e.key()
-            ))),
+            Entry::Occupied(e) => {
+                Err(OtherError::Other(format!("`{0}` bindings already exist", e.key())).into())
+            }
             Entry::Vacant(e) => Ok(e.insert(val.into())),
         }
     }

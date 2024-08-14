@@ -191,6 +191,74 @@ fn parse_error_config_expected() -> miette::Result<()> {
 }
 
 #[test]
+fn parse_error_config_key_duplicate() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "config_key_duplicate",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: Regex::{ pattern: "foo", pattern: "foo" },
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_config_key_extra() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "config_key_extra",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: Regex::{ pattern: "foo", xyz_pattern: "foo" },
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_config_key_missing() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "config_key_missing",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: LoremIpsum::{ min_words: 2 },
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
+fn parse_error_config_keys_missing() -> miette::Result<()> {
+    assert_script_error_snapshot(
+        "config_keys_missing",
+        r##"
+        rand_processes::{
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+            sensor: rand_process::{
+                $data: {
+                    err: Regex::{  },
+                }
+            }
+        }
+    "##,
+    )
+}
+
+#[test]
 fn parse_error_unknown_arrival() -> miette::Result<()> {
     assert_script_error_snapshot(
         "unknown_arrival",
