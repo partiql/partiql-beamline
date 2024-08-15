@@ -414,6 +414,30 @@ impl MultiSim {
             .and_then(|id| self.for_dataset(id))
     }
 
+    pub fn into_dataset_sims<P>(self, predicate: P) -> Vec<(DataSetName, Sim)>
+    where
+        Self: Sized,
+        P: Fn(&DataSetName) -> bool,
+    {
+        self.datasets
+            .into_iter()
+            .zip(self.sims.into_iter())
+            .filter(|(n, s)| predicate(n))
+            .collect()
+    }
+
+    pub fn dataset_sims<P>(&mut self, predicate: P) -> Vec<(&DataSetName, &mut Sim)>
+    where
+        Self: Sized,
+        P: Fn(&DataSetName) -> bool,
+    {
+        self.datasets
+            .iter()
+            .zip(self.sims.iter_mut())
+            .filter(|(n, s)| predicate(n))
+            .collect()
+    }
+
     /// Generate the next sample from this simulation
     fn next_sample(&mut self, id: DataSetId) -> SimResult<Option<Sample>> {
         self.sims[id.0].next_sample()
