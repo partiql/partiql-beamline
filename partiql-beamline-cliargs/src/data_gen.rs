@@ -3,7 +3,6 @@ use clap::{Args, ValueEnum};
 
 /// Output format for the generated data
 #[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-#[non_exhaustive]
 pub enum DataOutputFormat {
     Ion,
     IonPretty,
@@ -12,7 +11,6 @@ pub enum DataOutputFormat {
 
 /// Output format for the generated shape of data
 #[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-#[non_exhaustive]
 pub enum ShapeOutputFormat {
     PartiqlKollider,
     Text,
@@ -58,7 +56,6 @@ pub struct DbArgs {
 
 /// Output target for the generated Database
 #[derive(ValueEnum, Debug, Clone, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum DbTarget {
     Filesystem,
 }
