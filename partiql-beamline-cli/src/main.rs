@@ -3,20 +3,20 @@ mod kolliderdb;
 mod writer;
 
 use crate::cli::{encode_ion_text, IonPrintMode};
+use crate::kolliderdb::{
+    catalog_full_path, create_catalog_dir, create_kollider_db, create_manifest_file,
+    create_script_file,
+};
+use crate::writer::{
+    DataSetFiltersBuilder, SimSamplesBuilder, WriterIonCompactBuilder, WriterIonPrettyBuilder,
+    WriterSimBuilder, WriterTextBuilder,
+};
 use clap::{Args, Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
 use itertools::{Itertools, Position};
 use miette::IntoDiagnostic;
 use partiql_beamline::primitives::{DataSetName, Sample, Tick};
 use partiql_beamline::sim::{ISim, SimBuilder, DATETIME_FORMAT};
-use partiql_extension_ion::Encoding;
-use std::io::stdout;
-use std::ops::Add;
-
-use crate::kolliderdb::{
-    catalog_full_path, create_catalog_dir, create_kollider_db, create_manifest_file,
-    create_script_file,
-};
 use partiql_beamline_cliargs::data_gen::{
     DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat,
 };
@@ -26,6 +26,9 @@ use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
+use partiql_extension_ion::Encoding;
+use std::io::stdout;
+use std::ops::Add;
 use time::Duration;
 
 #[derive(Parser)]
@@ -57,6 +60,10 @@ pub enum Commands {
 pub enum Gen {
     /// Run the data generator
     Data(Data),
+
+    /// Run the data generator
+    DataRefactor(Data),
+
     #[clap(subcommand)]
     /// Run the Db generator with both data and schema(s)
     Db(Db),
@@ -122,9 +129,54 @@ fn main() -> miette::Result<()> {
 fn handle_gen(gen: Gen) -> miette::Result<()> {
     match gen {
         Gen::Data(data) => handle_gen_data(data),
+        Gen::DataRefactor(data) => handle_gen_data_refactor(data),
         Gen::Db(db) => handle_gen_db(db),
     }
 }
+
+fn handle_gen_data_refactor(
+    Data {
+        spec,
+        sample_count,
+        output_format,
+        datasets,
+    }: Data,
+) -> miette::Result<()> {
+    let (script, cfg) = spec.to_script_and_config();
+    let (script, cfg) = (script.into_diagnostic()?, cfg.into_diagnostic()?);
+
+    let samples = SimSamplesBuilder::default()
+        .count(sample_count.sample_count)
+        .build()?;
+    let filters = DataSetFiltersBuilder::default().filters(datasets).build()?;
+    let wspec = WriterSimBuilder::default()
+        .cfg(cfg)
+        .script(script)
+        .samples(samples)
+        .dataset_filters(filters)
+        .build()?;
+
+    let out = stdout().lock();
+    let mut writer = match output_format {
+        DataOutputFormat::Text => WriterTextBuilder::default()
+            .spec(wspec)
+            .build()?
+            .to_writer(out)?,
+        DataOutputFormat::Ion => WriterIonCompactBuilder::default()
+            .spec(wspec)
+            .build()?
+            .to_writer(out)?,
+        DataOutputFormat::IonPretty => WriterIonPrettyBuilder::default()
+            .spec(wspec)
+            .build()?
+            .to_writer(out)?,
+    };
+
+    writer.write()?;
+
+    Ok(())
+}
+
 fn handle_gen_data(
     Data {
         spec,
@@ -159,9 +211,9 @@ fn handle_gen_data(
             for (id, dataset) in datasets {
                 for _c in 0..sample_count {
                     if let Ok(Some(Sample {
-                                       tick: Tick(t),
-                                       value,
-                                   })) = sim.for_dataset(id)?.next_sample()
+                        tick: Tick(t),
+                        value,
+                    })) = sim.for_dataset(id)?.next_sample()
                     {
                         let time = t0.add(Duration::milliseconds(t as i64));
                         println!("[{time}] : {dataset:?} {value:?}");
@@ -176,7 +228,7 @@ fn handle_gen_data(
                 Encoding::Ion,
             );
             match res {
-                Ok(out) => println!("{:}", &out),
+                Ok(out) => print!("{:}", &out),
                 Err(e) => println!("{:?}", e),
             }
         }
@@ -187,7 +239,7 @@ fn handle_gen_data(
                 Encoding::Ion,
             );
             match res {
-                Ok(out) => println!("{:}", &out),
+                Ok(out) => print!("{:}", &out),
                 Err(e) => println!("{:?}", e),
             }
         }
@@ -201,12 +253,12 @@ fn handle_gen_db(db: Db) -> miette::Result<()> {
         Db::Kollider {
             spec,
             db_args:
-            DbArgs {
-                catalog_name,
-                catalog_path,
-                force,
-                target: DbTarget::Filesystem,
-            },
+                DbArgs {
+                    catalog_name,
+                    catalog_path,
+                    force,
+                    target: DbTarget::Filesystem,
+                },
             sample_count,
         } => {
             let (script, cfg) = spec.to_script_and_config();
@@ -332,7 +384,7 @@ mod tests {
     #[track_caller]
     fn assert_args<I, T>(args: I)
     where
-        I: IntoIterator<Item=T> + Debug,
+        I: IntoIterator<Item = T> + Debug,
         T: Into<OsString> + Clone,
     {
         let result = Cli::try_parse_from(args);
