@@ -1,11 +1,14 @@
-use crate::cli::{encode_ion_text, get_multi_sim, IonPrintMode};
 use ion_rs::element::writer::TextKind;
-use partiql_beamline::sim::{ISim, SimConfig, DATETIME_FORMAT};
+use partiql_beamline::sim::{ISim, MultiSim, SimBuilder, SimConfig, SimResult, DATETIME_FORMAT};
 use partiql_beamline::source::SimSource;
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;
 use partiql_extension_ddl::ddl::{DdlSyntax, PartiqlDdlEncoder};
+use partiql_extension_ion::encode::{
+    IonEncodeError, IonEncoderBuilder, IonEncoderConfig, ValueEncoder,
+};
 use partiql_extension_ion::Encoding;
+use partiql_value::Value;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
@@ -166,4 +169,35 @@ pub(crate) fn create_script_file(
 
 pub(crate) fn catalog_full_path(catalog_name: &str, catalog_path: &str) -> String {
     format!("{catalog_path}/{catalog_name}/")
+}
+
+fn get_multi_sim(cfg: SimConfig, script: SimSource) -> SimResult<MultiSim> {
+    SimBuilder::from_config(cfg, script)?.build_multi_dataset()
+}
+
+fn encode_ion_text(
+    print_mode: IonPrintMode,
+    value: &Value,
+    encoding: Encoding,
+) -> Result<String, IonEncodeError> {
+    let mut buff = vec![];
+    let mut writer = match print_mode {
+        IonPrintMode::Compact => ion_rs::TextWriterBuilder::compact().build(&mut buff)?,
+        IonPrintMode::Pretty => ion_rs::TextWriterBuilder::pretty().build(&mut buff)?,
+    };
+
+    let mut encoder = IonEncoderBuilder::new(IonEncoderConfig::default().with_mode(encoding))
+        .build(&mut writer)?;
+
+    encoder.write_value(value)?;
+
+    drop(encoder);
+    drop(writer);
+
+    Ok(String::from_utf8(buff).expect("string"))
+}
+
+enum IonPrintMode {
+    Compact,
+    Pretty,
 }
