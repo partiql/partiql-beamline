@@ -1,8 +1,6 @@
-mod cli;
 mod kolliderdb;
 mod writer;
 
-use crate::cli::{encode_ion_text, IonPrintMode};
 use crate::kolliderdb::{
     catalog_full_path, create_catalog_dir, create_kollider_db, create_manifest_file,
     create_script_file,
@@ -15,7 +13,6 @@ use clap::{Args, Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
 use itertools::{Itertools, Position};
 use miette::IntoDiagnostic;
-use partiql_beamline::primitives::{DataSetName, Sample, Tick};
 use partiql_beamline::sim::{ISim, SimBuilder, DATETIME_FORMAT};
 use partiql_beamline_cliargs::data_gen::{
     DataOutputFormat, DbArgs, DbTarget, SampleCount, ShapeOutputFormat,
@@ -26,10 +23,8 @@ use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
-use partiql_extension_ion::Encoding;
+
 use std::io::stdout;
-use std::ops::Add;
-use time::Duration;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -60,9 +55,6 @@ pub enum Commands {
 pub enum Gen {
     /// Run the data generator
     Data(Data),
-
-    /// Run the data generator
-    DataRefactor(Data),
 
     #[clap(subcommand)]
     /// Run the Db generator with both data and schema(s)
@@ -129,12 +121,11 @@ fn main() -> miette::Result<()> {
 fn handle_gen(gen: Gen) -> miette::Result<()> {
     match gen {
         Gen::Data(data) => handle_gen_data(data),
-        Gen::DataRefactor(data) => handle_gen_data_refactor(data),
         Gen::Db(db) => handle_gen_db(db),
     }
 }
 
-fn handle_gen_data_refactor(
+fn handle_gen_data(
     Data {
         spec,
         sample_count,
@@ -173,77 +164,6 @@ fn handle_gen_data_refactor(
     };
 
     writer.write()?;
-
-    Ok(())
-}
-
-fn handle_gen_data(
-    Data {
-        spec,
-        sample_count,
-        output_format,
-        datasets,
-    }: Data,
-) -> miette::Result<()> {
-    let (script, cfg) = spec.to_script_and_config();
-    let (script, cfg) = (script.into_diagnostic()?, cfg.into_diagnostic()?);
-    let t0 = cfg.t0;
-
-    let sample_count = sample_count.sample_count;
-
-    match output_format {
-        DataOutputFormat::Text => {
-            let mut sim = SimBuilder::from_config(cfg.clone(), script)?.build_multi_dataset()?;
-
-            println!("Seed: {}", cfg.seed);
-            println!("Start: {}", t0.format(&DATETIME_FORMAT).into_diagnostic()?);
-
-            let datasets = if datasets.is_empty() {
-                sim.datasets()
-            } else {
-                datasets
-                    .into_iter()
-                    .map(DataSetName)
-                    .filter_map(|ds| sim.get_dataset_id(&ds).map(|id| (id, ds)))
-                    .collect()
-            };
-
-            for (id, dataset) in datasets {
-                for _c in 0..sample_count {
-                    if let Ok(Some(Sample {
-                        tick: Tick(t),
-                        value,
-                    })) = sim.for_dataset(id)?.next_sample()
-                    {
-                        let time = t0.add(Duration::milliseconds(t as i64));
-                        println!("[{time}] : {dataset:?} {value:?}");
-                    }
-                }
-            }
-        }
-        DataOutputFormat::Ion => {
-            let res = encode_ion_text(
-                IonPrintMode::Compact,
-                &cli::execute(cfg, script, sample_count, datasets)?,
-                Encoding::Ion,
-            );
-            match res {
-                Ok(out) => print!("{:}", &out),
-                Err(e) => println!("{:?}", e),
-            }
-        }
-        DataOutputFormat::IonPretty => {
-            let res = encode_ion_text(
-                IonPrintMode::Pretty,
-                &cli::execute(cfg, script, sample_count, datasets)?,
-                Encoding::Ion,
-            );
-            match res {
-                Ok(out) => print!("{:}", &out),
-                Err(e) => println!("{:?}", e),
-            }
-        }
-    }
 
     Ok(())
 }
