@@ -1,0 +1,237 @@
+---
+source: partiql-beamline-sim/src/lib.rs
+expression: shapes
+---
+DatasetTypeMapping {
+    mapping: {
+        "sensors": Static(
+            StaticType {
+                ty: Bag(
+                    BagType {
+                        element_type: Static(
+                            StaticType {
+                                ty: Struct(
+                                    StructType {
+                                        constraints: {
+                                            Fields(
+                                                {
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "tick",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Int64,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "id",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Int,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "i8",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Int8,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "f",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Float64,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "sub",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Struct(
+                                                                    StructType {
+                                                                        constraints: {
+                                                                            Fields(
+                                                                                {
+                                                                                    StructField {
+                                                                                        optional: false,
+                                                                                        name: "o",
+                                                                                        ty: Static(
+                                                                                            StaticType {
+                                                                                                ty: Int8,
+                                                                                                nullable: true,
+                                                                                            },
+                                                                                        ),
+                                                                                    },
+                                                                                    StructField {
+                                                                                        optional: false,
+                                                                                        name: "f",
+                                                                                        ty: Static(
+                                                                                            StaticType {
+                                                                                                ty: Float64,
+                                                                                                nullable: true,
+                                                                                            },
+                                                                                        ),
+                                                                                    },
+                                                                                },
+                                                                            ),
+                                                                        },
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "w",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: DecimalP(
+                                                                    5,
+                                                                    4,
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "d",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: DecimalP(
+                                                                    2,
+                                                                    0,
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "variant",
+                                                        ty: AnyOf(
+                                                            AnyOf {
+                                                                types: {
+                                                                    Static(
+                                                                        StaticType {
+                                                                            ty: String,
+                                                                            nullable: true,
+                                                                        },
+                                                                    ),
+                                                                    Static(
+                                                                        StaticType {
+                                                                            ty: Int64,
+                                                                            nullable: true,
+                                                                        },
+                                                                    ),
+                                                                    Static(
+                                                                        StaticType {
+                                                                            ty: DecimalP(
+                                                                                3,
+                                                                                1,
+                                                                            ),
+                                                                            nullable: true,
+                                                                        },
+                                                                    ),
+                                                                    Static(
+                                                                        StaticType {
+                                                                            ty: Int8,
+                                                                            nullable: true,
+                                                                        },
+                                                                    ),
+                                                                },
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "tick_array",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Array(
+                                                                    ArrayType {
+                                                                        element_type: Static(
+                                                                            StaticType {
+                                                                                ty: Int64,
+                                                                                nullable: true,
+                                                                            },
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "weight_array",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Array(
+                                                                    ArrayType {
+                                                                        element_type: Static(
+                                                                            StaticType {
+                                                                                ty: DecimalP(
+                                                                                    5,
+                                                                                    4,
+                                                                                ),
+                                                                                nullable: true,
+                                                                            },
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "decimal_array",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                ty: Array(
+                                                                    ArrayType {
+                                                                        element_type: Static(
+                                                                            StaticType {
+                                                                                ty: DecimalP(
+                                                                                    5,
+                                                                                    4,
+                                                                                ),
+                                                                                nullable: true,
+                                                                            },
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                    },
+                                ),
+                                nullable: true,
+                            },
+                        ),
+                    },
+                ),
+                nullable: true,
+            },
+        ),
+    },
+}

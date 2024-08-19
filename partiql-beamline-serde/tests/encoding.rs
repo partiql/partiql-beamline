@@ -1,5 +1,4 @@
 use ion_rs::element::writer::TextKind;
-use ion_rs::element::Element;
 use partiql_beamline::sim::{ISim, NameAndShape, SimBuilder, SimConfigBuilder};
 use partiql_beamline::source::SimSource;
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
@@ -35,19 +34,8 @@ pub fn verify_correct_encoding() {
         .expect("encoded value");
     drop(writer);
 
-    let expected = include_str!("shapes/partiql-kollider/sensors-shape.ion");
     let actual = String::from_utf8(buff).expect("valid utf8");
-
-    let elm1 = Element::read_one(expected).unwrap();
-    let elm2 = Element::read_one(actual).unwrap();
-
-    let expected_struct = elm1.as_struct().expect("expected element as struct");
-    let actual_struct = elm2.as_struct().expect("actual element as struct");
-
-    println!("{:}", &expected_struct);
-    println!("{:}", &actual_struct);
-
-    assert_eq!(expected_struct, actual_struct);
+    insta::assert_snapshot!("verify_correct_encoding__shape", actual);
 
     let NameAndShape {
         name: _,
@@ -55,11 +43,7 @@ pub fn verify_correct_encoding() {
     } = shape.get_dataset("sensors").expect("sensors_type");
 
     let ddl_compact = PartiqlBasicDdlEncoder::new(DdlFormat::Compact);
-    let ddl_expected = r#""tick" INT8,"i8" TINYINT,"f" DOUBLE,"w" OPTIONAL DECIMAL(5, 4),"d" DECIMAL(2, 0) NOT NULL,"a" UNION<INT8,DOUBLE,VARCHAR,DECIMAL(5, 4) NOT NULL>,"ar1" ARRAY<DECIMAL(2, 1)>,"ar2" ARRAY<VARCHAR>,"ar3" ARRAY<DECIMAL(5, 4)>,"ar4" ARRAY<TINYINT>,"ar5" ARRAY<UNION<INT8,DOUBLE,VARCHAR,DECIMAL(5, 4) NOT NULL>>"#;
     let ddl_actual = ddl_compact.ddl(&sensors_ty).expect("ddl_output");
 
-    println!("{:}", &ddl_expected);
-    println!("{:}", &ddl_actual);
-
-    assert_eq!(ddl_actual, ddl_expected);
+    insta::assert_snapshot!("verify_correct_encoding__ddl", ddl_actual);
 }

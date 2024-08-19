@@ -1,0 +1,121 @@
+---
+source: partiql-beamline-serde/tests/encoding.rs
+expression: actual
+---
+{
+  seed: 1234,
+  start: 2024-04-05T23:02:57.000000000+00:00,
+  shapes: {
+    sensors: partiql::shape::v0::{
+      type: "bag",
+      items: {
+        type: "struct",
+        constraints: [
+          ordered,
+          closed
+        ],
+        fields: [
+          {
+            name: "tick",
+            type: "int8"
+          },
+          {
+            name: "i8",
+            type: "tinyint"
+          },
+          {
+            name: "f",
+            type: "double"
+          },
+          {
+            name: "w",
+            type: {
+              name: "decimal",
+              precision: 5,
+              scale: 4
+            }
+          },
+          {
+            name: "d",
+            type: {
+              name: "decimal",
+              precision: 2,
+              scale: 0
+            }
+          },
+          {
+            name: "a",
+            type: {
+              name: "union",
+              types: [
+                "int8",
+                "double",
+                "string",
+                {
+                  name: "decimal",
+                  precision: 5,
+                  scale: 4
+                }
+              ]
+            }
+          },
+          {
+            name: "ar1",
+            type: {
+              type: "list",
+              items: {
+                name: "decimal",
+                precision: 2,
+                scale: 1
+              }
+            }
+          },
+          {
+            name: "ar2",
+            type: {
+              type: "list",
+              items: "string"
+            }
+          },
+          {
+            name: "ar3",
+            type: {
+              type: "list",
+              items: {
+                name: "decimal",
+                precision: 5,
+                scale: 4
+              }
+            }
+          },
+          {
+            name: "ar4",
+            type: {
+              type: "list",
+              items: "tinyint"
+            }
+          },
+          {
+            name: "ar5",
+            type: {
+              type: "list",
+              items: {
+                name: "union",
+                types: [
+                  "int8",
+                  "double",
+                  "string",
+                  {
+                    name: "decimal",
+                    precision: 5,
+                    scale: 4
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

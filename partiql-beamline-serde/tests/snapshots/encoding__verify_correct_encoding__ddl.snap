@@ -1,0 +1,5 @@
+---
+source: partiql-beamline-serde/tests/encoding.rs
+expression: ddl_actual
+---
+"tick" INT8,"i8" TINYINT,"f" DOUBLE,"w" OPTIONAL DECIMAL(5, 4),"d" DECIMAL(2, 0) NOT NULL,"a" UNION<INT8,DOUBLE,VARCHAR,DECIMAL(5, 4) NOT NULL>,"ar1" ARRAY<DECIMAL(2, 1)>,"ar2" ARRAY<VARCHAR>,"ar3" ARRAY<DECIMAL(5, 4)>,"ar4" ARRAY<TINYINT>,"ar5" ARRAY<UNION<INT8,DOUBLE,VARCHAR,DECIMAL(5, 4) NOT NULL>>
