@@ -114,26 +114,10 @@ mod tests {
                 value,
             } = sample.expect("next_sample");
             let time = t0.add(Duration::milliseconds(t as i64));
-            println!("[{time}] : {value:?}");
         }
 
-        let expected = tuple!(
-            ("tick", 6072188),
-            ("id", 2),
-            ("i8", 62),
-            ("f", 118.21334455379912),
-            ("d", 38),
-            ("sub", tuple!(("f", 125.39686413267682), ("o", -24))),
-            ("w", 3.2451),
-            ("variant", 6072188),
-            ("tick_array", list!(6072188, 6072188, 6072188, 6072188)),
-            ("weight_array", list!(3.2511, 2.1859, 2.5657)),
-            ("decimal_array", list!(3.9967, 2.6189)),
-        );
-
         let sample_101 = sim.next_sample().unwrap().unwrap();
-        println!("{:?}", sample_101);
-        assert_eq!(Value::from(expected), sample_101.value);
+        insta::assert_debug_snapshot!("sensors_data", sample_101);
     }
 
     #[test]
@@ -141,7 +125,8 @@ mod tests {
         let sim = sensor_sim();
         let _t0 = sim.config().t0;
 
-        dbg!(sim.shape());
+        let shapes = sim.shape();
+        insta::assert_debug_snapshot!("sensors_shape", shapes);
     }
 
     #[test]
@@ -152,30 +137,6 @@ mod tests {
         let sensors_shape = datasets_mappings
             .get_shape("sensors")
             .expect("sensors shape");
-        assert!(sensors_shape.is_bag());
-
-        let stype = sensors_shape.expect_static().expect("static type");
-
-        if let Static::Bag(bag) = stype.ty() {
-            if let Ok(struct_type) = bag.element_type().expect_struct() {
-                let fields: Vec<&StructField> = struct_type
-                    .fields()
-                    .filter(|f| f.name() == "w" || f.name() == "d")
-                    .collect();
-                assert_eq!(fields.len(), 2);
-                fields.into_iter().for_each(|f| {
-                    let stype = f.ty().expect_static().expect("struct type");
-                    if f.name() == "w" {
-                        assert_eq!(stype.ty(), &Static::DecimalP(5, 4));
-                    } else {
-                        assert_eq!(stype.ty(), &Static::DecimalP(2, 0));
-                    }
-                });
-            } else {
-                panic!("not a struct type for sensors shape element")
-            }
-        } else {
-            panic!("not a bag type for sensors shape")
-        }
+        insta::assert_debug_snapshot!("sensors_shape_decimals", sensors_shape);
     }
 }

@@ -1,0 +1,10 @@
+---
+source: partiql-beamline-sim/src/lib.rs
+expression: sample_101
+---
+Sample {
+    tick: Tick(
+        6072188,
+    ),
+    value: { 'tick': 6072188, 'id': 2, 'i8': 62, 'f': 118.21334455379912, 'sub': { 'o': -24, 'f': 125.39686413267682 }, 'w': 3.2451, 'd': 38, 'variant': 6072188, 'tick_array': [6072188, 6072188, 6072188, 6072188], 'weight_array': [3.2511, 2.1859, 2.5657], 'decimal_array': [3.9967, 2.6189] },
+}
