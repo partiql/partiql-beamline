@@ -5,40 +5,35 @@ use partiql_types::{
 use partiql_value::Value;
 
 pub trait ValueTypeInference {
-    fn infer_shape(&self) -> PartiqlShape;
+    fn infer_shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape;
 }
 
 impl ValueTypeInference for Value {
-    fn infer_shape(&self) -> PartiqlShape {
+    fn infer_shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
         match self {
             Value::Null => PartiqlShape::Undefined,
             Value::Missing => PartiqlShape::Undefined,
-            Value::Boolean(_) => type_bool!(),
-            Value::Integer(_) => type_int!(),
-            Value::Real(_) => type_float64!(),
-            Value::Decimal(_) => type_decimal!(),
-            Value::String(_) => type_string!(),
+            Value::Boolean(_) => type_bool!(bld),
+            Value::Integer(_) => type_int!(bld),
+            Value::Real(_) => type_float64!(bld),
+            Value::Decimal(_) => type_decimal!(bld),
+            Value::String(_) => type_string!(bld),
             Value::Blob(_) => PartiqlShape::Undefined, // TODO BLOB
-            Value::DateTime(_) => type_datetime!(),
+            Value::DateTime(_) => type_datetime!(bld),
             Value::List(l) => {
-                let types = l.iter().map(|v| v.infer_shape());
-                PartiqlShapeBuilder::init_or_get().new_array(ArrayType::new(Box::new(
-                    PartiqlShapeBuilder::init_or_get().any_of(types),
-                )))
+                let types = l.iter().map(|v| v.infer_shape(bld));
+                bld.new_array(ArrayType::new(Box::new(bld.any_of(types))))
             }
             Value::Bag(b) => {
-                let types = b.iter().map(|v| v.infer_shape());
-                PartiqlShapeBuilder::init_or_get().new_bag(BagType::new(Box::new(
-                    PartiqlShapeBuilder::init_or_get().any_of(types),
-                )))
+                let types = b.iter().map(|v| v.infer_shape(bld));
+                bld.new_bag(BagType::new(Box::new(bld.any_of(types))))
             }
             Value::Tuple(t) => {
                 let fields = t
                     .pairs()
-                    .map(|(k, v)| StructField::new(k, v.infer_shape()))
+                    .map(|(k, v)| StructField::new(k, v.infer_shape(bld)))
                     .collect();
-                PartiqlShapeBuilder::init_or_get()
-                    .new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
+                bld.new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
             }
         }
     }

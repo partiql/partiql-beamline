@@ -3,7 +3,7 @@ use crate::primitives::{Sample, Tick};
 use crate::sim::SimContext;
 use dyn_clone::DynClone;
 use miette::Diagnostic;
-use partiql_types::PartiqlShape;
+use partiql_types::{PartiqlShape, PartiqlShapeBuilder};
 use partiql_value::Value;
 use statrs::StatsError;
 use std::convert::Infallible;
@@ -72,7 +72,7 @@ pub trait RandomProcess: Debug + DynClone {
     /// Returns [`None`] when the process is 'finished'.
     fn next_arrival(&self, now: Tick, ctx: &SimContext) -> Option<Tick>;
 
-    fn shape(&self) -> PartiqlShape;
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape;
 }
 
 dyn_clone::clone_trait_object!(RandomProcess);
@@ -92,7 +92,7 @@ pub trait ValueGenerator: Debug + DynClone {
 
     /// Generates non-absent [`Value`] (i.e., not [`Value::Null`] and not [`Value::Missing`]).
     fn present_value(&self, ctx: &SimContext) -> Value;
-    fn value_type(&self) -> PartiqlShape;
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape;
 
     // TODO Change to `fn density(&self) -> Density;` as part of https://github.com/partiql/partiql-beamline/issues/27
     fn density(&self) -> Option<Density>;

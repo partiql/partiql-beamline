@@ -2,24 +2,18 @@ use crate::gen::distributions::{Density, Meta};
 use crate::gen::util::ValueTypeInference;
 use crate::gen::ValueGenerator;
 use crate::sim::SimContext;
-use partiql_types::PartiqlShape;
+use partiql_types::{PartiqlShape, PartiqlShapeBuilder};
 use partiql_value::Value;
 
 #[derive(Debug, Clone)]
 pub struct ConstantGenerator {
     pub meta: Meta,
     pub constant: Value,
-    pub typ: PartiqlShape,
 }
 
 impl ConstantGenerator {
     pub fn new(meta: Meta, constant: Value) -> Self {
-        let typ = constant.infer_shape();
-        Self {
-            meta,
-            constant,
-            typ,
-        }
+        Self { meta, constant }
     }
 }
 
@@ -28,8 +22,8 @@ impl ValueGenerator for ConstantGenerator {
         self.constant.clone()
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        self.typ.clone()
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        self.constant.infer_shape(bld)
     }
 
     fn density(&self) -> Option<Density> {

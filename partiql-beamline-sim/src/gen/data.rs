@@ -91,25 +91,25 @@ where
         }
     }
 
-    fn value_type(&self) -> PartiqlShape {
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
         match self {
-            SimpleRandomDataImpl::Single(rv) => rv.value_type(),
+            SimpleRandomDataImpl::Single(rv) => rv.shape(bld),
             SimpleRandomDataImpl::Collection(kvs) => {
                 let fields = kvs
                     .iter()
                     .map(|(k, v)| {
                         if let Some(d) = v.density() {
                             if d.optionality().is_some() {
-                                StructField::new_optional(k, v.value_type())
+                                StructField::new_optional(k, v.shape(bld))
                             } else {
-                                StructField::new(k, v.value_type())
+                                StructField::new(k, v.shape(bld))
                             }
                         } else {
-                            StructField::new(k, v.value_type())
+                            StructField::new(k, v.shape(bld))
                         }
                     })
                     .collect();
-                PartiqlShapeBuilder::init_or_get().new_struct(StructType::new(
+                bld.new_struct(StructType::new(
                     [
                         StructConstraint::Fields(fields),
                         StructConstraint::Open(false),

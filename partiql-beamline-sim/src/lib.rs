@@ -14,7 +14,7 @@ mod tests {
     use crate::sim::{ISim, Sim, SimBuilder, SimConfigBuilder, SimResult};
     use crate::source::SimSource;
 
-    use partiql_types::{Static, StructField};
+    use partiql_types::{PartiqlShapeBuilder, Static, StructField};
     use partiql_value::{list, tuple, Value};
     use std::ops::Add;
     use time::macros::datetime;
