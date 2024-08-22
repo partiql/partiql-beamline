@@ -6,8 +6,8 @@ use crate::kolliderdb::{
     create_script_file,
 };
 use crate::writer::{
-    DataSetFiltersBuilder, SimSamplesBuilder, WriterIonCompactBuilder, WriterIonPrettyBuilder,
-    WriterSimBuilder, WriterTextBuilder,
+    DataSetFiltersBuilder, SimSamplesBuilder, WriterIonBinaryBuilder, WriterIonCompactBuilder,
+    WriterIonPrettyBuilder, WriterSimBuilder, WriterTextBuilder,
 };
 use clap::{Args, Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
@@ -161,9 +161,14 @@ fn handle_gen_data(
             .spec(wspec)
             .build()?
             .to_writer(out)?,
+        DataOutputFormat::IonBinary => WriterIonBinaryBuilder::default()
+            .spec(wspec)
+            .build()?
+            .to_writer(out)?,
     };
 
     writer.write()?;
+    drop(writer);
 
     Ok(())
 }
