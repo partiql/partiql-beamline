@@ -6,12 +6,12 @@ rand_processes::{
     // A generator for client ids
     $id_gen: UUID,
 
-    // A generator for request ids
-    $rid_gen: UUID,
-
     requests: $n::[
         // each iteration of the loop will assign an index from 1..=$n to the variable $@n
         {
+            // A generator for request ids
+            $rid_gen: UUID,
+
             // customer $@n has a UUID
             $id: $id_gen::(), // here we force the evaluation of the generator at read time with `::()` to get a single UUID
 
