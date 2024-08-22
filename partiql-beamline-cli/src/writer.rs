@@ -158,6 +158,21 @@ impl WriterIonPretty {
     }
 }
 
+#[derive(Debug, Clone, Builder)]
+#[builder(build_fn(error = "WriterBuilderError"))]
+#[non_exhaustive]
+pub struct WriterIonBinary {
+    spec: WriterSim,
+}
+
+impl WriterIonBinary {
+    pub fn to_writer(self, out: impl Write + 'static) -> WriterBuilderResult<Box<dyn SimWriter>> {
+        let sampler = self.spec.to_sampler()?;
+        let writer = ion_rs::BinaryWriterBuilder::new().build(out)?;
+        Ok(Box::new(SimWriterIon { sampler, writer }))
+    }
+}
+
 /// Error during simulation
 #[derive(Debug, Error, Diagnostic)]
 #[non_exhaustive]
@@ -259,6 +274,8 @@ where
             w.step_out()?;
         }
         w.step_out()?;
+
+        w.flush()?;
 
         Ok(())
     }

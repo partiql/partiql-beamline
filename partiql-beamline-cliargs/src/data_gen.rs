@@ -6,6 +6,7 @@ use clap::{Args, ValueEnum};
 pub enum DataOutputFormat {
     Ion,
     IonPretty,
+    IonBinary,
     Text,
 }
 
