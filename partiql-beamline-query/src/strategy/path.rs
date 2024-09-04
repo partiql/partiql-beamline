@@ -82,18 +82,44 @@ impl PathGenSpec {
         })
     }
 
-    pub fn paths_for_shape(&self, ty: &PartiqlShape) -> StrategyResult<PathAndShapeSet> {
+    fn paths_for_shape(&self, ty: &PartiqlShape) -> StrategyResult<PathAndShapeSet> {
         let mut paths = Vec::default();
         self.path_for_type(ty, &mut paths)?;
         paths.reverse();
         Ok(paths)
     }
 
-    fn allowed_step(&self, step: PathStepFlags) -> bool {
-        self.allowed_internal_steps.contains(step) || self.allowed_final_steps.contains(step)
+    fn is_valid_type(&self, shape: &PartiqlShape) -> bool {
+        self.allowed_final_types.matches(shape)
     }
 
-    pub fn path_for_type(
+    fn is_valid_next(&self, steps: &Vec<PathGenStep>, step: PathStepFlags) -> bool {
+        if self.allowed_internal_steps.contains(step) || self.allowed_final_steps.contains(step) {
+            true
+        } else {
+            steps.is_empty() && step.matches(&PathGenStep::PathForEach)
+        }
+    }
+
+    fn is_valid_accept(&self, steps: &Vec<PathGenStep>) -> bool {
+        steps
+            .last()
+            .map_or(true, |step| self.allowed_final_steps.matches(step))
+    }
+
+    fn is_valid_internal(&self, steps: &Vec<PathGenStep>) -> bool {
+        match (steps.len(), steps.last()) {
+            // Always valid to start generating steps
+            (0, _) => true,
+            // `ForEach` is always valid at beginning of path for binding tuples
+            (1, Some(PathGenStep::PathForEach)) => true,
+            // Otherwise, check the specified flags
+            (_, Some(step)) => self.allowed_internal_steps.matches(step),
+            _ => unreachable!(),
+        }
+    }
+
+    fn path_for_type(
         &self,
         shape: &PartiqlShape,
         paths: &mut Vec<PathAndShape>,
@@ -132,17 +158,13 @@ impl PathGenSpec {
                 continue 'candidate_queue;
             }
 
+            let internal_step = self.is_valid_internal(&steps);
             let accept_depth = depth >= min_depth;
             let accept_type = self.allowed_final_types.matches(&shape);
-            let accept_step = steps
-                .last()
-                .map_or(true, |step| self.allowed_final_steps.matches(step));
-            let valid_internal_step = steps
-                .last()
-                .map_or(true, |step| self.allowed_internal_steps.matches(step));
+            let accept_step = self.is_valid_accept(&steps);
 
             // if this step is a valid internal step, inspect it and generate new candidates
-            if valid_internal_step {
+            if internal_step {
                 match &shape {
                     PartiqlShape::Dynamic => {
                         todo!("dynamic type not supported yet")
@@ -177,7 +199,7 @@ impl PathGenSpec {
                         match sty.ty() {
                             Static::Struct(s) => {
                                 // Handle path unpivots for structs (e.g. the `.*` in `path.*.a.b.c`)
-                                if self.allowed_step(PathStepFlags::PathUnpivot) {
+                                if self.is_valid_next(&steps, PathStepFlags::PathUnpivot) {
                                     // Collect the types of all fields
                                     let field_types: Vec<_> =
                                         s.fields().map(|f| f.ty()).unique().cloned().collect();
@@ -202,7 +224,7 @@ impl PathGenSpec {
                                 }
 
                                 // Handle projecting single named keys (e.g., the `.foo` in `path.foo`)
-                                if self.allowed_step(PathStepFlags::PathProject) {
+                                if self.is_valid_next(&steps, PathStepFlags::PathProject) {
                                     for field in s.fields() {
                                         let step_in = append(
                                             &steps,
@@ -215,7 +237,7 @@ impl PathGenSpec {
                             }
                             Static::Bag(b) => {
                                 // handle for each over bags (e.g. the `[*]` in `path[*].a`)
-                                if self.allowed_step(PathStepFlags::PathForEach) {
+                                if self.is_valid_next(&steps, PathStepFlags::PathForEach) {
                                     let step_in = append(
                                         &steps,
                                         PathGenStep::PathForEach,
@@ -226,7 +248,7 @@ impl PathGenSpec {
                             }
                             Static::Array(l) => {
                                 // handle for each over list (e.g. the `[*]` in `path[*].a`)
-                                if self.allowed_step(PathStepFlags::PathForEach) {
+                                if self.is_valid_next(&steps, PathStepFlags::PathForEach) {
                                     let step_in = append(
                                         &steps,
                                         PathGenStep::PathForEach,
@@ -235,7 +257,7 @@ impl PathGenSpec {
                                     candidates.push((depth + 1, step_in));
                                 }
                                 // TODO handle explicitly indexed paths (e.g., the `[5]` in `path[5].a`)
-                                if self.allowed_step(PathStepFlags::PathIndex) {
+                                if self.is_valid_next(&steps, PathStepFlags::PathIndex) {
                                     todo!("path index")
                                 }
                             }
