@@ -21,13 +21,66 @@ Error:   × Ion Decoding Error
  13 │ │               ],
  14 │ │           }
  15 │ ├─▶     
-    · ╰──┤ invalid Ion syntax encountered; buffer: tick: Tick,
-    ·    │                     ... while matching a struct; buffer: {
-    ·    │                             id... while matching a struct; buffer: {
-    ·    │                         $data:... while matching a struct; buffer: {
-    ·    │                     $arrival: ... while matching a list; buffer: [
+    · ╰──┤ invalid Ion syntax encountered
+    ·    │         offset=289
+    ·    │         buffer head=<tick: Tick,
+    ·    │                     ...>
+    ·    │         buffer tail=<... }
+    ·    │             ],
+    ·    │         }
+    ·    │     >
+    ·    │         buffer len=107
+    ·    │         
+    ·    │     while matching a struct
+    ·    │         offset=223
+    ·    │         buffer head=<{
+    ·    │                             id...>
+    ·    │         buffer tail=<... }
+    ·    │             ],
+    ·    │         }
+    ·    │     >
+    ·    │         buffer len=173
+    ·    │         
+    ·    │     while matching a struct
+    ·    │         offset=190
+    ·    │         buffer head=<{
+    ·    │                         $data:...>
+    ·    │         buffer tail=<... }
+    ·    │             ],
+    ·    │         }
+    ·    │     >
+    ·    │         buffer len=206
+    ·    │         
+    ·    │     while matching a struct
+    ·    │         offset=65
+    ·    │         buffer head=<{
+    ·    │                     $arrival: ...>
+    ·    │         buffer tail=<... }
+    ·    │             ],
+    ·    │         }
+    ·    │     >
+    ·    │         buffer len=331
+    ·    │         
+    ·    │     while matching a list
+    ·    │         offset=47
+    ·    │         buffer head=<[
     ·    │                 {
-    ·    │             ... while matching a struct; buffer: {
+    ·    │             ...>
+    ·    │         buffer tail=<... }
+    ·    │             ],
+    ·    │         }
+    ·    │     >
+    ·    │         buffer len=349
+    ·    │         
+    ·    │     while matching a struct
+    ·    │         offset=25
+    ·    │         buffer head=<{
     ·    │             sensor: [
-    ·    │         ...
+    ·    │         ...>
+    ·    │         buffer tail=<... }
+    ·    │             ],
+    ·    │         }
+    ·    │     >
+    ·    │         buffer len=371
+    ·    │         
     ╰────
