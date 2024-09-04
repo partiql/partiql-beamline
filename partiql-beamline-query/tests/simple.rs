@@ -1,6 +1,8 @@
 use itertools::Itertools;
 use miette::IntoDiagnostic;
-use partiql_beamline::sim::{DatasetTypeMapping, ISim, SimBuilder, SimConfigBuilder, SimContext};
+use partiql_beamline::sim::{
+    DatasetTypeMapping, ISim, NameAndShape, SimBuilder, SimConfigBuilder, SimContext,
+};
 use partiql_beamline::source::SimSource;
 use partiql_beamline_query::generator::{AstGenContext, FromTable};
 use partiql_beamline_query::generator::{AstGeneratorBoxed, BasicSFW, QueryGenerator, RowFilter};
@@ -202,7 +204,12 @@ fn path_gen_test(
 ) -> miette::Result<()> {
     for (ds_name, shape) in data {
         let name = format!("path_test_{name}_{ds_name}");
-        let paths = path_spec.paths_for_shape(shape).unwrap();
+        let dataset = NameAndShape {
+            name: name.clone(),
+            shape: shape.clone(),
+        };
+        let paths = path_spec.paths_for_dataset(&dataset).unwrap();
+        let paths = paths.paths;
 
         let output = format!("{paths:#?}");
         insta::assert_snapshot!(name, output);
