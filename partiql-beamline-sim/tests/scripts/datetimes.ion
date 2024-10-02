@@ -1,0 +1,18 @@
+rand_processes::{
+    datetimes: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::250 },
+        $data: {
+            tick: Tick,
+            instant: Instant,
+            timestamp_micro: Timestamp::{timezone: false, precision: microsecond},
+            timestamp_tz_micro: Timestamp::{timezone: true, precision: microsecond},
+            timestamp_tz_milli: Timestamp::{timezone: true, precision: millisecond},
+            timestamp_tz_sec: Timestamp::{timezone: true, precision: second},
+            timestamp_tz_min: Timestamp::{timezone: true, precision: minute},
+            timestamp_tz_hour: Timestamp::{timezone: true, precision: hour},
+            timestamp_tz_day: Timestamp::{timezone: false, precision: day},
+            date: Date,
+
+        }
+    }
+}

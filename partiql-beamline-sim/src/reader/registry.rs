@@ -4,6 +4,7 @@ use crate::reader::error::{ProcessConfigError, ProcessConfigResult};
 use crate::reader::simple::SimpleScriptVariableKind;
 use crate::reader::symbol::EnvSymbolParser;
 use crate::reader::text::{Formatter, LoremIpsum, LoremIpsumTitle, RegexFormatter};
+use crate::reader::timeline::{DateRead, TimestampRead};
 use crate::reader::util::BasicValueGeneratorParser;
 use ion_rs::{AnyEncoding, LazyStruct};
 use rand::Rng;
@@ -82,6 +83,14 @@ where
             (
                 "LoremIpsumTitle",
                 BasicValueGeneratorParser::from(LoremIpsumTitle {}).vgpboxed(),
+            ),
+            (
+                "Timestamp",
+                BasicValueGeneratorParser::from(TimestampRead {}).vgpboxed(),
+            ),
+            (
+                "Date",
+                BasicValueGeneratorParser::from(DateRead {}).vgpboxed(),
             ),
         ] {
             registry.add_parser(k, v).expect("static registry creation");
