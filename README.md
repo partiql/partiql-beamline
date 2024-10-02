@@ -903,11 +903,13 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 | Name            | Description                     | PartiQL Type | Generation Characteristics & Probability                                                                               |
 |-----------------|---------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------|
 | Bool            | Boolean                         | BOOL         | [Bernoulli]                                                                                                            |
+| Date            | Current Simulation Date         | DATETIME     | The current simulation time as a `Date`                                                                                |                                                                                                                      |
 | Instant         | Current Simulation Time         | DATETIME     | The current simulation time as a `TIMESTAMP WITH TIMEZONE`                                                             |
 | LoremIpsum      | String                          | STRING       | Uses a [Discrete Uniform] to generate a length and generates that many words of 'Lorem Ipsum'-type text.               |
 | LoremIpsumTitle | String                          | STRING       | Generates between 3 & 8 (drawn from a [Discrete Uniform]) title-cased 'Lorem Ipsum'-type words.                        | 
 | Regex           | String                          | STRING       | Builds text matching a regex by using a [Discrete Uniform] over character classes, quantified ranges, and alternatives |
-| Instant         | Current Simulation Time         | Int64        | The current simulation tick as an Int64                                                                                |
+| Tick            | Current Simulation Time         | Int64        | The current simulation tick as an Int64                                                                                |
+| Timestamp       | Current Simulation Timestamp    | DATETIME     | The current simulation time as either a `TIMESTAMP WITH TIMEZONE` or `TIMESTAMP` with configurable precision           |
 | Uniform         | Uniform over literal values     | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst literals                                      |
 | UniformArray    | Uniform array type              | Array        | Uses a [Discrete Uniform] to generate a length and uses the inner generator for each element                           | 
 | UniformAnyOf    | Uniform distribution over types | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst inner generators                              |
@@ -930,26 +932,27 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 
 #### Data Generator Configuration
 
-| Name            | Configuration                                                   | Defaults                                                       |
-|-----------------|-----------------------------------------------------------------|----------------------------------------------------------------|
-| Bool            | p: f64                                                          | p: 0.5                                                         |
-| LoremIpsum      | min_words:10, max_words:200                                     | [N/A]                                                          |
-| LoremIpsumTitle | [N/A]                                                           | [N/A]                                                          |
-| Regex           | pattern: String                                                 | [N/A]                                                          |
-| Uniform         | choices: [ <Literal> ]                                          | [N/A]                                                          |     
-| UniformArray    | min_size: u64, max_size: u64, element_type: [ <DataGenerator> ] | [N/A]                                                          |
-| UniformAnyOf    | types: [ <DataGenerator> ]                                      | [N/A]                                                          |
-| UniformU8       | low: u8, high: u8                                               | low:0, high:255                                                |
-| UniformU16      | low: u16, high: u16                                             | low:0, high:65,535                                             |
-| UniformU32      | low: u32, high: u32                                             | low:0, high:4,294,967,295                                      |
-| UniformU64      | low: u64, high: u64                                             | low:0, high:9,223,372,036,854,775,807                          |
-| UniformI8       | low: i8, high: i8                                               | low:-127, high:127                                             |
-| UniformI16      | low: i16, high: i16                                             | low:-32,767, high:32,767                                       |
-| UniformI32      | low: i32, high: i32                                             | low:-2,147,483,647, high:2,147,483,647                         |
-| UniformI64      | low: i64, high: i64                                             | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
-| UniformF64      | low: f64, high: f64                                             | low:-127, high:127                                             |
-| UniformDecimal  | low: f64, high: f64                                             | low:-127, high:127                                             |
-| UUID            | [N/A]                                                           | [N/A]                                                          |
+| Name            | Configuration                                                                | Defaults                                                       |
+|-----------------|------------------------------------------------------------------------------|----------------------------------------------------------------|
+| Bool            | p: f64                                                                       | p: 0.5                                                         |
+| LoremIpsum      | min_words:10, max_words:200                                                  | [N/A]                                                          |
+| LoremIpsumTitle | [N/A]                                                                        | [N/A]                                                          |
+| Regex           | pattern: String                                                              | [N/A]                                                          |
+| Timestamp       | timezone: bool, precision: [microsecond, millisecond,second,minute,hour,day] | [N/A]                                                          |
+| Uniform         | choices: [ <Literal> ]                                                       | [N/A]                                                          |     
+| UniformArray    | min_size: u64, max_size: u64, element_type: [ <DataGenerator> ]              | [N/A]                                                          |
+| UniformAnyOf    | types: [ <DataGenerator> ]                                                   | [N/A]                                                          |
+| UniformU8       | low: u8, high: u8                                                            | low:0, high:255                                                |
+| UniformU16      | low: u16, high: u16                                                          | low:0, high:65,535                                             |
+| UniformU32      | low: u32, high: u32                                                          | low:0, high:4,294,967,295                                      |
+| UniformU64      | low: u64, high: u64                                                          | low:0, high:9,223,372,036,854,775,807                          |
+| UniformI8       | low: i8, high: i8                                                            | low:-127, high:127                                             |
+| UniformI16      | low: i16, high: i16                                                          | low:-32,767, high:32,767                                       |
+| UniformI32      | low: i32, high: i32                                                          | low:-2,147,483,647, high:2,147,483,647                         |
+| UniformI64      | low: i64, high: i64                                                          | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
+| UniformF64      | low: f64, high: f64                                                          | low:-127, high:127                                             |
+| UniformDecimal  | low: f64, high: f64                                                          | low:-127, high:127                                             |
+| UUID            | [N/A]                                                                        | [N/A]                                                          |
 
 * [ <Literal> ] means array of the following [Ion](https://amazon-ion.github.io/ion-docs/) literals: `bool`, `int`, `float`, `string`.
 * [ <DataGenerator> ] means array of data generators, e.g., [Tick, Instant, UniformI32]
