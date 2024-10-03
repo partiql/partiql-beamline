@@ -5,6 +5,7 @@ mod registry;
 mod simple;
 mod symbol;
 mod text;
+mod timeline;
 mod util;
 
 /// By default, all types are nullable, but nulls are generated with 0% chance
