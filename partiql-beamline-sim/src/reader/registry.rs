@@ -1,7 +1,9 @@
 use crate::gen::distributions::Meta;
 use crate::gen::ValueGenerator;
 use crate::reader::error::{ProcessConfigError, ProcessConfigResult};
-use crate::reader::simple::SimpleScriptVariableKind;
+use crate::reader::simple::{
+    ExpRead, LogNormalRead, NormalRead, SimpleScriptVariableKind, WeibullRead,
+};
 use crate::reader::symbol::EnvSymbolParser;
 use crate::reader::text::{Formatter, LoremIpsum, LoremIpsumTitle, RegexFormatter};
 use crate::reader::timeline::{DateRead, TimestampRead};
@@ -91,6 +93,22 @@ where
             (
                 "Date",
                 BasicValueGeneratorParser::from(DateRead {}).vgpboxed(),
+            ),
+            (
+                "Normal",
+                BasicValueGeneratorParser::from(NormalRead {}).vgpboxed(),
+            ),
+            (
+                "LogNormal",
+                BasicValueGeneratorParser::from(LogNormalRead {}).vgpboxed(),
+            ),
+            (
+                "Exp",
+                BasicValueGeneratorParser::from(ExpRead {}).vgpboxed(),
+            ),
+            (
+                "Weibull",
+                BasicValueGeneratorParser::from(WeibullRead {}).vgpboxed(),
             ),
         ] {
             registry.add_parser(k, v).expect("static registry creation");

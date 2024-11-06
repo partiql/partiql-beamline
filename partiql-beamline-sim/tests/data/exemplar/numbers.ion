@@ -1,0 +1,251 @@
+{
+  seed: 90,
+  start: "2024-05-24T20:39:13.000000000Z",
+  data: {
+    test_data: [
+      {
+        uniform: {
+          uniform_u8_default: 89,
+          uniform_u8_range: 35,
+          uniform_u8_all: 39,
+          uniform_u16_default: 29711,
+          uniform_u16_range: 410,
+          uniform_u16_all: 169,
+          uniform_u32_default: 694102494,
+          uniform_u32_range: 14496,
+          uniform_u32_all: 39451,
+          uniform_u64_default: 6628871434507515904,
+          uniform_u64_range: 36724986,
+          uniform_u64_all: null,
+          uniform_i8_default: -10,
+          uniform_i8_range: 39,
+          uniform_i8_all: 36,
+          uniform_i16_default: 25645,
+          uniform_i16_range: 150,
+          uniform_i16_all: 305,
+          uniform_i32_default: -1763983193,
+          uniform_i32_range: -2660,
+          uniform_i32_all: 21321,
+          uniform_i64_default: 7308200566901523456,
+          uniform_i64_range: -5844543,
+          uniform_f64_default: -1.0038992389334435e2,
+          uniform_f64_range: 4.622376432477925e0,
+          uniform_f64_all: 2.1750152678409755e1,
+          uniform_dec_default: -43.,
+          uniform_dec_range: 428.9150
+        },
+        normal: {
+          normal: 1.3830318170448699e1,
+          normal_all: 1.748233050614055e1
+        },
+        lognormal: {
+          lognormal: 3.503948598377535e6,
+          lognormal_all: null
+        },
+        weibull: {
+          weibull: 2.459770368735903e0,
+          weibull_all: null
+        },
+        exponential: {
+          exp: 1.5974030662662816e-1,
+          exp_all: null
+        }
+      },
+      {
+        uniform: {
+          uniform_u8_default: 48,
+          uniform_u8_range: 14,
+          uniform_u8_all: 34,
+          uniform_u16_default: 54594,
+          uniform_u16_range: 166,
+          uniform_u16_all: null,
+          uniform_u32_default: 4114987486,
+          uniform_u32_range: 13614,
+          uniform_u32_all: 18308,
+          uniform_u64_default: 5790812743628893184,
+          uniform_u64_range: 39534524,
+          uniform_u64_all: 22929587,
+          uniform_i8_default: -66,
+          uniform_i8_range: 7,
+          uniform_i8_all: 0,
+          uniform_i16_default: 414,
+          uniform_i16_range: 190,
+          uniform_i16_all: null,
+          uniform_i32_default: 186752811,
+          uniform_i32_range: 20326,
+          uniform_i32_all: null,
+          uniform_i64_default: 1772157742969355008,
+          uniform_i64_range: -2261830,
+          uniform_i64_all: -8525828,
+          uniform_f64_default: 9.490358209052184e1,
+          uniform_f64_range: -7.577688503404225e-1,
+          uniform_f64_all: null,
+          uniform_dec_default: -111.,
+          uniform_dec_range: 270.1486,
+          uniform_dec_all: 91.1204
+        },
+        normal: {
+          normal: 1.0351270320490817e1,
+          normal_all: null
+        },
+        lognormal: {
+          lognormal: 1.1480967055446155e5,
+          lognormal_all: 1.0586755431938726e6
+        },
+        weibull: {
+          weibull: 3.2200863238866795e0,
+          weibull_all: null
+        },
+        exponential: {
+          exp: 1.161388280851017e-2,
+          exp_all: 5.060113358190349e-1
+        }
+      },
+      {
+        uniform: {
+          uniform_u8_default: 93,
+          uniform_u8_range: 20,
+          uniform_u16_default: 2086,
+          uniform_u16_range: 310,
+          uniform_u16_all: null,
+          uniform_u32_default: 496594548,
+          uniform_u32_range: 14496,
+          uniform_u32_all: 27498,
+          uniform_u64_default: 152981722227557408,
+          uniform_u64_range: 15076925,
+          uniform_u64_all: 13654507,
+          uniform_i8_default: -7,
+          uniform_i8_range: 8,
+          uniform_i8_all: 18,
+          uniform_i16_default: -3114,
+          uniform_i16_range: 238,
+          uniform_i16_all: 255,
+          uniform_i32_default: -1484938549,
+          uniform_i32_range: 620,
+          uniform_i32_all: null,
+          uniform_i64_default: 2809754314864832512,
+          uniform_i64_range: 40119153,
+          uniform_i64_all: null,
+          uniform_f64_default: 8.831821593835716e1,
+          uniform_f64_range: 3.842728521957951e1,
+          uniform_dec_default: -72.,
+          uniform_dec_range: 384.1731
+        },
+        normal: {
+          normal: 1.3935471554908071e1,
+          normal_all: null
+        },
+        lognormal: {
+          lognormal: 1.3761592901396051e7,
+          lognormal_all: 7.333812282284371e5
+        },
+        weibull: {
+          weibull: 2.7136265286563264e0,
+          weibull_all: 2.6099637315419755e0
+        },
+        exponential: {
+          exp: 3.900596265661769e-1
+        }
+      },
+      {
+        uniform: {
+          uniform_u8_default: 232,
+          uniform_u8_range: 17,
+          uniform_u8_all: 25,
+          uniform_u16_default: 5205,
+          uniform_u16_range: 300,
+          uniform_u16_all: 344,
+          uniform_u32_default: 3394750562,
+          uniform_u32_range: 29519,
+          uniform_u32_all: null,
+          uniform_u64_default: 5233580784216104960,
+          uniform_u64_range: 28375412,
+          uniform_u64_all: 35755799,
+          uniform_i8_default: 74,
+          uniform_i8_range: 36,
+          uniform_i8_all: -5,
+          uniform_i16_default: 21822,
+          uniform_i16_range: 419,
+          uniform_i16_all: 398,
+          uniform_i32_default: 875920376,
+          uniform_i32_range: 41973,
+          uniform_i32_all: null,
+          uniform_i64_default: 6553468392503768064,
+          uniform_i64_range: 27415221,
+          uniform_i64_all: 36396931,
+          uniform_f64_default: 1.3140131494093055e1,
+          uniform_f64_range: -8.257188471686945e0,
+          uniform_f64_all: 4.496776612709986e0,
+          uniform_dec_default: -81.,
+          uniform_dec_range: 174.8720,
+          uniform_dec_all: null
+        },
+        normal: {
+          normal: 1.6960858631271226e1,
+          normal_all: 1.4348102188576831e1
+        },
+        lognormal: {
+          lognormal: 3.487879470075375e6,
+          lognormal_all: 1.8906070144352461e6
+        },
+        weibull: {
+          weibull: 2.465904553959812e0,
+          weibull_all: 2.6551104947038997e0
+        },
+        exponential: {
+          exp: 3.774307846069233e-1,
+          exp_all: null
+        }
+      },
+      {
+        uniform: {
+          uniform_u8_default: 234,
+          uniform_u8_range: 41,
+          uniform_u8_all: 19,
+          uniform_u16_default: 12404,
+          uniform_u16_range: 186,
+          uniform_u32_default: 688493163,
+          uniform_u32_range: 34956,
+          uniform_u32_all: 13910,
+          uniform_u64_default: 54557070423930864,
+          uniform_u64_range: 39761460,
+          uniform_u64_all: 26567756,
+          uniform_i8_default: 74,
+          uniform_i8_range: 42,
+          uniform_i8_all: 11,
+          uniform_i16_default: -30153,
+          uniform_i16_range: 132,
+          uniform_i16_all: 127,
+          uniform_i32_default: -2055762364,
+          uniform_i32_range: 6189,
+          uniform_i32_all: -12947,
+          uniform_i64_default: -6080649148473112576,
+          uniform_i64_range: 40186209,
+          uniform_i64_all: 36025001,
+          uniform_f64_default: 4.3244989138977985e1,
+          uniform_f64_range: 3.968026379373935e1,
+          uniform_f64_all: 2.1737090088842585e1,
+          uniform_dec_default: -25.,
+          uniform_dec_range: 402.4447,
+          uniform_dec_all: 28.0872
+        },
+        normal: {
+          normal: 1.4975895993179096e1,
+          normal_all: 1.72168283451952e1
+        },
+        lognormal: {
+          lognormal: 7.846913222674559e7,
+          lognormal_all: null
+        },
+        weibull: {
+          weibull: 2.773177867822138e0,
+          weibull_all: 2.8007864702863694e0
+        },
+        exponential: {
+          exp: 1.1614044801269359e0,
+          exp_all: 1.784321296812098e-1
+        }
+      }
+    ]
+  }
+}
