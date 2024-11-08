@@ -15,6 +15,13 @@ use crate::gen::macros::*;
 use debug_ignore::DebugIgnore;
 use statrs::distribution::Continuous;
 
+pub trait ParameterizedModel<R, Params, Model>
+where
+    R: Rng + Sized + Clone,
+{
+    fn new(params: Params, rng: R, meta: Meta, density: Density) -> DataGenerationResult<Model>;
+}
+
 macro_rules! rv_ranged {
     ($inner: ident, $ty: ty, $dist_ty: ty) => {
         #[derive(Debug, Clone)]
@@ -126,25 +133,13 @@ make_rv_ranged_discrete!(SimpleInt32, SimpleInt32Impl,  i32, TYPE_INT32,       i
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
 make_rv_ranged_discrete!(SimpleInt64, SimpleInt64Impl,  i64, TYPE_INT64,       i64::MIN, i64::MAX);
 
-macro_rules! make_rv_ranged_continuous {
-    ($name: ident, $inner: ident, $dist_ty: ty, $pq_ty: expr) => {
-        rv_ranged!($inner, f64, $dist_ty);
-        rv_typedef!(
-            #[doc = concat!("Yields ", stringify!($dist_ty), " distributed values of type f64")]
-            $name,
-            $inner
-        );
-        rv_ranged_ivg!($inner, f64, $pq_ty);
-    };
-}
-
 macro_rules! rv_ranged_continuous_new {
     ($name: ident, $inner: ident, $param_ty: ty) => {
-        impl<R> $name<R>
+        impl<R> ParameterizedModel<R, $param_ty, $name<R>> for $name<R>
         where
             R: Rng + Sized + Clone,
         {
-            pub fn new(
+            fn new(
                 params: $param_ty,
                 rng: R,
                 meta: Meta,
@@ -158,7 +153,7 @@ macro_rules! rv_ranged_continuous_new {
     };
 }
 
-macro_rules! make_rv_ranged_continuous2 {
+macro_rules! make_rv_ranged_continuous {
     ($name: ident, $inner: ident, $param_ty: ty, $dist_ty: ty, $pq_ty: expr) => {
         rv_ranged_parameterized!($inner, $param_ty, $dist_ty);
         rv_typedef!(
@@ -172,41 +167,35 @@ macro_rules! make_rv_ranged_continuous2 {
 }
 
 #[rustfmt::skip::macros(make_rv_ranged_continuous)]
-make_rv_ranged_continuous!( SimpleF64, SimpleF64Impl,                   statrs::distribution::Uniform,      TYPE_DOUBLE );
-#[rustfmt::skip::macros(make_rv_ranged_continuous2)]
-make_rv_ranged_continuous2!( Normal, NormalImpl, NormalParams,          statrs::distribution::Normal,       TYPE_DOUBLE );
-#[rustfmt::skip::macros(make_rv_ranged_continuous2)]
-make_rv_ranged_continuous2!( LogNormal, LogNormalImpl, LogNormalParams, statrs::distribution::LogNormal,    TYPE_DOUBLE );
-#[rustfmt::skip::macros(make_rv_ranged_continuous2)]
-make_rv_ranged_continuous2!( Exp, ExpImpl, ExpParams,                   statrs::distribution::Exp,          TYPE_DOUBLE );
-#[rustfmt::skip::macros(make_rv_ranged_continuous2)]
-make_rv_ranged_continuous2!( Weibull, WeibullImpl, WeibullParams,       statrs::distribution::Weibull,      TYPE_DOUBLE );
+make_rv_ranged_continuous!( SimpleF64, SimpleF64Impl, SimpleF64Params, statrs::distribution::Uniform,      TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( Normal, NormalImpl, NormalParams,          statrs::distribution::Normal,       TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( LogNormal, LogNormalImpl, LogNormalParams, statrs::distribution::LogNormal,    TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( Exp, ExpImpl, ExpParams,                   statrs::distribution::Exp,          TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( Weibull, WeibullImpl, WeibullParams,       statrs::distribution::Weibull,      TYPE_DOUBLE );
 
-impl<R> SimpleF64<R>
-where
-    R: Rng + Sized + Clone,
-{
-    /// Creates f64 generator that yields uniformly distributed f64s between `min` and `max`
-    /// with the specified [`Density`].
-    pub fn new(
-        min: f64,
-        max: f64,
-        rng: R,
-        meta: Meta,
-        density: Density,
-    ) -> DataGenerationResult<Self> {
+pub(crate) trait ParamsToDist<D: Continuous<f64, f64>> {
+    fn to_dist(&self) -> DataGenerationResult<D>;
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct SimpleF64Params {
+    pub min: f64,
+    pub max: f64,
+}
+
+impl ParamsToDist<statrs::distribution::Uniform> for SimpleF64Params {
+    fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Uniform> {
+        let (min, max) = (self.min, self.max);
         if min < f64::MIN || max > f64::MAX {
             Err(DataGenerationError::BoundsF(min, max))
         } else {
-            let dist = statrs::distribution::Uniform::new(min, max)?.into();
-            let inner = SimpleF64Impl { min, max, dist };
-            RandomVariable::create(rng, meta, density, inner)
+            Ok(statrs::distribution::Uniform::new(min, max)?)
         }
     }
-}
-
-trait ParamsToDist<D: Continuous<f64, f64>> {
-    fn to_dist(&self) -> DataGenerationResult<D>;
 }
 
 #[derive(Debug, Copy, Clone)]

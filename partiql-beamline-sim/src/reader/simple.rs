@@ -2,9 +2,9 @@ use crate::gen::distributions::{Density, Meta};
 
 use crate::gen::simple::{SimpleAnyOf, SimpleArray, SimpleBool, SimpleChoose, Uuid};
 use crate::gen::simple_numeric::{
-    Exp, ExpParams, LogNormal, LogNormalParams, Normal, NormalParams, SimpleDecimal, SimpleF64,
-    SimpleInt16, SimpleInt32, SimpleInt64, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64,
-    SimpleUInt8, Weibull, WeibullParams,
+    Exp, ExpParams, LogNormal, LogNormalParams, Normal, NormalParams, ParameterizedModel,
+    SimpleDecimal, SimpleF64, SimpleF64Params, SimpleInt16, SimpleInt32, SimpleInt64, SimpleInt8,
+    SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, Weibull, WeibullParams,
 };
 use crate::gen::timeline::{Date, InstantGenerator, TickGenerator};
 use crate::gen::ValueGeneratorBoxed;
@@ -236,7 +236,11 @@ where
             SimpleScriptVariableKind::Float64 => {
                 validate_config_keys(config, &CONFIG_KEYS_RANGE)?;
                 let (low, high) = range_f64(config, symbol_parser)?.unwrap_or(DEFAULT_FLOAT);
-                SimpleF64::new(low, high, rng, meta, density)?.boxed()
+                let params = SimpleF64Params {
+                    min: low,
+                    max: high,
+                };
+                SimpleF64::new(params, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Decimal => {
                 validate_config_keys(config, &CONFIG_KEYS_RANGE)?;
