@@ -18,7 +18,7 @@ partiql-types = "0.10"
 partiql-extension-ion = "0.10"
 
 # TODO: move to stable `ion-rs` once available
-ion-rs = { version = "1.0.0-rc.8", features = ["experimental"] }
+ion-rs = { version = "1.0.0-rc.11", features = ["experimental"] }
 ion-rs_old = { version = "0.18.1", package = "ion-rs" }
 
 itertools = "0.13"
