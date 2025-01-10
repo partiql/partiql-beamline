@@ -3,7 +3,7 @@ use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
 use crate::sim::{ConstantBindingValue, DatasetTypeMapping, SimContext};
 use indexmap::map::Entry;
 use indexmap::IndexMap;
-use partiql_types::{BagType, PartiqlShape};
+use partiql_types::{BagType, PartiqlShape, PartiqlShapeBuilder};
 
 #[derive(Debug, Clone)]
 pub struct SimpleProcess {
@@ -28,8 +28,8 @@ impl RandomProcess for SimpleProcess {
         self.arrival.next_arrival(now)
     }
 
-    fn shape(&self) -> PartiqlShape {
-        self.data.value_type()
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        self.data.shape(bld)
     }
 }
 
@@ -79,29 +79,24 @@ impl RandomDataSets {
         procs
     }
 
-    pub fn shape(&self) -> DatasetTypeMapping {
+    pub fn shape(&self, bld: &PartiqlShapeBuilder) -> DatasetTypeMapping {
         let mut kvs: IndexMap<&str, _> = IndexMap::default();
         for (d, rp) in &self.processes {
             match kvs.entry(&d.0) {
                 Entry::Occupied(mut e) => {
                     let x: &mut PartiqlShape = e.get_mut();
-                    let y = rp.shape();
+                    let y = rp.shape(bld);
                     let u = x.clone().union_with(y); // todo make not need clone
                     *x = u;
                 }
                 Entry::Vacant(e) => {
-                    e.insert(rp.shape());
+                    e.insert(rp.shape(bld));
                 }
             }
         }
 
         kvs.into_iter()
-            .map(|(k, v)| {
-                (
-                    k.to_string(),
-                    PartiqlShape::new_bag(BagType::new(Box::new(v))),
-                )
-            })
+            .map(|(k, v)| (k.to_string(), bld.new_bag(BagType::new(Box::new(v)))))
             .collect()
     }
 }

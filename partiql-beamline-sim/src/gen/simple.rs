@@ -1,7 +1,7 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::SimContext;
-use partiql_types::{ArrayType, PartiqlShape, TYPE_BOOL, TYPE_STRING};
+use partiql_types::{type_bool, type_string, ArrayType, PartiqlShape, PartiqlShapeBuilder};
 
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
@@ -20,7 +20,6 @@ rv_typedef!(
 #[doc(hidden)]
 pub struct SimpleAnyOfImpl {
     generators: Vec<Box<dyn ValueGenerator>>,
-    types: PartiqlShape,
     dist: DebugIgnore<statrs::distribution::DiscreteUniform>,
 }
 
@@ -34,20 +33,9 @@ where
         meta: Meta,
         density: Density,
     ) -> DataGenerationResult<Self> {
-        let types: Vec<PartiqlShape> = generators.iter().map(|gen| gen.value_type()).collect();
-        let types = PartiqlShape::any_of(types);
         let dist =
             statrs::distribution::DiscreteUniform::new(0, (generators.len() - 1) as i64)?.into();
-        RandomVariable::create(
-            rng,
-            meta,
-            density,
-            SimpleAnyOfImpl {
-                generators,
-                types,
-                dist,
-            },
-        )
+        RandomVariable::create(rng, meta, density, SimpleAnyOfImpl { generators, dist })
     }
 }
 impl<R> InnerValueGenerator<R> for SimpleAnyOfImpl
@@ -60,8 +48,8 @@ where
         generator.gen_value(ctx)
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        self.types.clone()
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        bld.any_of(self.generators.iter().map(|gen| gen.shape(bld)))
     }
 }
 
@@ -72,7 +60,6 @@ rv_typedef!(
 #[doc(hidden)]
 pub struct SimpleChooseImpl {
     choices: Vec<Value>,
-    types: PartiqlShape,
 }
 
 impl<R> SimpleChoose<R>
@@ -90,8 +77,7 @@ where
                 "Empty choice vector".to_string(),
             ));
         }
-        let types = PartiqlShape::any_of(choices.iter().map(|v| v.infer_shape()));
-        RandomVariable::create(rng, meta, density, SimpleChooseImpl { choices, types })
+        RandomVariable::create(rng, meta, density, SimpleChooseImpl { choices })
     }
 }
 
@@ -103,8 +89,8 @@ where
         self.choices.as_slice().choose(rng).unwrap().clone()
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        self.types.clone()
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        bld.any_of(self.choices.iter().map(|v| v.infer_shape(bld)))
     }
 }
 
@@ -117,7 +103,6 @@ pub struct SimpleArrayImpl {
     min: i64,
     max: i64,
     elem_generator: Box<dyn ValueGenerator>,
-    types: PartiqlShape,
     dist: DebugIgnore<statrs::distribution::DiscreteUniform>,
 }
 
@@ -137,8 +122,6 @@ where
             Err(DataGenerationError::Bounds(min, max))
         } else {
             let dist = statrs::distribution::DiscreteUniform::new(min, max)?.into();
-            let types =
-                PartiqlShape::new_array(ArrayType::new(Box::new(elem_generator.value_type())));
             RandomVariable::create(
                 rng,
                 meta,
@@ -147,7 +130,6 @@ where
                     min,
                     max,
                     elem_generator,
-                    types,
                     dist,
                 },
             )
@@ -166,8 +148,8 @@ where
         Value::List(Box::new(List::from(array)))
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        self.types.clone()
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        bld.new_array(ArrayType::new(Box::new(self.elem_generator.shape(bld))))
     }
 }
 
@@ -199,8 +181,8 @@ where
         Value::from(self.dist.sample(rng) > 0f64)
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        TYPE_BOOL
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        type_bool!(bld)
     }
 }
 
@@ -218,7 +200,7 @@ where
         Value::from(id.to_string())
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        type_string!(bld)
     }
 }

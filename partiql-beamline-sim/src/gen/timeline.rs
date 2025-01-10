@@ -2,7 +2,7 @@ use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariab
 use crate::gen::{DataGenerationResult, CURRENT_TICK};
 use crate::primitives::Tick;
 use crate::sim::{ConstantBindingValue, SimContext};
-use partiql_types::{PartiqlShape, TYPE_DATETIME, TYPE_INT64};
+use partiql_types::{type_datetime, type_int64, PartiqlShape, PartiqlShapeBuilder};
 use partiql_value::{DateTime, Value};
 use rand::Rng;
 use statrs::distribution::DiscreteUniform;
@@ -29,8 +29,8 @@ where
         }
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        TYPE_INT64
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        type_int64!()
     }
 }
 
@@ -57,8 +57,8 @@ where
         }
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        TYPE_DATETIME
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        type_datetime!(bld)
     }
 }
 

@@ -22,7 +22,6 @@ pub struct GeneratedLiteral {
 
 impl AstGenerator<ast::Expr> for GeneratedLiteral {
     fn gen_ast(&self, ctx: &AstGenContext) -> ast::Expr {
-        let _ty = self.value.value_type();
         let val = self.value.present_value(ctx.sim_ctx());
         let lit = match val {
             Value::Null => ast::Lit::Null,

@@ -4,7 +4,7 @@ use std::error::Error;
 
 use crate::gen;
 use miette::Diagnostic;
-use partiql_types::PartiqlShape;
+use partiql_types::{PartiqlShape, PartiqlShapeBuilder};
 
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
@@ -71,7 +71,7 @@ pub enum SimError {
 
 pub type SimResult<T> = Result<T, SimError>;
 
-pub type SimIterator = dyn Iterator<Item = SimResult<Sample>>;
+pub type SimIterator = dyn Iterator<Item=SimResult<Sample>>;
 
 #[derive(Debug, Clone)]
 pub struct DatasetTypeMapping {
@@ -79,7 +79,7 @@ pub struct DatasetTypeMapping {
 }
 
 impl FromIterator<(String, PartiqlShape)> for DatasetTypeMapping {
-    fn from_iter<T: IntoIterator<Item = (String, PartiqlShape)>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item=(String, PartiqlShape)>>(iter: T) -> Self {
         let mapping = iter.into_iter().collect();
         Self { mapping }
     }
@@ -108,15 +108,15 @@ impl DatasetTypeMapping {
         self.mapping.len()
     }
 
-    pub fn shapes(&self) -> impl Iterator<Item = &PartiqlShape> {
+    pub fn shapes(&self) -> impl Iterator<Item=&PartiqlShape> {
         self.mapping.values()
     }
 
-    pub fn names(&self) -> impl Iterator<Item = &String> {
+    pub fn names(&self) -> impl Iterator<Item=&String> {
         self.mapping.keys()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &PartiqlShape)> {
+    pub fn iter(&self) -> impl Iterator<Item=(&String, &PartiqlShape)> {
         self.mapping.iter()
     }
 }
@@ -302,7 +302,7 @@ impl ISim for Sim {
     }
 
     fn shape(&self) -> DatasetTypeMapping {
-        self.processes.shape()
+        self.processes.shape(PartiqlShapeBuilder::init_or_get())
     }
 
     fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
@@ -380,10 +380,10 @@ impl MultiSim {
                 t0,
                 processes: p,
             }
-            .build_time_ordered()
+                .build_time_ordered()
         };
 
-        let shape = processes.shape();
+        let shape = processes.shape(PartiqlShapeBuilder::init_or_get());
 
         let processes: Result<Vec<_>, _> = processes
             .decompose()

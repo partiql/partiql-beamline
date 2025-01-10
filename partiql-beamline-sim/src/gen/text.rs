@@ -2,7 +2,7 @@ use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariab
 use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::SimContext;
 use lipsum::{lipsum_title_with_rng, lipsum_with_rng};
-use partiql_types::{PartiqlShape, TYPE_STRING};
+use partiql_types::{type_string, PartiqlShape, PartiqlShapeBuilder};
 use partiql_value::Value;
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -45,8 +45,8 @@ where
         Value::from(lipsum_with_rng(rng, n))
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        type_string!(bld)
     }
 }
 
@@ -72,13 +72,14 @@ where
         Value::from(lipsum_title_with_rng(rng))
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        type_string!(bld)
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct RegexImpl {
+    regex: String,
     re_strategy: ReStrategy,
 }
 
@@ -101,9 +102,10 @@ where
     R: Rng + Sized + Clone,
 {
     pub fn new(rng: R, meta: Meta, density: Density, regex: &str) -> DataGenerationResult<Self> {
-        let hir = ParserBuilder::new().build().parse(regex)?;
+        let regex = regex.to_string();
+        let hir = ParserBuilder::new().build().parse(regex.as_str())?;
         let re_strategy = regex_gen(&hir)?;
-        RandomVariable::create(rng, meta, density, RegexImpl { re_strategy })
+        RandomVariable::create(rng, meta, density, RegexImpl { regex, re_strategy })
     }
 }
 
@@ -117,8 +119,8 @@ where
         Value::from(String::from_utf8(out).expect("valid utf-8"))
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        TYPE_STRING
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        type_string!(bld)
     }
 }
 

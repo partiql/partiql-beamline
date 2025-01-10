@@ -18,7 +18,7 @@ use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
 use partiql_beamline_query::strategy::where_clause::{RandomRowFilter, RandomRowPredicateBuilder};
 use partiql_beamline_query::strategy::{QueryStrategy, StrategyBoxed};
 use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder};
-use partiql_types::{BagType, PartiqlShape, StaticType};
+use partiql_types::{BagType, PartiqlShapeBuilder, Static};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use std::collections::Bound;
@@ -110,7 +110,7 @@ fn simple_ast_gen() -> miette::Result<()> {
     let from = FromTable {
         name: "Foo".to_string(),
     }
-    .agboxed();
+        .agboxed();
     let five = ConstantLiteral::Int8Lit(5).agboxed();
     let eight = ConstantLiteral::Int8Lit(8).agboxed();
     let sum = BinOp {
@@ -118,19 +118,19 @@ fn simple_ast_gen() -> miette::Result<()> {
         lhs: five,
         rhs: eight,
     }
-    .agboxed();
+        .agboxed();
     let gt = BinOp {
         kind: ast::BinOpKind::Gt,
         lhs: sum,
         rhs: ConstantLiteral::Int8Lit(7).agboxed(),
     }
-    .agboxed();
+        .agboxed();
     let and = BinOp {
         kind: ast::BinOpKind::And,
         lhs: gt.clone(),
         rhs: gt,
     }
-    .agboxed();
+        .agboxed();
     let where_clause = Some(RowFilter { expr: and }.agboxed());
     let sfw = BasicSFW {
         project,
@@ -145,15 +145,15 @@ fn simple_ast_gen() -> miette::Result<()> {
 
 #[test]
 fn simple_strategy() -> miette::Result<()> {
+    let bld = PartiqlShapeBuilder::init_or_get();
     let rng = Pcg64Mcg::seed_from_u64(1234);
     let strat = SelectFromWhereBuilder::select_all()
         .build()
         .into_diagnostic()?
         .sboxed();
 
-    let shape = PartiqlShape::new_bag(BagType::new(Box::new(PartiqlShape::Static(
-        StaticType::new(partiql_types::Static::Int),
-    ))));
+    let shape = bld.new_bag_of(bld.new_static(Static::Int));
+
     let dataset = DatasetTypeMapping::from([("Table".to_string(), shape)]);
     let gen = strat.build(&dataset, rng).into_diagnostic()?;
 

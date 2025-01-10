@@ -3,7 +3,7 @@ use crate::gen::{DataGenerationResult, ValueGenerator};
 
 use crate::sim::SimContext;
 use indexmap::IndexMap;
-use partiql_types::{PartiqlShape, StructConstraint, StructField, StructType};
+use partiql_types::{PartiqlShape, PartiqlShapeBuilder, StructConstraint, StructField, StructType};
 use partiql_value::{Tuple, Value};
 use rand::Rng;
 use std::fmt::{Debug, Formatter};
@@ -91,25 +91,31 @@ where
         }
     }
 
-    fn value_type(&self) -> PartiqlShape {
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
         match self {
-            SimpleRandomDataImpl::Single(rv) => rv.value_type(),
+            SimpleRandomDataImpl::Single(rv) => rv.shape(bld),
             SimpleRandomDataImpl::Collection(kvs) => {
                 let fields = kvs
                     .iter()
                     .map(|(k, v)| {
                         if let Some(d) = v.density() {
                             if d.optionality().is_some() {
-                                StructField::new_optional(k, v.value_type())
+                                StructField::new_optional(k, v.shape(bld))
                             } else {
-                                StructField::new(k, v.value_type())
+                                StructField::new(k, v.shape(bld))
                             }
                         } else {
-                            StructField::new(k, v.value_type())
+                            StructField::new(k, v.shape(bld))
                         }
                     })
                     .collect();
-                PartiqlShape::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
+                bld.new_struct(StructType::new(
+                    [
+                        StructConstraint::Fields(fields),
+                        StructConstraint::Open(false),
+                    ]
+                    .into(),
+                ))
             }
         }
     }

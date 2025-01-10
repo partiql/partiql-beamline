@@ -1,39 +1,39 @@
 use partiql_types::{
-    ArrayType, BagType, PartiqlShape, StructConstraint, StructField, StructType, TYPE_BOOL,
-    TYPE_DATETIME, TYPE_DECIMAL, TYPE_INT, TYPE_REAL, TYPE_STRING,
+    type_bool, type_datetime, type_decimal, type_float64, type_int, type_string, ArrayType,
+    BagType, PartiqlShape, PartiqlShapeBuilder, StructConstraint, StructField, StructType,
 };
 use partiql_value::Value;
 
 pub trait ValueTypeInference {
-    fn infer_shape(&self) -> PartiqlShape;
+    fn infer_shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape;
 }
 
 impl ValueTypeInference for Value {
-    fn infer_shape(&self) -> PartiqlShape {
+    fn infer_shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
         match self {
             Value::Null => PartiqlShape::Undefined,
             Value::Missing => PartiqlShape::Undefined,
-            Value::Boolean(_) => TYPE_BOOL,
-            Value::Integer(_) => TYPE_INT,
-            Value::Real(_) => TYPE_REAL,
-            Value::Decimal(_) => TYPE_DECIMAL,
-            Value::String(_) => TYPE_STRING,
+            Value::Boolean(_) => type_bool!(bld),
+            Value::Integer(_) => type_int!(bld),
+            Value::Real(_) => type_float64!(bld),
+            Value::Decimal(_) => type_decimal!(bld),
+            Value::String(_) => type_string!(bld),
             Value::Blob(_) => PartiqlShape::Undefined, // TODO BLOB
-            Value::DateTime(_) => TYPE_DATETIME,
+            Value::DateTime(_) => type_datetime!(bld),
             Value::List(l) => {
-                let types = l.iter().map(|v| v.infer_shape());
-                PartiqlShape::new_array(ArrayType::new(Box::new(PartiqlShape::any_of(types))))
+                let types = l.iter().map(|v| v.infer_shape(bld));
+                bld.new_array(ArrayType::new(Box::new(bld.any_of(types))))
             }
             Value::Bag(b) => {
-                let types = b.iter().map(|v| v.infer_shape());
-                PartiqlShape::new_bag(BagType::new(Box::new(PartiqlShape::any_of(types))))
+                let types = b.iter().map(|v| v.infer_shape(bld));
+                bld.new_bag(BagType::new(Box::new(bld.any_of(types))))
             }
             Value::Tuple(t) => {
                 let fields = t
                     .pairs()
-                    .map(|(k, v)| StructField::new(k, v.infer_shape()))
+                    .map(|(k, v)| StructField::new(k, v.infer_shape(bld)))
                     .collect();
-                PartiqlShape::new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
+                bld.new_struct(StructType::new([StructConstraint::Fields(fields)].into()))
             }
         }
     }

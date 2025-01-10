@@ -3,7 +3,8 @@ use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::SimContext;
 
 use partiql_types::{
-    PartiqlShape, Static, TYPE_DOUBLE, TYPE_INT16, TYPE_INT32, TYPE_INT64, TYPE_INT8,
+    type_float64, type_int16, type_int32, type_int64, type_int8, PartiqlShape, PartiqlShapeBuilder,
+    Static,
 };
 use partiql_value::Value;
 use rand::distributions::Distribution;
@@ -39,8 +40,8 @@ macro_rules! rv_ranged_ivg {
                 Value::from(self.dist.sample(rng) as $ty)
             }
 
-            fn value_type(&self) -> PartiqlShape {
-                $pq_ty
+            fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+                bld.new_static($pq_ty)
             }
         }
     };
@@ -107,28 +108,22 @@ macro_rules! make_rv_ranged_continuous {
     };
 }
 
-// TODO fix in partiql-type
-pub const TYPE_UINT8: PartiqlShape = PartiqlShape::new(Static::Int64);
-pub const TYPE_UINT16: PartiqlShape = PartiqlShape::new(Static::Int64);
-pub const TYPE_UINT32: PartiqlShape = PartiqlShape::new(Static::Int64);
-pub const TYPE_UINT64: PartiqlShape = PartiqlShape::new(Static::Int64);
-
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleUInt8, SimpleUInt8Impl,  u8,  TYPE_UINT8,       u8::MIN,  u8::MAX);
+make_rv_ranged_discrete!(SimpleUInt8, SimpleUInt8Impl,  u8,  Static::Int8,       u8::MIN,  u8::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleUInt16,SimpleUInt16Impl, u16, TYPE_UINT16,      u16::MIN, u16::MAX);
+make_rv_ranged_discrete!(SimpleUInt16,SimpleUInt16Impl, u16, Static::Int16,      u16::MIN, u16::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleUInt32,SimpleUInt32Impl, u32, TYPE_UINT32,      u32::MIN, u32::MAX);
+make_rv_ranged_discrete!(SimpleUInt32,SimpleUInt32Impl, u32, Static::Int32,      u32::MIN, u32::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleUInt64,SimpleUInt64Impl, u64, TYPE_UINT64, i64, u64::MIN as i64, i64::MAX);
+make_rv_ranged_discrete!(SimpleUInt64,SimpleUInt64Impl, u64, Static::Int64, i64, u64::MIN as i64, i64::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleInt8,  SimpleInt8Impl,   i8,  TYPE_INT8,        i8::MIN,  i8::MAX);
+make_rv_ranged_discrete!(SimpleInt8,  SimpleInt8Impl,   i8,  Static::Int8,        i8::MIN,  i8::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleInt16, SimpleInt16Impl,  i16, TYPE_INT16,       i16::MIN, i16::MAX);
+make_rv_ranged_discrete!(SimpleInt16, SimpleInt16Impl,  i16, Static::Int16,       i16::MIN, i16::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleInt32, SimpleInt32Impl,  i32, TYPE_INT32,       i32::MIN, i32::MAX);
+make_rv_ranged_discrete!(SimpleInt32, SimpleInt32Impl,  i32, Static::Int32,       i32::MIN, i32::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
-make_rv_ranged_discrete!(SimpleInt64, SimpleInt64Impl,  i64, TYPE_INT64,       i64::MIN, i64::MAX);
+make_rv_ranged_discrete!(SimpleInt64, SimpleInt64Impl,  i64, Static::Int64,       i64::MIN, i64::MAX);
 
 rv_ranged!(SimpleF64Impl, f64, statrs::distribution::Uniform);
 rv_typedef!(
@@ -136,7 +131,7 @@ rv_typedef!(
     SimpleF64,
     SimpleF64Impl
 );
-rv_ranged_ivg!(SimpleF64Impl, f64, TYPE_DOUBLE);
+rv_ranged_ivg!(SimpleF64Impl, f64, Static::Float64);
 
 impl<R> SimpleF64<R>
 where
@@ -235,8 +230,8 @@ where
         Value::Decimal(Box::new(out_dec))
     }
 
-    fn value_type(&self) -> PartiqlShape {
-        PartiqlShape::new(Static::DecimalP(
+    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+        bld.new_static(Static::DecimalP(
             self.precision as usize,
             self.scale as usize,
         ))

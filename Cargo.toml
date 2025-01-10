@@ -8,15 +8,14 @@ readme = "../README.md"
 #keywords = TODO
 #categories = TODO
 exclude = [
-  "**/.git/**",
-  "**/.github/**",
-  "**/.travis.yml",
-  "**/.appveyor.yml",
+    "**/.git/**",
+    "**/.github/**",
+    "**/.travis.yml",
+    "**/.appveyor.yml",
 ]
 edition = "2021"
 version = "0.1.0"
 
-[patch.crates-io]
 [workspace]
 members = [
     "partiql-beamline-cli",
@@ -36,3 +35,11 @@ opt-level = 3
 [profile.bench]
 debug = true
 lto = true
+
+[patch.crates-io]
+partiql-parser = { git = "https://github.com/partiql/partiql-lang-rust" }
+partiql-ast = { git = "https://github.com/partiql/partiql-lang-rust" }
+partiql-types = { git = "https://github.com/partiql/partiql-lang-rust" }
+partiql-value = { git = "https://github.com/partiql/partiql-lang-rust" }
+partiql-extension-ddl = { git = "https://github.com/partiql/partiql-lang-rust" }
+partiql-extension-ion = { git = "https://github.com/partiql/partiql-lang-rust" }

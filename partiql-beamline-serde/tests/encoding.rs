@@ -4,6 +4,7 @@ use partiql_beamline::source::SimSource;
 use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
+use partiql_types::PartiqlShapeBuilder;
 use time::OffsetDateTime;
 
 #[test]
