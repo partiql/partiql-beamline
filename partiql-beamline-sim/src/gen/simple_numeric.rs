@@ -167,15 +167,15 @@ macro_rules! make_rv_ranged_continuous {
 }
 
 #[rustfmt::skip::macros(make_rv_ranged_continuous)]
-make_rv_ranged_continuous!( SimpleF64, SimpleF64Impl, SimpleF64Params, statrs::distribution::Uniform,      TYPE_DOUBLE );
+make_rv_ranged_continuous!( SimpleF64, SimpleF64Impl, SimpleF64Params,          statrs::distribution::Uniform,      TYPE_DOUBLE );
 #[rustfmt::skip::macros(make_rv_ranged_continuous)]
-make_rv_ranged_continuous!( Normal, NormalImpl, NormalParams,          statrs::distribution::Normal,       TYPE_DOUBLE );
+make_rv_ranged_continuous!( NormalF64, NormalF64Impl, NormalF64Params,          statrs::distribution::Normal,       TYPE_DOUBLE );
 #[rustfmt::skip::macros(make_rv_ranged_continuous)]
-make_rv_ranged_continuous!( LogNormal, LogNormalImpl, LogNormalParams, statrs::distribution::LogNormal,    TYPE_DOUBLE );
+make_rv_ranged_continuous!( LogNormalF64, LogNormalF64Impl, LogNormalF64Params, statrs::distribution::LogNormal,    TYPE_DOUBLE );
 #[rustfmt::skip::macros(make_rv_ranged_continuous)]
-make_rv_ranged_continuous!( Exp, ExpImpl, ExpParams,                   statrs::distribution::Exp,          TYPE_DOUBLE );
+make_rv_ranged_continuous!( ExpF64, ExpF64Impl, ExpF64Params,                   statrs::distribution::Exp,          TYPE_DOUBLE );
 #[rustfmt::skip::macros(make_rv_ranged_continuous)]
-make_rv_ranged_continuous!( Weibull, WeibullImpl, WeibullParams,       statrs::distribution::Weibull,      TYPE_DOUBLE );
+make_rv_ranged_continuous!( WeibullF64, WeibullF64Impl, WeibullF64Params,       statrs::distribution::Weibull,      TYPE_DOUBLE );
 
 pub(crate) trait ParamsToDist<D: Continuous<f64, f64>> {
     fn to_dist(&self) -> DataGenerationResult<D>;
@@ -199,35 +199,35 @@ impl ParamsToDist<statrs::distribution::Uniform> for SimpleF64Params {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct NormalParams {
+pub(crate) struct NormalF64Params {
     pub mean: f64,
     pub std_dev: f64,
 }
 
-impl ParamsToDist<statrs::distribution::Normal> for NormalParams {
+impl ParamsToDist<statrs::distribution::Normal> for NormalF64Params {
     fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Normal> {
         Ok(statrs::distribution::Normal::new(self.mean, self.std_dev)?)
     }
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct ExpParams {
+pub(crate) struct ExpF64Params {
     pub rate: f64,
 }
 
-impl ParamsToDist<statrs::distribution::Exp> for ExpParams {
+impl ParamsToDist<statrs::distribution::Exp> for ExpF64Params {
     fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Exp> {
         Ok(statrs::distribution::Exp::new(self.rate)?)
     }
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct LogNormalParams {
+pub(crate) struct LogNormalF64Params {
     pub location: f64,
     pub scale: f64,
 }
 
-impl ParamsToDist<statrs::distribution::LogNormal> for LogNormalParams {
+impl ParamsToDist<statrs::distribution::LogNormal> for LogNormalF64Params {
     fn to_dist(&self) -> DataGenerationResult<statrs::distribution::LogNormal> {
         Ok(statrs::distribution::LogNormal::new(
             self.location,
@@ -237,12 +237,12 @@ impl ParamsToDist<statrs::distribution::LogNormal> for LogNormalParams {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct WeibullParams {
+pub(crate) struct WeibullF64Params {
     pub shape: f64,
     pub scale: f64,
 }
 
-impl ParamsToDist<statrs::distribution::Weibull> for WeibullParams {
+impl ParamsToDist<statrs::distribution::Weibull> for WeibullF64Params {
     fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Weibull> {
         Ok(statrs::distribution::Weibull::new(self.shape, self.scale)?)
     }

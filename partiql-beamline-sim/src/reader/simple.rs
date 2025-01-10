@@ -2,9 +2,10 @@ use crate::gen::distributions::{Density, Meta};
 
 use crate::gen::simple::{SimpleAnyOf, SimpleArray, SimpleBool, SimpleChoose, Uuid};
 use crate::gen::simple_numeric::{
-    Exp, ExpParams, LogNormal, LogNormalParams, Normal, NormalParams, ParameterizedModel,
-    SimpleDecimal, SimpleF64, SimpleF64Params, SimpleInt16, SimpleInt32, SimpleInt64, SimpleInt8,
-    SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, Weibull, WeibullParams,
+    ExpF64, ExpF64Params, LogNormalF64, LogNormalF64Params, NormalF64, NormalF64Params,
+    ParameterizedModel, SimpleDecimal, SimpleF64, SimpleF64Params, SimpleInt16, SimpleInt32,
+    SimpleInt64, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, WeibullF64,
+    WeibullF64Params,
 };
 use crate::gen::timeline::{Date, InstantGenerator, TickGenerator};
 use crate::gen::ValueGeneratorBoxed;
@@ -392,9 +393,9 @@ impl SimpleScriptVariableKind {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct NormalRead {}
+pub struct NormalF64Read {}
 
-impl<R> ValueGeneratorParserImpl<R> for NormalRead
+impl<R> ValueGeneratorParserImpl<R> for NormalF64Read
 where
     R: Rng + Sized + Clone + 'static,
 {
@@ -414,8 +415,8 @@ where
         let (std_dev, span) = require_key(config, "std_dev")?;
         let std_dev = to_f64(std_dev, symbol_parser).with_context(span)?;
 
-        let params = NormalParams { mean, std_dev };
-        Ok(Normal::new(params, rng, meta, density)
+        let params = NormalF64Params { mean, std_dev };
+        Ok(NormalF64::new(params, rng, meta, density)
             .map_err(ProcessConfigError::from)
             .with_context(config_span)?
             .boxed())
@@ -427,9 +428,9 @@ where
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct ExpRead {}
+pub struct ExpF64Read {}
 
-impl<R> ValueGeneratorParserImpl<R> for ExpRead
+impl<R> ValueGeneratorParserImpl<R> for ExpF64Read
 where
     R: Rng + Sized + Clone + 'static,
 {
@@ -446,8 +447,8 @@ where
         let (rate, span) = require_key(config, "rate")?;
         let rate = to_f64(rate, symbol_parser).with_context(span)?;
 
-        let params = ExpParams { rate };
-        Ok(Exp::new(params, rng, meta, density)
+        let params = ExpF64Params { rate };
+        Ok(ExpF64::new(params, rng, meta, density)
             .map_err(ProcessConfigError::from)
             .with_context(config_span)?
             .boxed())
@@ -459,9 +460,9 @@ where
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct LogNormalRead {}
+pub struct LogNormalF64Read {}
 
-impl<R> ValueGeneratorParserImpl<R> for LogNormalRead
+impl<R> ValueGeneratorParserImpl<R> for LogNormalF64Read
 where
     R: Rng + Sized + Clone + 'static,
 {
@@ -481,8 +482,8 @@ where
         let (scale, span) = require_key(config, "scale")?;
         let scale = to_f64(scale, symbol_parser).with_context(span)?;
 
-        let params = LogNormalParams { location, scale };
-        Ok(LogNormal::new(params, rng, meta, density)
+        let params = LogNormalF64Params { location, scale };
+        Ok(LogNormalF64::new(params, rng, meta, density)
             .map_err(ProcessConfigError::from)
             .with_context(config_span)?
             .boxed())
@@ -494,9 +495,9 @@ where
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct WeibullRead {}
+pub struct WeibullF64Read {}
 
-impl<R> ValueGeneratorParserImpl<R> for WeibullRead
+impl<R> ValueGeneratorParserImpl<R> for WeibullF64Read
 where
     R: Rng + Sized + Clone + 'static,
 {
@@ -516,8 +517,8 @@ where
         let (scale, span) = require_key(config, "scale")?;
         let scale = to_f64(scale, symbol_parser).with_context(span)?;
 
-        let params = WeibullParams { shape, scale };
-        Ok(Weibull::new(params, rng, meta, density)
+        let params = WeibullF64Params { shape, scale };
+        Ok(WeibullF64::new(params, rng, meta, density)
             .map_err(ProcessConfigError::from)
             .with_context(config_span)?
             .boxed())

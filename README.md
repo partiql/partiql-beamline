@@ -922,10 +922,10 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 | UniformI32      | Signed 32-bit integer                  | Int64        | [Discrete Uniform]                                                                                                     |
 | UniformI64      | Signed 64-bit integer                  | Int64        | [Discrete Uniform]                                                                                                     |
 | UniformF64      | 64-bit Float (Inexact)                 | DOUBLE       | [Continuous Uniform]                                                                                                   |
-| Normal          | Normally distributed 64-bit Float      | DOUBLE       | [Normal]                                                                                                               |
-| LogNormal       | LogNormally distributed 64-bit Float   | DOUBLE       | [LogNormal]                                                                                                            |
-| Weibull         | Weibull distributed 64-bit Float       | DOUBLE       | [Weibull]                                                                                                              |
-| Exp             | Exponentially distributed 64-bit Float | DOUBLE       | [Exponential]                                                                                                          |
+| NormalF64       | Normally distributed 64-bit Float      | DOUBLE       | [Normal]                                                                                                               |
+| LogNormalF64    | LogNormally distributed 64-bit Float   | DOUBLE       | [LogNormal]                                                                                                            |
+| WeibullF64      | Weibull distributed 64-bit Float       | DOUBLE       | [Weibull]                                                                                                              |
+| ExpF64          | Exponentially distributed 64-bit Float | DOUBLE       | [Exponential]                                                                                                          |
 | UniformDecimal  | Decimal (Exact)                        | DECIMAL(p,s) | [Continuous Uniform]                                                                                                   |
 | UUID            | UUID                                   | STRING       | Generates random bytes and parses them as a [Version 4 UUID]                                                           |
 

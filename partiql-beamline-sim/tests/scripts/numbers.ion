@@ -55,23 +55,23 @@ rand_processes::{
             },
 
             normal: {
-                normal: Normal::{ mean: 14.3, std_dev: 3 },
-                normal_all: Normal::{ nullable: 0.2, optional: 0.1, mean: 14.3, std_dev: 3 },
+                normal: NormalF64::{ mean: 14.3, std_dev: 3 },
+                normal_all: NormalF64::{ nullable: 0.2, optional: 0.1, mean: 14.3, std_dev: 3 },
             },
 
             lognormal: {
-                lognormal: LogNormal::{ location: 14.3, scale: 3 },
-                lognormal_all: LogNormal::{ nullable: 0.2, optional: 0.1, location: 14.3, scale: 3 },
+                lognormal: LogNormalF64::{ location: 14.3, scale: 3 },
+                lognormal_all: LogNormalF64::{ nullable: 0.2, optional: 0.1, location: 14.3, scale: 3 },
             },
 
             weibull: {
-                weibull: Weibull::{ shape: 14.3, scale: 3 },
-                weibull_all: Weibull::{ nullable: 0.2, optional: 0.1, shape: 14.3, scale: 3 },
+                weibull: WeibullF64::{ shape: 14.3, scale: 3 },
+                weibull_all: WeibullF64::{ nullable: 0.2, optional: 0.1, shape: 14.3, scale: 3 },
             },
 
             exponential: {
-                exp: Exp::{ rate: 3 },
-                exp_all: Exp::{ nullable: 0.2, optional: 0.1, rate: 3 },
+                exp: ExpF64::{ rate: 3 },
+                exp_all: ExpF64::{ nullable: 0.2, optional: 0.1, rate: 3 },
             }
         }
     }

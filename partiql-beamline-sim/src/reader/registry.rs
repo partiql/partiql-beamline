@@ -2,7 +2,7 @@ use crate::gen::distributions::Meta;
 use crate::gen::ValueGenerator;
 use crate::reader::error::{ProcessConfigError, ProcessConfigResult};
 use crate::reader::simple::{
-    ExpRead, LogNormalRead, NormalRead, SimpleScriptVariableKind, WeibullRead,
+    ExpF64Read, LogNormalF64Read, NormalF64Read, SimpleScriptVariableKind, WeibullF64Read,
 };
 use crate::reader::symbol::EnvSymbolParser;
 use crate::reader::text::{Formatter, LoremIpsum, LoremIpsumTitle, RegexFormatter};
@@ -95,20 +95,20 @@ where
                 BasicValueGeneratorParser::from(DateRead {}).vgpboxed(),
             ),
             (
-                "Normal",
-                BasicValueGeneratorParser::from(NormalRead {}).vgpboxed(),
+                "NormalF64",
+                BasicValueGeneratorParser::from(NormalF64Read {}).vgpboxed(),
             ),
             (
-                "LogNormal",
-                BasicValueGeneratorParser::from(LogNormalRead {}).vgpboxed(),
+                "LogNormalF64",
+                BasicValueGeneratorParser::from(LogNormalF64Read {}).vgpboxed(),
             ),
             (
-                "Exp",
-                BasicValueGeneratorParser::from(ExpRead {}).vgpboxed(),
+                "ExpF64",
+                BasicValueGeneratorParser::from(ExpF64Read {}).vgpboxed(),
             ),
             (
-                "Weibull",
-                BasicValueGeneratorParser::from(WeibullRead {}).vgpboxed(),
+                "WeibullF64",
+                BasicValueGeneratorParser::from(WeibullF64Read {}).vgpboxed(),
             ),
         ] {
             registry.add_parser(k, v).expect("static registry creation");
