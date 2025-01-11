@@ -340,6 +340,14 @@ fn verify_repeatable_datetimes() -> miette::Result<()> {
 }
 
 #[test]
+fn verify_repeatable_numbers() -> miette::Result<()> {
+    let (script, _) = test_data!("numbers");
+    verify_repeatable(script.clone())?;
+    verify_repeatable_multi(script)?;
+    Ok(())
+}
+
+#[test]
 fn verify_exemplar_transactions() -> miette::Result<()> {
     let (script, exemplar) = test_data!("transactions");
     verify_exemplar(script.clone(), exemplar)?;
@@ -391,6 +399,14 @@ fn verify_exemplar_client_service() -> miette::Result<()> {
 #[test]
 fn verify_exemplar_datetimes() -> miette::Result<()> {
     let (script, exemplar) = test_data!("datetimes");
+    verify_exemplar(script.clone(), exemplar)?;
+    verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
+    Ok(())
+}
+
+#[test]
+fn verify_exemplar_numbers() -> miette::Result<()> {
+    let (script, exemplar) = test_data!("numbers");
     verify_exemplar(script.clone(), exemplar)?;
     verify_exemplar_partials(script, exemplar, 1.0, 1.0)?;
     Ok(())

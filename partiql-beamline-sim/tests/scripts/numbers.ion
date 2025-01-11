@@ -1,0 +1,79 @@
+rand_processes::{
+
+    test_data: rand_process::{
+        $r: Uniform::{ choices: [5,10] },
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+        $data: {
+            uniform: {
+                // ===== Uniform Unsigned Ints ===== /
+                uniform_u8_default: UniformU8,
+                uniform_u8_range: UniformU8::{ low: 13, high: 42 },
+                uniform_u8_all: UniformU8::{ nullable: 0.2, optional: 0.1, low: 13, high: 42 },
+
+                uniform_u16_default: UniformU16,
+                uniform_u16_range: UniformU16::{ low: 130, high: 420 },
+                uniform_u16_all: UniformU16::{ nullable: 0.2, optional: 0.1, low: 130, high: 420 },
+
+                uniform_u32_default: UniformU32,
+                uniform_u32_range: UniformU32::{ low: 13000, high: 42000 },
+                uniform_u32_all: UniformU32::{ nullable: 0.2, optional: 0.1, low: 13000, high: 42000 },
+
+                uniform_u64_default: UniformU64,
+                uniform_u64_range: UniformU64::{ low: 13000000, high: 42000000 },
+                uniform_u64_all: UniformU64::{ nullable: 0.2, optional: 0.1, low: 13000000, high: 42000000 },
+
+
+                // ===== Uniform Signed Ints ===== /
+                uniform_i8_default: UniformI8,
+                uniform_i8_range: UniformI8::{ low: -13, high: 42 },
+                uniform_i8_all: UniformI8::{ nullable: 0.2, optional: 0.1, low: -13, high: 42 },
+
+                uniform_i16_default: UniformI16,
+                uniform_i16_range: UniformI16::{ low: -130, high: 420 },
+                uniform_i16_all: UniformI16::{ nullable: 0.2, optional: 0.1, low: -130, high: 420 },
+
+                uniform_i32_default: UniformI32,
+                uniform_i32_range: UniformI32::{ low: -13000, high: 42000 },
+                uniform_i32_all: UniformI32::{ nullable: 0.2, optional: 0.1, low: -13000, high: 42000 },
+
+                uniform_i64_default: UniformI64,
+                uniform_i64_range: UniformI64::{ low: -13000000, high: 42000000 },
+                uniform_i64_all: UniformI64::{ nullable: 0.2, optional: 0.1, low: -13000000, high: 42000000 },
+
+
+                // ===== Uniform Float ===== /
+                uniform_f64_default: UniformF64,
+                uniform_f64_range: UniformF64::{ low: -13, high: 42 },
+                uniform_f64_all: UniformF64::{ nullable: 0.2, optional: 0.1, low: -13, high: 42 },
+
+
+                // ===== Uniform Decimal ===== /
+                uniform_dec_default: UniformDecimal,
+                uniform_dec_range: UniformDecimal::{ low: 0.995, high: 499.9999, },
+                uniform_dec_all: UniformDecimal::{ nullable: 0.2, optional: 0.1, low: 0.995, high: 499.9999, },
+            },
+
+            normal: {
+                normal: NormalF64::{ mean: 14.3, std_dev: 3 },
+                normal_all: NormalF64::{ nullable: 0.2, optional: 0.1, mean: 14.3, std_dev: 3 },
+            },
+
+            lognormal: {
+                lognormal: LogNormalF64::{ location: 14.3, scale: 3 },
+                lognormal_all: LogNormalF64::{ nullable: 0.2, optional: 0.1, location: 14.3, scale: 3 },
+            },
+
+            weibull: {
+                weibull: WeibullF64::{ shape: 14.3, scale: 3 },
+                weibull_all: WeibullF64::{ nullable: 0.2, optional: 0.1, shape: 14.3, scale: 3 },
+            },
+
+            exponential: {
+                exp: ExpF64::{ rate: 3 },
+                exp_all: ExpF64::{ nullable: 0.2, optional: 0.1, rate: 3 },
+            }
+        }
+    }
+
+}

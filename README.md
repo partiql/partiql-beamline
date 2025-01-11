@@ -900,34 +900,42 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 
 ### Data Generators
 
-| Name            | Description                     | PartiQL Type | Generation Characteristics & Probability                                                                               |
-|-----------------|---------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------|
-| Bool            | Boolean                         | BOOL         | [Bernoulli]                                                                                                            |
-| Date            | Current Simulation Date         | DATETIME     | The current simulation time as a `Date`                                                                                |                                                                                                                      |
-| Instant         | Current Simulation Time         | DATETIME     | The current simulation time as a `TIMESTAMP WITH TIMEZONE`                                                             |
-| LoremIpsum      | String                          | STRING       | Uses a [Discrete Uniform] to generate a length and generates that many words of 'Lorem Ipsum'-type text.               |
-| LoremIpsumTitle | String                          | STRING       | Generates between 3 & 8 (drawn from a [Discrete Uniform]) title-cased 'Lorem Ipsum'-type words.                        | 
-| Regex           | String                          | STRING       | Builds text matching a regex by using a [Discrete Uniform] over character classes, quantified ranges, and alternatives |
-| Tick            | Current Simulation Time         | Int64        | The current simulation tick as an Int64                                                                                |
-| Timestamp       | Current Simulation Timestamp    | DATETIME     | The current simulation time as either a `TIMESTAMP WITH TIMEZONE` or `TIMESTAMP` with configurable precision           |
-| Uniform         | Uniform over literal values     | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst literals                                      |
-| UniformArray    | Uniform array type              | Array        | Uses a [Discrete Uniform] to generate a length and uses the inner generator for each element                           | 
-| UniformAnyOf    | Uniform distribution over types | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst inner generators                              |
-| UniformU8       | Unsigned 8-bit integer          | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformU16      | Unsigned 16-bit integer         | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformU32      | Unsigned 32-bit integer         | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformU64      | Unsigned 64-bit integer         | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformI8       | Signed 8-bit integer            | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformI16      | Signed 16-bit integer           | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformI32      | Signed 32-bit integer           | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformI64      | Signed 64-bit integer           | Int64        | [Discrete Uniform]                                                                                                     |
-| UniformF64      | 64-bit Float (Inexact)          | DOUBLE       | [Continuous Uniform]                                                                                                   |
-| UniformDecimal  | Decimal (Exact)                 | DECIMAL(p,s) | [Continuous Uniform]                                                                                                   |
-| UUID            | UUID                            | STRING       | Generates random bytes and parses them as a [Version 4 UUID]                                                           |
+| Name            | Description                            | PartiQL Type | Generation Characteristics & Probability                                                                               |
+|-----------------|----------------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------|
+| Bool            | Boolean                                | BOOL         | [Bernoulli]                                                                                                            |
+| Date            | Current Simulation Date                | DATETIME     | The current simulation time as a `Date`                                                                                |                                                                                                                      |
+| Instant         | Current Simulation Time                | DATETIME     | The current simulation time as a `TIMESTAMP WITH TIMEZONE`                                                             |
+| LoremIpsum      | String                                 | STRING       | Uses a [Discrete Uniform] to generate a length and generates that many words of 'Lorem Ipsum'-type text.               |
+| LoremIpsumTitle | String                                 | STRING       | Generates between 3 & 8 (drawn from a [Discrete Uniform]) title-cased 'Lorem Ipsum'-type words.                        | 
+| Regex           | String                                 | STRING       | Builds text matching a regex by using a [Discrete Uniform] over character classes, quantified ranges, and alternatives |
+| Tick            | Current Simulation Time                | Int64        | The current simulation tick as an Int64                                                                                |
+| Timestamp       | Current Simulation Timestamp           | DATETIME     | The current simulation time as either a `TIMESTAMP WITH TIMEZONE` or `TIMESTAMP` with configurable precision           |
+| Uniform         | Uniform over literal values            | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst literals                                      |
+| UniformArray    | Uniform array type                     | Array        | Uses a [Discrete Uniform] to generate a length and uses the inner generator for each element                           | 
+| UniformAnyOf    | Uniform distribution over types        | Union        | Generates a single value by using a [Discrete Uniform] to choose amongst inner generators                              |
+| UniformU8       | Unsigned 8-bit integer                 | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformU16      | Unsigned 16-bit integer                | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformU32      | Unsigned 32-bit integer                | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformU64      | Unsigned 64-bit integer                | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI8       | Signed 8-bit integer                   | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI16      | Signed 16-bit integer                  | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI32      | Signed 32-bit integer                  | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformI64      | Signed 64-bit integer                  | Int64        | [Discrete Uniform]                                                                                                     |
+| UniformF64      | 64-bit Float (Inexact)                 | DOUBLE       | [Continuous Uniform]                                                                                                   |
+| NormalF64       | Normally distributed 64-bit Float      | DOUBLE       | [Normal]                                                                                                               |
+| LogNormalF64    | LogNormally distributed 64-bit Float   | DOUBLE       | [LogNormal]                                                                                                            |
+| WeibullF64      | Weibull distributed 64-bit Float       | DOUBLE       | [Weibull]                                                                                                              |
+| ExpF64          | Exponentially distributed 64-bit Float | DOUBLE       | [Exponential]                                                                                                          |
+| UniformDecimal  | Decimal (Exact)                        | DECIMAL(p,s) | [Continuous Uniform]                                                                                                   |
+| UUID            | UUID                                   | STRING       | Generates random bytes and parses them as a [Version 4 UUID]                                                           |
 
 [Bernoulli]: https://en.wikipedia.org/wiki/Bernoulli_distribution "Bernoulli Distribution"
 [Discrete Uniform]: https://en.wikipedia.org/wiki/Discrete_uniform_distribution "Discrete Uniform Distribution"
 [Continuous Uniform]: https://en.wikipedia.org/wiki/Continuous_uniform_distribution "Continuous Uniform"
+[Weibull]: https://en.wikipedia.org/wiki/Weibull_distribution "Weibull Distribution"
+[LogNormal]: https://en.wikipedia.org/wiki/Log-normal_distribution "LogNormal Distribution"
+[Normal]: https://en.wikipedia.org/wiki/Normal_distribution "Normal Distribution"
+[Exponential]: https://en.wikipedia.org/wiki/Exponential_distribution "Exponential Distribution"
 [Version 4 UUID]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4 "Version 4 UUID"
 
 #### Data Generator Configuration
@@ -952,6 +960,10 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 | UniformI64      | low: i64, high: i64                                                          | low:-9,223,372,036,854,775,807, high:9,223,372,036,854,775,807 |
 | UniformF64      | low: f64, high: f64                                                          | low:-127, high:127                                             |
 | UniformDecimal  | low: f64, high: f64                                                          | low:-127, high:127                                             |
+| Normal          | mean: f64, std_dev: f64                                                      | [N/A]                                                          |
+| LogNormal       | location: f64, scale: f64                                                    | [N/A]                                                          | 
+| Weibull         | shape: f64, scale: f64                                                       | [N/A]                                                          | 
+| Exp             | rate: f64                                                                    | [N/A]                                                          | 
 | UUID            | [N/A]                                                                        | [N/A]                                                          |
 
 * [ <Literal> ] means array of the following [Ion](https://amazon-ion.github.io/ion-docs/) literals: `bool`, `int`, `float`, `string`.

@@ -2,10 +2,12 @@ use crate::gen::distributions::{Density, Meta};
 
 use crate::gen::simple::{SimpleAnyOf, SimpleArray, SimpleBool, SimpleChoose, Uuid};
 use crate::gen::simple_numeric::{
-    SimpleDecimal, SimpleF64, SimpleInt16, SimpleInt32, SimpleInt64, SimpleInt8, SimpleUInt16,
-    SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    ExpF64, ExpF64Params, LogNormalF64, LogNormalF64Params, NormalF64, NormalF64Params,
+    ParameterizedModel, SimpleDecimal, SimpleF64, SimpleF64Params, SimpleInt16, SimpleInt32,
+    SimpleInt64, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, WeibullF64,
+    WeibullF64Params,
 };
-use crate::gen::timeline::{InstantGenerator, TickGenerator};
+use crate::gen::timeline::{Date, InstantGenerator, TickGenerator};
 use crate::gen::ValueGeneratorBoxed;
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 
@@ -14,8 +16,12 @@ use crate::reader::symbol::EnvSymbolParser;
 
 use crate::reader::util;
 
-use crate::reader::error::{GeneralConfigError, ProcessConfigError, ProcessConfigResult};
-use crate::reader::util::{to_f64, to_i64, validate_config_keys};
+use crate::reader::error::{
+    GeneralConfigError, ProcessConfigError, ProcessConfigResult, Sourceable,
+};
+use crate::reader::util::{
+    require_key, to_f64, to_i64, validate_config_keys, ToSourceSpan, ValueGeneratorParserImpl,
+};
 use ion_rs::{AnyEncoding, LazyStruct, SymbolRef, ValueRef};
 use partiql_value::Value;
 use rand::Rng;
@@ -231,7 +237,11 @@ where
             SimpleScriptVariableKind::Float64 => {
                 validate_config_keys(config, &CONFIG_KEYS_RANGE)?;
                 let (low, high) = range_f64(config, symbol_parser)?.unwrap_or(DEFAULT_FLOAT);
-                SimpleF64::new(low, high, rng, meta, density)?.boxed()
+                let params = SimpleF64Params {
+                    min: low,
+                    max: high,
+                };
+                SimpleF64::new(params, rng, meta, density)?.boxed()
             }
             SimpleScriptVariableKind::Decimal => {
                 validate_config_keys(config, &CONFIG_KEYS_RANGE)?;
@@ -379,5 +389,142 @@ impl SimpleScriptVariableKind {
                 "Unsupported `element_type` {elem_type:?} in `UniformArray` definition"
             )))?,
         })
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct NormalF64Read {}
+
+impl<R> ValueGeneratorParserImpl<R> for NormalF64Read
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_with_config(
+        &self,
+        rng: R,
+        meta: Meta,
+        density: Density,
+        config: LazyStruct<'_, AnyEncoding>,
+        symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let config_span = config.source_span();
+
+        let (mean, span) = require_key(config, "mean")?;
+        let mean = to_f64(mean, symbol_parser).with_context(span)?;
+
+        let (std_dev, span) = require_key(config, "std_dev")?;
+        let std_dev = to_f64(std_dev, symbol_parser).with_context(span)?;
+
+        let params = NormalF64Params { mean, std_dev };
+        Ok(NormalF64::new(params, rng, meta, density)
+            .map_err(ProcessConfigError::from)
+            .with_context(config_span)?
+            .boxed())
+    }
+
+    fn possible_config_keys(&self) -> &[&'static str] {
+        &["mean", "std_dev"]
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ExpF64Read {}
+
+impl<R> ValueGeneratorParserImpl<R> for ExpF64Read
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_with_config(
+        &self,
+        rng: R,
+        meta: Meta,
+        density: Density,
+        config: LazyStruct<'_, AnyEncoding>,
+        symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let config_span = config.source_span();
+
+        let (rate, span) = require_key(config, "rate")?;
+        let rate = to_f64(rate, symbol_parser).with_context(span)?;
+
+        let params = ExpF64Params { rate };
+        Ok(ExpF64::new(params, rng, meta, density)
+            .map_err(ProcessConfigError::from)
+            .with_context(config_span)?
+            .boxed())
+    }
+
+    fn possible_config_keys(&self) -> &[&'static str] {
+        &["rate"]
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct LogNormalF64Read {}
+
+impl<R> ValueGeneratorParserImpl<R> for LogNormalF64Read
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_with_config(
+        &self,
+        rng: R,
+        meta: Meta,
+        density: Density,
+        config: LazyStruct<'_, AnyEncoding>,
+        symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let config_span = config.source_span();
+
+        let (location, span) = require_key(config, "location")?;
+        let location = to_f64(location, symbol_parser).with_context(span)?;
+
+        let (scale, span) = require_key(config, "scale")?;
+        let scale = to_f64(scale, symbol_parser).with_context(span)?;
+
+        let params = LogNormalF64Params { location, scale };
+        Ok(LogNormalF64::new(params, rng, meta, density)
+            .map_err(ProcessConfigError::from)
+            .with_context(config_span)?
+            .boxed())
+    }
+
+    fn possible_config_keys(&self) -> &[&'static str] {
+        &["location", "scale"]
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct WeibullF64Read {}
+
+impl<R> ValueGeneratorParserImpl<R> for WeibullF64Read
+where
+    R: Rng + Sized + Clone + 'static,
+{
+    fn parse_with_config(
+        &self,
+        rng: R,
+        meta: Meta,
+        density: Density,
+        config: LazyStruct<'_, AnyEncoding>,
+        symbol_parser: &dyn EnvSymbolParser,
+    ) -> ProcessConfigResult<Box<dyn ValueGenerator>> {
+        let config_span = config.source_span();
+
+        let (shape, span) = require_key(config, "shape")?;
+        let shape = to_f64(shape, symbol_parser).with_context(span)?;
+
+        let (scale, span) = require_key(config, "scale")?;
+        let scale = to_f64(scale, symbol_parser).with_context(span)?;
+
+        let params = WeibullF64Params { shape, scale };
+        Ok(WeibullF64::new(params, rng, meta, density)
+            .map_err(ProcessConfigError::from)
+            .with_context(config_span)?
+            .boxed())
+    }
+
+    fn possible_config_keys(&self) -> &[&'static str] {
+        &["shape", "scale"]
     }
 }

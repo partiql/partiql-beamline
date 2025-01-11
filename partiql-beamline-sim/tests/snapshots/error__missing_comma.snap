@@ -21,58 +21,7 @@ Error:   × Ion Decoding Error
  13 │ │               ],
  14 │ │           }
  15 │ ├─▶     
-    · ╰──┤ invalid Ion syntax encountered
-    ·    │         offset=289
-    ·    │         buffer head=<tick: Tick,
-    ·    │                     ...>
-    ·    │         buffer tail=<... }
-    ·    │             ],
-    ·    │         }
-    ·    │     >
-    ·    │         buffer len=107
-    ·    │         
-    ·    │     while matching a struct
-    ·    │         offset=223
-    ·    │         buffer head=<{
-    ·    │                             id...>
-    ·    │         buffer tail=<... }
-    ·    │             ],
-    ·    │         }
-    ·    │     >
-    ·    │         buffer len=173
-    ·    │         
-    ·    │     while matching a struct
-    ·    │         offset=190
-    ·    │         buffer head=<{
-    ·    │                         $data:...>
-    ·    │         buffer tail=<... }
-    ·    │             ],
-    ·    │         }
-    ·    │     >
-    ·    │         buffer len=206
-    ·    │         
-    ·    │     while matching a struct
-    ·    │         offset=65
-    ·    │         buffer head=<{
-    ·    │                     $arrival: ...>
-    ·    │         buffer tail=<... }
-    ·    │             ],
-    ·    │         }
-    ·    │     >
-    ·    │         buffer len=331
-    ·    │         
-    ·    │     while matching a list
-    ·    │         offset=47
-    ·    │         buffer head=<[
-    ·    │                 {
-    ·    │             ...>
-    ·    │         buffer tail=<... }
-    ·    │             ],
-    ·    │         }
-    ·    │     >
-    ·    │         buffer len=349
-    ·    │         
-    ·    │     while matching a struct
+    · ╰──┤ failed to parse a struct: Decoding(DecodingError { description: "failed to parse a list: Decoding(DecodingError { description: \"failed to parse a struct: Decoding(DecodingError { description: \\\"failed to parse a struct: Decoding(DecodingError { description: \\\\\\\"failed to parse a struct: Decoding(DecodingError { description: \\\\\\\\\\\\\\\"invalid Ion syntax encountered\\\\\\\\\\\\\\\\n        offset=289\\\\\\\\\\\\\\\\n        buffer head=<tick: Tick,\\\\\\\\\\\\\\\\n                    ...>\\\\\\\\\\\\\\\\n        buffer tail=<... }\\\\\\\\\\\\\\\\n            ],\\\\\\\\\\\\\\\\n        }\\\\\\\\\\\\\\\\n    >\\\\\\\\\\\\\\\\n        buffer len=107\\\\\\\\\\\\\\\\n        \\\\\\\\\\\\\\\", position: Some(Position { byte_offset: 289, byte_length: Some(107), line_column: None }) })\\\\\\\\n        offset=223\\\\\\\\n        buffer head=<{\\\\\\\\n                            id...>\\\\\\\\n        buffer tail=<... }\\\\\\\\n            ],\\\\\\\\n        }\\\\\\\\n    >\\\\\\\\n        buffer len=173\\\\\\\\n        \\\\\\\", position: Some(Position { byte_offset: 223, byte_length: Some(173), line_column: None }) })\\\\n        offset=190\\\\n        buffer head=<{\\\\n                        $data:...>\\\\n        buffer tail=<... }\\\\n            ],\\\\n        }\\\\n    >\\\\n        buffer len=206\\\\n        \\\", position: Some(Position { byte_offset: 190, byte_length: Some(206), line_column: None }) })\\n        offset=65\\n        buffer head=<{\\n                    $arrival: ...>\\n        buffer tail=<... }\\n            ],\\n        }\\n    >\\n        buffer len=331\\n        \", position: Some(Position { byte_offset: 65, byte_length: Some(331), line_column: None }) })\n        offset=47\n        buffer head=<[\n                {\n            ...>\n        buffer tail=<... }\n            ],\n        }\n    >\n        buffer len=349\n        ", position: Some(Position { byte_offset: 47, byte_length: Some(349), line_column: None }) })
     ·    │         offset=25
     ·    │         buffer head=<{
     ·    │             sensor: [

@@ -13,6 +13,14 @@ use std::fmt::Debug;
 
 use crate::gen::macros::*;
 use debug_ignore::DebugIgnore;
+use statrs::distribution::Continuous;
+
+pub trait ParameterizedModel<R, Params, Model>
+where
+    R: Rng + Sized + Clone,
+{
+    fn new(params: Params, rng: R, meta: Meta, density: Density) -> DataGenerationResult<Model>;
+}
 
 macro_rules! rv_ranged {
     ($inner: ident, $ty: ty, $dist_ty: ty) => {
@@ -29,6 +37,20 @@ macro_rules! rv_ranged {
         }
     };
 }
+
+macro_rules! rv_ranged_parameterized {
+    ($inner: ident, $param_ty: ty, $dist_ty: ty) => {
+        #[derive(Debug, Clone)]
+        #[doc(hidden)]
+        pub struct $inner {
+            /// The distribution's parameters
+            #[allow(dead_code)]
+            pub(crate) params: $param_ty,
+            pub(crate) dist: DebugIgnore<$dist_ty>,
+        }
+    };
+}
+
 macro_rules! rv_ranged_ivg {
     ($inner: ident, $ty: ty, $pq_ty: expr) => {
         impl<R> InnerValueGenerator<R> for $inner
@@ -87,32 +109,13 @@ macro_rules! make_rv_ranged_discrete {
     };
 }
 
-macro_rules! make_rv_ranged_continuous {
-    ($name: ident, $inner: ident, $ty: ty, $pq_ty: expr, $min: expr, $max: expr) => {
-        rv_ranged!($inner, $ty, statrs::distribution::Uniform);
-        rv_typedef!(
-            #[doc = concat!("Yields continuous uniformly distributed values of type ", stringify!($ty))]
-            $name,
-            $inner
-        );
-        rv_ranged_ivg!($inner, $ty, $pq_ty);
-    };
-    ($name: ident, $inner: ident, $ty: ty, $min: expr, $max: expr) => {
-        rv_ranged!($inner, $ty, statrs::distribution::Uniform);
-        rv_typedef!(
-            #[doc = concat!("Yields continuous uniformly distributed values of type ", stringify!($ty))]
-            $name,
-            $inner
-        );
-    };
-}
-
 // TODO fix in partiql-type
 pub const TYPE_UINT8: PartiqlShape = PartiqlShape::new(Static::Int64);
 pub const TYPE_UINT16: PartiqlShape = PartiqlShape::new(Static::Int64);
 pub const TYPE_UINT32: PartiqlShape = PartiqlShape::new(Static::Int64);
 pub const TYPE_UINT64: PartiqlShape = PartiqlShape::new(Static::Int64);
 
+// ===== Discrete Uniform ===== //
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
 make_rv_ranged_discrete!(SimpleUInt8, SimpleUInt8Impl,  u8,  TYPE_UINT8,       u8::MIN,  u8::MAX);
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
@@ -130,34 +133,118 @@ make_rv_ranged_discrete!(SimpleInt32, SimpleInt32Impl,  i32, TYPE_INT32,       i
 #[rustfmt::skip::macros(make_rv_ranged_discrete)]
 make_rv_ranged_discrete!(SimpleInt64, SimpleInt64Impl,  i64, TYPE_INT64,       i64::MIN, i64::MAX);
 
-rv_ranged!(SimpleF64Impl, f64, statrs::distribution::Uniform);
-rv_typedef!(
-    #[doc = "Yields values of type f64"]
-    SimpleF64,
-    SimpleF64Impl
-);
-rv_ranged_ivg!(SimpleF64Impl, f64, TYPE_DOUBLE);
+macro_rules! rv_ranged_continuous_new {
+    ($name: ident, $inner: ident, $param_ty: ty) => {
+        impl<R> ParameterizedModel<R, $param_ty, $name<R>> for $name<R>
+        where
+            R: Rng + Sized + Clone,
+        {
+            fn new(
+                params: $param_ty,
+                rng: R,
+                meta: Meta,
+                density: Density,
+            ) -> DataGenerationResult<Self> {
+                let dist = params.to_dist()?.into();
+                let inner = $inner { params, dist };
+                RandomVariable::create(rng, meta, density, inner)
+            }
+        }
+    };
+}
 
-impl<R> SimpleF64<R>
-where
-    R: Rng + Sized + Clone,
-{
-    /// Creates f64 generator that yields uniformly distributed f64s between `min` and `max`
-    /// with the specified [`Density`].
-    pub fn new(
-        min: f64,
-        max: f64,
-        rng: R,
-        meta: Meta,
-        density: Density,
-    ) -> DataGenerationResult<Self> {
+macro_rules! make_rv_ranged_continuous {
+    ($name: ident, $inner: ident, $param_ty: ty, $dist_ty: ty, $pq_ty: expr) => {
+        rv_ranged_parameterized!($inner, $param_ty, $dist_ty);
+        rv_typedef!(
+            #[doc = concat!("Yields ", stringify!($dist_ty), " distributed values of type f64")]
+            $name,
+            $inner
+        );
+        rv_ranged_ivg!($inner, f64, $pq_ty);
+        rv_ranged_continuous_new!($name, $inner, $param_ty);
+    };
+}
+
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( SimpleF64, SimpleF64Impl, SimpleF64Params,          statrs::distribution::Uniform,      TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( NormalF64, NormalF64Impl, NormalF64Params,          statrs::distribution::Normal,       TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( LogNormalF64, LogNormalF64Impl, LogNormalF64Params, statrs::distribution::LogNormal,    TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( ExpF64, ExpF64Impl, ExpF64Params,                   statrs::distribution::Exp,          TYPE_DOUBLE );
+#[rustfmt::skip::macros(make_rv_ranged_continuous)]
+make_rv_ranged_continuous!( WeibullF64, WeibullF64Impl, WeibullF64Params,       statrs::distribution::Weibull,      TYPE_DOUBLE );
+
+pub(crate) trait ParamsToDist<D: Continuous<f64, f64>> {
+    fn to_dist(&self) -> DataGenerationResult<D>;
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct SimpleF64Params {
+    pub min: f64,
+    pub max: f64,
+}
+
+impl ParamsToDist<statrs::distribution::Uniform> for SimpleF64Params {
+    fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Uniform> {
+        let (min, max) = (self.min, self.max);
         if min < f64::MIN || max > f64::MAX {
             Err(DataGenerationError::BoundsF(min, max))
         } else {
-            let dist = statrs::distribution::Uniform::new(min, max)?.into();
-            let inner = SimpleF64Impl { min, max, dist };
-            RandomVariable::create(rng, meta, density, inner)
+            Ok(statrs::distribution::Uniform::new(min, max)?)
         }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct NormalF64Params {
+    pub mean: f64,
+    pub std_dev: f64,
+}
+
+impl ParamsToDist<statrs::distribution::Normal> for NormalF64Params {
+    fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Normal> {
+        Ok(statrs::distribution::Normal::new(self.mean, self.std_dev)?)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct ExpF64Params {
+    pub rate: f64,
+}
+
+impl ParamsToDist<statrs::distribution::Exp> for ExpF64Params {
+    fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Exp> {
+        Ok(statrs::distribution::Exp::new(self.rate)?)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct LogNormalF64Params {
+    pub location: f64,
+    pub scale: f64,
+}
+
+impl ParamsToDist<statrs::distribution::LogNormal> for LogNormalF64Params {
+    fn to_dist(&self) -> DataGenerationResult<statrs::distribution::LogNormal> {
+        Ok(statrs::distribution::LogNormal::new(
+            self.location,
+            self.scale,
+        )?)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct WeibullF64Params {
+    pub shape: f64,
+    pub scale: f64,
+}
+
+impl ParamsToDist<statrs::distribution::Weibull> for WeibullF64Params {
+    fn to_dist(&self) -> DataGenerationResult<statrs::distribution::Weibull> {
+        Ok(statrs::distribution::Weibull::new(self.shape, self.scale)?)
     }
 }
 
