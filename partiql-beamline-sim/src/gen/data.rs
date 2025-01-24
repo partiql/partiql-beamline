@@ -91,7 +91,7 @@ where
         }
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
         match self {
             SimpleRandomDataImpl::Single(rv) => rv.shape(bld),
             SimpleRandomDataImpl::Collection(kvs) => {

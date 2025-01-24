@@ -40,7 +40,7 @@ macro_rules! rv_ranged_ivg {
                 Value::from(self.dist.sample(rng) as $ty)
             }
 
-            fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+            fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
                 bld.new_static($pq_ty)
             }
         }
@@ -230,7 +230,7 @@ where
         Value::Decimal(Box::new(out_dec))
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
         bld.new_static(Static::DecimalP(
             self.precision as usize,
             self.scale as usize,

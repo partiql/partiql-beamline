@@ -5,7 +5,7 @@ use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;
 use partiql_extension_ddl::ddl::{DdlSyntax, PartiqlDdlEncoder};
 use partiql_extension_ion::encode::{
-    IonEncodeError, IonEncoderBuilder, IonEncoderConfig, ValueEncoder,
+    IonEncodeError, IonEncoderBuilder, IonEncoderConfig,
 };
 use partiql_extension_ion::Encoding;
 use partiql_value::Value;

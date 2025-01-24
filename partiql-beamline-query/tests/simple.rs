@@ -16,11 +16,12 @@ use partiql_beamline_query::strategy::query::SelectFromWhereBuilder;
 use partiql_beamline_query::strategy::where_clause::{RandomRowFilter, RandomRowPredicateBuilder};
 use partiql_beamline_query::strategy::{QueryStrategy, StrategyBoxed};
 use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder};
-use partiql_types::{BagType, PartiqlShapeBuilder, Static};
+use partiql_types::{BagType, PartiqlShapeBuilder, ShapeBuilder, Static, type_bag};
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
 use std::collections::Bound;
 use std::ops::Sub;
+use partiql_common::node::AutoNodeIdGenerator;
 use time::OffsetDateTime;
 
 #[cfg(test)]
@@ -143,14 +144,15 @@ fn simple_ast_gen() -> miette::Result<()> {
 
 #[test]
 fn simple_strategy() -> miette::Result<()> {
-    let bld = PartiqlShapeBuilder::init_or_get();
+    let bld = &mut PartiqlShapeBuilder::default();
     let rng = Pcg64Mcg::seed_from_u64(1234);
     let strat = SelectFromWhereBuilder::select_all()
         .build()
         .into_diagnostic()?
         .sboxed();
 
-    let shape = bld.new_bag_of(bld.new_static(Static::Int));
+    let type_int = bld.new_static(Static::Int);
+    let shape = bld.new_bag_of(type_int);
 
     let dataset = DatasetTypeMapping::from([("Table".to_string(), shape)]);
     let gen = strat.build(&dataset, rng).into_diagnostic()?;

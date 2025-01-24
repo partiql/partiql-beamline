@@ -1,7 +1,7 @@
 use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariable};
 use crate::gen::{DataGenerationError, DataGenerationResult, ValueGenerator};
 use crate::sim::SimContext;
-use partiql_types::{type_bool, type_string, ArrayType, PartiqlShape, PartiqlShapeBuilder};
+use partiql_types::{type_bool, type_string, type_array, PartiqlShape, PartiqlShapeBuilder};
 
 use partiql_value::{List, Value};
 use rand::distributions::Distribution;
@@ -48,8 +48,9 @@ where
         generator.gen_value(ctx)
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
-        bld.any_of(self.generators.iter().map(|gen| gen.shape(bld)))
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+        let types: Vec<PartiqlShape> = self.generators.iter().map(|g| g.shape(bld)).collect();
+        bld.any_of(types)
     }
 }
 
@@ -89,8 +90,9 @@ where
         self.choices.as_slice().choose(rng).unwrap().clone()
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
-        bld.any_of(self.choices.iter().map(|v| v.infer_shape(bld)))
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+        let types: Vec<PartiqlShape> = self.choices.iter().map(|v| v.infer_shape(bld)).collect();
+        bld.any_of(types)
     }
 }
 
@@ -148,8 +150,8 @@ where
         Value::List(Box::new(List::from(array)))
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
-        bld.new_array(ArrayType::new(Box::new(self.elem_generator.shape(bld))))
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+        type_array!(bld, self.elem_generator.shape(bld))
     }
 }
 
@@ -181,7 +183,7 @@ where
         Value::from(self.dist.sample(rng) > 0f64)
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
         type_bool!(bld)
     }
 }
@@ -200,7 +202,7 @@ where
         Value::from(id.to_string())
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
         type_string!(bld)
     }
 }

@@ -22,7 +22,7 @@ impl ValueGenerator for ConstantGenerator {
         self.constant.clone()
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
         self.constant.infer_shape(bld)
     }
 

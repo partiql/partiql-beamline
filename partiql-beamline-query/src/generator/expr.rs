@@ -81,7 +81,15 @@ impl AstGenerator<ast::Expr> for ConstantLiteral {
             ConstantLiteral::FloatLit(l) => ast::Lit::FloatLit(*l),
             ConstantLiteral::DoubleLit(l) => ast::Lit::DoubleLit(*l),
             ConstantLiteral::BoolLit(l) => ast::Lit::BoolLit(*l),
-            ConstantLiteral::IonStringLit(l) => ast::Lit::IonStringLit(l.clone()),
+            ConstantLiteral::IonStringLit(l) => {
+                let ion_typ = ast::Type::CustomType(ast::CustomType {
+                    parts: vec![ast::CustomTypePart::Name(ast::SymbolPrimitive {
+                        value: "Ion".to_string(),
+                        case: ast::CaseSensitivity::CaseInsensitive,
+                    })],
+                });
+                ast::Lit::EmbeddedDocLit(l.clone(), ion_typ)
+            },
             ConstantLiteral::CharStringLit(l) => ast::Lit::CharStringLit(l.clone()),
             ConstantLiteral::NationalCharStringLit(l) => ast::Lit::NationalCharStringLit(l.clone()),
             ConstantLiteral::BitStringLit(l) => ast::Lit::BitStringLit(l.clone()),

@@ -28,8 +28,8 @@ where
         }
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
-        type_int64!()
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+        type_int64!(bld)
     }
 }
 
@@ -56,7 +56,7 @@ where
         }
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
         type_datetime!(bld)
     }
 }
