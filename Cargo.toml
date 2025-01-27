@@ -37,10 +37,10 @@ debug = true
 lto = true
 
 [patch.crates-io]
-partiql-parser = { git = "https://github.com/partiql/partiql-lang-rust" }
-partiql-ast = { git = "https://github.com/partiql/partiql-lang-rust" }
-partiql-types = { git = "https://github.com/partiql/partiql-lang-rust" }
-partiql-value = { git = "https://github.com/partiql/partiql-lang-rust" }
-partiql-common = { git = "https://github.com/partiql/partiql-lang-rust" }
-partiql-extension-ddl = { git = "https://github.com/partiql/partiql-lang-rust" }
-partiql-extension-ion = { git = "https://github.com/partiql/partiql-lang-rust" }
+partiql-parser = { git = "https://github.com/partiql/partiql-lang-rust", branch = "main" }
+partiql-ast = { git = "https://github.com/partiql/partiql-lang-rust", branch = "main" }
+partiql-types = { git = "https://github.com/partiql/partiql-lang-rust", branch = "main" }
+partiql-value = { git = "https://github.com/partiql/partiql-lang-rust", branch = "main" }
+partiql-common = { git = "https://github.com/partiql/partiql-lang-rust", branch = "main" }
+partiql-extension-ddl = { git = "https://github.com/partiql/partiql-lang-rust", branch = "main" }
+partiql-extension-ion = { git = "https://github.com/partiql/partiql-lang-rust", branch = "main" }

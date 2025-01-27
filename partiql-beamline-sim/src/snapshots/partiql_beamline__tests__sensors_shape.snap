@@ -7,872 +7,294 @@ DatasetTypeMapping {
         "sensors": Static(
             StaticType {
                 id: NodeId(
-                    61,
+                    0,
                 ),
                 ty: Bag(
                     BagType {
-                        element_type: AnyOf(
-                            AnyOf {
-                                types: {
-                                    Static(
-                                        StaticType {
-                                            id: NodeId(
-                                                20,
-                                            ),
-                                            ty: Struct(
-                                                StructType {
-                                                    constraints: {
-                                                        Fields(
-                                                            {
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "tick",
-                                                                    ty: Static(
+                        element_type: Static(
+                            StaticType {
+                                id: NodeId(
+                                    0,
+                                ),
+                                ty: Struct(
+                                    StructType {
+                                        constraints: {
+                                            Fields(
+                                                {
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "tick",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Int64,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "id",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Int,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "i8",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Int8,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "f",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Float64,
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "sub",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Struct(
+                                                                    StructType {
+                                                                        constraints: {
+                                                                            Fields(
+                                                                                {
+                                                                                    StructField {
+                                                                                        optional: false,
+                                                                                        name: "o",
+                                                                                        ty: Static(
+                                                                                            StaticType {
+                                                                                                id: NodeId(
+                                                                                                    0,
+                                                                                                ),
+                                                                                                ty: Int8,
+                                                                                                nullable: true,
+                                                                                            },
+                                                                                        ),
+                                                                                    },
+                                                                                    StructField {
+                                                                                        optional: false,
+                                                                                        name: "f",
+                                                                                        ty: Static(
+                                                                                            StaticType {
+                                                                                                id: NodeId(
+                                                                                                    0,
+                                                                                                ),
+                                                                                                ty: Float64,
+                                                                                                nullable: true,
+                                                                                            },
+                                                                                        ),
+                                                                                    },
+                                                                                },
+                                                                            ),
+                                                                            Open(
+                                                                                false,
+                                                                            ),
+                                                                        },
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "w",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: DecimalP(
+                                                                    5,
+                                                                    4,
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "d",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: DecimalP(
+                                                                    2,
+                                                                    0,
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "variant",
+                                                        ty: AnyOf(
+                                                            AnyOf {
+                                                                types: {
+                                                                    Static(
                                                                         StaticType {
                                                                             id: NodeId(
+                                                                                0,
+                                                                            ),
+                                                                            ty: String,
+                                                                            nullable: true,
+                                                                        },
+                                                                    ),
+                                                                    Static(
+                                                                        StaticType {
+                                                                            id: NodeId(
+                                                                                0,
+                                                                            ),
+                                                                            ty: Int64,
+                                                                            nullable: true,
+                                                                        },
+                                                                    ),
+                                                                    Static(
+                                                                        StaticType {
+                                                                            id: NodeId(
+                                                                                0,
+                                                                            ),
+                                                                            ty: DecimalP(
+                                                                                3,
                                                                                 1,
                                                                             ),
-                                                                            ty: Int64,
                                                                             nullable: true,
                                                                         },
                                                                     ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "id",
-                                                                    ty: Static(
+                                                                    Static(
                                                                         StaticType {
                                                                             id: NodeId(
-                                                                                2,
-                                                                            ),
-                                                                            ty: Int,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "i8",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                3,
+                                                                                0,
                                                                             ),
                                                                             ty: Int8,
                                                                             nullable: true,
                                                                         },
                                                                     ),
                                                                 },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "f",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                4,
-                                                                            ),
-                                                                            ty: Float64,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "sub",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                7,
-                                                                            ),
-                                                                            ty: Struct(
-                                                                                StructType {
-                                                                                    constraints: {
-                                                                                        Fields(
-                                                                                            {
-                                                                                                StructField {
-                                                                                                    optional: false,
-                                                                                                    name: "o",
-                                                                                                    ty: Static(
-                                                                                                        StaticType {
-                                                                                                            id: NodeId(
-                                                                                                                5,
-                                                                                                            ),
-                                                                                                            ty: Int8,
-                                                                                                            nullable: true,
-                                                                                                        },
-                                                                                                    ),
-                                                                                                },
-                                                                                                StructField {
-                                                                                                    optional: false,
-                                                                                                    name: "f",
-                                                                                                    ty: Static(
-                                                                                                        StaticType {
-                                                                                                            id: NodeId(
-                                                                                                                6,
-                                                                                                            ),
-                                                                                                            ty: Float64,
-                                                                                                            nullable: true,
-                                                                                                        },
-                                                                                                    ),
-                                                                                                },
-                                                                                            },
-                                                                                        ),
-                                                                                        Open(
-                                                                                            false,
-                                                                                        ),
-                                                                                    },
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "w",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                8,
-                                                                            ),
-                                                                            ty: DecimalP(
-                                                                                5,
-                                                                                4,
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "d",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                9,
-                                                                            ),
-                                                                            ty: DecimalP(
-                                                                                2,
-                                                                                0,
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "variant",
-                                                                    ty: AnyOf(
-                                                                        AnyOf {
-                                                                            types: {
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            10,
-                                                                                        ),
-                                                                                        ty: String,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            11,
-                                                                                        ),
-                                                                                        ty: Int64,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            12,
-                                                                                        ),
-                                                                                        ty: DecimalP(
-                                                                                            3,
-                                                                                            1,
-                                                                                        ),
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            13,
-                                                                                        ),
-                                                                                        ty: Int8,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                            },
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "tick_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                15,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                14,
-                                                                                            ),
-                                                                                            ty: Int64,
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "weight_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                17,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                16,
-                                                                                            ),
-                                                                                            ty: DecimalP(
-                                                                                                5,
-                                                                                                4,
-                                                                                            ),
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "decimal_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                19,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                18,
-                                                                                            ),
-                                                                                            ty: DecimalP(
-                                                                                                5,
-                                                                                                4,
-                                                                                            ),
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
                                                             },
                                                         ),
-                                                        Open(
-                                                            false,
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "tick_array",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Array(
+                                                                    ArrayType {
+                                                                        element_type: Static(
+                                                                            StaticType {
+                                                                                id: NodeId(
+                                                                                    0,
+                                                                                ),
+                                                                                ty: Int64,
+                                                                                nullable: true,
+                                                                            },
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "weight_array",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Array(
+                                                                    ArrayType {
+                                                                        element_type: Static(
+                                                                            StaticType {
+                                                                                id: NodeId(
+                                                                                    0,
+                                                                                ),
+                                                                                ty: DecimalP(
+                                                                                    5,
+                                                                                    4,
+                                                                                ),
+                                                                                nullable: true,
+                                                                            },
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
+                                                        ),
+                                                    },
+                                                    StructField {
+                                                        optional: false,
+                                                        name: "decimal_array",
+                                                        ty: Static(
+                                                            StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
+                                                                ty: Array(
+                                                                    ArrayType {
+                                                                        element_type: Static(
+                                                                            StaticType {
+                                                                                id: NodeId(
+                                                                                    0,
+                                                                                ),
+                                                                                ty: DecimalP(
+                                                                                    5,
+                                                                                    4,
+                                                                                ),
+                                                                                nullable: true,
+                                                                            },
+                                                                        ),
+                                                                    },
+                                                                ),
+                                                                nullable: true,
+                                                            },
                                                         ),
                                                     },
                                                 },
                                             ),
-                                            nullable: true,
+                                            Open(
+                                                false,
+                                            ),
                                         },
-                                    ),
-                                    Static(
-                                        StaticType {
-                                            id: NodeId(
-                                                40,
-                                            ),
-                                            ty: Struct(
-                                                StructType {
-                                                    constraints: {
-                                                        Fields(
-                                                            {
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "tick",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                21,
-                                                                            ),
-                                                                            ty: Int64,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "id",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                22,
-                                                                            ),
-                                                                            ty: Int,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "i8",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                23,
-                                                                            ),
-                                                                            ty: Int8,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "f",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                24,
-                                                                            ),
-                                                                            ty: Float64,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "sub",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                27,
-                                                                            ),
-                                                                            ty: Struct(
-                                                                                StructType {
-                                                                                    constraints: {
-                                                                                        Fields(
-                                                                                            {
-                                                                                                StructField {
-                                                                                                    optional: false,
-                                                                                                    name: "o",
-                                                                                                    ty: Static(
-                                                                                                        StaticType {
-                                                                                                            id: NodeId(
-                                                                                                                25,
-                                                                                                            ),
-                                                                                                            ty: Int8,
-                                                                                                            nullable: true,
-                                                                                                        },
-                                                                                                    ),
-                                                                                                },
-                                                                                                StructField {
-                                                                                                    optional: false,
-                                                                                                    name: "f",
-                                                                                                    ty: Static(
-                                                                                                        StaticType {
-                                                                                                            id: NodeId(
-                                                                                                                26,
-                                                                                                            ),
-                                                                                                            ty: Float64,
-                                                                                                            nullable: true,
-                                                                                                        },
-                                                                                                    ),
-                                                                                                },
-                                                                                            },
-                                                                                        ),
-                                                                                        Open(
-                                                                                            false,
-                                                                                        ),
-                                                                                    },
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "w",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                28,
-                                                                            ),
-                                                                            ty: DecimalP(
-                                                                                5,
-                                                                                4,
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "d",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                29,
-                                                                            ),
-                                                                            ty: DecimalP(
-                                                                                2,
-                                                                                0,
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "variant",
-                                                                    ty: AnyOf(
-                                                                        AnyOf {
-                                                                            types: {
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            30,
-                                                                                        ),
-                                                                                        ty: String,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            31,
-                                                                                        ),
-                                                                                        ty: Int64,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            32,
-                                                                                        ),
-                                                                                        ty: DecimalP(
-                                                                                            3,
-                                                                                            1,
-                                                                                        ),
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            33,
-                                                                                        ),
-                                                                                        ty: Int8,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                            },
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "tick_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                35,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                34,
-                                                                                            ),
-                                                                                            ty: Int64,
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "weight_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                37,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                36,
-                                                                                            ),
-                                                                                            ty: DecimalP(
-                                                                                                5,
-                                                                                                4,
-                                                                                            ),
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "decimal_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                39,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                38,
-                                                                                            ),
-                                                                                            ty: DecimalP(
-                                                                                                5,
-                                                                                                4,
-                                                                                            ),
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                            },
-                                                        ),
-                                                        Open(
-                                                            false,
-                                                        ),
-                                                    },
-                                                },
-                                            ),
-                                            nullable: true,
-                                        },
-                                    ),
-                                    Static(
-                                        StaticType {
-                                            id: NodeId(
-                                                60,
-                                            ),
-                                            ty: Struct(
-                                                StructType {
-                                                    constraints: {
-                                                        Fields(
-                                                            {
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "tick",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                41,
-                                                                            ),
-                                                                            ty: Int64,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "id",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                42,
-                                                                            ),
-                                                                            ty: Int,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "i8",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                43,
-                                                                            ),
-                                                                            ty: Int8,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "f",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                44,
-                                                                            ),
-                                                                            ty: Float64,
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "sub",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                47,
-                                                                            ),
-                                                                            ty: Struct(
-                                                                                StructType {
-                                                                                    constraints: {
-                                                                                        Fields(
-                                                                                            {
-                                                                                                StructField {
-                                                                                                    optional: false,
-                                                                                                    name: "o",
-                                                                                                    ty: Static(
-                                                                                                        StaticType {
-                                                                                                            id: NodeId(
-                                                                                                                45,
-                                                                                                            ),
-                                                                                                            ty: Int8,
-                                                                                                            nullable: true,
-                                                                                                        },
-                                                                                                    ),
-                                                                                                },
-                                                                                                StructField {
-                                                                                                    optional: false,
-                                                                                                    name: "f",
-                                                                                                    ty: Static(
-                                                                                                        StaticType {
-                                                                                                            id: NodeId(
-                                                                                                                46,
-                                                                                                            ),
-                                                                                                            ty: Float64,
-                                                                                                            nullable: true,
-                                                                                                        },
-                                                                                                    ),
-                                                                                                },
-                                                                                            },
-                                                                                        ),
-                                                                                        Open(
-                                                                                            false,
-                                                                                        ),
-                                                                                    },
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "w",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                48,
-                                                                            ),
-                                                                            ty: DecimalP(
-                                                                                5,
-                                                                                4,
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "d",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                49,
-                                                                            ),
-                                                                            ty: DecimalP(
-                                                                                2,
-                                                                                0,
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "variant",
-                                                                    ty: AnyOf(
-                                                                        AnyOf {
-                                                                            types: {
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            50,
-                                                                                        ),
-                                                                                        ty: String,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            51,
-                                                                                        ),
-                                                                                        ty: Int64,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            52,
-                                                                                        ),
-                                                                                        ty: DecimalP(
-                                                                                            3,
-                                                                                            1,
-                                                                                        ),
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                                Static(
-                                                                                    StaticType {
-                                                                                        id: NodeId(
-                                                                                            53,
-                                                                                        ),
-                                                                                        ty: Int8,
-                                                                                        nullable: true,
-                                                                                    },
-                                                                                ),
-                                                                            },
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "tick_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                55,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                54,
-                                                                                            ),
-                                                                                            ty: Int64,
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "weight_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                57,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                56,
-                                                                                            ),
-                                                                                            ty: DecimalP(
-                                                                                                5,
-                                                                                                4,
-                                                                                            ),
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                                StructField {
-                                                                    optional: false,
-                                                                    name: "decimal_array",
-                                                                    ty: Static(
-                                                                        StaticType {
-                                                                            id: NodeId(
-                                                                                59,
-                                                                            ),
-                                                                            ty: Array(
-                                                                                ArrayType {
-                                                                                    element_type: Static(
-                                                                                        StaticType {
-                                                                                            id: NodeId(
-                                                                                                58,
-                                                                                            ),
-                                                                                            ty: DecimalP(
-                                                                                                5,
-                                                                                                4,
-                                                                                            ),
-                                                                                            nullable: true,
-                                                                                        },
-                                                                                    ),
-                                                                                },
-                                                                            ),
-                                                                            nullable: true,
-                                                                        },
-                                                                    ),
-                                                                },
-                                                            },
-                                                        ),
-                                                        Open(
-                                                            false,
-                                                        ),
-                                                    },
-                                                },
-                                            ),
-                                            nullable: true,
-                                        },
-                                    ),
-                                },
+                                    },
+                                ),
+                                nullable: true,
                             },
                         ),
                     },

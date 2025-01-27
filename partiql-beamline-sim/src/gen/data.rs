@@ -3,7 +3,7 @@ use crate::gen::{DataGenerationResult, ValueGenerator};
 
 use crate::sim::SimContext;
 use indexmap::IndexMap;
-use partiql_types::{PartiqlShape, PartiqlShapeBuilder, StructConstraint, StructField, StructType};
+use partiql_types::{PartiqlNoIdShapeBuilder, PartiqlShape, PartiqlShapeBuilder, StructConstraint, StructField, StructType};
 use partiql_value::{Tuple, Value};
 use rand::Rng;
 use std::fmt::{Debug, Formatter};
@@ -91,7 +91,7 @@ where
         }
     }
 
-    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
         match self {
             SimpleRandomDataImpl::Single(rv) => rv.shape(bld),
             SimpleRandomDataImpl::Collection(kvs) => {

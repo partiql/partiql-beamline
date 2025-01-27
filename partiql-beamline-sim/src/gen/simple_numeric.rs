@@ -2,10 +2,7 @@ use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariab
 use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::SimContext;
 
-use partiql_types::{
-    type_float64, type_int16, type_int32, type_int64, type_int8, PartiqlShape, PartiqlShapeBuilder,
-    Static,
-};
+use partiql_types::{type_float64, type_int16, type_int32, type_int64, type_int8, PartiqlNoIdShapeBuilder, PartiqlShape, PartiqlShapeBuilder, Static};
 use partiql_value::Value;
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -40,7 +37,7 @@ macro_rules! rv_ranged_ivg {
                 Value::from(self.dist.sample(rng) as $ty)
             }
 
-            fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+            fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
                 bld.new_static($pq_ty)
             }
         }
@@ -230,7 +227,7 @@ where
         Value::Decimal(Box::new(out_dec))
     }
 
-    fn shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
         bld.new_static(Static::DecimalP(
             self.precision as usize,
             self.scale as usize,

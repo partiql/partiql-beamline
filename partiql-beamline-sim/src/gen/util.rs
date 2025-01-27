@@ -1,15 +1,12 @@
-use partiql_types::{
-    type_bool, type_datetime, type_decimal, type_float64, type_int, type_string, type_array, type_bag,
-    BagType, PartiqlShape, PartiqlShapeBuilder, StructConstraint, StructField, StructType,
-};
+use partiql_types::{type_bool, type_datetime, type_decimal, type_float64, type_int, type_string, type_array, type_bag, BagType, PartiqlShape, PartiqlShapeBuilder, StructConstraint, StructField, StructType, PartiqlNoIdShapeBuilder};
 use partiql_value::Value;
 
 pub trait ValueTypeInference {
-    fn infer_shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape;
+    fn infer_shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape;
 }
 
 impl ValueTypeInference for Value {
-    fn infer_shape(&self, bld: &mut PartiqlShapeBuilder) -> PartiqlShape {
+    fn infer_shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
         match self {
             Value::Null => PartiqlShape::Undefined,
             Value::Missing => PartiqlShape::Undefined,
