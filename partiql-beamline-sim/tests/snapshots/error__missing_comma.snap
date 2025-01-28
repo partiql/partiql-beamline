@@ -4,7 +4,8 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × Ion Decoding Error
+Error: 
+  × Ion Decoding Error
     ╭─[missing_comma.script:2:25]
   1 │     
   2 │ ╭─▶         rand_processes::{

@@ -4,7 +4,8 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × `Regex` Generator Configuration
+Error: 
+  × `Regex` Generator Configuration
   ╰─▶   × Regex Error: Unsupported Regex: Look-around not supported for data generation
          ╭─[unsupported_lookaround.script:8:40]
        7 │             $data: {

@@ -4,7 +4,8 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × `Regex` Generator Configuration
+Error: 
+  × `Regex` Generator Configuration
   ├─▶   × Configuration Key `pattern`
   │   
   ╰─▶   × Ion Decoding Error
