@@ -6,6 +6,7 @@ use partiql_extension_ion::encode::{IonEncodeError, IonEncoderBuilder, IonEncode
 use partiql_extension_ion::Encoding::PartiqlEncodedAsIon;
 use partiql_value::{tuple, BindingsName, List, Value};
 use std::collections::HashMap;
+use partiql_value::datum::Datum;
 use time::macros::datetime;
 
 #[track_caller]

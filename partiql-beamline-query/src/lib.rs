@@ -2,7 +2,7 @@ use crate::generator::{AstGenContext, QueryGenerator};
 use crate::strategy::{QueryStrategy, StrategyError};
 use derive_builder::Builder;
 use miette::Diagnostic;
-use partiql_ast::pretty::{ToPretty, ToPrettyError};
+use partiql_common::pretty::{ToPretty, ToPrettyError};
 use partiql_beamline::sim::{ISim, SimBuilder, SimConfig, SimConfigError, SimContext, SimError};
 use partiql_beamline::source::SimSource;
 use partiql_types::PartiqlShapeBuilder;

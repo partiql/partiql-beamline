@@ -6,10 +6,16 @@ DatasetTypeMapping {
     mapping: {
         "sensors": Static(
             StaticType {
+                id: NodeId(
+                    0,
+                ),
                 ty: Bag(
                     BagType {
                         element_type: Static(
                             StaticType {
+                                id: NodeId(
+                                    0,
+                                ),
                                 ty: Struct(
                                     StructType {
                                         constraints: {
@@ -20,6 +26,9 @@ DatasetTypeMapping {
                                                         name: "tick",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Int64,
                                                                 nullable: true,
                                                             },
@@ -30,6 +39,9 @@ DatasetTypeMapping {
                                                         name: "id",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Int,
                                                                 nullable: true,
                                                             },
@@ -40,6 +52,9 @@ DatasetTypeMapping {
                                                         name: "i8",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Int8,
                                                                 nullable: true,
                                                             },
@@ -50,6 +65,9 @@ DatasetTypeMapping {
                                                         name: "f",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Float64,
                                                                 nullable: true,
                                                             },
@@ -60,6 +78,9 @@ DatasetTypeMapping {
                                                         name: "sub",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Struct(
                                                                     StructType {
                                                                         constraints: {
@@ -70,6 +91,9 @@ DatasetTypeMapping {
                                                                                         name: "o",
                                                                                         ty: Static(
                                                                                             StaticType {
+                                                                                                id: NodeId(
+                                                                                                    0,
+                                                                                                ),
                                                                                                 ty: Int8,
                                                                                                 nullable: true,
                                                                                             },
@@ -80,12 +104,18 @@ DatasetTypeMapping {
                                                                                         name: "f",
                                                                                         ty: Static(
                                                                                             StaticType {
+                                                                                                id: NodeId(
+                                                                                                    0,
+                                                                                                ),
                                                                                                 ty: Float64,
                                                                                                 nullable: true,
                                                                                             },
                                                                                         ),
                                                                                     },
                                                                                 },
+                                                                            ),
+                                                                            Open(
+                                                                                false,
                                                                             ),
                                                                         },
                                                                     },
@@ -99,6 +129,9 @@ DatasetTypeMapping {
                                                         name: "w",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: DecimalP(
                                                                     5,
                                                                     4,
@@ -112,6 +145,9 @@ DatasetTypeMapping {
                                                         name: "d",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: DecimalP(
                                                                     2,
                                                                     0,
@@ -128,18 +164,27 @@ DatasetTypeMapping {
                                                                 types: {
                                                                     Static(
                                                                         StaticType {
+                                                                            id: NodeId(
+                                                                                0,
+                                                                            ),
                                                                             ty: String,
                                                                             nullable: true,
                                                                         },
                                                                     ),
                                                                     Static(
                                                                         StaticType {
+                                                                            id: NodeId(
+                                                                                0,
+                                                                            ),
                                                                             ty: Int64,
                                                                             nullable: true,
                                                                         },
                                                                     ),
                                                                     Static(
                                                                         StaticType {
+                                                                            id: NodeId(
+                                                                                0,
+                                                                            ),
                                                                             ty: DecimalP(
                                                                                 3,
                                                                                 1,
@@ -149,6 +194,9 @@ DatasetTypeMapping {
                                                                     ),
                                                                     Static(
                                                                         StaticType {
+                                                                            id: NodeId(
+                                                                                0,
+                                                                            ),
                                                                             ty: Int8,
                                                                             nullable: true,
                                                                         },
@@ -162,10 +210,16 @@ DatasetTypeMapping {
                                                         name: "tick_array",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Array(
                                                                     ArrayType {
                                                                         element_type: Static(
                                                                             StaticType {
+                                                                                id: NodeId(
+                                                                                    0,
+                                                                                ),
                                                                                 ty: Int64,
                                                                                 nullable: true,
                                                                             },
@@ -181,10 +235,16 @@ DatasetTypeMapping {
                                                         name: "weight_array",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Array(
                                                                     ArrayType {
                                                                         element_type: Static(
                                                                             StaticType {
+                                                                                id: NodeId(
+                                                                                    0,
+                                                                                ),
                                                                                 ty: DecimalP(
                                                                                     5,
                                                                                     4,
@@ -203,10 +263,16 @@ DatasetTypeMapping {
                                                         name: "decimal_array",
                                                         ty: Static(
                                                             StaticType {
+                                                                id: NodeId(
+                                                                    0,
+                                                                ),
                                                                 ty: Array(
                                                                     ArrayType {
                                                                         element_type: Static(
                                                                             StaticType {
+                                                                                id: NodeId(
+                                                                                    0,
+                                                                                ),
                                                                                 ty: DecimalP(
                                                                                     5,
                                                                                     4,
@@ -221,6 +287,9 @@ DatasetTypeMapping {
                                                         ),
                                                     },
                                                 },
+                                            ),
+                                            Open(
+                                                false,
                                             ),
                                         },
                                     },

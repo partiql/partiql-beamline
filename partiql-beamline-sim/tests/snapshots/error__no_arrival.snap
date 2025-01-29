@@ -4,7 +4,8 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × No $arrival for random process
+Error: 
+  × No $arrival for random process
    ╭─[no_arrival.script:3:21]
  2 │             rand_processes::{
  3 │ ╭─▶             sensor: rand_process::{

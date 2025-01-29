@@ -2,7 +2,7 @@ use crate::gen::distributions::{Density, InnerValueGenerator, Meta, RandomVariab
 use crate::gen::{DataGenerationError, DataGenerationResult};
 use crate::sim::SimContext;
 use lipsum::{lipsum_title_with_rng, lipsum_with_rng};
-use partiql_types::{type_string, PartiqlShape, PartiqlShapeBuilder};
+use partiql_types::{type_string, PartiqlNoIdShapeBuilder, PartiqlShape, PartiqlShapeBuilder};
 use partiql_value::Value;
 use rand::distributions::Distribution;
 use rand::Rng;
@@ -45,7 +45,7 @@ where
         Value::from(lipsum_with_rng(rng, n))
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
         type_string!(bld)
     }
 }
@@ -72,7 +72,7 @@ where
         Value::from(lipsum_title_with_rng(rng))
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
         type_string!(bld)
     }
 }
@@ -119,7 +119,7 @@ where
         Value::from(String::from_utf8(out).expect("valid utf-8"))
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
         type_string!(bld)
     }
 }

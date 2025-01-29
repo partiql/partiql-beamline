@@ -13,7 +13,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
-partiql-ast = "0.10"
+partiql-ast = "0.11"
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
 partiql-beamline-query = { path = "../partiql-beamline-query", version = "0.1" }
 

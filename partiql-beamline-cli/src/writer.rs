@@ -8,7 +8,7 @@ use partiql_beamline::sim::{
 };
 use partiql_beamline::source::SimSource;
 use partiql_extension_ion::encode::{
-    IonEncodeError, IonEncoderBuilder, IonEncoderConfig, ValueEncoder,
+    IonEncodeError, IonEncoderBuilder, IonEncoderConfig,
 };
 use partiql_extension_ion::Encoding;
 use std::io::Write;

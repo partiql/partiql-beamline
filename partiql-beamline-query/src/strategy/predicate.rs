@@ -8,11 +8,9 @@ use bitflags::bitflags;
 use bitvec::order::Msb0;
 use bitvec::BitArr;
 use derive_builder::Builder;
-use itertools::Itertools;
 use partiql_beamline::sim::NameAndShape;
 use partiql_types::{PartiqlShape, Static};
 use std::fmt::Debug;
-use std::ops::RangeBounds;
 
 type PredicateBits = BitArr!(for 17, in u32, Msb0);
 

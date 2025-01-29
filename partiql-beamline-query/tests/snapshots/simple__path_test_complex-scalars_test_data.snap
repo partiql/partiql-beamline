@@ -3,7 +3,7 @@ source: partiql-beamline-query/tests/simple.rs
 expression: output
 ---
 [
-    [*].*: AnyOf(NOT NULL String, Int8, String, DateTime, String, Bool, String, AnyOf({value: Decimal(7,4), currency: String}, Decimal(3,2), Decimal(3,2), Decimal(4,2), Decimal(5,2)), {test_decimal: Decimal(3,0), test_string: String}, {nested_struct: {nested_struct: {nested_struct: {nested_struct: {nested_struct: {test_int: Int8}}}}}}),
+    [*].*: AnyOf(NOT NULL String, Int8, String, DateTime, Bool, AnyOf({value: Decimal(7,4), currency: String}, Decimal(3,2), Decimal(4,2), Decimal(5,2)), {test_decimal: Decimal(3,0), test_string: String}, {nested_struct: {nested_struct: {nested_struct: {nested_struct: {nested_struct: {test_int: Int8}}}}}}),
     [*].transaction_id: NOT NULL String,
     [*].marketplace_id: Int8,
     [*].country_code: String,
@@ -14,7 +14,7 @@ expression: output
     [*].price.*: AnyOf(Decimal(7,4), String),
     [*].price.value: Decimal(7,4),
     [*].price.currency: String,
-    [*].price: AnyOf(Decimal(3,2), Decimal(3,2), Decimal(4,2), Decimal(5,2)),
+    [*].price: AnyOf(Decimal(3,2), Decimal(4,2), Decimal(5,2)),
     [*].test_struct.*: AnyOf(Decimal(3,0), String),
     [*].test_struct.test_decimal: Decimal(3,0),
     [*].test_struct.test_string: String,

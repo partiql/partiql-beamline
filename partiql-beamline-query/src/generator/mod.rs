@@ -4,7 +4,7 @@ use partiql_ast::ast::AstNode;
 use std::cell::RefCell;
 use std::fmt::Debug;
 
-use partiql_ast::builder::NodeBuilderWithAutoId;
+use partiql_ast::builder::AstNodeBuilderWithAutoId;
 
 mod expr;
 mod from_clause;
@@ -28,12 +28,12 @@ use partiql_beamline::sim::SimContext;
 
 pub struct AstGenContext {
     ctx: SimContext,
-    bld: RefCell<NodeBuilderWithAutoId>,
+    bld: RefCell<AstNodeBuilderWithAutoId>,
 }
 
 impl AstGenContext {
     pub fn new(ctx: SimContext) -> Self {
-        let bld = RefCell::new(NodeBuilderWithAutoId::default());
+        let bld = RefCell::new(AstNodeBuilderWithAutoId::default());
         AstGenContext { ctx, bld }
     }
     pub fn node<T>(&self, node: T) -> AstNode<T> {

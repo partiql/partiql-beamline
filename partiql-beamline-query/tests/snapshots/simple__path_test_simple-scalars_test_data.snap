@@ -3,7 +3,7 @@ source: partiql-beamline-query/tests/simple.rs
 expression: output
 ---
 [
-    [*].*: AnyOf(NOT NULL String, NOT NULL Int8, String, DateTime, Bool, String, Decimal(7,2)),
+    [*].*: AnyOf(NOT NULL String, NOT NULL Int8, String, DateTime, Bool, Decimal(7,2)),
     [*].transaction_id: NOT NULL String,
     [*].marketplace_id: NOT NULL Int8,
     [*].country_code: String,

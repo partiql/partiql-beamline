@@ -3,7 +3,7 @@ use crate::primitives::{DataSetId, DataSetName, ProcessId, Sample, Tick};
 use crate::sim::{ConstantBindingValue, DatasetTypeMapping, SimContext};
 use indexmap::map::Entry;
 use indexmap::IndexMap;
-use partiql_types::{BagType, PartiqlShape, PartiqlShapeBuilder};
+use partiql_types::{BagType, PartiqlNoIdShapeBuilder, PartiqlShape, PartiqlShapeBuilder};
 
 #[derive(Debug, Clone)]
 pub struct SimpleProcess {
@@ -28,7 +28,7 @@ impl RandomProcess for SimpleProcess {
         self.arrival.next_arrival(now)
     }
 
-    fn shape(&self, bld: &PartiqlShapeBuilder) -> PartiqlShape {
+    fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> PartiqlShape {
         self.data.shape(bld)
     }
 }
@@ -79,14 +79,14 @@ impl RandomDataSets {
         procs
     }
 
-    pub fn shape(&self, bld: &PartiqlShapeBuilder) -> DatasetTypeMapping {
+    pub fn shape(&self, bld: &mut PartiqlNoIdShapeBuilder) -> DatasetTypeMapping {
         let mut kvs: IndexMap<&str, _> = IndexMap::default();
         for (d, rp) in &self.processes {
             match kvs.entry(&d.0) {
                 Entry::Occupied(mut e) => {
                     let x: &mut PartiqlShape = e.get_mut();
                     let y = rp.shape(bld);
-                    let u = x.clone().union_with(y); // todo make not need clone
+                    let u = bld.union(x.clone(), y); // todo make not need clone
                     *x = u;
                 }
                 Entry::Vacant(e) => {

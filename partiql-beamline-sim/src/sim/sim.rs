@@ -4,7 +4,7 @@ use std::error::Error;
 
 use crate::gen;
 use miette::Diagnostic;
-use partiql_types::{PartiqlShape, PartiqlShapeBuilder};
+use partiql_types::{PartiqlShape, PartiqlNoIdShapeBuilder};
 
 use rand::SeedableRng;
 use rand_pcg::Pcg64Mcg;
@@ -302,7 +302,7 @@ impl ISim for Sim {
     }
 
     fn shape(&self) -> DatasetTypeMapping {
-        self.processes.shape(PartiqlShapeBuilder::init_or_get())
+        self.processes.shape(&mut PartiqlNoIdShapeBuilder::default())
     }
 
     fn datasets(&self) -> Vec<(DataSetId, DataSetName)> {
@@ -383,7 +383,7 @@ impl MultiSim {
                 .build_time_ordered()
         };
 
-        let shape = processes.shape(PartiqlShapeBuilder::init_or_get());
+        let shape = processes.shape(&mut PartiqlNoIdShapeBuilder::default());
 
         let processes: Result<Vec<_>, _> = processes
             .decompose()

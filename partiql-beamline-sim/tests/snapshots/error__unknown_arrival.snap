@@ -4,7 +4,8 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × Unknown Binding {interarrival:5,}
+Error: 
+  × Unknown Binding {interarrival:5,}
    ╭─[unknown_arrival.script:3:23]
  2 │         rand_processes::{
  3 │             $arrival: NonsenseArrival:: { interarrival: minutes::5 },

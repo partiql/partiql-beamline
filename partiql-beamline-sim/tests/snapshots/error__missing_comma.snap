@@ -4,7 +4,8 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × Ion Decoding Error
+Error: 
+  × Ion Decoding Error
     ╭─[missing_comma.script:2:25]
   1 │     
   2 │ ╭─▶         rand_processes::{
@@ -21,13 +22,15 @@ Error:   × Ion Decoding Error
  13 │ │               ],
  14 │ │           }
  15 │ ├─▶     
-    · ╰──┤ invalid Ion syntax encountered; buffer: tick: Tick,
-    ·    │                     ... while matching a struct; buffer: {
-    ·    │                             id... while matching a struct; buffer: {
-    ·    │                         $data:... while matching a struct; buffer: {
-    ·    │                     $arrival: ... while matching a list; buffer: [
-    ·    │                 {
-    ·    │             ... while matching a struct; buffer: {
+    · ╰──┤ failed to parse a struct: Decoding(DecodingError { description: "failed to parse a list: Decoding(DecodingError { description: \"failed to parse a struct: Decoding(DecodingError { description: \\\"failed to parse a struct: Decoding(DecodingError { description: \\\\\\\"failed to parse a struct: Decoding(DecodingError { description: \\\\\\\\\\\\\\\"invalid Ion syntax encountered\\\\\\\\\\\\\\\\n        offset=289\\\\\\\\\\\\\\\\n        buffer head=<tick: Tick,\\\\\\\\\\\\\\\\n                    ...>\\\\\\\\\\\\\\\\n        buffer tail=<... }\\\\\\\\\\\\\\\\n            ],\\\\\\\\\\\\\\\\n        }\\\\\\\\\\\\\\\\n    >\\\\\\\\\\\\\\\\n        buffer len=107\\\\\\\\\\\\\\\\n        \\\\\\\\\\\\\\\", position: Some(Position { byte_offset: 289, byte_length: Some(107), line_column: None }) })\\\\\\\\n        offset=223\\\\\\\\n        buffer head=<{\\\\\\\\n                            id...>\\\\\\\\n        buffer tail=<... }\\\\\\\\n            ],\\\\\\\\n        }\\\\\\\\n    >\\\\\\\\n        buffer len=173\\\\\\\\n        \\\\\\\", position: Some(Position { byte_offset: 223, byte_length: Some(173), line_column: None }) })\\\\n        offset=190\\\\n        buffer head=<{\\\\n                        $data:...>\\\\n        buffer tail=<... }\\\\n            ],\\\\n        }\\\\n    >\\\\n        buffer len=206\\\\n        \\\", position: Some(Position { byte_offset: 190, byte_length: Some(206), line_column: None }) })\\n        offset=65\\n        buffer head=<{\\n                    $arrival: ...>\\n        buffer tail=<... }\\n            ],\\n        }\\n    >\\n        buffer len=331\\n        \", position: Some(Position { byte_offset: 65, byte_length: Some(331), line_column: None }) })\n        offset=47\n        buffer head=<[\n                {\n            ...>\n        buffer tail=<... }\n            ],\n        }\n    >\n        buffer len=349\n        ", position: Some(Position { byte_offset: 47, byte_length: Some(349), line_column: None }) })
+    ·    │         offset=25
+    ·    │         buffer head=<{
     ·    │             sensor: [
-    ·    │         ...
+    ·    │         ...>
+    ·    │         buffer tail=<... }
+    ·    │             ],
+    ·    │         }
+    ·    │     >
+    ·    │         buffer len=371
+    ·    │         
     ╰────

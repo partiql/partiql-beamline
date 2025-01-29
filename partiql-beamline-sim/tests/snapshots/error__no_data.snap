@@ -4,7 +4,8 @@ expression: output
 ---
   × Error in process configuration
 
-Error:   × No data for random process
+Error: 
+  × No data for random process
    ╭─[no_data.script:4:21]
  3 │             $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
  4 │             sensor: rand_process::{}

@@ -15,11 +15,12 @@ version.workspace = true
 [dependencies]
 partiql-beamline = { path = "../partiql-beamline-sim", version = "0.1" }
 
-partiql-parser = "0.10"
-partiql-ast = "^0.10.1"
-partiql-extension-ion = "0.10"
-partiql-value = "0.10"
-partiql-types = "0.10"
+partiql-parser = "0.11"
+partiql-ast = "^0.11"
+partiql-extension-ion = "0.11"
+partiql-value = "0.11"
+partiql-types = "0.11"
+partiql-common = "0.11"
 
 
 petgraph = "0.6.5"
