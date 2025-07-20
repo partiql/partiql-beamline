@@ -1,0 +1,495 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Your First Data Generation - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/getting-started/first-generation.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="your-first-data-generation"><a class="header" href="#your-first-data-generation">Your First Data Generation</a></h1>
+<p>Now that you have PartiQL Beamline installed, let’s generate your first dataset! This hands-on tutorial will walk you through creating a simple sensor data generator and understanding the basic concepts.</p>
+<h2 id="quick-start-using-an-example-script"><a class="header" href="#quick-start-using-an-example-script">Quick Start: Using an Example Script</a></h2>
+<p>PartiQL Beamline comes with several example scripts. Let’s start with the sensors example to see data generation in action.</p>
+<h3 id="step-1-generate-your-first-dataset"><a class="header" href="#step-1-generate-your-first-dataset">Step 1: Generate Your First Dataset</a></h3>
+<p>Run the following command to generate 2 sensor readings:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed-auto \
+    --start-auto \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+</code></pre>
+<p>You should see output similar to:</p>
+<pre><code>Seed: 12328924104731257599
+Start: 2024-01-20T20:05:41.000000000Z
+[2024-01-20 20:07:46.532 +00:00:00] : "sensors" { 'f': -2.5436390152455175, 'i8': 4, 'tick': 125532 }
+[2024-01-20 20:09:19.756 +00:00:00] : "sensors" { 'f': -63.49308817145054, 'i8': 4, 'tick': 218756 }
+</code></pre>
+<p>Congratulations! You’ve just generated your first synthetic dataset with PartiQL Beamline.</p>
+<h3 id="understanding-the-output"><a class="header" href="#understanding-the-output">Understanding the Output</a></h3>
+<p>Let’s break down what happened:</p>
+<ul>
+<li><strong>Seed</strong>: <code>12328924104731257599</code> - This random seed ensures reproducibility</li>
+<li><strong>Start</strong>: <code>2024-01-20T20:05:41.000000000Z</code> - The simulation start time</li>
+<li><strong>Data Records</strong>: Two sensor readings with timestamps, each containing:
+<ul>
+<li><code>f</code>: A floating-point sensor value</li>
+<li><code>i8</code>: An 8-bit integer value</li>
+<li><code>tick</code>: A simulation tick counter</li>
+</ul>
+</li>
+</ul>
+<h3 id="step-2-reproduce-the-same-data"><a class="header" href="#step-2-reproduce-the-same-data">Step 2: Reproduce the Same Data</a></h3>
+<p>The beauty of PartiQL Beamline is reproducibility. Let’s generate the exact same data using the seed from the previous run:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-auto \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+</code></pre>
+<p>Notice that the data values are identical, but the timestamps might be different because we used <code>--start-auto</code>. To get exactly the same output, use the same start time:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-iso "2024-01-20T20:05:41.000000000Z" \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+</code></pre>
+<p>Now you’ll get exactly the same output as the first run!</p>
+<h2 id="understanding-the-script"><a class="header" href="#understanding-the-script">Understanding the Script</a></h2>
+<p>Let’s examine the script that generated this data. Look at the contents of <code>partiql-beamline-sim/tests/scripts/sensors.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 1, high: 3 },
+
+    sensors: $n::[
+        rand_process::{
+            $r: Uniform::[5,10],
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $data: {
+                tick: Tick,
+                id: '$@n',
+                i8: UniformI8,
+                f: UniformF64,
+            }
+        }
+    ],
+}
+</code></pre>
+<h3 id="script-breakdown"><a class="header" href="#script-breakdown">Script Breakdown</a></h3>
+<ol>
+<li>
+<p><strong><code>rand_processes::</code></strong>: This annotation tells PartiQL Beamline that this structure defines random processes</p>
+</li>
+<li>
+<p><strong><code>$n: UniformU8::{ low: 1, high: 3 }</code></strong>: Creates a variable <code>n</code> that generates a random number between 1 and 3</p>
+</li>
+<li>
+<p><strong><code>sensors: $n::[...]</code></strong>: Creates a dataset called “sensors” with <code>n</code> random processes (1-3 processes)</p>
+</li>
+<li>
+<p><strong><code>rand_process::</code></strong>: Defines a single random process within the sensors dataset</p>
+</li>
+<li>
+<p><strong><code>$r: Uniform::[5,10]</code></strong>: Creates a variable <code>r</code> that randomly selects between 5 and 10</p>
+</li>
+<li>
+<p><strong><code>$arrival: HomogeneousPoisson:: { interarrival: minutes::$r }</code></strong>: Defines how often data arrives (every <code>r</code> minutes using a Poisson process)</p>
+</li>
+<li>
+<p><strong><code>$data:</code></strong>: Defines the structure of each generated data record:</p>
+<ul>
+<li><code>tick: Tick</code> - Current simulation tick</li>
+<li><code>id: '$@n'</code> - Process identifier</li>
+<li><code>i8: UniformI8</code> - Random 8-bit integer</li>
+<li><code>f: UniformF64</code> - Random 64-bit float</li>
+</ul>
+</li>
+</ol>
+<h2 id="exploring-different-output-formats"><a class="header" href="#exploring-different-output-formats">Exploring Different Output Formats</a></h2>
+<p>PartiQL Beamline supports multiple output formats. Let’s try generating the same data in different formats:</p>
+<h3 id="ion-pretty-format"><a class="header" href="#ion-pretty-format">Ion Pretty Format</a></h3>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-auto \
+    --sample-count 3 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
+    --output-format ion-pretty
+</code></pre>
+<p>This produces nicely formatted Ion output:</p>
+<pre><code class="language-ion">{
+  seed: 12328924104731257599,
+  start: "2024-01-20T20:05:41.000000000Z",
+  data: {
+    sensors: [
+      {
+        i8: -21,
+        tick: 9421,
+        f: 2.803799956162891e0,
+        id: 1
+      },
+      {
+        i8: -70,
+        tick: 12294,
+        f: 1.7229362418585936e1,
+        id: 1
+      },
+      {
+        i8: 84,
+        tick: 32697,
+        f: -2.4809825455060093e1,
+        id: 0
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="text-format-default"><a class="header" href="#text-format-default">Text Format (Default)</a></h3>
+<p>The default text format is human-readable and great for quick inspection:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-auto \
+    --sample-count 3 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
+    --output-format text
+</code></pre>
+<h2 id="creating-your-own-simple-script"><a class="header" href="#creating-your-own-simple-script">Creating Your Own Simple Script</a></h2>
+<p>Now let’s create your own script from scratch. Create a new file called <code>my-first-script.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    simple_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            timestamp: Instant,
+            temperature: UniformF64::{ low: 20.0, high: 35.0 },
+            humidity: UniformF64::{ low: 30.0, high: 80.0 },
+            sensor_id: UUID,
+            active: Bool::{ p: 0.9 }
+        }
+    }
+}
+</code></pre>
+<p>This script creates a simple weather sensor that generates:</p>
+<ul>
+<li><code>timestamp</code>: Current simulation time</li>
+<li><code>temperature</code>: Random temperature between 20-35°C</li>
+<li><code>humidity</code>: Random humidity between 30-80%</li>
+<li><code>sensor_id</code>: A unique UUID for each reading</li>
+<li><code>active</code>: Boolean with 90% chance of being true</li>
+</ul>
+<h3 id="test-your-script"><a class="header" href="#test-your-script">Test Your Script</a></h3>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 5 \
+    --script my-first-script.ion \
+    --output-format ion-pretty
+</code></pre>
+<h2 id="understanding-key-concepts"><a class="header" href="#understanding-key-concepts">Understanding Key Concepts</a></h2>
+<h3 id="seeds-and-reproducibility"><a class="header" href="#seeds-and-reproducibility">Seeds and Reproducibility</a></h3>
+<p>The <code>--seed</code> parameter controls randomness:</p>
+<ul>
+<li><code>--seed-auto</code>: Generate a random seed (different data each time)</li>
+<li><code>--seed 42</code>: Use a specific seed (same data each time)</li>
+</ul>
+<h3 id="start-times"><a class="header" href="#start-times">Start Times</a></h3>
+<p>The <code>--start</code> parameter controls simulation time:</p>
+<ul>
+<li><code>--start-auto</code>: Use current time</li>
+<li><code>--start-iso "2024-01-01T00:00:00Z"</code>: Use specific time</li>
+<li><code>--start-epoch-ms 1704067200000</code>: Use epoch milliseconds</li>
+</ul>
+<h3 id="sample-count"><a class="header" href="#sample-count">Sample Count</a></h3>
+<p>The <code>--sample-count</code> parameter controls how many data points to generate. This is particularly useful for:</p>
+<ul>
+<li>Testing with small datasets</li>
+<li>Generating large datasets for performance testing</li>
+<li>Controlling output size</li>
+</ul>
+<h2 id="common-patterns"><a class="header" href="#common-patterns">Common Patterns</a></h2>
+<h3 id="multiple-datasets"><a class="header" href="#multiple-datasets">Multiple Datasets</a></h3>
+<p>You can generate data for specific datasets using the <code>--dataset</code> flag:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 10 \
+    --script-path partiql-beamline-sim/tests/scripts/client-service.ion \
+    --dataset service --dataset client_1 \
+    --output-format ion-pretty
+</code></pre>
+<h3 id="controlling-nullability"><a class="header" href="#controlling-nullability">Controlling Nullability</a></h3>
+<p>You can control how often NULL values appear:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 5 \
+    --script my-first-script.ion \
+    --default-nullable true \
+    --pct-null 0.1  # 10% chance of NULL values
+</code></pre>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you’ve successfully generated your first datasets, you’re ready to dive deeper into PartiQL Beamline’s capabilities. In the next section, we’ll explore the core concepts that power PartiQL Beamline’s data generation, including:</p>
+<ul>
+<li>Random processes and stochastic modeling</li>
+<li>Data generators and their configurations</li>
+<li>Temporal modeling and arrival patterns</li>
+<li>Relationships between data elements</li>
+</ul>
+<h2 id="quick-reference"><a class="header" href="#quick-reference">Quick Reference</a></h2>
+<p>Here are the commands you’ve learned in this chapter:</p>
+<pre><code class="language-bash"># Basic data generation
+cargo run gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
+
+# Reproducible generation
+cargo run gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
+
+# Different output formats
+cargo run gen data ... --output-format [text|ion|ion-pretty]
+
+# Specific datasets
+cargo run gen data ... --dataset DATASET_NAME
+
+# Control nullability
+cargo run gen data ... --default-nullable true --pct-null 0.1
+</code></pre>
+<p>Congratulations on completing your first data generation with PartiQL Beamline! You’re now ready to explore more advanced features and create more sophisticated synthetic datasets.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../getting-started/installation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../basics/core-concepts.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../getting-started/installation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../basics/core-concepts.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

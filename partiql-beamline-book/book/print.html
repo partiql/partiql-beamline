@@ -1,0 +1,2167 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>PartiQL Beamline</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>Welcome to the <strong>PartiQL Beamline Guide</strong> – your comprehensive resource for mastering synthetic data and query generation for PartiQL testing and experimentation.</p>
+<h2 id="what-youll-learn"><a class="header" href="#what-youll-learn">What You’ll Learn</a></h2>
+<p>This guide will take you on a journey from understanding the basics of PartiQL Beamline to becoming proficient in generating sophisticated synthetic datasets and queries. Whether you’re a developer looking to test your PartiQL implementations, a data engineer needing realistic test data, or a researcher exploring query patterns, this guide has you covered.</p>
+<h2 id="how-this-guide-is-organized"><a class="header" href="#how-this-guide-is-organized">How This Guide is Organized</a></h2>
+<p>The guide is structured to gradually build your understanding and skills:</p>
+<ol>
+<li><strong>Getting Started</strong> - Learn what PartiQL Beamline is and get your first data generation running</li>
+<li><strong>Understanding the Basics</strong> - Grasp core concepts like random processes and reproducible generation</li>
+<li><strong>Data Generation</strong> - Master the art of creating synthetic data with various types and patterns</li>
+<li><strong>Query Generation</strong> - Learn to generate PartiQL queries that match your data shapes</li>
+<li><strong>Schema and Shape Inference</strong> - Understand how to work with data schemas and type inference</li>
+<li><strong>Database Generation</strong> - Create complete databases with both data and schemas</li>
+<li><strong>Command Line Interface</strong> - Become proficient with all CLI commands and options</li>
+<li><strong>Advanced Topics</strong> - Explore custom generators, performance optimization, and integration patterns</li>
+<li><strong>Reference</strong> - Quick access to all generators, configurations, and commands</li>
+<li><strong>Examples and Tutorials</strong> - Hands-on tutorials with real-world scenarios</li>
+</ol>
+<h2 id="what-is-partiql-beamline"><a class="header" href="#what-is-partiql-beamline">What is PartiQL Beamline?</a></h2>
+<p>PartiQL Beamline is a powerful tool for <strong>fast data generation</strong> designed specifically for PartiQL testing and experimentation. It generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong>, meaning you can create realistic datasets that are both random enough to be useful for testing and deterministic enough to be reproducible for debugging and validation.</p>
+<h3 id="key-features"><a class="header" href="#key-features">Key Features</a></h3>
+<ul>
+<li><strong>Reproducible Data Generation</strong>: Use seeds to generate the same data every time</li>
+<li><strong>Stochastic Processes</strong>: Model real-world data patterns using mathematical distributions</li>
+<li><strong>Query Generation</strong>: Automatically generate PartiQL queries that match your data shapes</li>
+<li><strong>Schema Inference</strong>: Automatically infer and export data schemas in various formats</li>
+<li><strong>Multiple Output Formats</strong>: Support for Ion, JSON, SQL DDL, and more</li>
+<li><strong>Database Generation</strong>: Create complete databases with both data and schemas</li>
+<li><strong>Flexible Configuration</strong>: Highly configurable through Ion-based scripts</li>
+</ul>
+<h3 id="why-use-partiql-beamline"><a class="header" href="#why-use-partiql-beamline">Why Use PartiQL Beamline?</a></h3>
+<ul>
+<li><strong>Testing</strong>: Generate realistic test data for your PartiQL implementations</li>
+<li><strong>Benchmarking</strong>: Create consistent datasets for performance testing</li>
+<li><strong>Development</strong>: Quickly prototype with realistic data without manual data creation</li>
+<li><strong>Research</strong>: Explore query patterns and data relationships</li>
+<li><strong>Education</strong>: Learn PartiQL with hands-on examples and realistic datasets</li>
+</ul>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
+<p>This guide assumes basic familiarity with:</p>
+<ul>
+<li>Command-line interfaces</li>
+<li>JSON/Ion data formats</li>
+<li>Basic understanding of databases and queries</li>
+<li>Rust programming language (for building from source)</li>
+</ul>
+<p>Don’t worry if you’re new to some of these concepts – we’ll explain everything you need to know as we go!</p>
+<h2 id="getting-help"><a class="header" href="#getting-help">Getting Help</a></h2>
+<p>If you encounter issues or have questions while following this guide:</p>
+<ul>
+<li>Check the <a href="./reference/troubleshooting.html">Troubleshooting</a> section</li>
+<li>Review the <a href="./reference/commands.html">Command Reference</a> for detailed CLI options</li>
+<li>Visit the <a href="https://github.com/partiql/partiql-beamline">PartiQL Beamline GitHub repository</a> for the latest updates and community support</li>
+</ul>
+<p>Let’s begin your journey with PartiQL Beamline!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="what-is-partiql-beamline-1"><a class="header" href="#what-is-partiql-beamline-1">What is PartiQL Beamline?</a></h1>
+<p>PartiQL Beamline is a sophisticated tool designed for <strong>fast data generation</strong> specifically tailored for PartiQL testing and experimentation. At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data patterns.</p>
+<h2 id="the-problem-it-solves"><a class="header" href="#the-problem-it-solves">The Problem It Solves</a></h2>
+<p>When working with PartiQL implementations, developers and researchers often face several challenges:</p>
+<ul>
+<li><strong>Lack of Test Data</strong>: Creating realistic test datasets manually is time-consuming and error-prone</li>
+<li><strong>Inconsistent Testing</strong>: Different test runs with different data make it hard to reproduce bugs</li>
+<li><strong>Query Testing</strong>: Writing queries that match your data structures requires understanding both the data shape and query patterns</li>
+<li><strong>Performance Benchmarking</strong>: Consistent, scalable datasets are needed for meaningful performance comparisons</li>
+<li><strong>Schema Evolution</strong>: As data structures change, maintaining test data becomes increasingly complex</li>
+</ul>
+<p>PartiQL Beamline addresses all these challenges with a unified approach to synthetic data generation.</p>
+<h2 id="core-components"><a class="header" href="#core-components">Core Components</a></h2>
+<p>PartiQL Beamline consists of three main components that work together:</p>
+<h3 id="1-data-generator"><a class="header" href="#1-data-generator">1. Data Generator</a></h3>
+<p>The <strong>Data Generator</strong> creates reproducible pseudo-random data based on mathematical distributions and stochastic processes. It can generate:</p>
+<ul>
+<li>Simple scalar values (numbers, strings, booleans, dates)</li>
+<li>Complex nested structures (objects, arrays, mixed types)</li>
+<li>Time-series data with realistic temporal patterns</li>
+<li>Related data across multiple datasets</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li><strong>Reproducible</strong>: Same seed always produces the same data</li>
+<li><strong>Configurable</strong>: Highly customizable through Ion-based scripts</li>
+<li><strong>Realistic</strong>: Uses statistical distributions to model real-world patterns</li>
+<li><strong>Scalable</strong>: Can generate datasets from small samples to millions of records</li>
+</ul>
+<h3 id="2-query-generator"><a class="header" href="#2-query-generator">2. Query Generator</a></h3>
+<p>The <strong>Query Generator</strong> creates PartiQL queries that match the shapes and types of your generated data. It can produce:</p>
+<ul>
+<li><code>SELECT * FROM ... WHERE ...</code> queries with various predicates</li>
+<li><code>SELECT ... FROM ... WHERE ...</code> queries with custom projections</li>
+<li><code>SELECT ... EXCLUDE ... FROM ... WHERE ...</code> queries with exclusions</li>
+<li>Complex nested queries with deep path expressions</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li><strong>Shape-Aware</strong>: Generates queries that match your data structure</li>
+<li><strong>Parameterizable</strong>: Control query complexity, depth, and patterns</li>
+<li><strong>Comprehensive</strong>: Supports all major PartiQL query patterns</li>
+<li><strong>Reproducible</strong>: Same seed produces the same query patterns</li>
+</ul>
+<h3 id="3-cli-interface"><a class="header" href="#3-cli-interface">3. CLI Interface</a></h3>
+<p>The <strong>Command Line Interface</strong> provides easy access to all functionality with comprehensive options for:</p>
+<ul>
+<li>Data generation with various output formats</li>
+<li>Query generation with extensive parameterization</li>
+<li>Schema inference and export</li>
+<li>Database creation with both data and schemas</li>
+</ul>
+<h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
+<h3 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h3>
+<p>PartiQL Beamline models data generation as <strong>stochastic processes</strong> - mathematical models that describe systems that appear to vary randomly over time. This approach allows it to:</p>
+<ul>
+<li>Generate data that follows realistic patterns</li>
+<li>Model temporal relationships (like arrival times)</li>
+<li>Create correlated data across different fields</li>
+<li>Simulate real-world variability while maintaining reproducibility</li>
+</ul>
+<h3 id="scripts-and-configuration"><a class="header" href="#scripts-and-configuration">Scripts and Configuration</a></h3>
+<p>Data generation is controlled through <strong>Ion-based scripts</strong> that define:</p>
+<ul>
+<li><strong>Random Processes</strong>: How data arrives and is generated over time</li>
+<li><strong>Data Generators</strong>: What types of data to create and their distributions</li>
+<li><strong>Relationships</strong>: How different data elements relate to each other</li>
+<li><strong>Constraints</strong>: Rules and patterns the data should follow</li>
+</ul>
+<h3 id="reproducibility"><a class="header" href="#reproducibility">Reproducibility</a></h3>
+<p>One of PartiQL Beamline’s key strengths is <strong>reproducibility</strong>:</p>
+<ul>
+<li><strong>Seeds</strong>: Control the random number generation for consistent results</li>
+<li><strong>Timestamps</strong>: Control the starting time for temporal data</li>
+<li><strong>Deterministic</strong>: Same inputs always produce the same outputs</li>
+<li><strong>Debuggable</strong>: Reproduce exact datasets for debugging and validation</li>
+</ul>
+<h2 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h2>
+<h3 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h3>
+<ul>
+<li><strong>Unit Testing</strong>: Generate consistent test data for PartiQL implementations</li>
+<li><strong>Integration Testing</strong>: Create realistic datasets for end-to-end testing</li>
+<li><strong>Regression Testing</strong>: Ensure changes don’t break existing functionality</li>
+<li><strong>Edge Case Testing</strong>: Generate data that exercises boundary conditions</li>
+</ul>
+<h3 id="performance-and-benchmarking"><a class="header" href="#performance-and-benchmarking">Performance and Benchmarking</a></h3>
+<ul>
+<li><strong>Load Testing</strong>: Generate large datasets for performance evaluation</li>
+<li><strong>Comparative Analysis</strong>: Create consistent datasets for comparing implementations</li>
+<li><strong>Scalability Testing</strong>: Test how systems perform with growing data sizes</li>
+<li><strong>Query Optimization</strong>: Generate queries to test optimization strategies</li>
+</ul>
+<h3 id="research-and-education"><a class="header" href="#research-and-education">Research and Education</a></h3>
+<ul>
+<li><strong>Algorithm Research</strong>: Generate datasets for testing new PartiQL features</li>
+<li><strong>Query Pattern Analysis</strong>: Study how different query patterns perform</li>
+<li><strong>Educational Examples</strong>: Create realistic examples for learning PartiQL</li>
+<li><strong>Prototyping</strong>: Quickly generate data for proof-of-concept implementations</li>
+</ul>
+<h2 id="what-makes-it-special"><a class="header" href="#what-makes-it-special">What Makes It Special</a></h2>
+<h3 id="mathematical-foundation"><a class="header" href="#mathematical-foundation">Mathematical Foundation</a></h3>
+<p>Unlike simple random data generators, PartiQL Beamline is built on solid mathematical foundations:</p>
+<ul>
+<li><strong>Probability Distributions</strong>: Uses proper statistical distributions for realistic data</li>
+<li><strong>Stochastic Modeling</strong>: Models real-world processes mathematically</li>
+<li><strong>Temporal Modeling</strong>: Handles time-based data generation correctly</li>
+<li><strong>Correlation Modeling</strong>: Can generate related data across multiple dimensions</li>
+</ul>
+<h3 id="partiql-specific"><a class="header" href="#partiql-specific">PartiQL-Specific</a></h3>
+<p>PartiQL Beamline is designed specifically for PartiQL, which means:</p>
+<ul>
+<li><strong>Native Ion Support</strong>: First-class support for Amazon Ion data format</li>
+<li><strong>PartiQL Types</strong>: Understands PartiQL’s type system and semantics</li>
+<li><strong>Query Generation</strong>: Generates queries that are valid and meaningful for PartiQL</li>
+<li><strong>Schema Integration</strong>: Works seamlessly with PartiQL schema systems</li>
+</ul>
+<h3 id="production-ready"><a class="header" href="#production-ready">Production-Ready</a></h3>
+<p>PartiQL Beamline is built for real-world use:</p>
+<ul>
+<li><strong>Performance</strong>: Optimized for generating large datasets efficiently</li>
+<li><strong>Memory Efficient</strong>: Streams data generation to handle large datasets</li>
+<li><strong>Robust</strong>: Handles edge cases and error conditions gracefully</li>
+<li><strong>Extensible</strong>: Designed to be extended with new generators and formats</li>
+</ul>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand what PartiQL Beamline is and why it’s useful, let’s get it installed and running on your system. In the next section, we’ll walk through the installation process and verify that everything is working correctly.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation-and-setup"><a class="header" href="#installation-and-setup">Installation and Setup</a></h1>
+<p>This chapter will guide you through installing PartiQL Beamline and setting up your development environment. PartiQL Beamline is written in Rust, so we’ll cover both building from source and using pre-built binaries when available.</p>
+<h2 id="prerequisites-1"><a class="header" href="#prerequisites-1">Prerequisites</a></h2>
+<p>Before installing PartiQL Beamline, ensure you have the following prerequisites:</p>
+<h3 id="required"><a class="header" href="#required">Required</a></h3>
+<ul>
+<li><strong>Rust Toolchain</strong>: PartiQL Beamline requires Rust 1.70 or later</li>
+<li><strong>Git</strong>: For cloning the repository</li>
+<li><strong>Command Line Access</strong>: Terminal or command prompt</li>
+</ul>
+<h3 id="optional-but-recommended"><a class="header" href="#optional-but-recommended">Optional but Recommended</a></h3>
+<ul>
+<li><strong>Text Editor</strong>: For editing Ion scripts (VS Code, vim, emacs, etc.)</li>
+<li><strong>JSON/Ion Viewer</strong>: For examining generated data</li>
+</ul>
+<h2 id="installing-rust"><a class="header" href="#installing-rust">Installing Rust</a></h2>
+<p>If you don’t have Rust installed, follow these steps:</p>
+<h3 id="on-macos-linux-or-wsl"><a class="header" href="#on-macos-linux-or-wsl">On macOS, Linux, or WSL</a></h3>
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+</code></pre>
+<h3 id="on-windows"><a class="header" href="#on-windows">On Windows</a></h3>
+<ol>
+<li>Download and run <a href="https://rustup.rs/">rustup-init.exe</a></li>
+<li>Follow the installation prompts</li>
+<li>Restart your command prompt</li>
+</ol>
+<h3 id="verify-rust-installation"><a class="header" href="#verify-rust-installation">Verify Rust Installation</a></h3>
+<pre><code class="language-bash">rustc --version
+cargo --version
+</code></pre>
+<p>You should see version information for both <code>rustc</code> and <code>cargo</code>.</p>
+<h2 id="installing-partiql-beamline"><a class="header" href="#installing-partiql-beamline">Installing PartiQL Beamline</a></h2>
+<h3 id="method-1-building-from-source-recommended"><a class="header" href="#method-1-building-from-source-recommended">Method 1: Building from Source (Recommended)</a></h3>
+<p>This is currently the primary method for installing PartiQL Beamline:</p>
+<ol>
+<li>
+<p><strong>Clone the Repository</strong></p>
+<pre><code class="language-bash">git clone https://github.com/partiql/partiql-beamline.git
+cd partiql-beamline
+</code></pre>
+</li>
+<li>
+<p><strong>Build the Project</strong></p>
+<pre><code class="language-bash">cargo build --release
+</code></pre>
+<p>This will compile PartiQL Beamline in release mode, which provides better performance for data generation.</p>
+</li>
+<li>
+<p><strong>Verify the Installation</strong></p>
+<pre><code class="language-bash">./target/release/partiql-beamline-cli --version
+</code></pre>
+<p>You should see version information for PartiQL Beamline.</p>
+</li>
+<li>
+<p><strong>Optional: Add to PATH</strong></p>
+<p>For easier access, you can add the binary to your PATH or create a symlink:</p>
+<p><strong>On macOS/Linux:</strong></p>
+<pre><code class="language-bash"># Option 1: Copy to a directory in your PATH
+sudo cp target/release/partiql-beamline-cli /usr/local/bin/
+
+# Option 2: Create a symlink
+ln -s $(pwd)/target/release/partiql-beamline-cli ~/.local/bin/partiql-beamline-cli
+
+# Option 3: Add to your shell profile
+echo 'export PATH="'$(pwd)'/target/release:$PATH"' &gt;&gt; ~/.bashrc
+source ~/.bashrc
+</code></pre>
+<p><strong>On Windows:</strong></p>
+<pre><code class="language-cmd"># Add the target/release directory to your PATH environment variable
+# Or copy the .exe file to a directory already in your PATH
+</code></pre>
+</li>
+</ol>
+<h3 id="method-2-using-cargo-install-future"><a class="header" href="#method-2-using-cargo-install-future">Method 2: Using Cargo Install (Future)</a></h3>
+<p>Once PartiQL Beamline is published to crates.io, you’ll be able to install it directly:</p>
+<pre><code class="language-bash"># This will be available in the future
+cargo install partiql-beamline-cli
+</code></pre>
+<h2 id="verifying-your-installation"><a class="header" href="#verifying-your-installation">Verifying Your Installation</a></h2>
+<p>Let’s verify that PartiQL Beamline is installed correctly by running a few basic commands:</p>
+<h3 id="1-check-version"><a class="header" href="#1-check-version">1. Check Version</a></h3>
+<pre><code class="language-bash">partiql-beamline-cli --version
+</code></pre>
+<h3 id="2-view-help"><a class="header" href="#2-view-help">2. View Help</a></h3>
+<pre><code class="language-bash">partiql-beamline-cli --help
+</code></pre>
+<p>You should see output similar to:</p>
+<pre><code>PartiQL Beamline CLI
+
+Usage: partiql-beamline-cli &lt;COMMAND&gt;
+
+Commands:
+  gen          Run the generator
+  infer-shape  Run the script shape inference
+  help         Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+</code></pre>
+<h3 id="3-test-data-generation"><a class="header" href="#3-test-data-generation">3. Test Data Generation</a></h3>
+<p>Let’s run a simple test to ensure data generation works:</p>
+<pre><code class="language-bash">partiql-beamline-cli gen data --help
+</code></pre>
+<p>This should display the help for the data generation command, confirming that the core functionality is available.</p>
+<h2 id="development-environment-setup"><a class="header" href="#development-environment-setup">Development Environment Setup</a></h2>
+<h3 id="setting-up-your-workspace"><a class="header" href="#setting-up-your-workspace">Setting Up Your Workspace</a></h3>
+<p>Create a directory for your PartiQL Beamline projects:</p>
+<pre><code class="language-bash">mkdir ~/partiql-beamline-workspace
+cd ~/partiql-beamline-workspace
+</code></pre>
+<h3 id="editor-configuration"><a class="header" href="#editor-configuration">Editor Configuration</a></h3>
+<h4 id="vs-code"><a class="header" href="#vs-code">VS Code</a></h4>
+<p>If you’re using VS Code, consider installing these extensions for better Ion support:</p>
+<ol>
+<li><strong>Rust Analyzer</strong>: For Rust syntax highlighting if you plan to contribute</li>
+<li><strong>JSON</strong>: For viewing generated JSON output</li>
+<li><strong>Better TOML</strong>: For configuration files</li>
+</ol>
+<h4 id="vimneovim"><a class="header" href="#vimneovim">Vim/Neovim</a></h4>
+<p>Add Ion syntax highlighting by creating <code>~/.vim/syntax/ion.vim</code> or using existing Ion plugins.</p>
+<h3 id="shell-aliases-optional"><a class="header" href="#shell-aliases-optional">Shell Aliases (Optional)</a></h3>
+<p>For convenience, you might want to create shell aliases:</p>
+<pre><code class="language-bash"># Add to your ~/.bashrc, ~/.zshrc, or equivalent
+alias pql-gen='partiql-beamline-cli gen data'
+alias pql-query='partiql-beamline-cli query'
+alias pql-shape='partiql-beamline-cli infer-shape'
+</code></pre>
+<h2 id="troubleshooting-installation"><a class="header" href="#troubleshooting-installation">Troubleshooting Installation</a></h2>
+<h3 id="common-issues"><a class="header" href="#common-issues">Common Issues</a></h3>
+<h4 id="rust-version-too-old"><a class="header" href="#rust-version-too-old">Rust Version Too Old</a></h4>
+<p><strong>Error</strong>: <code>error: package requires rustc 1.70 or newer</code></p>
+<p><strong>Solution</strong>: Update Rust:</p>
+<pre><code class="language-bash">rustup update
+</code></pre>
+<h4 id="build-failures"><a class="header" href="#build-failures">Build Failures</a></h4>
+<p><strong>Error</strong>: Compilation errors during <code>cargo build</code></p>
+<p><strong>Solutions</strong>:</p>
+<ol>
+<li>Ensure you have the latest Rust version</li>
+<li>Clean and rebuild:
+<pre><code class="language-bash">cargo clean
+cargo build --release
+</code></pre>
+</li>
+<li>Check for system-specific dependencies</li>
+</ol>
+<h4 id="permission-issues"><a class="header" href="#permission-issues">Permission Issues</a></h4>
+<p><strong>Error</strong>: Permission denied when copying to <code>/usr/local/bin</code></p>
+<p><strong>Solution</strong>: Use <code>sudo</code> or choose a different installation location:</p>
+<pre><code class="language-bash"># Install to user directory instead
+mkdir -p ~/.local/bin
+cp target/release/partiql-beamline-cli ~/.local/bin/
+</code></pre>
+<h4 id="path-issues"><a class="header" href="#path-issues">PATH Issues</a></h4>
+<p><strong>Error</strong>: <code>command not found: partiql-beamline-cli</code></p>
+<p><strong>Solution</strong>: Verify the binary is in your PATH:</p>
+<pre><code class="language-bash">which partiql-beamline-cli
+echo $PATH
+</code></pre>
+<h3 id="getting-help-1"><a class="header" href="#getting-help-1">Getting Help</a></h3>
+<p>If you encounter issues not covered here:</p>
+<ol>
+<li>Check the <a href="getting-started/../reference/troubleshooting.html">Troubleshooting</a> section</li>
+<li>Review the <a href="https://github.com/partiql/partiql-beamline/issues">GitHub Issues</a></li>
+<li>Create a new issue with:
+<ul>
+<li>Your operating system</li>
+<li>Rust version (<code>rustc --version</code>)</li>
+<li>Complete error messages</li>
+<li>Steps to reproduce</li>
+</ul>
+</li>
+</ol>
+<h2 id="performance-considerations"><a class="header" href="#performance-considerations">Performance Considerations</a></h2>
+<h3 id="release-vs-debug-builds"><a class="header" href="#release-vs-debug-builds">Release vs Debug Builds</a></h3>
+<p>Always use release builds for actual data generation:</p>
+<pre><code class="language-bash"># Debug build (slower, for development)
+cargo build
+
+# Release build (faster, for production use)
+cargo build --release
+</code></pre>
+<p>Release builds can be 10-100x faster than debug builds for data generation tasks.</p>
+<h3 id="system-resources"><a class="header" href="#system-resources">System Resources</a></h3>
+<p>PartiQL Beamline is designed to be memory-efficient, but consider your system resources:</p>
+<ul>
+<li><strong>RAM</strong>: 4GB minimum, 8GB+ recommended for large datasets</li>
+<li><strong>Storage</strong>: Ensure adequate disk space for generated data</li>
+<li><strong>CPU</strong>: Multi-core processors will benefit from parallel processing features</li>
+</ul>
+<h2 id="next-steps-1"><a class="header" href="#next-steps-1">Next Steps</a></h2>
+<p>Now that you have PartiQL Beamline installed and verified, you’re ready to generate your first dataset! In the next section, we’ll walk through creating your first data generation script and producing some sample data.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="your-first-data-generation"><a class="header" href="#your-first-data-generation">Your First Data Generation</a></h1>
+<p>Now that you have PartiQL Beamline installed, let’s generate your first dataset! This hands-on tutorial will walk you through creating a simple sensor data generator and understanding the basic concepts.</p>
+<h2 id="quick-start-using-an-example-script"><a class="header" href="#quick-start-using-an-example-script">Quick Start: Using an Example Script</a></h2>
+<p>PartiQL Beamline comes with several example scripts. Let’s start with the sensors example to see data generation in action.</p>
+<h3 id="step-1-generate-your-first-dataset"><a class="header" href="#step-1-generate-your-first-dataset">Step 1: Generate Your First Dataset</a></h3>
+<p>Run the following command to generate 2 sensor readings:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed-auto \
+    --start-auto \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+</code></pre>
+<p>You should see output similar to:</p>
+<pre><code>Seed: 12328924104731257599
+Start: 2024-01-20T20:05:41.000000000Z
+[2024-01-20 20:07:46.532 +00:00:00] : "sensors" { 'f': -2.5436390152455175, 'i8': 4, 'tick': 125532 }
+[2024-01-20 20:09:19.756 +00:00:00] : "sensors" { 'f': -63.49308817145054, 'i8': 4, 'tick': 218756 }
+</code></pre>
+<p>Congratulations! You’ve just generated your first synthetic dataset with PartiQL Beamline.</p>
+<h3 id="understanding-the-output"><a class="header" href="#understanding-the-output">Understanding the Output</a></h3>
+<p>Let’s break down what happened:</p>
+<ul>
+<li><strong>Seed</strong>: <code>12328924104731257599</code> - This random seed ensures reproducibility</li>
+<li><strong>Start</strong>: <code>2024-01-20T20:05:41.000000000Z</code> - The simulation start time</li>
+<li><strong>Data Records</strong>: Two sensor readings with timestamps, each containing:
+<ul>
+<li><code>f</code>: A floating-point sensor value</li>
+<li><code>i8</code>: An 8-bit integer value</li>
+<li><code>tick</code>: A simulation tick counter</li>
+</ul>
+</li>
+</ul>
+<h3 id="step-2-reproduce-the-same-data"><a class="header" href="#step-2-reproduce-the-same-data">Step 2: Reproduce the Same Data</a></h3>
+<p>The beauty of PartiQL Beamline is reproducibility. Let’s generate the exact same data using the seed from the previous run:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-auto \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+</code></pre>
+<p>Notice that the data values are identical, but the timestamps might be different because we used <code>--start-auto</code>. To get exactly the same output, use the same start time:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-iso "2024-01-20T20:05:41.000000000Z" \
+    --sample-count 2 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion
+</code></pre>
+<p>Now you’ll get exactly the same output as the first run!</p>
+<h2 id="understanding-the-script"><a class="header" href="#understanding-the-script">Understanding the Script</a></h2>
+<p>Let’s examine the script that generated this data. Look at the contents of <code>partiql-beamline-sim/tests/scripts/sensors.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 1, high: 3 },
+
+    sensors: $n::[
+        rand_process::{
+            $r: Uniform::[5,10],
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $data: {
+                tick: Tick,
+                id: '$@n',
+                i8: UniformI8,
+                f: UniformF64,
+            }
+        }
+    ],
+}
+</code></pre>
+<h3 id="script-breakdown"><a class="header" href="#script-breakdown">Script Breakdown</a></h3>
+<ol>
+<li>
+<p><strong><code>rand_processes::</code></strong>: This annotation tells PartiQL Beamline that this structure defines random processes</p>
+</li>
+<li>
+<p><strong><code>$n: UniformU8::{ low: 1, high: 3 }</code></strong>: Creates a variable <code>n</code> that generates a random number between 1 and 3</p>
+</li>
+<li>
+<p><strong><code>sensors: $n::[...]</code></strong>: Creates a dataset called “sensors” with <code>n</code> random processes (1-3 processes)</p>
+</li>
+<li>
+<p><strong><code>rand_process::</code></strong>: Defines a single random process within the sensors dataset</p>
+</li>
+<li>
+<p><strong><code>$r: Uniform::[5,10]</code></strong>: Creates a variable <code>r</code> that randomly selects between 5 and 10</p>
+</li>
+<li>
+<p><strong><code>$arrival: HomogeneousPoisson:: { interarrival: minutes::$r }</code></strong>: Defines how often data arrives (every <code>r</code> minutes using a Poisson process)</p>
+</li>
+<li>
+<p><strong><code>$data:</code></strong>: Defines the structure of each generated data record:</p>
+<ul>
+<li><code>tick: Tick</code> - Current simulation tick</li>
+<li><code>id: '$@n'</code> - Process identifier</li>
+<li><code>i8: UniformI8</code> - Random 8-bit integer</li>
+<li><code>f: UniformF64</code> - Random 64-bit float</li>
+</ul>
+</li>
+</ol>
+<h2 id="exploring-different-output-formats"><a class="header" href="#exploring-different-output-formats">Exploring Different Output Formats</a></h2>
+<p>PartiQL Beamline supports multiple output formats. Let’s try generating the same data in different formats:</p>
+<h3 id="ion-pretty-format"><a class="header" href="#ion-pretty-format">Ion Pretty Format</a></h3>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-auto \
+    --sample-count 3 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
+    --output-format ion-pretty
+</code></pre>
+<p>This produces nicely formatted Ion output:</p>
+<pre><code class="language-ion">{
+  seed: 12328924104731257599,
+  start: "2024-01-20T20:05:41.000000000Z",
+  data: {
+    sensors: [
+      {
+        i8: -21,
+        tick: 9421,
+        f: 2.803799956162891e0,
+        id: 1
+      },
+      {
+        i8: -70,
+        tick: 12294,
+        f: 1.7229362418585936e1,
+        id: 1
+      },
+      {
+        i8: 84,
+        tick: 32697,
+        f: -2.4809825455060093e1,
+        id: 0
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="text-format-default"><a class="header" href="#text-format-default">Text Format (Default)</a></h3>
+<p>The default text format is human-readable and great for quick inspection:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 12328924104731257599 \
+    --start-auto \
+    --sample-count 3 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
+    --output-format text
+</code></pre>
+<h2 id="creating-your-own-simple-script"><a class="header" href="#creating-your-own-simple-script">Creating Your Own Simple Script</a></h2>
+<p>Now let’s create your own script from scratch. Create a new file called <code>my-first-script.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    simple_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            timestamp: Instant,
+            temperature: UniformF64::{ low: 20.0, high: 35.0 },
+            humidity: UniformF64::{ low: 30.0, high: 80.0 },
+            sensor_id: UUID,
+            active: Bool::{ p: 0.9 }
+        }
+    }
+}
+</code></pre>
+<p>This script creates a simple weather sensor that generates:</p>
+<ul>
+<li><code>timestamp</code>: Current simulation time</li>
+<li><code>temperature</code>: Random temperature between 20-35°C</li>
+<li><code>humidity</code>: Random humidity between 30-80%</li>
+<li><code>sensor_id</code>: A unique UUID for each reading</li>
+<li><code>active</code>: Boolean with 90% chance of being true</li>
+</ul>
+<h3 id="test-your-script"><a class="header" href="#test-your-script">Test Your Script</a></h3>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 5 \
+    --script my-first-script.ion \
+    --output-format ion-pretty
+</code></pre>
+<h2 id="understanding-key-concepts"><a class="header" href="#understanding-key-concepts">Understanding Key Concepts</a></h2>
+<h3 id="seeds-and-reproducibility"><a class="header" href="#seeds-and-reproducibility">Seeds and Reproducibility</a></h3>
+<p>The <code>--seed</code> parameter controls randomness:</p>
+<ul>
+<li><code>--seed-auto</code>: Generate a random seed (different data each time)</li>
+<li><code>--seed 42</code>: Use a specific seed (same data each time)</li>
+</ul>
+<h3 id="start-times"><a class="header" href="#start-times">Start Times</a></h3>
+<p>The <code>--start</code> parameter controls simulation time:</p>
+<ul>
+<li><code>--start-auto</code>: Use current time</li>
+<li><code>--start-iso "2024-01-01T00:00:00Z"</code>: Use specific time</li>
+<li><code>--start-epoch-ms 1704067200000</code>: Use epoch milliseconds</li>
+</ul>
+<h3 id="sample-count"><a class="header" href="#sample-count">Sample Count</a></h3>
+<p>The <code>--sample-count</code> parameter controls how many data points to generate. This is particularly useful for:</p>
+<ul>
+<li>Testing with small datasets</li>
+<li>Generating large datasets for performance testing</li>
+<li>Controlling output size</li>
+</ul>
+<h2 id="common-patterns"><a class="header" href="#common-patterns">Common Patterns</a></h2>
+<h3 id="multiple-datasets"><a class="header" href="#multiple-datasets">Multiple Datasets</a></h3>
+<p>You can generate data for specific datasets using the <code>--dataset</code> flag:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 10 \
+    --script-path partiql-beamline-sim/tests/scripts/client-service.ion \
+    --dataset service --dataset client_1 \
+    --output-format ion-pretty
+</code></pre>
+<h3 id="controlling-nullability"><a class="header" href="#controlling-nullability">Controlling Nullability</a></h3>
+<p>You can control how often NULL values appear:</p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 5 \
+    --script my-first-script.ion \
+    --default-nullable true \
+    --pct-null 0.1  # 10% chance of NULL values
+</code></pre>
+<h2 id="next-steps-2"><a class="header" href="#next-steps-2">Next Steps</a></h2>
+<p>Now that you’ve successfully generated your first datasets, you’re ready to dive deeper into PartiQL Beamline’s capabilities. In the next section, we’ll explore the core concepts that power PartiQL Beamline’s data generation, including:</p>
+<ul>
+<li>Random processes and stochastic modeling</li>
+<li>Data generators and their configurations</li>
+<li>Temporal modeling and arrival patterns</li>
+<li>Relationships between data elements</li>
+</ul>
+<h2 id="quick-reference"><a class="header" href="#quick-reference">Quick Reference</a></h2>
+<p>Here are the commands you’ve learned in this chapter:</p>
+<pre><code class="language-bash"># Basic data generation
+cargo run gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
+
+# Reproducible generation
+cargo run gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
+
+# Different output formats
+cargo run gen data ... --output-format [text|ion|ion-pretty]
+
+# Specific datasets
+cargo run gen data ... --dataset DATASET_NAME
+
+# Control nullability
+cargo run gen data ... --default-nullable true --pct-null 0.1
+</code></pre>
+<p>Congratulations on completing your first data generation with PartiQL Beamline! You’re now ready to explore more advanced features and create more sophisticated synthetic datasets.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="core-concepts"><a class="header" href="#core-concepts">Core Concepts</a></h1>
+<p>Before diving deeper into PartiQL Beamline’s advanced features, it’s essential to understand the fundamental concepts that power its data generation capabilities. This chapter will introduce you to the mathematical and computational foundations that make PartiQL Beamline both powerful and reliable.</p>
+<h2 id="stochastic-processes-1"><a class="header" href="#stochastic-processes-1">Stochastic Processes</a></h2>
+<p>At the heart of PartiQL Beamline lies the concept of <strong>stochastic processes</strong> - mathematical models that describe systems appearing to vary randomly over time.</p>
+<h3 id="what-is-a-stochastic-process"><a class="header" href="#what-is-a-stochastic-process">What is a Stochastic Process?</a></h3>
+<p>A stochastic process is a collection of random variables indexed by time or space. In simpler terms, it’s a way to model how things change randomly over time while still following certain patterns or rules.</p>
+<p><strong>Real-world examples:</strong></p>
+<ul>
+<li>Stock prices over time</li>
+<li>Sensor readings from IoT devices</li>
+<li>User activity on a website</li>
+<li>Network traffic patterns</li>
+<li>Temperature measurements</li>
+</ul>
+<h3 id="why-stochastic-processes-matter"><a class="header" href="#why-stochastic-processes-matter">Why Stochastic Processes Matter</a></h3>
+<p>Traditional random data generators often produce data that looks random but lacks the realistic patterns found in real-world data. Stochastic processes allow PartiQL Beamline to:</p>
+<ol>
+<li><strong>Model Temporal Relationships</strong>: Data points aren’t just random - they follow realistic time-based patterns</li>
+<li><strong>Create Correlations</strong>: Different data elements can be related in meaningful ways</li>
+<li><strong>Simulate Real Patterns</strong>: Generate data that behaves like real-world systems</li>
+<li><strong>Maintain Consistency</strong>: Ensure generated data follows logical rules and constraints</li>
+</ol>
+<h3 id="example-sensor-data"><a class="header" href="#example-sensor-data">Example: Sensor Data</a></h3>
+<p>Consider a temperature sensor:</p>
+<ul>
+<li><strong>Simple Random</strong>: Each reading is completely independent</li>
+<li><strong>Stochastic Process</strong>: Readings follow realistic patterns (gradual changes, daily cycles, seasonal trends)</li>
+</ul>
+<pre><code class="language-ion">// Simple random (unrealistic)
+temperature: UniformF64::{ low: -10.0, high: 40.0 }
+
+// Stochastic process (realistic)
+temperature: NormalF64::{ mean: 22.0, std_dev: 5.0 }
+</code></pre>
+<h2 id="random-processes-in-partiql-beamline"><a class="header" href="#random-processes-in-partiql-beamline">Random Processes in PartiQL Beamline</a></h2>
+<p>PartiQL Beamline implements stochastic processes through <strong>random processes</strong> defined in Ion scripts.</p>
+<h3 id="anatomy-of-a-random-process"><a class="header" href="#anatomy-of-a-random-process">Anatomy of a Random Process</a></h3>
+<pre><code class="language-ion">rand_process::{
+    $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+    $data: {
+        // Data structure definition
+    }
+}
+</code></pre>
+<p>Every random process has two key components:</p>
+<ol>
+<li><strong>Arrival Process</strong> (<code>$arrival</code>): Defines <em>when</em> data is generated</li>
+<li><strong>Data Structure</strong> (<code>$data</code>): Defines <em>what</em> data is generated</li>
+</ol>
+<h3 id="arrival-processes"><a class="header" href="#arrival-processes">Arrival Processes</a></h3>
+<p>Arrival processes control the timing of data generation. PartiQL Beamline supports several types:</p>
+<h4 id="homogeneous-poisson-process"><a class="header" href="#homogeneous-poisson-process">Homogeneous Poisson Process</a></h4>
+<p>The most common arrival process, modeling events that occur at a constant average rate:</p>
+<pre><code class="language-ion">$arrival: HomogeneousPoisson:: { interarrival: minutes::5 }
+</code></pre>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Events occur independently</li>
+<li>Average rate is constant over time</li>
+<li>Time between events follows an exponential distribution</li>
+<li>Models many real-world phenomena (customer arrivals, system events, etc.)</li>
+</ul>
+<p><strong>Use cases:</strong></p>
+<ul>
+<li>Web server requests</li>
+<li>Sensor readings</li>
+<li>User logins</li>
+<li>System alerts</li>
+</ul>
+<h4 id="time-units"><a class="header" href="#time-units">Time Units</a></h4>
+<p>PartiQL Beamline supports various time units for arrival processes:</p>
+<pre><code class="language-ion">// Different time units
+seconds::30      // 30 seconds
+minutes::5       // 5 minutes  
+hours::2         // 2 hours
+days::1          // 1 day
+milliseconds::100 // 100 milliseconds
+</code></pre>
+<h2 id="data-generators"><a class="header" href="#data-generators">Data Generators</a></h2>
+<p>Data generators define the structure and content of generated data. They use probability distributions to create realistic values.</p>
+<h3 id="probability-distributions"><a class="header" href="#probability-distributions">Probability Distributions</a></h3>
+<p>PartiQL Beamline supports many probability distributions, each suited for different types of data:</p>
+<h4 id="uniform-distributions"><a class="header" href="#uniform-distributions">Uniform Distributions</a></h4>
+<p>Generate values where each value in a range is equally likely:</p>
+<pre><code class="language-ion">// Discrete uniform (integers)
+age: UniformU8::{ low: 18, high: 65 }
+
+// Continuous uniform (floats)
+temperature: UniformF64::{ low: 20.0, high: 30.0 }
+
+// Uniform choice from literals
+status: Uniform::{ choices: ["active", "inactive", "pending"] }
+</code></pre>
+<p><strong>Use cases:</strong></p>
+<ul>
+<li>IDs, categories, discrete choices</li>
+<li>Baseline random values</li>
+<li>Testing edge cases</li>
+</ul>
+<h4 id="normal-gaussian-distributions"><a class="header" href="#normal-gaussian-distributions">Normal (Gaussian) Distributions</a></h4>
+<p>Generate values that cluster around a mean with a bell-curve distribution:</p>
+<pre><code class="language-ion">height: NormalF64::{ mean: 170.0, std_dev: 10.0 }
+</code></pre>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Most values near the mean</li>
+<li>Symmetric distribution</li>
+<li>Models many natural phenomena</li>
+</ul>
+<p><strong>Use cases:</strong></p>
+<ul>
+<li>Physical measurements (height, weight)</li>
+<li>Performance metrics</li>
+<li>Error values</li>
+</ul>
+<h4 id="other-distributions"><a class="header" href="#other-distributions">Other Distributions</a></h4>
+<pre><code class="language-ion">// Exponential (for modeling wait times)
+response_time: ExpF64::{ rate: 0.1 }
+
+// Log-normal (for modeling sizes, prices)
+file_size: LogNormalF64::{ location: 10.0, scale: 1.0 }
+
+// Weibull (for modeling lifetimes, reliability)
+device_lifetime: WeibullF64::{ shape: 2.0, scale: 1000.0 }
+</code></pre>
+<h3 id="data-types"><a class="header" href="#data-types">Data Types</a></h3>
+<p>PartiQL Beamline supports all PartiQL data types:</p>
+<h4 id="scalar-types"><a class="header" href="#scalar-types">Scalar Types</a></h4>
+<pre><code class="language-ion">// Numbers
+integer_val: UniformI32::{ low: 1, high: 1000 }
+float_val: UniformF64::{ low: 0.0, high: 1.0 }
+decimal_val: UniformDecimal::{ low: 1.99, high: 999.99 }
+
+// Text
+name: LoremIpsumTitle
+description: LoremIpsum::{ min_words: 10, max_words: 50 }
+pattern_text: Regex::{ pattern: "[A-Z]{2}[0-9]{4}" }
+
+// Boolean
+active: Bool::{ p: 0.8 }  // 80% chance of true
+
+// Temporal
+created_at: Instant
+birth_date: Date
+
+// Identifiers
+user_id: UUID
+</code></pre>
+<h4 id="complex-types"><a class="header" href="#complex-types">Complex Types</a></h4>
+<pre><code class="language-ion">// Structures
+user: {
+    id: UUID,
+    name: LoremIpsumTitle,
+    age: UniformU8::{ low: 18, high: 65 },
+    preferences: {
+        theme: Uniform::{ choices: ["light", "dark"] },
+        notifications: Bool::{ p: 0.7 }
+    }
+}
+
+// Arrays
+tags: UniformArray::{ 
+    min_size: 1, 
+    max_size: 5, 
+    element_type: LoremIpsumTitle 
+}
+
+// Union types
+value: UniformAnyOf::{ types: [
+    UniformI32::{ low: 1, high: 100 },
+    LoremIpsumTitle,
+    Bool
+]}
+</code></pre>
+<h2 id="variables-and-references"><a class="header" href="#variables-and-references">Variables and References</a></h2>
+<p>PartiQL Beamline supports variables for creating relationships and reusing values:</p>
+<h3 id="variable-definition"><a class="header" href="#variable-definition">Variable Definition</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    // Define variables at the top level
+    $user_count: UniformU8::{ low: 5, high: 20 },
+    $id_generator: UUID,
+    
+    // Use variables in processes
+    users: $user_count::[
+        rand_process::{
+            $data: {
+                id: $id_generator,
+                name: LoremIpsumTitle
+            }
+        }
+    ]
+}
+</code></pre>
+<h3 id="variable-types"><a class="header" href="#variable-types">Variable Types</a></h3>
+<h4 id="generator-variables"><a class="header" href="#generator-variables">Generator Variables</a></h4>
+<p>Store data generators for reuse:</p>
+<pre><code class="language-ion">$temperature_sensor: NormalF64::{ mean: 22.0, std_dev: 3.0 }
+$id_gen: UUID
+</code></pre>
+<h4 id="value-variables"><a class="header" href="#value-variables">Value Variables</a></h4>
+<p>Store computed values:</p>
+<pre><code class="language-ion">$success_rate: UniformF64::{ low: 0.95, high: 1.0 }
+$is_successful: Bool::{ p: $success_rate }
+</code></pre>
+<h4 id="evaluation-control"><a class="header" href="#evaluation-control">Evaluation Control</a></h4>
+<p>Control when variables are evaluated:</p>
+<pre><code class="language-ion">// Evaluate once at script read time
+$user_id: $id_gen::()
+
+// Evaluate each time it's used
+$request_id: $id_gen
+</code></pre>
+<h2 id="datasets-and-collections"><a class="header" href="#datasets-and-collections">Datasets and Collections</a></h2>
+<p>PartiQL Beamline organizes generated data into datasets, which represent collections of related data.</p>
+<h3 id="single-dataset"><a class="header" href="#single-dataset">Single Dataset</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    sensors: rand_process::{
+        $data: { /* sensor data */ }
+    }
+}
+</code></pre>
+<h3 id="multiple-datasets-1"><a class="header" href="#multiple-datasets-1">Multiple Datasets</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    users: rand_process::{
+        $data: { /* user data */ }
+    },
+    
+    orders: rand_process::{
+        $data: { /* order data */ }
+    }
+}
+</code></pre>
+<h3 id="dynamic-datasets"><a class="header" href="#dynamic-datasets">Dynamic Datasets</a></h3>
+<p>Create multiple related datasets:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 3, high: 8 },
+    
+    // Creates client_1, client_2, ..., client_n datasets
+    clients: $n::[
+        'client_{ $@n }': rand_process::{
+            $data: {
+                client_id: '$@n',
+                // ... other fields
+            }
+        }
+    ]
+}
+</code></pre>
+<h2 id="reproducibility-and-determinism"><a class="header" href="#reproducibility-and-determinism">Reproducibility and Determinism</a></h2>
+<p>One of PartiQL Beamline’s key strengths is its ability to generate reproducible data.</p>
+<h3 id="seeds"><a class="header" href="#seeds">Seeds</a></h3>
+<p>Seeds control the random number generation:</p>
+<pre><code class="language-bash"># Same seed = same data
+cargo run gen data --seed 42 --script my-script.ion
+cargo run gen data --seed 42 --script my-script.ion  # Identical output
+</code></pre>
+<h3 id="timestamps"><a class="header" href="#timestamps">Timestamps</a></h3>
+<p>Control the simulation start time:</p>
+<pre><code class="language-bash"># Same timestamp = same temporal patterns
+cargo run gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script my-script.ion
+</code></pre>
+<h3 id="deterministic-behavior"><a class="header" href="#deterministic-behavior">Deterministic Behavior</a></h3>
+<p>PartiQL Beamline ensures that:</p>
+<ul>
+<li>Same inputs always produce same outputs</li>
+<li>Random sequences are predictable and reproducible</li>
+<li>Debugging is possible with consistent data</li>
+<li>Tests can be reliable and repeatable</li>
+</ul>
+<h2 id="static-vs-dynamic-data"><a class="header" href="#static-vs-dynamic-data">Static vs. Dynamic Data</a></h2>
+<p>PartiQL Beamline supports both static and dynamic data generation:</p>
+<h3 id="dynamic-data-default"><a class="header" href="#dynamic-data-default">Dynamic Data (Default)</a></h3>
+<p>Generated during simulation with temporal patterns:</p>
+<pre><code class="language-ion">rand_process::{
+    $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+    $data: {
+        timestamp: Instant,
+        value: UniformF64
+    }
+}
+</code></pre>
+<h3 id="static-data"><a class="header" href="#static-data">Static Data</a></h3>
+<p>Generated once at the beginning of simulation:</p>
+<pre><code class="language-ion">static_data::{
+    $data: {
+        id: UUID,
+        created_at: Instant,  // Will be simulation start time
+        config: LoremIpsum
+    }
+}
+</code></pre>
+<p><strong>Use cases for static data:</strong></p>
+<ul>
+<li>Reference tables</li>
+<li>Configuration data</li>
+<li>Lookup tables</li>
+<li>Master data</li>
+</ul>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Understanding these core concepts is crucial for effectively using PartiQL Beamline:</p>
+<ol>
+<li><strong>Stochastic Processes</strong>: Mathematical foundation for realistic data patterns</li>
+<li><strong>Random Processes</strong>: Implementation of stochastic processes in PartiQL Beamline</li>
+<li><strong>Arrival Processes</strong>: Control timing of data generation</li>
+<li><strong>Data Generators</strong>: Create realistic values using probability distributions</li>
+<li><strong>Variables</strong>: Enable relationships and reuse in data generation</li>
+<li><strong>Datasets</strong>: Organize generated data into meaningful collections</li>
+<li><strong>Reproducibility</strong>: Ensure consistent, debuggable data generation</li>
+<li><strong>Static vs. Dynamic</strong>: Choose appropriate data generation patterns</li>
+</ol>
+<p>In the next chapter, we’ll dive deeper into scripts and random processes, exploring how to create more sophisticated data generation patterns and relationships.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="data-generator-reference"><a class="header" href="#data-generator-reference">Data Generator Reference</a></h1>
+<p>This comprehensive reference covers all data generators available in PartiQL Beamline, their configurations, and usage examples. Use this as a quick lookup when building your data generation scripts.</p>
+<h2 id="scalar-generators"><a class="header" href="#scalar-generators">Scalar Generators</a></h2>
+<h3 id="boolean-generators"><a class="header" href="#boolean-generators">Boolean Generators</a></h3>
+<h4 id="bool"><a class="header" href="#bool">Bool</a></h4>
+<p>Generates boolean values with configurable probability.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>p: f64</code> - Probability of generating <code>true</code> (default: 0.5)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>BOOL</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// 50% chance of true (default)
+active: Bool
+
+// 80% chance of true
+premium: Bool::{ p: 0.8 }
+
+// 10% chance of true
+error_occurred: Bool::{ p: 0.1 }
+</code></pre>
+<h3 id="numeric-generators"><a class="header" href="#numeric-generators">Numeric Generators</a></h3>
+<h4 id="integer-generators"><a class="header" href="#integer-generators">Integer Generators</a></h4>
+<h5 id="uniformu8"><a class="header" href="#uniformu8">UniformU8</a></h5>
+<p>Generates unsigned 8-bit integers (0-255).</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: u8</code> - Minimum value (default: 0)</li>
+<li><code>high: u8</code> - Maximum value (default: 255)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Full range (0-255)
+byte_value: UniformU8
+
+// Custom range
+age: UniformU8::{ low: 18, high: 65 }
+percentage: UniformU8::{ low: 0, high: 100 }
+</code></pre>
+<h5 id="uniformu16"><a class="header" href="#uniformu16">UniformU16</a></h5>
+<p>Generates unsigned 16-bit integers (0-65,535).</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: u16</code> - Minimum value (default: 0)</li>
+<li><code>high: u16</code> - Maximum value (default: 65,535)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<h5 id="uniformu32"><a class="header" href="#uniformu32">UniformU32</a></h5>
+<p>Generates unsigned 32-bit integers (0-4,294,967,295).</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: u32</code> - Minimum value (default: 0)</li>
+<li><code>high: u32</code> - Maximum value (default: 4,294,967,295)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<h5 id="uniformu64"><a class="header" href="#uniformu64">UniformU64</a></h5>
+<p>Generates unsigned 64-bit integers (0-9,223,372,036,854,775,807).</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: u64</code> - Minimum value (default: 0)</li>
+<li><code>high: u64</code> - Maximum value (default: 9,223,372,036,854,775,807)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<h5 id="uniformi8"><a class="header" href="#uniformi8">UniformI8</a></h5>
+<p>Generates signed 8-bit integers (-127 to 127).</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: i8</code> - Minimum value (default: -127)</li>
+<li><code>high: i8</code> - Maximum value (default: 127)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Temperature in Celsius
+temperature: UniformI8::{ low: -40, high: 50 }
+
+// Small signed values
+offset: UniformI8::{ low: -10, high: 10 }
+</code></pre>
+<h5 id="uniformi16"><a class="header" href="#uniformi16">UniformI16</a></h5>
+<p>Generates signed 16-bit integers (-32,767 to 32,767).</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: i16</code> - Minimum value (default: -32,767)</li>
+<li><code>high: i16</code> - Maximum value (default: 32,767)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<h5 id="uniformi32"><a class="header" href="#uniformi32">UniformI32</a></h5>
+<p>Generates signed 32-bit integers (-2,147,483,647 to 2,147,483,647).</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: i32</code> - Minimum value (default: -2,147,483,647)</li>
+<li><code>high: i32</code> - Maximum value (default: 2,147,483,647)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<h5 id="uniformi64"><a class="header" href="#uniformi64">UniformI64</a></h5>
+<p>Generates signed 64-bit integers.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: i64</code> - Minimum value (default: -9,223,372,036,854,775,807)</li>
+<li><code>high: i64</code> - Maximum value (default: 9,223,372,036,854,775,807)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<h4 id="floating-point-generators"><a class="header" href="#floating-point-generators">Floating-Point Generators</a></h4>
+<h5 id="uniformf64"><a class="header" href="#uniformf64">UniformF64</a></h5>
+<p>Generates 64-bit floating-point numbers with uniform distribution.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: f64</code> - Minimum value (default: -127.0)</li>
+<li><code>high: f64</code> - Maximum value (default: 127.0)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>DOUBLE</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Default range
+random_value: UniformF64
+
+// Custom range
+price: UniformF64::{ low: 0.99, high: 999.99 }
+probability: UniformF64::{ low: 0.0, high: 1.0 }
+</code></pre>
+<h5 id="normalf64"><a class="header" href="#normalf64">NormalF64</a></h5>
+<p>Generates normally distributed 64-bit floating-point numbers.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>mean: f64</code> - Mean of the distribution (required)</li>
+<li><code>std_dev: f64</code> - Standard deviation (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>DOUBLE</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Human height (cm)
+height: NormalF64::{ mean: 170.0, std_dev: 10.0 }
+
+// Test scores
+score: NormalF64::{ mean: 75.0, std_dev: 15.0 }
+
+// Response time (ms)
+response_time: NormalF64::{ mean: 200.0, std_dev: 50.0 }
+</code></pre>
+<h5 id="lognormalf64"><a class="header" href="#lognormalf64">LogNormalF64</a></h5>
+<p>Generates log-normally distributed 64-bit floating-point numbers.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>location: f64</code> - Location parameter (required)</li>
+<li><code>scale: f64</code> - Scale parameter (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>DOUBLE</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// File sizes (bytes)
+file_size: LogNormalF64::{ location: 10.0, scale: 1.0 }
+
+// Income distribution
+income: LogNormalF64::{ location: 11.0, scale: 0.5 }
+</code></pre>
+<h5 id="weibullf64"><a class="header" href="#weibullf64">WeibullF64</a></h5>
+<p>Generates Weibull distributed 64-bit floating-point numbers.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>shape: f64</code> - Shape parameter (required)</li>
+<li><code>scale: f64</code> - Scale parameter (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>DOUBLE</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Device lifetime (hours)
+lifetime: WeibullF64::{ shape: 2.0, scale: 1000.0 }
+
+// Wind speed
+wind_speed: WeibullF64::{ shape: 2.0, scale: 10.0 }
+</code></pre>
+<h5 id="expf64"><a class="header" href="#expf64">ExpF64</a></h5>
+<p>Generates exponentially distributed 64-bit floating-point numbers.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>rate: f64</code> - Rate parameter (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>DOUBLE</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Wait time between events
+wait_time: ExpF64::{ rate: 0.1 }
+
+// Time to failure
+failure_time: ExpF64::{ rate: 0.001 }
+</code></pre>
+<h4 id="decimal-generators"><a class="header" href="#decimal-generators">Decimal Generators</a></h4>
+<h5 id="uniformdecimal"><a class="header" href="#uniformdecimal">UniformDecimal</a></h5>
+<p>Generates decimal numbers with uniform distribution.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>low: f64</code> - Minimum value (default: -127.0)</li>
+<li><code>high: f64</code> - Maximum value (default: 127.0)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>DECIMAL(p,s)</code> (precision and scale inferred)</p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Currency values
+price: UniformDecimal::{ low: 1.99, high: 999.99 }
+
+// Precise measurements
+weight: UniformDecimal::{ low: 0.001, high: 100.000 }
+</code></pre>
+<h3 id="string-generators"><a class="header" href="#string-generators">String Generators</a></h3>
+<h4 id="uuid"><a class="header" href="#uuid">UUID</a></h4>
+<p>Generates Version 4 UUIDs.</p>
+<p><strong>Configuration:</strong> None</p>
+<p><strong>PartiQL Type:</strong> <code>STRING</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Simple UUID
+user_id: UUID
+
+// Shared UUID across records
+$shared_id: UUID::()
+record1: { id: $shared_id }
+record2: { id: $shared_id }
+</code></pre>
+<h4 id="loremipsum"><a class="header" href="#loremipsum">LoremIpsum</a></h4>
+<p>Generates Lorem Ipsum text with configurable word count.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>min_words: u32</code> - Minimum number of words (required)</li>
+<li><code>max_words: u32</code> - Maximum number of words (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>STRING</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Short description
+summary: LoremIpsum::{ min_words: 5, max_words: 15 }
+
+// Long content
+article: LoremIpsum::{ min_words: 100, max_words: 500 }
+
+// Single sentence
+title: LoremIpsum::{ min_words: 3, max_words: 8 }
+</code></pre>
+<h4 id="loremipsumtitle"><a class="header" href="#loremipsumtitle">LoremIpsumTitle</a></h4>
+<p>Generates title-cased Lorem Ipsum text (3-8 words).</p>
+<p><strong>Configuration:</strong> None</p>
+<p><strong>PartiQL Type:</strong> <code>STRING</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Article titles
+title: LoremIpsumTitle
+
+// Product names
+product_name: LoremIpsumTitle
+</code></pre>
+<h4 id="regex"><a class="header" href="#regex">Regex</a></h4>
+<p>Generates strings matching a regular expression pattern.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>pattern: String</code> - Regular expression pattern (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>STRING</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Phone numbers
+phone: Regex::{ pattern: "\\+1-[0-9]{3}-[0-9]{3}-[0-9]{4}" }
+
+// Product codes
+sku: Regex::{ pattern: "[A-Z]{3}-[0-9]{4}" }
+
+// Email addresses
+email: Regex::{ pattern: "[a-z]{5,10}@[a-z]{3,8}\\.(com|org|net)" }
+
+// Postal codes
+zip: Regex::{ pattern: "[0-9]{5}(-[0-9]{4})?" }
+</code></pre>
+<p><strong>Note:</strong> Use double backslashes (<code>\\</code>) for escape sequences in Ion strings.</p>
+<h3 id="temporal-generators"><a class="header" href="#temporal-generators">Temporal Generators</a></h3>
+<h4 id="instant"><a class="header" href="#instant">Instant</a></h4>
+<p>Generates the current simulation timestamp.</p>
+<p><strong>Configuration:</strong> None</p>
+<p><strong>PartiQL Type:</strong> <code>DATETIME</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Current timestamp
+created_at: Instant
+
+// Multiple timestamps in same record
+record: {
+    created: Instant,
+    updated: Instant  // Will be same as created within same record
+}
+</code></pre>
+<h4 id="date"><a class="header" href="#date">Date</a></h4>
+<p>Generates the current simulation date.</p>
+<p><strong>Configuration:</strong> None</p>
+<p><strong>PartiQL Type:</strong> <code>DATETIME</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Current date
+birth_date: Date
+event_date: Date
+</code></pre>
+<h4 id="timestamp"><a class="header" href="#timestamp">Timestamp</a></h4>
+<p>Generates timestamps with configurable precision and timezone.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>timezone: bool</code> - Include timezone information (optional)</li>
+<li><code>precision: String</code> - Time precision: “microsecond”, “millisecond”, “second”, “minute”, “hour”, “day” (optional)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>DATETIME</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// High precision with timezone
+precise_time: Timestamp::{ timezone: true, precision: "microsecond" }
+
+// Date only
+date_only: Timestamp::{ precision: "day" }
+
+// Hour precision
+hourly: Timestamp::{ precision: "hour" }
+</code></pre>
+<h4 id="tick"><a class="header" href="#tick">Tick</a></h4>
+<p>Generates the current simulation tick counter.</p>
+<p><strong>Configuration:</strong> None</p>
+<p><strong>PartiQL Type:</strong> <code>INT64</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Sequence number
+sequence: Tick
+
+// Event counter
+event_id: Tick
+</code></pre>
+<h3 id="choice-generators"><a class="header" href="#choice-generators">Choice Generators</a></h3>
+<h4 id="uniform"><a class="header" href="#uniform">Uniform</a></h4>
+<p>Generates values by uniformly choosing from a list of literals.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>choices: [Literal]</code> - Array of Ion literals to choose from (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>Union</code> (type of chosen literals)</p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// String choices
+status: Uniform::{ choices: ["active", "inactive", "pending"] }
+
+// Numeric choices
+priority: Uniform::{ choices: [1, 2, 3, 4, 5] }
+
+// Mixed types
+value: Uniform::{ choices: [42, "unknown", true, null] }
+
+// Complex values
+config: Uniform::{ choices: [
+    { mode: "fast", timeout: 100 },
+    { mode: "slow", timeout: 1000 }
+]}
+</code></pre>
+<h2 id="complex-generators"><a class="header" href="#complex-generators">Complex Generators</a></h2>
+<h3 id="array-generators"><a class="header" href="#array-generators">Array Generators</a></h3>
+<h4 id="uniformarray"><a class="header" href="#uniformarray">UniformArray</a></h4>
+<p>Generates arrays with uniform size distribution.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>min_size: u64</code> - Minimum array size (required)</li>
+<li><code>max_size: u64</code> - Maximum array size (required)</li>
+<li><code>element_type: DataGenerator</code> - Generator for array elements (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>ARRAY&lt;T&gt;</code> where T is the element type</p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Array of strings
+tags: UniformArray::{ 
+    min_size: 1, 
+    max_size: 5, 
+    element_type: LoremIpsumTitle 
+}
+
+// Array of numbers
+scores: UniformArray::{ 
+    min_size: 3, 
+    max_size: 10, 
+    element_type: UniformF64::{ low: 0.0, high: 100.0 }
+}
+
+// Array of UUIDs
+related_ids: UniformArray::{ 
+    min_size: 0, 
+    max_size: 3, 
+    element_type: UUID 
+}
+</code></pre>
+<h3 id="union-generators"><a class="header" href="#union-generators">Union Generators</a></h3>
+<h4 id="uniformanyof"><a class="header" href="#uniformanyof">UniformAnyOf</a></h4>
+<p>Generates values by uniformly choosing from multiple data generators.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>types: [DataGenerator]</code> - Array of data generators to choose from (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>Union</code> of all generator types</p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Mixed numeric types
+value: UniformAnyOf::{ types: [
+    UniformI32::{ low: 1, high: 100 },
+    UniformF64::{ low: 0.0, high: 1.0 },
+    UniformDecimal::{ low: 1.99, high: 99.99 }
+]}
+
+// Mixed data types
+content: UniformAnyOf::{ types: [
+    LoremIpsumTitle,
+    UniformI32::{ low: 1, high: 1000 },
+    Bool,
+    UUID
+]}
+
+// Different object structures
+event: UniformAnyOf::{ types: [
+    { type: "click", x: UniformI32, y: UniformI32 },
+    { type: "scroll", delta: UniformI32 },
+    { type: "key", code: UniformU8 }
+]}
+</code></pre>
+<h3 id="format-generators"><a class="header" href="#format-generators">Format Generators</a></h3>
+<h4 id="format"><a class="header" href="#format">Format</a></h4>
+<p>Generates formatted strings using templates.</p>
+<p><strong>Configuration:</strong></p>
+<ul>
+<li><code>pattern: String</code> - Format pattern with placeholders (required)</li>
+</ul>
+<p><strong>PartiQL Type:</strong> <code>STRING</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ion">// Customer names with numbers
+customer: Format::{ pattern: "customer #{ $@n }" }
+
+// Formatted addresses
+address: Format::{ pattern: "{ $street_num } { $street_name } { $street_type }" }
+
+// Log messages
+log_message: Format::{ pattern: "[{ $level }] { $timestamp }: { $message }" }
+</code></pre>
+<h2 id="nullability-and-optionality"><a class="header" href="#nullability-and-optionality">Nullability and Optionality</a></h2>
+<p>All generators support nullability and optionality configuration:</p>
+<h3 id="nullability"><a class="header" href="#nullability">Nullability</a></h3>
+<p>Controls generation of <code>NULL</code> values:</p>
+<pre><code class="language-ion">// Default: nullable but 0% chance of NULL
+name: LoremIpsumTitle::{ nullable: true }
+
+// Not nullable
+id: UUID::{ nullable: false }
+
+// 10% chance of NULL
+description: LoremIpsum::{ nullable: 0.1, min_words: 10, max_words: 50 }
+</code></pre>
+<h3 id="optionality"><a class="header" href="#optionality">Optionality</a></h3>
+<p>Controls generation of <code>MISSING</code> values:</p>
+<pre><code class="language-ion">// Default: not optional
+required_field: UUID::{ optional: false }
+
+// Optional but 0% chance of MISSING
+optional_field: LoremIpsumTitle::{ optional: true }
+
+// 20% chance of MISSING
+maybe_field: UniformI32::{ optional: 0.2, low: 1, high: 100 }
+</code></pre>
+<h3 id="global-defaults"><a class="header" href="#global-defaults">Global Defaults</a></h3>
+<p>Control default nullability and optionality via CLI:</p>
+<pre><code class="language-bash"># Make all fields nullable by default with 5% NULL rate
+cargo run gen data --default-nullable true --pct-null 0.05 --script my-script.ion
+
+# Make all fields optional by default with 10% MISSING rate
+cargo run gen data --default-optional true --pct-optional 0.1 --script my-script.ion
+</code></pre>
+<h2 id="reserved-variables"><a class="header" href="#reserved-variables">Reserved Variables</a></h2>
+<p>PartiQL Beamline provides several reserved variables:</p>
+<h3 id="tick-1"><a class="header" href="#tick-1">Tick</a></h3>
+<p>Current simulation tick (increments with each generated sample).</p>
+<pre><code class="language-ion">sequence_number: Tick
+</code></pre>
+<h3 id="instant-1"><a class="header" href="#instant-1">Instant</a></h3>
+<p>Current simulation timestamp.</p>
+<pre><code class="language-ion">timestamp: Instant
+</code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h3 id="choosing-distributions"><a class="header" href="#choosing-distributions">Choosing Distributions</a></h3>
+<ol>
+<li><strong>Uniform</strong>: Use for IDs, categories, or when all values are equally likely</li>
+<li><strong>Normal</strong>: Use for natural measurements (height, weight, test scores)</li>
+<li><strong>Exponential</strong>: Use for wait times, time between events</li>
+<li><strong>Log-Normal</strong>: Use for sizes, prices, income distributions</li>
+<li><strong>Weibull</strong>: Use for reliability analysis, lifetime modeling</li>
+</ol>
+<h3 id="performance-considerations-1"><a class="header" href="#performance-considerations-1">Performance Considerations</a></h3>
+<ol>
+<li><strong>String Generators</strong>: <code>UUID</code> is faster than <code>Regex</code> for identifiers</li>
+<li><strong>Array Sizes</strong>: Large arrays with complex elements can be slow</li>
+<li><strong>Regex Complexity</strong>: Simple patterns are much faster than complex ones</li>
+<li><strong>Distribution Choice</strong>: Uniform distributions are fastest</li>
+</ol>
+<h3 id="memory-usage"><a class="header" href="#memory-usage">Memory Usage</a></h3>
+<ol>
+<li><strong>Large Arrays</strong>: Consider streaming for very large arrays</li>
+<li><strong>String Length</strong>: Long Lorem Ipsum text uses more memory</li>
+<li><strong>Complex Structures</strong>: Deeply nested structures increase memory usage</li>
+</ol>
+<h3 id="reproducibility-1"><a class="header" href="#reproducibility-1">Reproducibility</a></h3>
+<ol>
+<li><strong>Variable Evaluation</strong>: Use <code>::()</code> for values that should be constant across records</li>
+<li><strong>Shared Generators</strong>: Define generators as variables for consistency</li>
+<li><strong>Seed Management</strong>: Use consistent seeds for reproducible datasets</li>
+</ol>
+<h2 id="common-patterns-1"><a class="header" href="#common-patterns-1">Common Patterns</a></h2>
+<h3 id="related-data"><a class="header" href="#related-data">Related Data</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    $user_id: UUID,
+    $success_rate: UniformF64::{ low: 0.95, high: 1.0 },
+    
+    events: rand_process::{
+        $data: {
+            user_id: $user_id::(),  // Same for all records
+            success: Bool::{ p: $success_rate },
+            timestamp: Instant
+        }
+    }
+}
+</code></pre>
+<h3 id="realistic-distributions"><a class="header" href="#realistic-distributions">Realistic Distributions</a></h3>
+<pre><code class="language-ion">// E-commerce order values (log-normal distribution)
+order_value: LogNormalF64::{ location: 3.0, scale: 1.0 }
+
+// Response times (exponential distribution)
+response_time: ExpF64::{ rate: 0.01 }
+
+// User ratings (normal distribution, clamped)
+rating: NormalF64::{ mean: 4.2, std_dev: 0.8 }
+</code></pre>
+<h3 id="conditional-generation"><a class="header" href="#conditional-generation">Conditional Generation</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    $is_premium: Bool::{ p: 0.1 },
+    
+    users: rand_process::{
+        $data: {
+            premium: $is_premium,
+            // Higher limits for premium users
+            api_limit: UniformAnyOf::{ types: [
+                UniformI32::{ low: 1000, high: 5000 },    // Premium
+                UniformI32::{ low: 100, high: 500 }       // Regular
+            ]}
+        }
+    }
+}
+</code></pre>
+<p>This reference should serve as your go-to guide when building PartiQL Beamline scripts. For more complex examples and patterns, see the <a href="reference/../examples/">Examples and Tutorials</a> section.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="sensor-data-tutorial"><a class="header" href="#sensor-data-tutorial">Sensor Data Tutorial</a></h1>
+<p>This tutorial will walk you through creating a comprehensive sensor data generation system using PartiQL Beamline. We’ll start with simple sensor readings and gradually build up to a complex IoT monitoring system with multiple sensor types, realistic patterns, and related datasets.</p>
+<h2 id="tutorial-overview"><a class="header" href="#tutorial-overview">Tutorial Overview</a></h2>
+<p>By the end of this tutorial, you’ll have created:</p>
+<ul>
+<li>Basic sensor data generators</li>
+<li>Multiple sensor types with different characteristics</li>
+<li>Realistic temporal patterns</li>
+<li>Static reference data</li>
+<li>Related datasets for a complete IoT system</li>
+<li>Queries to analyze the generated data</li>
+</ul>
+<h2 id="part-1-simple-sensor-data"><a class="header" href="#part-1-simple-sensor-data">Part 1: Simple Sensor Data</a></h2>
+<p>Let’s start with a basic temperature sensor that takes readings every few minutes.</p>
+<h3 id="basic-temperature-sensor"><a class="header" href="#basic-temperature-sensor">Basic Temperature Sensor</a></h3>
+<p>Create a file called <code>simple-sensor.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    temperature_readings: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_001",
+            timestamp: Instant,
+            temperature: NormalF64::{ mean: 22.0, std_dev: 3.0 },
+            unit: "celsius"
+        }
+    }
+}
+</code></pre>
+<p><strong>Test it:</strong></p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --sample-count 10 \
+    --script simple-sensor.ion \
+    --output-format ion-pretty
+</code></pre>
+<p><strong>Expected Output:</strong></p>
+<pre><code class="language-ion">{
+  seed: 42,
+  start: "2024-01-01T00:00:00Z",
+  data: {
+    temperature_readings: [
+      {
+        sensor_id: "TEMP_001",
+        timestamp: 2024-01-01T00:03:45.123000000+00:00,
+        temperature: 24.5,
+        unit: "celsius"
+      },
+      // ... more readings
+    ]
+  }
+}
+</code></pre>
+<h3 id="understanding-the-script-1"><a class="header" href="#understanding-the-script-1">Understanding the Script</a></h3>
+<ul>
+<li><strong><code>HomogeneousPoisson</code></strong>: Models realistic sensor reading intervals</li>
+<li><strong><code>NormalF64</code></strong>: Creates realistic temperature variations around 22°C</li>
+<li><strong><code>Instant</code></strong>: Captures the exact time of each reading</li>
+<li><strong>Fixed values</strong>: <code>sensor_id</code> and <code>unit</code> remain constant</li>
+</ul>
+<h2 id="part-2-multiple-sensor-types"><a class="header" href="#part-2-multiple-sensor-types">Part 2: Multiple Sensor Types</a></h2>
+<p>Now let’s create a more realistic system with different types of sensors.</p>
+<h3 id="multi-sensor-system"><a class="header" href="#multi-sensor-system">Multi-Sensor System</a></h3>
+<p>Create <code>multi-sensor.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Temperature sensor - indoor environment
+    temperature: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_001",
+            sensor_type: "temperature",
+            timestamp: Instant,
+            value: NormalF64::{ mean: 22.0, std_dev: 2.0 },
+            unit: "celsius",
+            location: "office_main"
+        }
+    },
+    
+    // Humidity sensor - correlated with temperature
+    humidity: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::7 },
+        $data: {
+            sensor_id: "HUM_001",
+            sensor_type: "humidity",
+            timestamp: Instant,
+            value: NormalF64::{ mean: 45.0, std_dev: 8.0 },
+            unit: "percent",
+            location: "office_main"
+        }
+    },
+    
+    // Motion sensor - binary events
+    motion: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::15 },
+        $data: {
+            sensor_id: "MOT_001",
+            sensor_type: "motion",
+            timestamp: Instant,
+            value: Bool::{ p: 0.3 },  // 30% chance of motion detected
+            unit: "boolean",
+            location: "office_main"
+        }
+    },
+    
+    // Light sensor - varies throughout the day
+    light: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::10 },
+        $data: {
+            sensor_id: "LUX_001",
+            sensor_type: "light",
+            timestamp: Instant,
+            value: LogNormalF64::{ location: 6.0, scale: 0.5 },  // Realistic light distribution
+            unit: "lux",
+            location: "office_main"
+        }
+    }
+}
+</code></pre>
+<p><strong>Test with specific sensors:</strong></p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 20 \
+    --script multi-sensor.ion \
+    --dataset temperature --dataset motion \
+    --output-format ion-pretty
+</code></pre>
+<h2 id="part-3-realistic-sensor-networks"><a class="header" href="#part-3-realistic-sensor-networks">Part 3: Realistic Sensor Networks</a></h2>
+<p>Let’s create a more sophisticated system with multiple locations and sensor relationships.</p>
+<h3 id="sensor-network-with-variables"><a class="header" href="#sensor-network-with-variables">Sensor Network with Variables</a></h3>
+<p>Create <code>sensor-network.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Configuration variables
+    $location_count: UniformU8::{ low: 3, high: 6 },
+    $base_temp: NormalF64::{ mean: 20.0, std_dev: 5.0 },
+    
+    // Sensor network with multiple locations
+    sensors: $location_count::[
+        {
+            // Each location gets a unique ID
+            $location_id: Format::{ pattern: "ROOM_{ $@n }" },
+            $temp_offset: NormalF64::{ mean: 0.0, std_dev: 2.0 },
+            
+            // Temperature sensor for this location
+            'temp_{ $@n }': rand_process::{
+                $arrival: HomogeneousPoisson:: { 
+                    interarrival: UniformU8::{low: 3, high: 8}::minutes 
+                },
+                $data: {
+                    sensor_id: Format::{ pattern: "TEMP_{ $@n }" },
+                    sensor_type: "temperature",
+                    location: $location_id,
+                    timestamp: Instant,
+                    tick: Tick,
+                    value: NormalF64::{ 
+                        mean: $base_temp + $temp_offset, 
+                        std_dev: 1.5 
+                    },
+                    unit: "celsius",
+                    battery_level: UniformF64::{ low: 0.8, high: 1.0 },
+                    signal_strength: UniformI8::{ low: -80, high: -20 }
+                }
+            },
+            
+            // Humidity sensor for this location
+            'humidity_{ $@n }': rand_process::{
+                $arrival: HomogeneousPoisson:: { interarrival: minutes::6 },
+                $data: {
+                    sensor_id: Format::{ pattern: "HUM_{ $@n }" },
+                    sensor_type: "humidity",
+                    location: $location_id,
+                    timestamp: Instant,
+                    tick: Tick,
+                    value: NormalF64::{ mean: 40.0, std_dev: 10.0 },
+                    unit: "percent",
+                    battery_level: UniformF64::{ low: 0.7, high: 1.0 },
+                    signal_strength: UniformI8::{ low: -85, high: -25 }
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<p><strong>Generate network data:</strong></p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 123 \
+    --start-auto \
+    --sample-count 50 \
+    --script sensor-network.ion \
+    --output-format text
+</code></pre>
+<h2 id="part-4-adding-static-reference-data"><a class="header" href="#part-4-adding-static-reference-data">Part 4: Adding Static Reference Data</a></h2>
+<p>Real IoT systems need configuration and reference data. Let’s add static sensor metadata.</p>
+<h3 id="complete-iot-system"><a class="header" href="#complete-iot-system">Complete IoT System</a></h3>
+<p>Create <code>iot-system.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Static sensor configuration data
+    sensor_registry: static_data::{
+        $data: {
+            sensor_id: "TEMP_001",
+            model: "TempSense Pro",
+            manufacturer: "IoT Corp",
+            firmware_version: "2.1.4",
+            installation_date: "2024-01-01",
+            calibration_date: "2024-01-01",
+            location: "office_main",
+            coordinates: { lat: 37.7749, lon: -122.4194 },
+            specifications: {
+                range_min: -40.0,
+                range_max: 85.0,
+                accuracy: 0.5,
+                resolution: 0.1
+            }
+        }
+    },
+    
+    // Dynamic sensor readings
+    temperature_readings: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_001",
+            timestamp: Instant,
+            sequence: Tick,
+            reading: {
+                value: NormalF64::{ mean: 22.0, std_dev: 2.0 },
+                unit: "celsius",
+                quality: Uniform::{ choices: ["good", "fair", "poor"] },
+                confidence: UniformF64::{ low: 0.85, high: 1.0 }
+            },
+            metadata: {
+                battery_voltage: UniformF64::{ low: 3.0, high: 4.2 },
+                signal_rssi: UniformI8::{ low: -90, high: -30 },
+                uptime_seconds: Tick * 300,  // 5 minutes per tick
+                memory_usage: UniformF64::{ low: 0.2, high: 0.8 }
+            },
+            status: {
+                operational: Bool::{ p: 0.95 },
+                error_code: Uniform::{ choices: [null, "LOW_BATTERY", "COMM_ERROR", "CALIBRATION"] },
+                last_maintenance: "2024-01-01T00:00:00Z"
+            }
+        }
+    },
+    
+    // Sensor alerts/events
+    sensor_alerts: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: hours::2 },
+        $data: {
+            alert_id: UUID,
+            sensor_id: "TEMP_001",
+            timestamp: Instant,
+            alert_type: Uniform::{ choices: [
+                "temperature_high", 
+                "temperature_low", 
+                "battery_low", 
+                "communication_lost",
+                "calibration_needed"
+            ]},
+            severity: Uniform::{ choices: ["info", "warning", "critical"] },
+            message: LoremIpsum::{ min_words: 5, max_words: 15 },
+            acknowledged: Bool::{ p: 0.7 },
+            resolved: Bool::{ p: 0.8 }
+        }
+    }
+}
+</code></pre>
+<p><strong>Generate complete system data:</strong></p>
+<pre><code class="language-bash">cargo run gen data \
+    --seed 456 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --sample-count 100 \
+    --script iot-system.ion \
+    --output-format ion-pretty
+</code></pre>
+<h2 id="part-5-advanced-patterns"><a class="header" href="#part-5-advanced-patterns">Part 5: Advanced Patterns</a></h2>
+<h3 id="time-based-variations"><a class="header" href="#time-based-variations">Time-Based Variations</a></h3>
+<p>Let’s create sensors that show realistic daily patterns:</p>
+<p>Create <code>daily-patterns.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Office temperature with daily cycle
+    office_temperature: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::10 },
+        $data: {
+            sensor_id: "TEMP_OFFICE",
+            timestamp: Instant,
+            // Simulate daily temperature cycle (warmer during work hours)
+            base_temp: NormalF64::{ mean: 21.0, std_dev: 1.0 },
+            // Add some randomness for HVAC cycles
+            hvac_variation: NormalF64::{ mean: 0.0, std_dev: 0.5 },
+            final_temp: base_temp + hvac_variation,
+            occupancy_detected: Bool::{ p: 0.6 },  // 60% chance during work hours
+            unit: "celsius"
+        }
+    },
+    
+    // Outdoor weather station
+    weather_station: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::15 },
+        $data: {
+            station_id: "WEATHER_001",
+            timestamp: Instant,
+            measurements: {
+                temperature: NormalF64::{ mean: 15.0, std_dev: 8.0 },
+                humidity: NormalF64::{ mean: 65.0, std_dev: 15.0 },
+                pressure: NormalF64::{ mean: 1013.25, std_dev: 20.0 },
+                wind_speed: WeibullF64::{ shape: 2.0, scale: 5.0 },
+                wind_direction: UniformU16::{ low: 0, high: 359 },
+                precipitation: ExpF64::{ rate: 10.0 }  // Most readings are 0, occasional rain
+            },
+            conditions: Uniform::{ choices: [
+                "clear", "partly_cloudy", "cloudy", "overcast", 
+                "light_rain", "rain", "heavy_rain", "snow"
+            ]},
+            visibility_km: LogNormalF64::{ location: 2.0, scale: 0.5 }
+        }
+    }
+}
+</code></pre>
+<h3 id="correlated-sensors"><a class="header" href="#correlated-sensors">Correlated Sensors</a></h3>
+<p>Create sensors where readings are related to each other:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Shared variables for correlation
+    $room_base_temp: NormalF64::{ mean: 22.0, std_dev: 1.0 },
+    $is_occupied: Bool::{ p: 0.4 },
+    $hvac_active: Bool::{ p: 0.3 },
+    
+    // Temperature affected by occupancy and HVAC
+    temperature: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_CORR",
+            timestamp: Instant,
+            base_temperature: $room_base_temp,
+            occupancy_effect: $is_occupied ? 1.5 : 0.0,
+            hvac_effect: $hvac_active ? -2.0 : 0.0,
+            final_temperature: base_temperature + occupancy_effect + hvac_effect,
+            unit: "celsius"
+        }
+    },
+    
+    // CO2 levels affected by occupancy
+    co2_levels: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::8 },
+        $data: {
+            sensor_id: "CO2_CORR",
+            timestamp: Instant,
+            base_co2: NormalF64::{ mean: 400.0, std_dev: 50.0 },
+            occupancy_boost: $is_occupied ? 
+                NormalF64::{ mean: 200.0, std_dev: 100.0 } : 0.0,
+            final_co2: base_co2 + occupancy_boost,
+            unit: "ppm"
+        }
+    },
+    
+    // Occupancy sensor (source of truth)
+    occupancy: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::3 },
+        $data: {
+            sensor_id: "OCC_CORR",
+            timestamp: Instant,
+            occupied: $is_occupied,
+            person_count: $is_occupied ? 
+                UniformU8::{ low: 1, high: 8 } : 0,
+            confidence: UniformF64::{ low: 0.8, high: 1.0 }
+        }
+    }
+}
+</code></pre>
+<h2 id="part-6-generating-queries"><a class="header" href="#part-6-generating-queries">Part 6: Generating Queries</a></h2>
+<p>Now let’s generate some queries to analyze our sensor data:</p>
+<pre><code class="language-bash"># Generate queries for sensor data analysis
+cargo run query \
+    basic --seed 789 --start-auto \
+    --script-path iot-system.ion \
+    --sample-count 5 \
+    rand-select-all-fw \
+        --tbl-flt-rand-min 1 --tbl-flt-rand-max 3 \
+        --tbl-flt-path-depth-max 2 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-project \
+        --tbl-flt-type-final-scalar \
+        --pred-all
+</code></pre>
+<p><strong>Example generated queries:</strong></p>
+<pre><code class="language-sql">SELECT * FROM temperature_readings AS temperature_readings 
+WHERE (temperature_readings.reading.value &gt; 20.5)
+
+SELECT * FROM sensor_alerts AS sensor_alerts 
+WHERE (sensor_alerts.severity = 'critical' AND sensor_alerts.resolved = false)
+
+SELECT * FROM temperature_readings AS temperature_readings 
+WHERE (temperature_readings.metadata.battery_voltage &lt; 3.2 
+       OR temperature_readings.status.operational = false)
+</code></pre>
+<h2 id="part-7-shape-inference"><a class="header" href="#part-7-shape-inference">Part 7: Shape Inference</a></h2>
+<p>Let’s examine the data shapes our sensors generate:</p>
+<pre><code class="language-bash"># Infer shapes from our IoT system
+cargo run infer-shape \
+    --seed 456 \
+    --start-auto \
+    --script-path iot-system.ion \
+    --output-format basic-ddl
+</code></pre>
+<p><strong>Expected DDL output:</strong></p>
+<pre><code class="language-sql">-- Dataset: sensor_registry
+"coordinates" STRUCT&lt;"lat": DOUBLE,"lon": DOUBLE&gt;,
+"firmware_version" VARCHAR,
+"installation_date" VARCHAR,
+"location" VARCHAR,
+"manufacturer" VARCHAR,
+"model" VARCHAR,
+"sensor_id" VARCHAR,
+"specifications" STRUCT&lt;"accuracy": DOUBLE,"range_max": DOUBLE,"range_min": DOUBLE,"resolution": DOUBLE&gt;
+
+-- Dataset: temperature_readings  
+"metadata" STRUCT&lt;"battery_voltage": DOUBLE,"memory_usage": DOUBLE,"signal_rssi": TINYINT,"uptime_seconds": INT8&gt;,
+"reading" STRUCT&lt;"confidence": DOUBLE,"quality": VARCHAR,"unit": VARCHAR,"value": DOUBLE&gt;,
+"sensor_id" VARCHAR,
+"sequence" INT8,
+"status" STRUCT&lt;"error_code": VARCHAR,"last_maintenance": VARCHAR,"operational": BOOL&gt;,
+"timestamp" TIMESTAMP
+</code></pre>
+<h2 id="part-8-database-generation"><a class="header" href="#part-8-database-generation">Part 8: Database Generation</a></h2>
+<p>Finally, let’s create a complete database with our IoT system:</p>
+<pre><code class="language-bash"># Generate a complete IoT database
+cargo run --release --all-features gen db kollider \
+    --seed 456 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --script-path iot-system.ion \
+    --catalog-name iot-monitoring \
+    --catalog-path ./iot-database
+</code></pre>
+<p>This creates a complete database with:</p>
+<ul>
+<li>Data files for each dataset</li>
+<li>Shape files describing the schema</li>
+<li>Manifest with generation metadata</li>
+<li>Script backup for reproducibility</li>
+</ul>
+<h2 id="key-concepts-demonstrated"><a class="header" href="#key-concepts-demonstrated">Key Concepts Demonstrated</a></h2>
+<p>Through this tutorial, you’ve learned:</p>
+<ol>
+<li><strong>Basic Sensor Modeling</strong>: Simple periodic readings with realistic distributions</li>
+<li><strong>Multi-Sensor Systems</strong>: Different sensor types with appropriate characteristics</li>
+<li><strong>Variable Usage</strong>: Sharing configuration and creating relationships</li>
+<li><strong>Static vs Dynamic Data</strong>: Reference data vs. time-series readings</li>
+<li><strong>Complex Data Structures</strong>: Nested objects for rich sensor metadata</li>
+<li><strong>Realistic Patterns</strong>: Using appropriate probability distributions</li>
+<li><strong>Correlated Data</strong>: Making sensor readings influence each other</li>
+<li><strong>Query Generation</strong>: Creating queries that match your data patterns</li>
+<li><strong>Shape Inference</strong>: Understanding the schema of generated data</li>
+<li><strong>Database Creation</strong>: Building complete, queryable databases</li>
+</ol>
+<h2 id="next-steps-3"><a class="header" href="#next-steps-3">Next Steps</a></h2>
+<p>Try these extensions to deepen your understanding:</p>
+<ol>
+<li><strong>Add More Sensor Types</strong>: Create pressure, vibration, or chemical sensors</li>
+<li><strong>Implement Sensor Failures</strong>: Model realistic failure patterns and recovery</li>
+<li><strong>Create Sensor Networks</strong>: Build hierarchical sensor deployments</li>
+<li><strong>Add Data Quality Issues</strong>: Simulate missing readings, outliers, and errors</li>
+<li><strong>Model Seasonal Patterns</strong>: Create long-term variations in sensor readings</li>
+<li><strong>Build Alert Systems</strong>: Generate complex alert and notification patterns</li>
+</ol>
+<p>This tutorial provides a solid foundation for modeling any IoT or sensor-based system with PartiQL Beamline. The patterns you’ve learned can be adapted to industrial monitoring, smart buildings, environmental sensing, and many other domains.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>
