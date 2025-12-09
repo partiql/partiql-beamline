@@ -502,7 +502,7 @@ Start: 2022-12-12T19:52:29.000000000Z
 ```
 
 As you can see from the example, using the `shape` command, you can infer the shape of the data as `PartiQLType`.
-Beamline also provides different encodings for the output shape; for example you can get the output shape in PartiQL Kollider
+Beamline also provides different encodings for the output shape; for example you can get the output shape in Beamline JSON
 format (a testing suite for PartiQL) or SQL-like DDL; for getting the output in a specific encoding, you can use `--output-format` as the following examples show:
 
 ```
@@ -525,7 +525,7 @@ $ cargo run infer-shape \
 $ cargo run --release --all-features infer-shape  \
    --seed-auto --start-auto \
    --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion \
-   --output-format partiql-kollider
+   --output-format beamline-json
    
 {
   seed: -3711181901898679775,
@@ -568,11 +568,11 @@ $ cargo run --release --all-features infer-shape  \
 ```
 
 ### Example 5 — Database Generation
-Beamline supports creating databases that include both shapes and data. It currently supports PartiQL Kollider Database
+Beamline supports creating databases that include both shapes and data. It currently supports BeamlineLite Database
 generation on the file system as follows in an example:
 
 ```
-$ cargo run --release --all-features gen db kollider  \
+$ cargo run --release --all-features gen db beamline-lite  \
    --seed-auto --start-auto \
    --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion
 
@@ -747,7 +747,7 @@ $ cat beamline-catalog/service.shape.sql
 
 The database generation is a safe operation; running the same command won't result in overwriting the created catalog:
 ```
-$ cargo run --release --all-features gen db kollider  \
+$ cargo run --release --all-features gen db beamline-lite  \
    --seed-auto --start-auto \
    --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion
 
@@ -759,7 +759,7 @@ If you need to overwrite to the same catalog, you can use `--force` argument. Wi
 Beamline will backup the existing catalog and overwrite the catalog afterward:
 
 ```
-$ cargo run --release --all-features gen db kollider  \
+$ cargo run --release --all-features gen db beamline-lite  \
    --seed-auto --start-auto \
    --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion --force
 
@@ -1097,10 +1097,10 @@ Example output:
 
 ### Data Generator Output Shape Formats
 
-| Shape Format     | Description                                                                            |
-|------------------|----------------------------------------------------------------------------------------|
-| Text             | A human readable text format                                                           |
-| PartiQL Kollider | ParitQL Kollider (a testing suite for PartiQL) shape Format                            |
+| Shape Format  | Description                  |
+|---------------|------------------------------|
+| Text          | A human readable text format |
+| Beamline JSON | Beamline JSON shape Format   |
 
 ### Pending Features For Data Generator
 - Random Schema generation

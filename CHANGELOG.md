@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Changed references of Kollider to Beamline JSON and DB.
 - Changed the command line hierarchy to separate data generation and shape inference.
 ### Added
 - Added Weibull, Normal, LogNormal, Exponential distributions
