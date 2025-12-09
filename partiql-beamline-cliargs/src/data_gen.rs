@@ -13,7 +13,7 @@ pub enum DataOutputFormat {
 /// Output format for the generated shape of data
 #[derive(ValueEnum, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ShapeOutputFormat {
-    PartiqlKollider,
+    BeamlineJson,
     Text,
     BasicDdl,
 }
@@ -29,7 +29,7 @@ pub struct SampleCount {
 
 /// Initial state configuration for the generator.
 #[derive(Args, Debug, Clone, PartialEq, Eq)]
-pub struct KolliderDb {
+pub struct BeamlineLite {
     #[command(flatten)]
     pub seed: Seed,
 

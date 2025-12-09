@@ -1,2 +1,2 @@
-pub mod kollider;
+pub mod beamline_json;
 pub mod serde;

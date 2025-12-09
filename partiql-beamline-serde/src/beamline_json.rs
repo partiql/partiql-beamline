@@ -6,24 +6,24 @@ use partiql_beamline::sim::{DatasetTypeMapping, SimConfig, DATETIME_FORMAT};
 use partiql_types::{AnyOf, ArrayType, BagType, PartiqlShape, Static, StructType};
 
 #[derive(Debug)]
-pub struct PartiqlKolliderEncoder<'a, W, I>
+pub struct BeamlineJsonEncoder<'a, W, I>
 where
     I: IonWriter<Output = W>,
 {
     pub(crate) writer: &'a mut I,
 }
 
-impl<'a, W, I> PartiqlKolliderEncoder<'a, W, I>
+impl<'a, W, I> BeamlineJsonEncoder<'a, W, I>
 where
     W: 'a,
     I: IonWriter<Output = W>,
 {
     pub fn new(writer: &'a mut I) -> Self {
-        PartiqlKolliderEncoder { writer }
+        BeamlineJsonEncoder { writer }
     }
 }
 
-impl<'a, W, I> PartiqlShapeEncoder<W, I> for PartiqlKolliderEncoder<'a, W, I>
+impl<'a, W, I> PartiqlShapeEncoder<W, I> for BeamlineJsonEncoder<'a, W, I>
 where
     W: 'a,
     I: IonWriter<Output = W>,
@@ -59,7 +59,7 @@ where
     }
 }
 
-impl<'a, W, I> PartiqlKolliderEncoder<'a, W, I>
+impl<'a, W, I> BeamlineJsonEncoder<'a, W, I>
 where
     W: 'a,
     I: IonWriter<Output = W>,
@@ -163,7 +163,7 @@ where
     }
 }
 
-impl<'a, W, I> PartiqlDataSetsEncoder<W, I> for PartiqlKolliderEncoder<'a, W, I>
+impl<'a, W, I> PartiqlDataSetsEncoder<W, I> for BeamlineJsonEncoder<'a, W, I>
 where
     W: 'a,
     I: IonWriter<Output = W>,

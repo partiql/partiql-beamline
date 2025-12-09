@@ -1,8 +1,8 @@
-mod kolliderdb;
+mod beamlinelite_db;
 mod writer;
 
-use crate::kolliderdb::{
-    catalog_full_path, create_catalog_dir, create_kollider_db, create_manifest_file,
+use crate::beamlinelite_db::{
+    catalog_full_path, create_catalog_dir, create_db, create_manifest_file,
     create_script_file,
 };
 use crate::writer::{
@@ -20,7 +20,7 @@ use partiql_beamline_cliargs::data_gen::{
 use partiql_beamline_cliargs::query_gen::{IntoStrategy, QueryGenStrategy};
 use partiql_beamline_cliargs::sim_spec::SimSpec;
 use partiql_beamline_query::{QueryTextGenerator, QueryTextGeneratorConfigBuilder};
-use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
+use partiql_beamline_serde::beamline_json::BeamlineJsonEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
 
@@ -80,7 +80,7 @@ pub struct Data {
 
 #[derive(Subcommand)]
 pub enum Db {
-    Kollider {
+    BeamlineLite {
         #[command(flatten)]
         spec: SimSpec,
 
@@ -175,7 +175,7 @@ fn handle_gen_data(
 
 fn handle_gen_db(db: Db) -> miette::Result<()> {
     match db {
-        Db::Kollider {
+        Db::BeamlineLite {
             spec,
             db_args:
                 DbArgs {
@@ -197,7 +197,7 @@ fn handle_gen_db(db: Db) -> miette::Result<()> {
             create_manifest_file(&cfg, &catalog_full_path, &ddl_encoder.syntax())?;
 
             create_script_file(&catalog_full_path, &script)?;
-            create_kollider_db(
+            create_db(
                 cfg,
                 &catalog_name,
                 &catalog_path,
@@ -221,14 +221,14 @@ fn handle_infer(spec: SimSpec, output_format: ShapeOutputFormat) -> miette::Resu
     let sim = SimBuilder::from_config(cfg.clone(), script)?.build_multi_dataset()?;
 
     match output_format {
-        ShapeOutputFormat::PartiqlKollider => {
+        ShapeOutputFormat::BeamlineJson => {
             let shape = sim.shape();
 
             let mut out = stdout().lock();
             let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
                 .build(&mut out)
                 .expect("pretty writer");
-            let mut encoder = PartiqlKolliderEncoder::new(&mut writer);
+            let mut encoder = BeamlineJsonEncoder::new(&mut writer);
             encoder.write_datasets(&cfg, shape).expect("encoded value");
             drop(writer);
             drop(out);
@@ -385,12 +385,12 @@ mod tests {
     #[test]
     fn parse_gen_db_cmdline() {
         assert_cmdline(
-            r##"partiql-beamline gen db kollider
+            r##"partiql-beamline gen db beamline-lite
                        --seed-auto --start-auto 
                        --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion"##,
         );
         assert_cmdline(
-            r##"partiql-beamline gen db kollider
+            r##"partiql-beamline gen db beamline-lite
                        --seed-auto --start-auto
                        --script-path ./partiql-beamline-sim/tests/scripts/client-service.ion"##,
         );
