@@ -1,7 +1,7 @@
 use ion_rs::element::writer::TextKind;
 use partiql_beamline::sim::{ISim, NameAndShape, SimBuilder, SimConfigBuilder};
 use partiql_beamline::source::SimSource;
-use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
+use partiql_beamline_serde::beamline_json::BeamlineJsonEncoder;
 use partiql_beamline_serde::serde::PartiqlDataSetsEncoder;
 use partiql_extension_ddl::ddl::{DdlFormat, PartiqlBasicDdlEncoder, PartiqlDdlEncoder};
 use time::OffsetDateTime;
@@ -28,7 +28,7 @@ pub fn verify_correct_encoding() {
     let mut writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
         .build(&mut buff)
         .expect("pretty writer");
-    let mut encoder = PartiqlKolliderEncoder::new(&mut writer);
+    let mut encoder = BeamlineJsonEncoder::new(&mut writer);
     encoder
         .write_datasets(&cfg, shape.clone())
         .expect("encoded value");

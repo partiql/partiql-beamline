@@ -1,7 +1,7 @@
 use ion_rs::element::writer::TextKind;
 use partiql_beamline::sim::{ISim, MultiSim, SimBuilder, SimConfig, SimResult, DATETIME_FORMAT};
 use partiql_beamline::source::SimSource;
-use partiql_beamline_serde::kollider::PartiqlKolliderEncoder;
+use partiql_beamline_serde::beamline_json::BeamlineJsonEncoder;
 use partiql_beamline_serde::serde::PartiqlShapeEncoder;
 use partiql_extension_ddl::ddl::{DdlSyntax, PartiqlDdlEncoder};
 use partiql_extension_ion::encode::{
@@ -15,7 +15,7 @@ use std::path::Path;
 use std::process::exit;
 use time::OffsetDateTime;
 
-pub(crate) fn create_kollider_db(
+pub(crate) fn create_db(
     cfg: SimConfig,
     catalog_name: &str,
     catalog_path: &str,
@@ -33,7 +33,7 @@ pub(crate) fn create_kollider_db(
         let mut ion_shape_writer = ion_rs::TextWriterBuilder::new(TextKind::Pretty)
             .build(&mut ion_out)
             .expect("pretty writer");
-        let mut ion_shape_encoder = PartiqlKolliderEncoder::new(&mut ion_shape_writer);
+        let mut ion_shape_encoder = BeamlineJsonEncoder::new(&mut ion_shape_writer);
         ion_shape_encoder.write_shape(&ty).expect("write shape");
         drop(ion_shape_writer);
 
