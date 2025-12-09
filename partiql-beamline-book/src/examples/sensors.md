@@ -36,11 +36,11 @@ rand_processes::{
 
 **Test it:**
 ```bash
-cargo run gen data \
+partiql-beamline-cli gen data \
     --seed 42 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 10 \
-    --script simple-sensor.ion \
+    --script-path simple-sensor.ion \
     --output-format ion-pretty
 ```
 
@@ -136,11 +136,11 @@ rand_processes::{
 
 **Test with specific sensors:**
 ```bash
-cargo run gen data \
+partiql-beamline-cli gen data \
     --seed 42 \
     --start-auto \
     --sample-count 20 \
-    --script multi-sensor.ion \
+    --script-path multi-sensor.ion \
     --dataset temperature --dataset motion \
     --output-format ion-pretty
 ```
@@ -155,32 +155,24 @@ Create `sensor-network.ion`:
 
 ```ion
 rand_processes::{
-    // Configuration variables
-    $location_count: UniformU8::{ low: 3, high: 6 },
-    $base_temp: NormalF64::{ mean: 20.0, std_dev: 5.0 },
-    
-    // Sensor network with multiple locations
-    sensors: $location_count::[
+    // Generate between 3 & 5 sensor locations  
+    $n: UniformU8::{ low: 3, high: 5 },
+
+    // Multiple sensor locations
+    locations: $n::[
+        // each iteration of the loop will assign an index from 0..=$n to the variable $@n
         {
-            // Each location gets a unique ID
-            $location_id: Format::{ pattern: "ROOM_{ $@n }" },
-            $temp_offset: NormalF64::{ mean: 0.0, std_dev: 2.0 },
-            
-            // Temperature sensor for this location
-            'temp_{ $@n }': rand_process::{
-                $arrival: HomogeneousPoisson:: { 
-                    interarrival: UniformU8::{low: 3, high: 8}::minutes 
-                },
+            // Sensor interval varies per location
+            $interval: Uniform::{ choices: [3, 5, 8] },
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$interval },
+
+            // Temperature sensor for this location  
+            temperature: rand_process::{
                 $data: {
                     sensor_id: Format::{ pattern: "TEMP_{ $@n }" },
-                    sensor_type: "temperature",
-                    location: $location_id,
+                    location: Format::{ pattern: "ROOM_{ $@n }" },
                     timestamp: Instant,
-                    tick: Tick,
-                    value: NormalF64::{ 
-                        mean: $base_temp + $temp_offset, 
-                        std_dev: 1.5 
-                    },
+                    value: NormalF64::{ mean: 20.0, std_dev: 3.0 },
                     unit: "celsius",
                     battery_level: UniformF64::{ low: 0.8, high: 1.0 },
                     signal_strength: UniformI8::{ low: -80, high: -20 }
@@ -192,10 +184,8 @@ rand_processes::{
                 $arrival: HomogeneousPoisson:: { interarrival: minutes::6 },
                 $data: {
                     sensor_id: Format::{ pattern: "HUM_{ $@n }" },
-                    sensor_type: "humidity",
-                    location: $location_id,
+                    location: Format::{ pattern: "ROOM_{ $@n }" },
                     timestamp: Instant,
-                    tick: Tick,
                     value: NormalF64::{ mean: 40.0, std_dev: 10.0 },
                     unit: "percent",
                     battery_level: UniformF64::{ low: 0.7, high: 1.0 },
@@ -209,11 +199,11 @@ rand_processes::{
 
 **Generate network data:**
 ```bash
-cargo run gen data \
+partiql-beamline-cli gen data \
     --seed 123 \
     --start-auto \
     --sample-count 50 \
-    --script sensor-network.ion \
+    --script-path sensor-network.ion \
     --output-format text
 ```
 
@@ -237,12 +227,12 @@ rand_processes::{
             installation_date: "2024-01-01",
             calibration_date: "2024-01-01",
             location: "office_main",
-            coordinates: { lat: 37.7749, lon: -122.4194 },
+            coordinates: { lat: 37.7749e0, lon: -122.4194e0 },
             specifications: {
-                range_min: -40.0,
-                range_max: 85.0,
-                accuracy: 0.5,
-                resolution: 0.1
+                range_min: -40.0e0,
+                range_max: 85.0e0,
+                accuracy: 0.5e0,
+                resolution: 0.1e0
             }
         }
     },
@@ -263,12 +253,12 @@ rand_processes::{
             metadata: {
                 battery_voltage: UniformF64::{ low: 3.0, high: 4.2 },
                 signal_rssi: UniformI8::{ low: -90, high: -30 },
-                uptime_seconds: Tick * 300,  // 5 minutes per tick
+                uptime_seconds: Tick,  // tick count since start
                 memory_usage: UniformF64::{ low: 0.2, high: 0.8 }
             },
             status: {
                 operational: Bool::{ p: 0.95 },
-                error_code: Uniform::{ choices: [null, "LOW_BATTERY", "COMM_ERROR", "CALIBRATION"] },
+                error_code: Uniform::{ choices: ["NONE", "LOW_BATTERY", "COMM_ERROR", "CALIBRATION"] },
                 last_maintenance: "2024-01-01T00:00:00Z"
             }
         }
@@ -299,11 +289,11 @@ rand_processes::{
 
 **Generate complete system data:**
 ```bash
-cargo run gen data \
+partiql-beamline-cli gen data \
     --seed 456 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 100 \
-    --script iot-system.ion \
+    --script-path iot-system.ion \
     --output-format ion-pretty
 ```
 
@@ -327,7 +317,7 @@ rand_processes::{
             base_temp: NormalF64::{ mean: 21.0, std_dev: 1.0 },
             // Add some randomness for HVAC cycles
             hvac_variation: NormalF64::{ mean: 0.0, std_dev: 0.5 },
-            final_temp: base_temp + hvac_variation,
+            temperature_celsius: NormalF64::{ mean: 21.0, std_dev: 1.5 },
             occupancy_detected: Bool::{ p: 0.6 },  // 60% chance during work hours
             unit: "celsius"
         }
@@ -375,9 +365,9 @@ rand_processes::{
             sensor_id: "TEMP_CORR",
             timestamp: Instant,
             base_temperature: $room_base_temp,
-            occupancy_effect: $is_occupied ? 1.5 : 0.0,
-            hvac_effect: $hvac_active ? -2.0 : 0.0,
-            final_temperature: base_temperature + occupancy_effect + hvac_effect,
+            occupancy_detected: $is_occupied,
+            hvac_running: $hvac_active,
+            temperature_celsius: NormalF64::{ mean: 22.0, std_dev: 2.0 },
             unit: "celsius"
         }
     },
@@ -389,9 +379,8 @@ rand_processes::{
             sensor_id: "CO2_CORR",
             timestamp: Instant,
             base_co2: NormalF64::{ mean: 400.0, std_dev: 50.0 },
-            occupancy_boost: $is_occupied ? 
-                NormalF64::{ mean: 200.0, std_dev: 100.0 } : 0.0,
-            final_co2: base_co2 + occupancy_boost,
+            occupancy_detected: $is_occupied,
+            co2_ppm: NormalF64::{ mean: 450.0, std_dev: 75.0 },
             unit: "ppm"
         }
     },
@@ -403,8 +392,7 @@ rand_processes::{
             sensor_id: "OCC_CORR",
             timestamp: Instant,
             occupied: $is_occupied,
-            person_count: $is_occupied ? 
-                UniformU8::{ low: 1, high: 8 } : 0,
+            person_count: UniformU8::{ low: 0, high: 8 },
             confidence: UniformF64::{ low: 0.8, high: 1.0 }
         }
     }
@@ -417,12 +405,14 @@ Now let's generate some queries to analyze our sensor data:
 
 ```bash
 # Generate queries for sensor data analysis
-cargo run query \
-    basic --seed 789 --start-auto \
-    --script-path iot-system.ion \
-    --sample-count 5 \
+partiql-beamline-cli query basic \
+    --seed 789 \
+    --start-auto \
+    --script-path simple-sensor.ion \
+    --sample-count 3 \
     rand-select-all-fw \
-        --tbl-flt-rand-min 1 --tbl-flt-rand-max 3 \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 1 \
         --tbl-flt-path-depth-max 2 \
         --tbl-flt-pathstep-internal-all \
         --tbl-flt-pathstep-final-project \
@@ -432,15 +422,20 @@ cargo run query \
 
 **Example generated queries:**
 ```sql
-SELECT * FROM temperature_readings AS temperature_readings 
-WHERE (temperature_readings.reading.value > 20.5)
+SELECT * FROM temperature_readings AS temperature_readings
+WHERE NOT ((temperature_readings.unit IS NULL))
 
-SELECT * FROM sensor_alerts AS sensor_alerts 
-WHERE (sensor_alerts.severity = 'critical' AND sensor_alerts.resolved = false)
+SELECT * FROM temperature_readings AS temperature_readings
+WHERE temperature_readings.timestamp IN [
+    UTCNOW(),
+    UTCNOW(),
+    UTCNOW(),
+    UTCNOW(),
+    UTCNOW()
+  ]
 
-SELECT * FROM temperature_readings AS temperature_readings 
-WHERE (temperature_readings.metadata.battery_voltage < 3.2 
-       OR temperature_readings.status.operational = false)
+SELECT * FROM temperature_readings AS temperature_readings
+WHERE (temperature_readings.temperature < -30.634268316887464)
 ```
 
 ## Part 7: Shape Inference
@@ -449,7 +444,7 @@ Let's examine the data shapes our sensors generate:
 
 ```bash
 # Infer shapes from our IoT system
-cargo run infer-shape \
+partiql-beamline-cli infer-shape \
     --seed 456 \
     --start-auto \
     --script-path iot-system.ion \
@@ -483,12 +478,12 @@ Finally, let's create a complete database with our IoT system:
 
 ```bash
 # Generate a complete IoT database
-cargo run --release --all-features gen db kollider \
+partiql-beamline-cli gen db beamline-lite \
     --seed 456 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path iot-system.ion \
-    --catalog-name iot-monitoring \
-    --catalog-path ./iot-database
+    --catalog_name iot-monitoring \
+    --catalog_path ./iot-database
 ```
 
 This creates a complete database with:

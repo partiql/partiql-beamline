@@ -4,11 +4,11 @@ Before diving deeper into PartiQL Beamline's advanced features, it's essential t
 
 ## Stochastic Processes
 
-At the heart of PartiQL Beamline lies the concept of **stochastic processes** - mathematical models that describe systems appearing to vary randomly over time.
+At the heart of PartiQL Beamline lies the concept of [**stochastic processes**](https://en.wikipedia.org/wiki/Stochastic_process) — mathematical models that describe systems appearing to vary randomly over time.
 
 ### What is a Stochastic Process?
 
-A stochastic process is a collection of random variables indexed by time or space. In simpler terms, it's a way to model how things change randomly over time while still following certain patterns or rules.
+A stochastic process is a collection of [random variables](https://en.wikipedia.org/wiki/Random_variable) indexed by time or space. In simpler terms, it's a way to model how things change randomly over time while still following certain patterns or rules.
 
 **Real-world examples:**
 - Stock prices over time
@@ -21,7 +21,7 @@ A stochastic process is a collection of random variables indexed by time or spac
 
 Traditional random data generators often produce data that looks random but lacks the realistic patterns found in real-world data. Stochastic processes allow PartiQL Beamline to:
 
-1. **Model Temporal Relationships**: Data points aren't just random - they follow realistic time-based patterns
+1. **Model Temporal Relationships**: Data points aren't just random — they follow realistic time-based patterns
 2. **Create Correlations**: Different data elements can be related in meaningful ways
 3. **Simulate Real Patterns**: Generate data that behaves like real-world systems
 4. **Maintain Consistency**: Ensure generated data follows logical rules and constraints
@@ -327,8 +327,8 @@ Seeds control the random number generation:
 
 ```bash
 # Same seed = same data
-cargo run gen data --seed 42 --script my-script.ion
-cargo run gen data --seed 42 --script my-script.ion  # Identical output
+partiql-beamline-cli gen data --seed 42 --start-auto --script-path my-script.ion
+partiql-beamline-cli gen data --seed 42 --start-auto --script-path my-script.ion  # Identical output
 ```
 
 ### Timestamps
@@ -337,7 +337,7 @@ Control the simulation start time:
 
 ```bash
 # Same timestamp = same temporal patterns
-cargo run gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script my-script.ion
+partiql-beamline-cli gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script-path my-script.ion
 ```
 
 ### Deterministic Behavior

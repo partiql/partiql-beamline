@@ -1,15 +1,16 @@
 # What is PartiQL Beamline?
 
-PartiQL Beamline is a sophisticated tool designed for **fast data generation** specifically tailored for PartiQL testing and experimentation. At its core, it generates **reproducible pseudo-random data** using a **stochastic approach** that models real-world data patterns.
+PartiQL Beamline is a tool designed for **fast data generation** specifically using [PartiQL](https://partiql.org/) value system.
+At its core, it generates **reproducible pseudo-random data** using a **stochastic approach** that models real-world data patterns.
 
 ## The Problem It Solves
 
-When working with PartiQL implementations, developers and researchers often face several challenges:
+Some of the common software engineering problem that most developers, data engineers, and researchers often face are:
 
 - **Lack of Test Data**: Creating realistic test datasets manually is time-consuming and error-prone
 - **Inconsistent Testing**: Different test runs with different data make it hard to reproduce bugs
 - **Query Testing**: Writing queries that match your data structures requires understanding both the data shape and query patterns
-- **Performance Benchmarking**: Consistent, scalable datasets are needed for meaningful performance comparisons
+- **Performance Benchmarking**: Consistent, scalable datasets are needed for meaningful performance comparisons and AI inferences evaluations
 - **Schema Evolution**: As data structures change, maintaining test data becomes increasingly complex
 
 PartiQL Beamline addresses all these challenges with a unified approach to synthetic data generation.
@@ -20,16 +21,17 @@ PartiQL Beamline consists of three main components that work together:
 
 ### 1. Data Generator
 
-The **Data Generator** creates reproducible pseudo-random data based on mathematical distributions and stochastic processes. It can generate:
+The **Data Generator** creates reproducible pseudo-random data based on mathematical distributions and stochastic processes. 
+It can generate:
 
 - Simple scalar values (numbers, strings, booleans, dates)
 - Complex nested structures (objects, arrays, mixed types)
 - Time-series data with realistic temporal patterns
-- Related data across multiple datasets
+- Sharing data across multiple datasets
 
 **Key Features:**
-- **Reproducible**: Same seed always produces the same data
-- **Configurable**: Highly customizable through Ion-based scripts
+- **Reproducible**: Same seed always produces the same data no matter how nested that data is
+- **Configurable**: Highly customizable through Amazon Ion-based scripts
 - **Realistic**: Uses statistical distributions to model real-world patterns
 - **Scalable**: Can generate datasets from small samples to millions of records
 
@@ -61,7 +63,8 @@ The **Command Line Interface** provides easy access to all functionality with co
 
 ### Stochastic Processes
 
-PartiQL Beamline models data generation as **stochastic processes** - mathematical models that describe systems that appear to vary randomly over time. This approach allows it to:
+PartiQL Beamline models data generation as **stochastic processes** — mathematical models that describe systems that 
+appear to vary randomly over time. This approach allows it to:
 
 - Generate data that follows realistic patterns
 - Model temporal relationships (like arrival times)
@@ -88,6 +91,15 @@ One of PartiQL Beamline's key strengths is **reproducibility**:
 
 ## Use Cases
 
+### AI Model Training and Inference
+
+- **Training Data Generation**: Generate datasets that follow specific statistical distributions for machine learning model training
+- **Distribution-Based Modeling**: Create training data that matches target population distributions for more representative models
+- **Model Validation**: Generate test datasets with known statistical properties for evaluating model performance
+- **Feature Engineering**: Create data with controlled statistical characteristics to test feature extraction algorithms
+- **Synthetic Data Augmentation**: Expand training datasets while preserving underlying statistical distributions
+- **Edge Case Generation**: Generate rare statistical scenarios for robust model validation
+
 ### Testing and Development
 
 - **Unit Testing**: Generate consistent test data for PartiQL implementations
@@ -104,7 +116,7 @@ One of PartiQL Beamline's key strengths is **reproducibility**:
 
 ### Research and Education
 
-- **Algorithm Research**: Generate datasets for testing new PartiQL features
+- **Algorithm Research**: Generate datasets for testing new features
 - **Query Pattern Analysis**: Study how different query patterns perform
 - **Educational Examples**: Create realistic examples for learning PartiQL
 - **Prototyping**: Quickly generate data for proof-of-concept implementations
@@ -119,24 +131,6 @@ Unlike simple random data generators, PartiQL Beamline is built on solid mathema
 - **Stochastic Modeling**: Models real-world processes mathematically
 - **Temporal Modeling**: Handles time-based data generation correctly
 - **Correlation Modeling**: Can generate related data across multiple dimensions
-
-### PartiQL-Specific
-
-PartiQL Beamline is designed specifically for PartiQL, which means:
-
-- **Native Ion Support**: First-class support for Amazon Ion data format
-- **PartiQL Types**: Understands PartiQL's type system and semantics
-- **Query Generation**: Generates queries that are valid and meaningful for PartiQL
-- **Schema Integration**: Works seamlessly with PartiQL schema systems
-
-### Production-Ready
-
-PartiQL Beamline is built for real-world use:
-
-- **Performance**: Optimized for generating large datasets efficiently
-- **Memory Efficient**: Streams data generation to handle large datasets
-- **Robust**: Handles edge cases and error conditions gracefully
-- **Extensible**: Designed to be extended with new generators and formats
 
 ## Next Steps
 

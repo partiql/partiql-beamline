@@ -1,6 +1,7 @@
 # Installation and Setup
 
-This chapter will guide you through installing PartiQL Beamline and setting up your development environment. PartiQL Beamline is written in Rust, so we'll cover both building from source and using pre-built binaries when available.
+This chapter will guide you through installing PartiQL Beamline and setting up your development environment. 
+PartiQL Beamline is written in Rust, so we'll cover both building from source and using pre-built binaries when available.
 
 ## Prerequisites
 
@@ -15,7 +16,8 @@ Before installing PartiQL Beamline, ensure you have the following prerequisites:
 ### Optional but Recommended
 
 - **Text Editor**: For editing Ion scripts (VS Code, vim, emacs, etc.)
-- **JSON/Ion Viewer**: For examining generated data
+- **JSON/Ion Viewer**: Use [jq](https://jqlang.org/) and/or [ion-cli](https://github.com/amazon-ion/ion-cli) tools for 
+examining generated data
 
 ## Installing Rust
 
@@ -92,7 +94,7 @@ This is currently the primary method for installing PartiQL Beamline:
    # Or copy the .exe file to a directory already in your PATH
    ```
 
-### Method 2: Using Cargo Install (Future)
+### Method 2: Using Cargo Install (Not available yet)
 
 Once PartiQL Beamline is published to crates.io, you'll be able to install it directly:
 
@@ -265,4 +267,5 @@ PartiQL Beamline is designed to be memory-efficient, but consider your system re
 
 ## Next Steps
 
-Now that you have PartiQL Beamline installed and verified, you're ready to generate your first dataset! In the next section, we'll walk through creating your first data generation script and producing some sample data.
+Now that you have PartiQL Beamline installed and verified, you're ready to generate your first dataset!
+In the next section, we'll walk through creating your first data generation script and producing some sample data.

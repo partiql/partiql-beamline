@@ -182,29 +182,29 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="your-first-data-generation"><a class="header" href="#your-first-data-generation">Your First Data Generation</a></h1>
-<p>Now that you have PartiQL Beamline installed, let’s generate your first dataset! This hands-on tutorial will walk you through creating a simple sensor data generator and understanding the basic concepts.</p>
+<p>Now that you have PartiQL Beamline installed, let’s generate your first dataset! This hands-on tutorial will walk you
+through creating a simple sensor data generator and understanding the basic concepts.</p>
 <h2 id="quick-start-using-an-example-script"><a class="header" href="#quick-start-using-an-example-script">Quick Start: Using an Example Script</a></h2>
 <p>PartiQL Beamline comes with several example scripts. Let’s start with the sensors example to see data generation in action.</p>
 <h3 id="step-1-generate-your-first-dataset"><a class="header" href="#step-1-generate-your-first-dataset">Step 1: Generate Your First Dataset</a></h3>
 <p>Run the following command to generate 2 sensor readings:</p>
-<pre><code class="language-bash">cargo run gen data \
+<pre><code class="language-bash">partiql-beamline-cli gen data \
     --seed-auto \
     --start-auto \
     --sample-count 2 \
     --script-path partiql-beamline-sim/tests/scripts/sensors.ion
 </code></pre>
 <p>You should see output similar to:</p>
-<pre><code>Seed: 12328924104731257599
-Start: 2024-01-20T20:05:41.000000000Z
-[2024-01-20 20:07:46.532 +00:00:00] : "sensors" { 'f': -2.5436390152455175, 'i8': 4, 'tick': 125532 }
-[2024-01-20 20:09:19.756 +00:00:00] : "sensors" { 'f': -63.49308817145054, 'i8': 4, 'tick': 218756 }
+<pre><code>Seed: 5372343081885320050
+Start: 2022-01-08T18:38:38.000000000Z
+[2022-01-08 18:38:57.155 +00:00:00] : DataSetName("sensors") { 'tick': 19155, 'i8': 57, 'f': 30.103028021670184, 'w': 3.2669, 'd': 2, 'a': 'ed6b2d0c-dd09-4d7e-b1d3-fc16e3547eb5', 'ar1': [1.2, 1.4, 0.8], 'ar2': ['8fe9ee2c-a9e0-462a-8a44-a9abc51e759b', '0411eace-53be-4647-b351-3fa2de9b8e5f'], 'ar3': [3.2669, NULL, 3.0777], 'ar4': [10, 4, 8, 2], 'ar5': ['ed6b2d0c-dd09-4d7e-b1d3-fc16e3547eb5'] }
 </code></pre>
 <p>Congratulations! You’ve just generated your first synthetic dataset with PartiQL Beamline.</p>
 <h3 id="understanding-the-output"><a class="header" href="#understanding-the-output">Understanding the Output</a></h3>
 <p>Let’s break down what happened:</p>
 <ul>
-<li><strong>Seed</strong>: <code>12328924104731257599</code> - This random seed ensures reproducibility</li>
-<li><strong>Start</strong>: <code>2024-01-20T20:05:41.000000000Z</code> - The simulation start time</li>
+<li><strong>Seed</strong>: <code>5372343081885320050</code> — This random seed ensures reproducibility</li>
+<li><strong>Start</strong>: <code>2024-01-20T20:05:41.000000000Z</code> — The simulation start time</li>
 <li><strong>Data Records</strong>: Two sensor readings with timestamps, each containing:
 <ul>
 <li><code>f</code>: A floating-point sensor value</li>
@@ -214,17 +214,17 @@ Start: 2024-01-20T20:05:41.000000000Z
 </li>
 </ul>
 <h3 id="step-2-reproduce-the-same-data"><a class="header" href="#step-2-reproduce-the-same-data">Step 2: Reproduce the Same Data</a></h3>
-<p>The beauty of PartiQL Beamline is reproducibility. Let’s generate the exact same data using the seed from the previous run:</p>
-<pre><code class="language-bash">cargo run gen data \
-    --seed 12328924104731257599 \
+<p>Let’s generate the exact same data using the seed from the previous run:</p>
+<pre><code class="language-bash">partiql-beamline-cli gen data \
+    --seed 5372343081885320050 \
     --start-auto \
     --sample-count 2 \
     --script-path partiql-beamline-sim/tests/scripts/sensors.ion
 </code></pre>
 <p>Notice that the data values are identical, but the timestamps might be different because we used <code>--start-auto</code>. To get exactly the same output, use the same start time:</p>
-<pre><code class="language-bash">cargo run gen data \
-    --seed 12328924104731257599 \
-    --start-iso "2024-01-20T20:05:41.000000000Z" \
+<pre><code class="language-bash">partiql-beamline-cli gen data \
+    --seed 5372343081885320050 \
+    --start-iso "2022-01-08T18:38:38.000000000Z" \
     --sample-count 2 \
     --script-path partiql-beamline-sim/tests/scripts/sensors.ion
 </code></pre>
@@ -232,20 +232,85 @@ Start: 2024-01-20T20:05:41.000000000Z
 <h2 id="understanding-the-script"><a class="header" href="#understanding-the-script">Understanding the Script</a></h2>
 <p>Let’s examine the script that generated this data. Look at the contents of <code>partiql-beamline-sim/tests/scripts/sensors.ion</code>:</p>
 <pre><code class="language-ion">rand_processes::{
-    $n: UniformU8::{ low: 1, high: 3 },
-
-    sensors: $n::[
-        rand_process::{
-            $r: Uniform::[5,10],
-            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
-            $data: {
-                tick: Tick,
-                id: '$@n',
-                i8: UniformI8,
-                f: UniformF64,
-            }
+  $n:UniformU8::{
+    low:2,
+    high:10
+  },
+  sensors:$n::[
+    rand_process::{
+      $r:Uniform::{
+        choices:[
+          5,
+          10
+        ]
+      },
+      $arrival:HomogeneousPoisson::{
+        interarrival:minutes::$r
+      },
+      $weight:UniformDecimal::{
+        nullable:0.75,
+        low:1.995,
+        high:4.9999,
+        optional:true
+      },
+      $anyof:UniformAnyOf::{
+        types:[
+          Tick,
+          UniformF64,
+          UUID,
+          UniformDecimal::{
+            low:1.995,
+            high:4.9999,
+            nullable:false
+          }
+        ]
+      },
+      $array:UniformArray::{
+        min_size:3,
+        max_size:3,
+        element_type:UniformDecimal::{
+          low:0.5,
+          high:1.5
         }
-    ],
+      },
+      $data:{
+        tick:Tick,
+        i8:UniformI8,
+        f:UniformF64,
+        w:$weight,
+        d:UniformDecimal::{
+          low:0.,
+          high:42.,
+          nullable:false
+        },
+        a:$anyof,
+        ar1:$array,
+        ar2:UniformArray::{
+          min_size:2,
+          max_size:4,
+          element_type:UUID
+        },
+        ar3:UniformArray::{
+          min_size:2,
+          max_size:4,
+          element_type:$weight
+        },
+        ar4:UniformArray::{
+          min_size:2,
+          max_size:4,
+          element_type:UniformI8::{
+            low:2,
+            high:10
+          }
+        },
+        ar5:UniformArray::{
+          min_size:1,
+          max_size:1,
+          element_type:$anyof
+        }
+      }
+    }
+  ]
 }
 </code></pre>
 <h3 id="script-breakdown"><a class="header" href="#script-breakdown">Script Breakdown</a></h3>
@@ -281,8 +346,8 @@ Start: 2024-01-20T20:05:41.000000000Z
 <h2 id="exploring-different-output-formats"><a class="header" href="#exploring-different-output-formats">Exploring Different Output Formats</a></h2>
 <p>PartiQL Beamline supports multiple output formats. Let’s try generating the same data in different formats:</p>
 <h3 id="ion-pretty-format"><a class="header" href="#ion-pretty-format">Ion Pretty Format</a></h3>
-<pre><code class="language-bash">cargo run gen data \
-    --seed 12328924104731257599 \
+<pre><code class="language-bash">partiql-beamline-cli gen data \
+    --seed 5372343081885320050 \
     --start-auto \
     --sample-count 3 \
     --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
@@ -318,8 +383,8 @@ Start: 2024-01-20T20:05:41.000000000Z
 </code></pre>
 <h3 id="text-format-default"><a class="header" href="#text-format-default">Text Format (Default)</a></h3>
 <p>The default text format is human-readable and great for quick inspection:</p>
-<pre><code class="language-bash">cargo run gen data \
-    --seed 12328924104731257599 \
+<pre><code class="language-bash">partiql-beamline-cli gen data \
+    --seed 5372343081885320050 \
     --start-auto \
     --sample-count 3 \
     --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
@@ -349,11 +414,11 @@ Start: 2024-01-20T20:05:41.000000000Z
 <li><code>active</code>: Boolean with 90% chance of being true</li>
 </ul>
 <h3 id="test-your-script"><a class="header" href="#test-your-script">Test Your Script</a></h3>
-<pre><code class="language-bash">cargo run gen data \
+<pre><code class="language-bash">partiql-beamline-cli gen data \
     --seed 42 \
     --start-auto \
     --sample-count 5 \
-    --script my-first-script.ion \
+    --script-path my-first-script.ion \
     --output-format ion-pretty
 </code></pre>
 <h2 id="understanding-key-concepts"><a class="header" href="#understanding-key-concepts">Understanding Key Concepts</a></h2>
@@ -380,7 +445,7 @@ Start: 2024-01-20T20:05:41.000000000Z
 <h2 id="common-patterns"><a class="header" href="#common-patterns">Common Patterns</a></h2>
 <h3 id="multiple-datasets"><a class="header" href="#multiple-datasets">Multiple Datasets</a></h3>
 <p>You can generate data for specific datasets using the <code>--dataset</code> flag:</p>
-<pre><code class="language-bash">cargo run gen data \
+<pre><code class="language-bash">partiql-beamline-cli gen data \
     --seed 42 \
     --start-auto \
     --sample-count 10 \
@@ -390,16 +455,17 @@ Start: 2024-01-20T20:05:41.000000000Z
 </code></pre>
 <h3 id="controlling-nullability"><a class="header" href="#controlling-nullability">Controlling Nullability</a></h3>
 <p>You can control how often NULL values appear:</p>
-<pre><code class="language-bash">cargo run gen data \
+<pre><code class="language-bash">partiql-beamline-cli gen data \
     --seed 42 \
     --start-auto \
     --sample-count 5 \
-    --script my-first-script.ion \
+    --script-path my-first-script.ion \
     --default-nullable true \
     --pct-null 0.1  # 10% chance of NULL values
 </code></pre>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
-<p>Now that you’ve successfully generated your first datasets, you’re ready to dive deeper into PartiQL Beamline’s capabilities. In the next section, we’ll explore the core concepts that power PartiQL Beamline’s data generation, including:</p>
+<p>Now that you’ve successfully generated your first datasets, you’re ready to dive deeper into PartiQL Beamline’s
+capabilities. In the next section, we’ll explore the core concepts that power PartiQL Beamline’s data generation, including:</p>
 <ul>
 <li>Random processes and stochastic modeling</li>
 <li>Data generators and their configurations</li>
@@ -409,19 +475,19 @@ Start: 2024-01-20T20:05:41.000000000Z
 <h2 id="quick-reference"><a class="header" href="#quick-reference">Quick Reference</a></h2>
 <p>Here are the commands you’ve learned in this chapter:</p>
 <pre><code class="language-bash"># Basic data generation
-cargo run gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
+partiql-beamline-cli gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
 
 # Reproducible generation
-cargo run gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
+partiql-beamline-cli gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
 
 # Different output formats
-cargo run gen data ... --output-format [text|ion|ion-pretty]
+partiql-beamline-cli gen data ... --output-format [text|ion|ion-pretty]
 
 # Specific datasets
-cargo run gen data ... --dataset DATASET_NAME
+partiql-beamline-cli gen data ... --dataset DATASET_NAME
 
 # Control nullability
-cargo run gen data ... --default-nullable true --pct-null 0.1
+partiql-beamline-cli gen data ... --default-nullable true --pct-null 0.1
 </code></pre>
 <p>Congratulations on completing your first data generation with PartiQL Beamline! You’re now ready to explore more advanced features and create more sophisticated synthetic datasets.</p>
 

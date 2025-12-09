@@ -1,0 +1,918 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Output Formats - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/schema/output-formats.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="schema-output-formats"><a class="header" href="#schema-output-formats">Schema Output Formats</a></h1>
+<p>PartiQL Beamline supports three distinct output formats for schema information, each optimized for different use cases. Understanding these formats helps you choose the right one for your workflow and integrate schemas effectively with your tools and processes.</p>
+<h2 id="available-schema-formats"><a class="header" href="#available-schema-formats">Available Schema Formats</a></h2>
+<p>The <code>infer-shape</code> command supports three output formats via <code>--output-format</code>:</p>
+<div class="table-wrapper"><table><thead><tr><th>Format</th><th>Description</th><th>Use Case</th><th>Performance</th></tr></thead><tbody>
+<tr><td><code>text</code></td><td>Rust debug format with detailed type information</td><td>Development, debugging</td><td>Fast</td></tr>
+<tr><td><code>basic-ddl</code></td><td>SQL DDL statements ready for database creation</td><td>Database integration</td><td>Fast</td></tr>
+<tr><td><code>beamline-json</code></td><td>Structured JSON for PartiQL testing tools</td><td>Tool integration, automation</td><td>Fast</td></tr>
+</tbody></table>
+</div>
+<h2 id="text-format-default"><a class="header" href="#text-format-default">Text Format (Default)</a></h2>
+<h3 id="characteristics"><a class="header" href="#characteristics">Characteristics</a></h3>
+<ul>
+<li><strong>Detailed type information</strong>: Complete PartiQL type system representation</li>
+<li><strong>Rust debug format</strong>: Shows internal type structures</li>
+<li><strong>Development focused</strong>: Ideal for understanding complex type relationships</li>
+<li><strong>Human readable</strong>: With some practice, easy to understand</li>
+</ul>
+<h3 id="example-output"><a class="header" href="#example-output">Example Output</a></h3>
+<p>From the README example with sensors.ion:</p>
+<pre><code class="language-bash">$ partiql-beamline-cli infer-shape \
+    --seed-auto \
+    --start-auto \
+    --script-path sensors.ion
+
+Seed: 17685918364143248531
+Start: 2022-12-12T19:52:29.000000000Z
+{
+    "sensors": PartiqlType(
+        Bag(
+            BagType {
+                element_type: PartiqlType(
+                    Struct(
+                        StructType {
+                            constraints: {
+                                Fields(
+                                    {
+                                        StructField {
+                                            name: "d",
+                                            ty: PartiqlType(
+                                                DecimalP(
+                                                    2,
+                                                    0,
+                                                ),
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "f",
+                                            ty: PartiqlType(
+                                                Float64,
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "i8",
+                                            ty: PartiqlType(
+                                                Int64,
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "tick",
+                                            ty: PartiqlType(
+                                                Int64,
+                                            ),
+                                        },
+                                        StructField {
+                                            name: "w",
+                                            ty: PartiqlType(
+                                                DecimalP(
+                                                    5,
+                                                    4,
+                                                ),
+                                            ),
+                                        },
+                                    },
+                                ),
+                            },
+                        },
+                    ),
+                ),
+            },
+        ),
+    ),
+}
+</code></pre>
+<h3 id="understanding-text-format-structure"><a class="header" href="#understanding-text-format-structure">Understanding Text Format Structure</a></h3>
+<ul>
+<li><strong><code>PartiqlType</code></strong>: Root type wrapper</li>
+<li><strong><code>Bag</code></strong>: Collection type (dataset)</li>
+<li><strong><code>BagType</code></strong>: Container for element type information</li>
+<li><strong><code>Struct</code></strong>: Record structure</li>
+<li><strong><code>StructType</code></strong>: Detailed structure information</li>
+<li><strong><code>StructField</code></strong>: Individual field with name and type</li>
+<li><strong><code>DecimalP(5,4)</code></strong>: Decimal with precision 5, scale 4</li>
+<li><strong><code>Float64</code></strong>: 64-bit floating point</li>
+<li><strong><code>Int64</code></strong>: 64-bit integer</li>
+</ul>
+<h3 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h3>
+<ul>
+<li><strong>Development</strong>: Understanding complex type relationships</li>
+<li><strong>Debugging</strong>: Detailed analysis of type inference</li>
+<li><strong>Learning</strong>: Understanding PartiQL type system</li>
+<li><strong>Tool development</strong>: Building PartiQL-aware tools</li>
+</ul>
+<h2 id="basic-ddl-format"><a class="header" href="#basic-ddl-format">Basic DDL Format</a></h2>
+<h3 id="characteristics-1"><a class="header" href="#characteristics-1">Characteristics</a></h3>
+<ul>
+<li><strong>SQL-ready</strong>: Can be used directly in CREATE TABLE statements</li>
+<li><strong>Human readable</strong>: Easy to understand for database developers</li>
+<li><strong>Production focused</strong>: Ready for database integration</li>
+<li><strong>Compact</strong>: Concise representation</li>
+</ul>
+<h3 id="example-output-1"><a class="header" href="#example-output-1">Example Output</a></h3>
+<p>From the README example with sensors-nested.ion:</p>
+<pre><code class="language-bash">$ partiql-beamline-cli infer-shape \
+    --seed 7844265201457918498 \
+    --start-auto \
+    --script-path sensors-nested.ion \
+    --output-format basic-ddl
+
+-- Seed: 7844265201457918498
+-- Start: 2024-01-01T06:53:06.000000000Z
+-- Syntax: partiql_datatype_syntax.0.1
+-- Dataset: sensors
+"f" DOUBLE,
+"i8" INT8,
+"id" INT,
+"sub" STRUCT&lt;"f": DOUBLE,"o": INT8&gt;,
+"tick" INT8
+</code></pre>
+<h3 id="format-structure"><a class="header" href="#format-structure">Format Structure</a></h3>
+<ul>
+<li><strong>Header comments</strong>: Generation metadata for reproducibility</li>
+<li><strong>Syntax version</strong>: DDL syntax version identifier</li>
+<li><strong>Dataset sections</strong>: <code>-- Dataset: name</code> separates different datasets</li>
+<li><strong>Field definitions</strong>: SQL column definitions ready for CREATE TABLE</li>
+<li><strong>Type specifications</strong>: Precise SQL types with dimensions</li>
+</ul>
+<h3 id="ddl-type-mapping"><a class="header" href="#ddl-type-mapping">DDL Type Mapping</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>PartiQL Internal</th><th>DDL Output</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Int64</code></td><td><code>INT8</code>, <code>TINYINT</code>, <code>INT</code>, <code>BIGINT</code></td><td>Size depends on generator range</td></tr>
+<tr><td><code>Float64</code></td><td><code>DOUBLE</code></td><td>64-bit floating point</td></tr>
+<tr><td><code>DecimalP(p,s)</code></td><td><code>DECIMAL(p,s)</code></td><td>Fixed precision decimal</td></tr>
+<tr><td><code>String</code></td><td><code>VARCHAR</code></td><td>Variable length string</td></tr>
+<tr><td><code>Bool</code></td><td><code>BOOL</code></td><td>Boolean type</td></tr>
+<tr><td><code>DateTime</code></td><td><code>TIMESTAMP</code></td><td>Date and time</td></tr>
+<tr><td><code>Struct</code></td><td><code>STRUCT&lt;...&gt;</code></td><td>Nested object structure</td></tr>
+<tr><td><code>Array</code></td><td><code>ARRAY&lt;T&gt;</code></td><td>Array of type T</td></tr>
+<tr><td><code>Union</code></td><td><code>UNION&lt;T1,T2,...&gt;</code></td><td>One of several types</td></tr>
+</tbody></table>
+</div>
+<h3 id="complete-database-creation"><a class="header" href="#complete-database-creation">Complete Database Creation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Create complete database from DDL output
+
+SCRIPT="ecommerce.ion"
+DB_NAME="ecommerce_test"
+
+# Generate complete DDL
+partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path "$SCRIPT" \
+    --output-format basic-ddl &gt; schema.ddl
+
+# Create database
+createdb "$DB_NAME"
+
+# Extract and create each table
+grep "-- Dataset:" schema.ddl | while read -r line; do
+    dataset=$(echo "$line" | cut -d: -f2 | xargs)
+    
+    {
+        echo "CREATE TABLE $dataset ("
+        # Extract fields until next dataset or end of file
+        sed -n "/-- Dataset: $dataset/,/-- Dataset:/p" schema.ddl | \
+        grep '^"' | \
+        sed '$ s/,$//' # Remove trailing comma from last line
+        echo ");"
+    } &gt; "${dataset}_table.sql"
+    
+    echo "Creating table: $dataset"
+    psql -d "$DB_NAME" -f "${dataset}_table.sql"
+    
+    rm "${dataset}_table.sql"
+done
+
+echo "Database $DB_NAME created successfully"
+</code></pre>
+<h3 id="use-cases-1"><a class="header" href="#use-cases-1">Use Cases</a></h3>
+<ul>
+<li><strong>Database creation</strong>: Direct CREATE TABLE generation</li>
+<li><strong>Schema documentation</strong>: Human-readable reference</li>
+<li><strong>Migration scripts</strong>: Database schema evolution</li>
+<li><strong>SQL integration</strong>: Compatible with SQL databases</li>
+</ul>
+<h2 id="beamline-json-format"><a class="header" href="#beamline-json-format">Beamline JSON Format</a></h2>
+<h3 id="characteristics-2"><a class="header" href="#characteristics-2">Characteristics</a></h3>
+<ul>
+<li><strong>Machine readable</strong>: Structured JSON for programmatic processing</li>
+<li><strong>Tool integration</strong>: Designed for PartiQL testing frameworks</li>
+<li><strong>Versioned</strong>: Includes format version information</li>
+<li><strong>Complete metadata</strong>: Full type and constraint information</li>
+</ul>
+<h3 id="example-output-2"><a class="header" href="#example-output-2">Example Output</a></h3>
+<p>From the README example:</p>
+<pre><code class="language-bash">$ partiql-beamline-cli infer-shape \
+    --seed-auto \
+    --start-auto \
+    --script-path sensors.ion \
+    --output-format beamline-json
+
+{
+  seed: -3711181901898679775,
+  start: "2022-05-22T13:49:57.000000000+00:00",
+  shapes: {
+    sensors: partiql::shape::v0::{
+      type: "bag",
+      items: {
+        type: "struct",
+        constraints: [
+          ordered,
+          closed
+        ],
+        fields: [
+          {
+            name: "d",
+            type: "decimal(2, 0)"
+          },
+          {
+            name: "f",
+            type: "double"
+          },
+          {
+            name: "i8",
+            type: "int8"
+          },
+          {
+            name: "tick",
+            type: "int8"
+          },
+          {
+            name: "w",
+            type: "decimal(5, 4)"
+          }
+        ]
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="json-format-structure"><a class="header" href="#json-format-structure">JSON Format Structure</a></h3>
+<ul>
+<li><strong><code>seed</code></strong>: Random seed used for inference</li>
+<li><strong><code>start</code></strong>: Start timestamp used for inference</li>
+<li><strong><code>shapes</code></strong>: Dictionary of dataset name to shape definition</li>
+<li><strong><code>partiql::shape::v0::</code></strong>: Format version identifier</li>
+<li><strong><code>type: "bag"</code></strong>: Collection type (dataset)</li>
+<li><strong><code>items</code></strong>: Element type definition for bag contents</li>
+<li><strong><code>constraints</code></strong>: Structural constraints (<code>ordered</code>, <code>closed</code>)</li>
+<li><strong><code>fields</code></strong>: Array of field definitions</li>
+<li><strong>Field objects</strong>: <code>name</code> and <code>type</code> for each field</li>
+</ul>
+<h3 id="processing-json-format"><a class="header" href="#processing-json-format">Processing JSON Format</a></h3>
+<pre><code class="language-bash"># Extract dataset names
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path multi.ion --output-format beamline-json | \
+jq -r '.shapes | keys[]'
+
+# Count fields in each dataset
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path multi.ion --output-format beamline-json | \
+jq -r '.shapes | to_entries[] | "\(.key): \(.value.items.fields | length) fields"'
+
+# Extract field types for specific dataset
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --output-format beamline-json | \
+jq -r '.shapes.users.items.fields[] | "\(.name): \(.type)"'
+</code></pre>
+<h3 id="use-cases-2"><a class="header" href="#use-cases-2">Use Cases</a></h3>
+<ul>
+<li><strong>Automated testing</strong>: PartiQL conformance test suites</li>
+<li><strong>Tool integration</strong>: Schema-aware development tools</li>
+<li><strong>CI/CD pipelines</strong>: Automated schema validation</li>
+<li><strong>Documentation generation</strong>: Programmatic documentation creation</li>
+</ul>
+<h2 id="format-comparison"><a class="header" href="#format-comparison">Format Comparison</a></h2>
+<h3 id="size-and-performance"><a class="header" href="#size-and-performance">Size and Performance</a></h3>
+<p>For the same schema with multiple datasets:</p>
+<pre><code class="language-bash"># Generate all formats for comparison
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path complex.ion --output-format text &gt; schema.txt
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path complex.ion --output-format basic-ddl &gt; schema.sql
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path complex.ion --output-format beamline-json &gt; schema.json
+
+# Compare sizes
+ls -lh schema.*
+# Example results:
+# -rw-r--r-- 1 user user 8.2K schema.txt  (most detailed)
+# -rw-r--r-- 1 user user 1.5K schema.sql  (most compact)  
+# -rw-r--r-- 1 user user 3.1K schema.json (structured)
+</code></pre>
+<h3 id="information-density"><a class="header" href="#information-density">Information Density</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Format</th><th>Type Detail</th><th>Structure Info</th><th>Metadata</th><th>Processability</th></tr></thead><tbody>
+<tr><td><code>text</code></td><td>Very High</td><td>Very High</td><td>High</td><td>Low</td></tr>
+<tr><td><code>basic-ddl</code></td><td>Medium</td><td>Medium</td><td>Medium</td><td>High (SQL)</td></tr>
+<tr><td><code>beamline-json</code></td><td>High</td><td>High</td><td>High</td><td>High (JSON)</td></tr>
+</tbody></table>
+</div>
+<h2 id="format-specific-integration"><a class="header" href="#format-specific-integration">Format-Specific Integration</a></h2>
+<h3 id="text-format-analysis"><a class="header" href="#text-format-analysis">Text Format Analysis</a></h3>
+<pre><code class="language-bash"># Analyze complex type structures
+partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path nested_structures.ion \
+    --output-format text | \
+grep -A 20 "StructField"  # Extract field information
+
+# Count nesting levels
+partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path deep_nesting.ion \
+    --output-format text | \
+grep -c "Struct("  # Count nested structures
+</code></pre>
+<h3 id="ddl-format-database-integration"><a class="header" href="#ddl-format-database-integration">DDL Format Database Integration</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Complete database integration workflow
+
+SCRIPT="$1"
+DATABASE="$2"
+
+# Generate DDL schema
+partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path "$SCRIPT" \
+    --output-format basic-ddl &gt; full_schema.sql
+
+# Create database
+createdb "$DATABASE"
+
+# Process each dataset into a table
+current_dataset=""
+while IFS= read -r line; do
+    if [[ $line == *"-- Dataset:"* ]]; then
+        # Start new dataset
+        if [[ -n "$current_dataset" ]]; then
+            echo ");" &gt;&gt; "${current_dataset}.sql"
+            psql -d "$DATABASE" -f "${current_dataset}.sql"
+            rm "${current_dataset}.sql"
+        fi
+        
+        current_dataset=$(echo "$line" | cut -d: -f2 | xargs)
+        echo "CREATE TABLE $current_dataset (" &gt; "${current_dataset}.sql"
+        
+    elif [[ $line == \"* ]]; then
+        # Add field to current table
+        echo "  $line" &gt;&gt; "${current_dataset}.sql"
+    fi
+done &lt; full_schema.sql
+
+# Handle last dataset
+if [[ -n "$current_dataset" ]]; then
+    echo ");" &gt;&gt; "${current_dataset}.sql"
+    psql -d "$DATABASE" -f "${current_dataset}.sql"
+    rm "${current_dataset}.sql"
+fi
+
+echo "Database $DATABASE created with all tables"
+</code></pre>
+<h3 id="json-format-automation"><a class="header" href="#json-format-automation">JSON Format Automation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Automated schema processing with JSON format
+
+SCRIPT="$1"
+
+echo "Analyzing schema from $SCRIPT..."
+
+# Generate JSON schema
+schema_json=$(partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path "$SCRIPT" \
+    --output-format beamline-json)
+
+# Extract metadata
+seed=$(echo "$schema_json" | jq -r '.seed')
+start=$(echo "$schema_json" | jq -r '.start')
+echo "Schema generated with seed: $seed, start: $start"
+
+# Analyze each dataset
+echo "$schema_json" | jq -r '.shapes | keys[]' | while read -r dataset; do
+    echo ""
+    echo "Dataset: $dataset"
+    
+    # Get field count
+    field_count=$(echo "$schema_json" | jq ".shapes.${dataset}.items.fields | length")
+    echo "  Fields: $field_count"
+    
+    # List all fields with types
+    echo "  Field details:"
+    echo "$schema_json" | jq -r ".shapes.${dataset}.items.fields[] | \"    \(.name): \(.type)\""
+    
+    # Check for complex types
+    complex_count=$(echo "$schema_json" | jq -r ".shapes.${dataset}.items.fields[] | select(.type | contains(\"STRUCT\") or contains(\"ARRAY\") or contains(\"UNION\")) | .name" | wc -l)
+    if [ "$complex_count" -gt 0 ]; then
+        echo "  Complex types: $complex_count fields"
+    fi
+done
+</code></pre>
+<h2 id="multi-dataset-schema-handling"><a class="header" href="#multi-dataset-schema-handling">Multi-Dataset Schema Handling</a></h2>
+<h3 id="separating-dataset-schemas"><a class="header" href="#separating-dataset-schemas">Separating Dataset Schemas</a></h3>
+<p>Different formats handle multiple datasets differently:</p>
+<h4 id="text-format"><a class="header" href="#text-format">Text Format</a></h4>
+<p>All datasets in single output, nested under their names:</p>
+<pre><code>{
+    "service": PartiqlType(Bag(...)),
+    "client_0": PartiqlType(Bag(...)),
+    "client_1": PartiqlType(Bag(...))
+}
+</code></pre>
+<h4 id="basic-ddl-format-1"><a class="header" href="#basic-ddl-format-1">Basic DDL Format</a></h4>
+<p>Datasets separated by comments:</p>
+<pre><code class="language-sql">-- Dataset: service
+"Account" VARCHAR,
+"Request" VARCHAR,
+-- Dataset: client_0  
+"id" VARCHAR,
+"request_id" VARCHAR,
+-- Dataset: client_1
+"id" VARCHAR,
+"request_id" VARCHAR,
+</code></pre>
+<h4 id="json-format"><a class="header" href="#json-format">JSON Format</a></h4>
+<p>Datasets as separate objects in <code>shapes</code> dictionary:</p>
+<pre><code class="language-json">{
+  "shapes": {
+    "service": { "type": "bag", "items": {...} },
+    "client_0": { "type": "bag", "items": {...} },
+    "client_1": { "type": "bag", "items": {...} }
+  }
+}
+</code></pre>
+<h3 id="dataset-specific-schema-extraction"><a class="header" href="#dataset-specific-schema-extraction">Dataset-Specific Schema Extraction</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Extract schema for specific dataset
+
+SCRIPT="$1"
+DATASET="$2"
+FORMAT="$3"
+
+case $FORMAT in
+    "ddl")
+        partiql-beamline-cli infer-shape \
+            --seed 1 \
+            --start-auto \
+            --script-path "$SCRIPT" \
+            --output-format basic-ddl | \
+        sed -n "/-- Dataset: $DATASET/,/-- Dataset:/p" | \
+        head -n -1  # Remove next dataset header
+        ;;
+        
+    "json")
+        partiql-beamline-cli infer-shape \
+            --seed 1 \
+            --start-auto \
+            --script-path "$SCRIPT" \
+            --output-format beamline-json | \
+        jq ".shapes.${DATASET}"
+        ;;
+        
+    *)
+        echo "Usage: $0 &lt;script.ion&gt; &lt;dataset_name&gt; &lt;ddl|json&gt;"
+        exit 1
+        ;;
+esac
+</code></pre>
+<h2 id="nullability-and-optionality-in-formats"><a class="header" href="#nullability-and-optionality-in-formats">Nullability and Optionality in Formats</a></h2>
+<h3 id="how-each-format-represents-absent-values"><a class="header" href="#how-each-format-represents-absent-values">How Each Format Represents Absent Values</a></h3>
+<h4 id="text-format-1"><a class="header" href="#text-format-1">Text Format</a></h4>
+<pre><code>StructField {
+    name: "nullable_field",
+    ty: PartiqlType(Int64),  // Type doesn't show nullability directly
+}
+</code></pre>
+<h4 id="ddl-format"><a class="header" href="#ddl-format">DDL Format</a></h4>
+<pre><code class="language-sql">"required_field" VARCHAR NOT NULL,     -- nullable: false
+"nullable_field" INT,                  -- nullable: true (default)
+"optional_field" OPTIONAL VARCHAR      -- optional: true
+</code></pre>
+<h4 id="json-format-1"><a class="header" href="#json-format-1">JSON Format</a></h4>
+<pre><code class="language-json">{
+  "name": "nullable_field", 
+  "type": "int64"  // Nullability not directly visible
+}
+</code></pre>
+<p><strong>Note</strong>: DDL format provides the clearest nullability information.</p>
+<h3 id="cli-defaults-impact-on-formats"><a class="header" href="#cli-defaults-impact-on-formats">CLI Defaults Impact on Formats</a></h3>
+<pre><code class="language-bash"># With CLI nullability defaults
+partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path data.ion \
+    --default-nullable true \
+    --default-optional true \
+    --output-format basic-ddl
+</code></pre>
+<p><strong>Result shows CLI impact:</strong></p>
+<pre><code class="language-sql">-- All fields affected by CLI defaults
+"field1" OPTIONAL VARCHAR,      -- Made optional by CLI
+"field2" OPTIONAL INT NOT NULL, -- Made optional, but explicit nullable: false overrides
+"field3" OPTIONAL BOOL          -- Both CLI defaults applied
+</code></pre>
+<h2 id="advanced-format-usage"><a class="header" href="#advanced-format-usage">Advanced Format Usage</a></h2>
+<h3 id="schema-evolution-tracking"><a class="header" href="#schema-evolution-tracking">Schema Evolution Tracking</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Track schema changes across versions
+
+OLD_SCRIPT="model_v1.ion"
+NEW_SCRIPT="model_v2.ion"
+
+echo "Schema Evolution Analysis"
+echo "========================"
+
+# Generate schemas in DDL format for comparison
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$OLD_SCRIPT" --output-format basic-ddl &gt; v1_schema.sql
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$NEW_SCRIPT" --output-format basic-ddl &gt; v2_schema.sql
+
+# Show changes
+echo "Schema changes:"
+diff -u v1_schema.sql v2_schema.sql
+
+# Also generate JSON for programmatic analysis
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$OLD_SCRIPT" --output-format beamline-json &gt; v1_schema.json
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$NEW_SCRIPT" --output-format beamline-json &gt; v2_schema.json
+
+# Count field changes
+v1_fields=$(jq -r '.shapes | to_entries[] | .value.items.fields[].name' v1_schema.json | sort)
+v2_fields=$(jq -r '.shapes | to_entries[] | .value.items.fields[].name' v2_schema.json | sort)
+
+added_fields=$(comm -13 &lt;(echo "$v1_fields") &lt;(echo "$v2_fields"))
+removed_fields=$(comm -23 &lt;(echo "$v1_fields") &lt;(echo "$v2_fields"))
+
+echo ""
+echo "Field changes:"
+if [ -n "$added_fields" ]; then
+    echo "Added: $(echo "$added_fields" | tr '\n' ' ')"
+fi
+if [ -n "$removed_fields" ]; then
+    echo "Removed: $(echo "$removed_fields" | tr '\n' ' ')"
+fi
+</code></pre>
+<h3 id="multi-format-documentation"><a class="header" href="#multi-format-documentation">Multi-Format Documentation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Generate comprehensive schema documentation
+
+SCRIPT="$1"
+BASE_NAME=$(basename "$SCRIPT" .ion)
+
+echo "# Schema Documentation: $BASE_NAME"
+echo "Generated: $(date)"
+echo ""
+
+# Generate metadata
+metadata=$(partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$SCRIPT" --output-format basic-ddl | head -3)
+echo "## Generation Metadata"
+echo '```'
+echo "$metadata"
+echo '```'
+echo ""
+
+# SQL DDL for database developers
+echo "## SQL DDL Schema"
+echo '```sql'
+partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path "$SCRIPT" \
+    --output-format basic-ddl | tail -n +4  # Skip metadata lines
+echo '```'
+echo ""
+
+# JSON for tool developers
+echo "## JSON Schema (for tools)"
+echo '```json'
+partiql-beamline-cli infer-shape \
+    --seed 1 \
+    --start-auto \
+    --script-path "$SCRIPT" \
+    --output-format beamline-json | jq '.shapes'
+echo '```'
+echo ""
+
+# Analysis summary
+echo "## Schema Analysis"
+schema_json=$(partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$SCRIPT" --output-format beamline-json)
+dataset_count=$(echo "$schema_json" | jq '.shapes | length')
+total_fields=$(echo "$schema_json" | jq '[.shapes[].items.fields | length] | add')
+
+echo "- **Datasets**: $dataset_count"
+echo "- **Total fields**: $total_fields"
+echo "- **Source script**: \`$SCRIPT\`"
+</code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h3 id="1-choose-format-for-purpose"><a class="header" href="#1-choose-format-for-purpose">1. Choose Format for Purpose</a></h3>
+<pre><code class="language-bash"># Understanding complex types
+partiql-beamline-cli infer-shape --script-path complex.ion --output-format text
+
+# Database creation
+partiql-beamline-cli infer-shape --script-path db_model.ion --output-format basic-ddl
+
+# Automated processing
+partiql-beamline-cli infer-shape --script-path data.ion --output-format beamline-json
+</code></pre>
+<h3 id="2-use-consistent-parameters"><a class="header" href="#2-use-consistent-parameters">2. Use Consistent Parameters</a></h3>
+<pre><code class="language-bash"># Always use same seed for reproducible schema generation
+partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path script.ion --output-format basic-ddl
+</code></pre>
+<h3 id="3-version-schema-output"><a class="header" href="#3-version-schema-output">3. Version Schema Output</a></h3>
+<pre><code class="language-bash"># Include format in version control
+git add schemas/model_v2.sql schemas/model_v2.json
+git commit -m "Add schema v2 in SQL and JSON formats
+
+- SQL DDL for database creation
+- JSON for automated tooling"
+</code></pre>
+<h3 id="4-validate-format-consistency"><a class="header" href="#4-validate-format-consistency">4. Validate Format Consistency</a></h3>
+<pre><code class="language-bash"># Ensure all formats represent same schema
+partiql-beamline-cli infer-shape --seed 42 --start-auto --script-path test.ion --output-format basic-ddl &gt; test.sql
+partiql-beamline-cli infer-shape --seed 42 --start-auto --script-path test.ion --output-format beamline-json &gt; test.json
+
+# Extract field count from both formats  
+sql_fields=$(grep '^"' test.sql | wc -l)
+json_fields=$(jq '[.shapes[].items.fields | length] | add' test.json)
+
+if [ "$sql_fields" -eq "$json_fields" ]; then
+    echo "✅ Schema formats consistent: $sql_fields fields"
+else
+    echo "❌ Format mismatch: SQL=$sql_fields, JSON=$json_fields"
+fi
+</code></pre>
+<h2 id="format-selection-guidelines"><a class="header" href="#format-selection-guidelines">Format Selection Guidelines</a></h2>
+<h3 id="by-use-case"><a class="header" href="#by-use-case">By Use Case</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Use Case</th><th>Recommended Format</th><th>Alternative</th></tr></thead><tbody>
+<tr><td><strong>Database creation</strong></td><td><code>basic-ddl</code></td><td>N/A</td></tr>
+<tr><td><strong>Development debugging</strong></td><td><code>text</code></td><td><code>basic-ddl</code></td></tr>
+<tr><td><strong>Tool integration</strong></td><td><code>beamline-json</code></td><td>N/A</td></tr>
+<tr><td><strong>Documentation</strong></td><td><code>basic-ddl</code></td><td><code>beamline-json</code></td></tr>
+<tr><td><strong>Schema comparison</strong></td><td><code>basic-ddl</code></td><td><code>beamline-json</code></td></tr>
+<tr><td><strong>CI/CD automation</strong></td><td><code>beamline-json</code></td><td><code>basic-ddl</code></td></tr>
+</tbody></table>
+</div>
+<h3 id="by-consumer"><a class="header" href="#by-consumer">By Consumer</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Consumer</th><th>Recommended Format</th><th>Rationale</th></tr></thead><tbody>
+<tr><td><strong>SQL Database</strong></td><td><code>basic-ddl</code></td><td>Direct CREATE TABLE usage</td></tr>
+<tr><td><strong>PartiQL Tools</strong></td><td><code>beamline-json</code></td><td>Native PartiQL format</td></tr>
+<tr><td><strong>Human Review</strong></td><td><code>basic-ddl</code></td><td>Most readable</td></tr>
+<tr><td><strong>Development Tools</strong></td><td><code>beamline-json</code></td><td>Machine processable</td></tr>
+<tr><td><strong>Documentation</strong></td><td><code>basic-ddl</code></td><td>Clear and concise</td></tr>
+</tbody></table>
+</div>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand all schema output formats:</p>
+<ul>
+<li><a href="../cli/shape-commands.html">CLI Shape Commands</a> - Complete CLI reference for shape operations</li>
+<li><a href="../database/overview.html">Database Integration</a> - Using schemas for database creation</li>
+<li><a href="./understanding-shapes.html">Understanding Shapes</a> - Fundamental concepts and type mappings</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../schema/shape-inference.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../cli/overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../schema/shape-inference.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../cli/overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

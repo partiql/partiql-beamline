@@ -1,0 +1,1084 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Overview - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/database/overview.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="database-overview"><a class="header" href="#database-overview">Database Overview</a></h1>
+<p>PartiQL Beamline provides powerful database generation capabilities through the <strong>BeamlineLite</strong> system. Unlike simple data generation, database generation creates complete, self-contained databases with both data and schemas, making them ideal for testing, development, and demonstrations.</p>
+<h2 id="what-is-beamlinelite"><a class="header" href="#what-is-beamlinelite">What is BeamlineLite?</a></h2>
+<p><strong>BeamlineLite</strong> is PartiQL Beamline’s database generation system that creates filesystem-based databases containing:</p>
+<ul>
+<li><strong>Generated data</strong> in Ion format</li>
+<li><strong>Inferred schemas</strong> in both Ion and SQL DDL formats</li>
+<li><strong>Metadata</strong> about generation parameters</li>
+<li><strong>Original scripts</strong> for reproducibility</li>
+<li><strong>Complete catalogs</strong> ready for use with database systems</li>
+</ul>
+<h2 id="database-vs-data-generation"><a class="header" href="#database-vs-data-generation">Database vs Data Generation</a></h2>
+<h3 id="data-generation-gen-data"><a class="header" href="#data-generation-gen-data">Data Generation (gen data)</a></h3>
+<pre><code class="language-bash">partiql-beamline-cli gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path sensors.ion \
+  --sample-count 1000 \
+  --output-format ion-pretty
+</code></pre>
+<p><strong>Output:</strong> Stream of data records to stdout or file</p>
+<p><strong>Use cases:</strong> Data processing pipelines, API testing, analysis</p>
+<h3 id="database-generation-gen-db"><a class="header" href="#database-generation-gen-db">Database Generation (gen db)</a></h3>
+<pre><code class="language-bash">partiql-beamline-cli gen db beamline-lite \
+  --seed 42 \
+  --start-auto \
+  --script-path sensors.ion \
+  --sample-count 1000
+</code></pre>
+<p><strong>Output:</strong> Complete database directory with data + schemas</p>
+<p><strong>Use cases:</strong> Local development databases, testing environments, demos</p>
+<h2 id="beamlinelite-database-structure"><a class="header" href="#beamlinelite-database-structure">BeamlineLite Database Structure</a></h2>
+<h3 id="catalog-directory-layout"><a class="header" href="#catalog-directory-layout">Catalog Directory Layout</a></h3>
+<p>A BeamlineLite database creates a <strong>catalog directory</strong> with this structure:</p>
+<pre><code>beamline-catalog/
+├── .beamline-manifest          # Generation metadata (JSON)
+├── .beamline-script           # Original Ion script
+├── &lt;dataset&gt;.ion              # Data files (one per dataset)
+├── &lt;dataset&gt;.shape.ion        # Ion format schemas
+└── &lt;dataset&gt;.shape.sql        # SQL DDL schemas
+</code></pre>
+<h3 id="real-example-from-client-serviceion"><a class="header" href="#real-example-from-client-serviceion">Real Example from client-service.ion</a></h3>
+<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+    --seed-auto \
+    --start-auto \
+    --script-path client-service.ion \
+    --sample-count 1000
+
+writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
+writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
+writing shape file(s)...[COMPLETED]
+writing data file(s)...[COMPLETED]
+done!
+
+$ tree beamline-catalog/
+beamline-catalog/
+├── .beamline-manifest
+├── .beamline-script
+├── service.ion
+├── service.shape.ion
+├── service.shape.sql
+├── client_0.ion
+├── client_0.shape.ion
+├── client_0.shape.sql
+├── client_1.ion
+├── client_1.shape.ion  
+├── client_1.shape.sql
+└── ... (more client datasets)
+</code></pre>
+<h2 id="database-files-deep-dive"><a class="header" href="#database-files-deep-dive">Database Files Deep Dive</a></h2>
+<h3 id="manifest-file-beamline-manifest"><a class="header" href="#manifest-file-beamline-manifest">Manifest File (.beamline-manifest)</a></h3>
+<p>Contains generation metadata in JSON format:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/.beamline-manifest
+{"seed": "949665520117506306", "start": "2023-02-06T12:52:29.000000000Z", "ddl_syntax.version": "partiql_datatype_syntax.0.1"}
+</code></pre>
+<p><strong>Contents:</strong></p>
+<ul>
+<li><strong>seed</strong>: Random seed used for generation (for reproducibility)</li>
+<li><strong>start</strong>: Simulation start timestamp</li>
+<li><strong>ddl_syntax.version</strong>: SQL DDL syntax version used in .shape.sql files</li>
+</ul>
+<h3 id="script-file-beamline-script"><a class="header" href="#script-file-beamline-script">Script File (.beamline-script)</a></h3>
+<p>Preserved copy of the original Ion script:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/.beamline-script
+rand_processes::{
+    // generate between 5 &amp; 20 customers
+    $n: UniformU8::{ low: 5, high: 20 },
+    
+    // A generator for client ids
+    $id_gen: UUID,
+    
+    // ... rest of original script
+}
+</code></pre>
+<p><strong>Purpose:</strong></p>
+<ul>
+<li><strong>Reproducibility</strong>: Regenerate identical database later</li>
+<li><strong>Documentation</strong>: What script created this database</li>
+<li><strong>Version control</strong>: Track script changes over time</li>
+</ul>
+<h3 id="data-files-datasetion"><a class="header" href="#data-files-datasetion">Data Files (dataset.ion)</a></h3>
+<p>Contains generated data in compact Ion format:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/client_0.ion
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "0de35d1e-a87c-e540-734d-6f2a4fa410c3", request_time: 2021-01-05T03:55:01.035000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "3539cdf0-6f7e-6bdc-c25a-4e0b7d8f8bac", request_time: 2021-01-05T03:55:01.182000000+00:00}
+</code></pre>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li><strong>One record per line</strong>: Newline-delimited Ion format</li>
+<li><strong>Complete type information</strong>: All Ion types preserved</li>
+<li><strong>Temporal ordering</strong>: Records ordered by generation time</li>
+</ul>
+<h3 id="schema-files-datasetshapeion"><a class="header" href="#schema-files-datasetshapeion">Schema Files (dataset.shape.ion)</a></h3>
+<p>Ion format schema definitions:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/client_0.shape.ion
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [ordered, closed],
+    fields: [
+      { name: "id", type: "string" },
+      { name: "request_id", type: "string" },
+      { name: "request_time", type: "datetime" },
+      { name: "success", type: "bool" }
+    ]
+  }
+}
+</code></pre>
+<p><strong>Use cases:</strong></p>
+<ul>
+<li><strong>PartiQL validation</strong>: Validate queries against schema</li>
+<li><strong>Type checking</strong>: Ensure data types match expectations</li>
+<li><strong>Tool integration</strong>: Ion-aware tools can use schema information</li>
+</ul>
+<h3 id="schema-files-datasetshapesql"><a class="header" href="#schema-files-datasetshapesql">Schema Files (dataset.shape.sql)</a></h3>
+<p>SQL DDL format schemas:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/service.shape.sql
+"Account" VARCHAR,
+"Distance" DECIMAL(2, 0),
+"Operation" VARCHAR,
+"Program" VARCHAR,
+"Request" VARCHAR,
+"StartTime" TIMESTAMP,
+"Weight" DECIMAL(5, 4),
+"client" VARCHAR,
+"success" BOOL
+</code></pre>
+<p><strong>Use cases:</strong></p>
+<ul>
+<li><strong>Database creation</strong>: Create tables in SQL databases</li>
+<li><strong>Schema documentation</strong>: Human-readable schema reference</li>
+<li><strong>Migration scripts</strong>: Database schema evolution</li>
+</ul>
+<h2 id="database-generation-process"><a class="header" href="#database-generation-process">Database Generation Process</a></h2>
+<h3 id="step-by-step-process"><a class="header" href="#step-by-step-process">Step-by-Step Process</a></h3>
+<ol>
+<li><strong>Script Parsing</strong>: Validate and parse Ion script</li>
+<li><strong>Simulation Setup</strong>: Initialize random processes and generators</li>
+<li><strong>Catalog Creation</strong>: Create catalog directory structure</li>
+<li><strong>Manifest Generation</strong>: Write generation metadata</li>
+<li><strong>Script Preservation</strong>: Copy original script to catalog</li>
+<li><strong>Schema Inference</strong>: Analyze script to determine data types</li>
+<li><strong>Schema Export</strong>: Generate Ion and SQL schema files</li>
+<li><strong>Data Generation</strong>: Generate and write data files</li>
+<li><strong>Completion</strong>: Database ready for use</li>
+</ol>
+<h3 id="process-output"><a class="header" href="#process-output">Process Output</a></h3>
+<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+    --seed 12345 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --script-path ecommerce.ion \
+    --sample-count 10000
+
+writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
+writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
+writing shape file(s)...[COMPLETED]
+writing data file(s)...[COMPLETED]
+done!
+</code></pre>
+<h2 id="database-configuration-options"><a class="header" href="#database-configuration-options">Database Configuration Options</a></h2>
+<h3 id="catalog-configuration"><a class="header" href="#catalog-configuration">Catalog Configuration</a></h3>
+<pre><code class="language-bash">--catalog_name &lt;NAME&gt;          # Catalog directory name (default: "beamline-catalog")
+--catalog_path &lt;PATH&gt;          # Where to create catalog (default: ".")
+--force                        # Overwrite existing catalog with backup
+</code></pre>
+<h3 id="examples"><a class="header" href="#examples">Examples</a></h3>
+<pre><code class="language-bash"># Default catalog location
+partiql-beamline-cli gen db beamline-lite \
+  --seed 1000 \
+  --start-auto \
+  --script-path data.ion
+
+# Creates: ./beamline-catalog/
+
+# Custom catalog name and location
+partiql-beamline-cli gen db beamline-lite \
+  --seed 2000 \
+  --start-auto \
+  --script-path analytics.ion \
+  --catalog_name analytics-db-v2 \
+  --catalog_path ./databases/
+
+# Creates: ./databases/analytics-db-v2/
+</code></pre>
+<h3 id="backup-and-overwrite-behavior"><a class="header" href="#backup-and-overwrite-behavior">Backup and Overwrite Behavior</a></h3>
+<p>The system protects existing catalogs by default:</p>
+<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path data.ion
+creating directory ./beamline-catalog/ failed with the following error:
+File exists (os error 17)
+</code></pre>
+<p>Use <code>--force</code> for safe overwrite with automatic backup:</p>
+<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+    --seed-auto \
+    --start-auto \
+    --script-path updated_data.ion \
+    --force
+
+command is using --force ...
+Beamline catalog ./beamline-catalog/ exists, backing it up to "beamline-catalog.2024-05-10T22:15:54.019316000Z.bkp"...
+back up completed
+writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
+writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]  
+writing shape file(s)...[COMPLETED]
+writing data file(s)...[COMPLETED]
+done!
+</code></pre>
+<h2 id="database-use-cases"><a class="header" href="#database-use-cases">Database Use Cases</a></h2>
+<h3 id="local-development-database"><a class="header" href="#local-development-database">Local Development Database</a></h3>
+<p>Create a lightweight database for development:</p>
+<pre><code class="language-bash">partiql-beamline-cli gen db beamline-lite \
+  --seed 1000 \
+  --start-auto \
+  --script-path dev_data.ion \
+  --sample-count 5000 \
+  --catalog_name dev-local-db
+</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li><strong>Fast setup</strong>: Generated in seconds</li>
+<li><strong>Realistic data</strong>: Follows statistical distributions</li>
+<li><strong>Complete schemas</strong>: Both Ion and SQL formats</li>
+<li><strong>Reproducible</strong>: Same seed creates identical database</li>
+</ul>
+<h3 id="testing-database"><a class="header" href="#testing-database">Testing Database</a></h3>
+<p>Create comprehensive test databases:</p>
+<pre><code class="language-bash">partiql-beamline-cli gen db beamline-lite \
+  --seed 2024001 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path integration_test.ion \
+  --sample-count 25000 \
+  --catalog_name integration-test-db \
+  --default-nullable false \
+  --default-optional false
+</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li><strong>Consistent</strong>: Exact reproduction for regression testing</li>
+<li><strong>Complete</strong>: Multiple datasets with relationships</li>
+<li><strong>Clean</strong>: Controlled nullability for predictable testing</li>
+<li><strong>Versioned</strong>: Manifest tracks generation parameters</li>
+</ul>
+<h3 id="demo-and-training-database"><a class="header" href="#demo-and-training-database">Demo and Training Database</a></h3>
+<p>Create databases for demonstrations and training:</p>
+<pre><code class="language-bash">partiql-beamline-cli gen db beamline-lite \
+  --seed 12345 \
+  --start-iso "2023-01-01T00:00:00Z" \
+  --script-path demo_ecommerce.ion \
+  --sample-count 50000 \
+  --catalog_name demo-ecommerce-2024
+</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li><strong>Realistic</strong>: Data follows real-world patterns</li>
+<li><strong>Self-contained</strong>: Everything needed in one directory</li>
+<li><strong>Documented</strong>: Schemas and metadata included</li>
+<li><strong>Portable</strong>: Easy to share and deploy</li>
+</ul>
+<h2 id="working-with-generated-databases"><a class="header" href="#working-with-generated-databases">Working with Generated Databases</a></h2>
+<h3 id="database-analysis"><a class="header" href="#database-analysis">Database Analysis</a></h3>
+<pre><code class="language-bash"># Examine database structure
+ls -la beamline-catalog/
+tree beamline-catalog/
+
+# Check generation metadata
+cat beamline-catalog/.beamline-manifest
+
+# Count records per dataset
+for f in beamline-catalog/*.ion; do
+  if [[ "$f" != *".shape.ion" ]]; then
+    echo "$(basename "$f" .ion): $(wc -l &lt; "$f") records"
+  fi
+done
+
+# Examine schemas
+ls beamline-catalog/*.shape.sql
+cat beamline-catalog/users.shape.sql
+</code></pre>
+<h3 id="data-inspection"><a class="header" href="#data-inspection">Data Inspection</a></h3>
+<pre><code class="language-bash"># View sample data from each dataset
+for f in beamline-catalog/*.ion; do
+  if [[ "$f" != *".shape.ion" ]]; then
+    echo "=== $(basename "$f" .ion) ==="
+    head -3 "$f"
+    echo ""
+  fi
+done
+
+# Look for specific patterns
+grep "error" beamline-catalog/events.ion | head -5
+grep -c "premium" beamline-catalog/users.ion
+</code></pre>
+<h3 id="schema-analysis"><a class="header" href="#schema-analysis">Schema Analysis</a></h3>
+<pre><code class="language-bash"># Compare schemas across datasets
+diff beamline-catalog/client_0.shape.sql beamline-catalog/client_1.shape.sql
+
+# Count fields per dataset
+for f in beamline-catalog/*.shape.sql; do
+  echo "$(basename "$f" .shape.sql): $(wc -l &lt; "$f") fields"
+done
+</code></pre>
+<h2 id="database-integration-patterns"><a class="header" href="#database-integration-patterns">Database Integration Patterns</a></h2>
+<h3 id="sql-database-integration"><a class="header" href="#sql-database-integration">SQL Database Integration</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Load BeamlineLite database into PostgreSQL
+
+CATALOG="beamline-catalog"
+DB_NAME="test_db"
+
+# Create database
+createdb $DB_NAME
+
+# Create tables from schemas
+for schema in $CATALOG/*.shape.sql; do
+  table_name=$(basename "$schema" .shape.sql)
+  echo "CREATE TABLE $table_name (" &gt; temp_schema.sql
+  cat "$schema" &gt;&gt; temp_schema.sql
+  echo ");" &gt;&gt; temp_schema.sql
+  psql -d $DB_NAME -f temp_schema.sql
+done
+
+# Load data (would need custom Ion-to-CSV converter)
+# for data in $CATALOG/*.ion; do
+#   table_name=$(basename "$data" .ion)  
+#   ion-to-csv "$data" | psql -d $DB_NAME -c "COPY $table_name FROM STDIN CSV HEADER"
+# done
+
+echo "Database $DB_NAME created with schemas"
+</code></pre>
+<h3 id="application-testing-integration"><a class="header" href="#application-testing-integration">Application Testing Integration</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Setup test environment with BeamlineLite database
+
+APP_ENV="testing"
+DB_CATALOG="test-data-v3"
+
+echo "Setting up test environment..."
+
+# Generate fresh test database
+partiql-beamline-cli gen db beamline-lite \
+  --seed 202412 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path test_scenarios.ion \
+  --sample-count 10000 \
+  --catalog-name $DB_CATALOG \
+  --force
+
+# Set environment variables for application
+export TEST_DATA_PATH="$(pwd)/$DB_CATALOG"
+export TEST_DATA_SEED="202412"
+export TEST_DATA_RECORDS="10000"
+
+echo "Test database created: $DB_CATALOG"
+echo "Records per dataset:"
+for f in $DB_CATALOG/*.ion; do
+  if [[ "$f" != *".shape.ion" ]]; then
+    echo "  $(basename "$f" .ion): $(wc -l &lt; "$f")"
+  fi
+done
+
+# Run application tests
+# ./run_tests.sh
+</code></pre>
+<h3 id="multi-environment-database-generation"><a class="header" href="#multi-environment-database-generation">Multi-Environment Database Generation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Generate databases for different environments
+
+BASE_SCRIPT="app_simulation.ion"
+BASE_SEED=2024
+
+# Development environment - small data
+partiql-beamline-cli gen db beamline-lite \
+  --seed $BASE_SEED \
+  --start-iso "2024-01-01T08:00:00Z" \
+  --script-path $BASE_SCRIPT \
+  --sample-count 1000 \
+  --catalog-name dev-db \
+  --catalog-path ./environments/
+
+# Staging environment - medium data
+partiql-beamline-cli gen db beamline-lite \
+  --seed $((BASE_SEED + 1)) \
+  --start-iso "2024-01-01T08:00:00Z" \
+  --script-path $BASE_SCRIPT \
+  --sample-count 25000 \
+  --catalog-name staging-db \
+  --catalog-path ./environments/
+
+# Production-like environment - large data
+partiql-beamline-cli gen db beamline-lite \
+  --seed $((BASE_SEED + 2)) \
+  --start-iso "2024-01-01T08:00:00Z" \
+  --script-path $BASE_SCRIPT \
+  --sample-count 500000 \
+  --catalog-name prod-like-db \
+  --catalog-path ./environments/
+
+echo "Generated databases:"
+echo "- Development: $(wc -l environments/dev-db/*.ion | tail -1 | awk '{print $1}') total records"
+echo "- Staging: $(wc -l environments/staging-db/*.ion | tail -1 | awk '{print $1}') total records"  
+echo "- Prod-like: $(wc -l environments/prod-like-db/*.ion | tail -1 | awk '{print $1}') total records"
+</code></pre>
+<h2 id="database-versioning-and-management"><a class="header" href="#database-versioning-and-management">Database Versioning and Management</a></h2>
+<h3 id="database-versioning-strategy"><a class="header" href="#database-versioning-strategy">Database Versioning Strategy</a></h3>
+<pre><code class="language-bash"># Use meaningful catalog names with versions
+partiql-beamline-cli gen db beamline-lite \
+  --seed 2024001 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path user_analytics_v2.ion \
+  --sample-count 100000 \
+  --catalog-name user-analytics-v2-20241201 \
+  --catalog-path ./db-versions/
+
+# Document database version
+echo "User Analytics Database v2.0
+Generated: $(date)
+Script: user_analytics_v2.ion
+Seed: 2024001  
+Start: 2024-01-01T00:00:00Z
+Records: 100,000
+Purpose: User behavior analysis for Q4 2024
+Team: Analytics Engineering
+" &gt; db-versions/user-analytics-v2-20241201/README.md
+</code></pre>
+<h3 id="database-archiving"><a class="header" href="#database-archiving">Database Archiving</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Archive old database versions
+
+ARCHIVE_DIR="./archived-databases"
+CURRENT_DB="beamline-catalog"
+
+if [ -d "$CURRENT_DB" ]; then
+  # Create archive with timestamp
+  TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+  ARCHIVE_NAME="$(basename "$CURRENT_DB")_$TIMESTAMP"
+  
+  mkdir -p "$ARCHIVE_DIR"
+  mv "$CURRENT_DB" "$ARCHIVE_DIR/$ARCHIVE_NAME"
+  
+  echo "Archived current database to: $ARCHIVE_DIR/$ARCHIVE_NAME"
+else
+  echo "No current database to archive"
+fi
+</code></pre>
+<h2 id="advanced-database-generation"><a class="header" href="#advanced-database-generation">Advanced Database Generation</a></h2>
+<h3 id="large-database-generation"><a class="header" href="#large-database-generation">Large Database Generation</a></h3>
+<p>For large databases, consider performance and storage:</p>
+<pre><code class="language-bash"># Generate large database with monitoring
+time partiql-beamline-cli gen db beamline-lite \
+  --seed 999999 \
+  --start-iso "2023-01-01T00:00:00Z" \
+  --script-path large_simulation.ion \
+  --sample-count 5000000 \
+  --catalog-name large-dataset-5m
+
+# Monitor disk usage during generation
+watch -n 5 'du -sh large-dataset-5m/'
+</code></pre>
+<h3 id="database-validation"><a class="header" href="#database-validation">Database Validation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Validate generated database
+
+CATALOG="$1"
+
+if [ ! -d "$CATALOG" ]; then
+  echo "Catalog directory $CATALOG not found"
+  exit 1
+fi
+
+echo "Validating database: $CATALOG"
+
+# Check required files exist
+for required in ".beamline-manifest" ".beamline-script"; do
+  if [ ! -f "$CATALOG/$required" ]; then
+    echo "ERROR: Missing required file $required"
+    exit 1
+  fi
+done
+
+# Check data files have corresponding schemas
+for data_file in $CATALOG/*.ion; do
+  if [[ "$data_file" != *".shape.ion" ]]; then
+    dataset=$(basename "$data_file" .ion)
+    
+    if [ ! -f "$CATALOG/${dataset}.shape.ion" ]; then
+      echo "ERROR: Missing Ion schema for dataset $dataset"
+    fi
+    
+    if [ ! -f "$CATALOG/${dataset}.shape.sql" ]; then
+      echo "ERROR: Missing SQL schema for dataset $dataset"  
+    fi
+    
+    record_count=$(wc -l &lt; "$data_file")
+    echo "✓ Dataset $dataset: $record_count records"
+  fi
+done
+
+echo "Database validation completed"
+</code></pre>
+<h2 id="performance-considerations"><a class="header" href="#performance-considerations">Performance Considerations</a></h2>
+<h3 id="database-size-planning"><a class="header" href="#database-size-planning">Database Size Planning</a></h3>
+<pre><code class="language-bash"># Estimate database size with small sample
+partiql-beamline-cli gen db beamline-lite \
+  --seed 1 \
+  --start-auto \
+  --script-path production_sim.ion \
+  --sample-count 1000 \
+  --catalog-name size-estimate
+
+# Check size
+du -sh size-estimate/
+echo "Estimated size for 1M records: $(($(du -sk size-estimate/ | cut -f1) * 1000))KB"
+
+# Clean up
+rm -rf size-estimate/
+</code></pre>
+<h3 id="memory-and-disk-optimization"><a class="header" href="#memory-and-disk-optimization">Memory and Disk Optimization</a></h3>
+<pre><code class="language-bash"># For very large databases
+partiql-beamline-cli gen db beamline-lite \
+  --seed 123456 \
+  --start-auto \
+  --script-path optimized_sim.ion \
+  --sample-count 10000000 \
+  --catalog-name huge-db \
+  --catalog-path /fast-ssd-storage/  # Use fast storage
+</code></pre>
+<h3 id="concurrent-database-generation"><a class="header" href="#concurrent-database-generation">Concurrent Database Generation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Generate multiple databases in parallel
+
+SCRIPT="simulation.ion"
+BASE_SEED=10000
+
+# Generate multiple test databases concurrently
+for i in {1..4}; do
+  (
+    partiql-beamline-cli gen db beamline-lite \
+      --seed $((BASE_SEED + i)) \
+      --start-auto \
+      --script-path $SCRIPT \
+      --sample-count 50000 \
+      --catalog-name "parallel-db-$i" \
+      --catalog-path ./parallel-dbs/ &amp;
+  )
+done
+
+wait  # Wait for all background jobs
+echo "All parallel databases generated"
+</code></pre>
+<h2 id="database-comparison-and-testing"><a class="header" href="#database-comparison-and-testing">Database Comparison and Testing</a></h2>
+<h3 id="schema-evolution-testing"><a class="header" href="#schema-evolution-testing">Schema Evolution Testing</a></h3>
+<pre><code class="language-bash">#!/bin/bash  
+# Test schema changes between versions
+
+OLD_SCRIPT="schema_v1.ion"
+NEW_SCRIPT="schema_v2.ion"
+
+# Generate databases with same seed for comparison
+partiql-beamline-cli gen db beamline-lite \
+  --seed 100 \
+  --start-auto \
+  --script-path $OLD_SCRIPT \
+  --catalog-name schema-v1-test
+
+partiql-beamline-cli gen db beamline-lite \
+  --seed 100 \
+  --start-auto \
+  --script-path $NEW_SCRIPT \
+  --catalog-name schema-v2-test
+
+# Compare schemas
+echo "Schema differences:"
+for dataset in schema-v1-test/*.shape.sql; do
+  table_name=$(basename "$dataset" .shape.sql)
+  if [ -f "schema-v2-test/$table_name.shape.sql" ]; then
+    echo "=== $table_name ==="
+    diff "$dataset" "schema-v2-test/$table_name.shape.sql"
+  else
+    echo "=== $table_name ==="
+    echo "Table removed in v2"
+  fi
+done
+
+# Check for new tables in v2
+for dataset in schema-v2-test/*.shape.sql; do
+  table_name=$(basename "$dataset" .shape.sql)
+  if [ ! -f "schema-v1-test/$table_name.shape.sql" ]; then
+    echo "=== $table_name ==="
+    echo "New table in v2"
+  fi
+done
+</code></pre>
+<h3 id="data-quality-assessment"><a class="header" href="#data-quality-assessment">Data Quality Assessment</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Assess generated database quality
+
+CATALOG="$1"
+
+echo "Database Quality Report: $CATALOG"
+echo "Generated: $(date)"
+echo "=================================="
+
+# Basic statistics
+echo "Dataset Summary:"
+for data in $CATALOG/*.ion; do
+  if [[ "$data" != *".shape.ion" ]]; then
+    dataset=$(basename "$data" .ion)
+    records=$(wc -l &lt; "$data")
+    size=$(du -h "$data" | cut -f1)
+    echo "  $dataset: $records records ($size)"
+  fi
+done
+
+echo ""
+echo "Schema Summary:"
+for schema in $CATALOG/*.shape.sql; do
+  dataset=$(basename "$schema" .shape.sql)  
+  fields=$(wc -l &lt; "$schema")
+  echo "  $dataset: $fields fields"
+done
+
+# Check for data quality issues
+echo ""
+echo "Data Quality Checks:"
+
+# Check for obvious issues in data files
+for data in $CATALOG/*.ion; do
+  if [[ "$data" != *".shape.ion" ]]; then
+    dataset=$(basename "$data" .ion)
+    
+    # Check for empty records
+    empty_count=$(grep -c '^{}$' "$data" 2&gt;/dev/null || echo "0")
+    if [ "$empty_count" -gt 0 ]; then
+      echo "  WARNING: $dataset has $empty_count empty records"
+    fi
+    
+    # Check for null-only records
+    null_only=$(grep -c '^{[^}]*null[^}]*}$' "$data" 2&gt;/dev/null || echo "0") 
+    if [ "$null_only" -gt "$(wc -l &lt; "$data")" ] &amp;&amp; [ "$null_only" -gt 100 ]; then
+      echo "  INFO: $dataset has high null value rate"
+    fi
+  fi
+done
+
+echo "Quality assessment completed"
+</code></pre>
+<h2 id="database-backup-and-recovery"><a class="header" href="#database-backup-and-recovery">Database Backup and Recovery</a></h2>
+<h3 id="manual-backup-strategy"><a class="header" href="#manual-backup-strategy">Manual Backup Strategy</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Manual database backup
+
+SOURCE_CATALOG="$1"
+BACKUP_DIR="./database-backups"
+
+if [ ! -d "$SOURCE_CATALOG" ]; then
+  echo "Source catalog $SOURCE_CATALOG not found"
+  exit 1
+fi
+
+# Create backup with timestamp
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_NAME="$(basename "$SOURCE_CATALOG")_backup_$TIMESTAMP"
+
+mkdir -p "$BACKUP_DIR"
+cp -r "$SOURCE_CATALOG" "$BACKUP_DIR/$BACKUP_NAME"
+
+echo "Database backed up to: $BACKUP_DIR/$BACKUP_NAME"
+
+# Optionally compress backup
+tar -czf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" -C "$BACKUP_DIR" "$BACKUP_NAME"
+rm -rf "$BACKUP_DIR/$BACKUP_NAME"
+
+echo "Compressed backup: $BACKUP_DIR/$BACKUP_NAME.tar.gz"
+</code></pre>
+<h3 id="database-restoration"><a class="header" href="#database-restoration">Database Restoration</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Restore database from backup
+
+BACKUP_FILE="$1"
+RESTORE_DIR="$2"
+
+if [ ! -f "$BACKUP_FILE" ]; then
+  echo "Backup file $BACKUP_FILE not found"
+  exit 1
+fi
+
+# Extract backup
+tar -xzf "$BACKUP_FILE" -C "$RESTORE_DIR"
+
+echo "Database restored to: $RESTORE_DIR"
+ls -la "$RESTORE_DIR"
+</code></pre>
+<h2 id="database-migration-and-updates"><a class="header" href="#database-migration-and-updates">Database Migration and Updates</a></h2>
+<h3 id="schema-migration"><a class="header" href="#schema-migration">Schema Migration</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Migrate to new schema version
+
+OLD_CATALOG="production-db-v1"
+NEW_SCRIPT="production_v2.ion"
+
+# Backup current database
+cp -r "$OLD_CATALOG" "$OLD_CATALOG.backup"
+
+# Get generation parameters from old database
+OLD_SEED=$(jq -r '.seed' "$OLD_CATALOG/.beamline-manifest")
+OLD_START=$(jq -r '.start' "$OLD_CATALOG/.beamline-manifest")
+
+# Generate new database with same parameters
+partiql-beamline-cli gen db beamline-lite \
+  --seed "$OLD_SEED" \
+  --start-iso "$OLD_START" \
+  --script-path "$NEW_SCRIPT" \
+  --catalog-name production-db-v2
+
+# Compare schemas
+echo "Schema changes:"
+diff -r "$OLD_CATALOG"/*.shape.sql production-db-v2/*.shape.sql
+
+echo "Migration completed"
+echo "Old database backed up to: $OLD_CATALOG.backup"
+echo "New database created: production-db-v2"
+</code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h3 id="1-use-meaningful-catalog-names"><a class="header" href="#1-use-meaningful-catalog-names">1. Use Meaningful Catalog Names</a></h3>
+<pre><code class="language-bash"># Good - descriptive names with versions and dates
+partiql-beamline-cli gen db beamline-lite \
+  --script-path user_behavior.ion \
+  --catalog-name user-behavior-v3-20241201
+
+# Avoid - generic names
+partiql-beamline-cli gen db beamline-lite \
+  --script-path data.ion \
+  --catalog-name db
+</code></pre>
+<h3 id="2-document-database-purpose"><a class="header" href="#2-document-database-purpose">2. Document Database Purpose</a></h3>
+<pre><code class="language-bash"># Create database with documentation
+partiql-beamline-cli gen db beamline-lite \
+  --seed 54321 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path analytics.ion \
+  --sample-count 75000 \
+  --catalog-name analytics-q4-2024
+
+# Add comprehensive README
+cat &gt; analytics-q4-2024/README.md &lt;&lt; EOF
+# Analytics Database Q4 2024
+
+## Purpose
+Customer behavior analysis for quarterly business review
+
+## Generation Details
+- **Script**: analytics.ion
+- **Seed**: 54321  
+- **Start Time**: 2024-01-01T00:00:00Z
+- **Sample Count**: 75,000
+- **Generated**: $(date)
+
+## Datasets
+- **customers**: Customer profiles and demographics
+- **sessions**: User session data with engagement metrics
+- **events**: Detailed user interaction events
+- **conversions**: Purchase and conversion events
+
+## Usage
+This database supports queries for:
+- Customer segmentation analysis
+- User journey mapping
+- Conversion funnel analysis
+- Engagement pattern identification
+
+## Contact
+Analytics Engineering Team &lt;analytics@company.com&gt;
+EOF
+</code></pre>
+<h3 id="3-plan-storage-requirements"><a class="header" href="#3-plan-storage-requirements">3. Plan Storage Requirements</a></h3>
+<pre><code class="language-bash"># Estimate storage needs
+partiql-beamline-cli gen db beamline-lite \
+  --seed 1 \
+  --start-auto \
+  --script-path large_sim.ion \
+  --sample-count 10000 \
+  --catalog-name storage-test
+
+# Check size and project
+size_kb=$(du -sk storage-test | cut -f1)
+echo "10K records = ${size_kb}KB"
+echo "1M records ≈ $((size_kb * 100))KB = $((size_kb * 100 / 1024))MB"
+
+# Clean up test
+rm -rf storage-test/
+</code></pre>
+<h3 id="4-use-version-control-for-metadata"><a class="header" href="#4-use-version-control-for-metadata">4. Use Version Control for Metadata</a></h3>
+<pre><code class="language-bash"># Track database generation metadata in git
+git add beamline-catalog/.beamline-manifest
+git add beamline-catalog/.beamline-script  
+git add beamline-catalog/README.md
+git commit -m "Add database generation manifest for analytics-v2.1
+
+Generated 50K records for user analytics testing
+Seed: 2024001, Start: 2024-01-01T00:00:00Z"
+</code></pre>
+<h3 id="5-validate-generated-databases"><a class="header" href="#5-validate-generated-databases">5. Validate Generated Databases</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Standard database validation
+
+CATALOG="$1"
+
+echo "Validating BeamlineLite database: $CATALOG"
+
+# Structural validation
+if [ ! -d "$CATALOG" ]; then
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../cli/database-commands.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../database/catalogs.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../cli/database-commands.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../database/catalogs.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

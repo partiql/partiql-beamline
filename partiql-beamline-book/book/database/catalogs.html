@@ -1,0 +1,1116 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Catalogs - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/database/catalogs.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="managing-catalogs"><a class="header" href="#managing-catalogs">Managing Catalogs</a></h1>
+<p>BeamlineLite catalogs are filesystem-based directories that contain complete databases with data, schemas, and metadata. Understanding how to manage, organize, and work with catalogs is essential for effective database operations.</p>
+<h2 id="catalog-structure-deep-dive"><a class="header" href="#catalog-structure-deep-dive">Catalog Structure Deep Dive</a></h2>
+<h3 id="standard-catalog-layout"><a class="header" href="#standard-catalog-layout">Standard Catalog Layout</a></h3>
+<p>Every BeamlineLite catalog follows a consistent structure:</p>
+<pre><code>catalog-name/
+├── .beamline-manifest          # JSON metadata file
+├── .beamline-script           # Original Ion script
+├── dataset_1.ion              # Dataset 1 data (Ion format)
+├── dataset_1.shape.ion        # Dataset 1 schema (Ion format)  
+├── dataset_1.shape.sql        # Dataset 1 schema (SQL DDL)
+├── dataset_2.ion              # Dataset 2 data
+├── dataset_2.shape.ion        # Dataset 2 schema (Ion)
+├── dataset_2.shape.sql        # Dataset 2 schema (SQL)
+└── ... (additional datasets)
+</code></pre>
+<h3 id="file-naming-conventions"><a class="header" href="#file-naming-conventions">File Naming Conventions</a></h3>
+<p><strong>Data Files:</strong> <code>&lt;dataset_name&gt;.ion</code></p>
+<ul>
+<li>Contains generated records in newline-delimited Ion format</li>
+<li>One file per dataset defined in the Ion script</li>
+<li>Records ordered chronologically by generation time</li>
+</ul>
+<p><strong>Ion Schema Files:</strong> <code>&lt;dataset_name&gt;.shape.ion</code></p>
+<ul>
+<li>PartiQL type definitions in Ion format</li>
+<li>Used by Ion-aware tools for validation and processing</li>
+<li>Contains complete type constraint information</li>
+</ul>
+<p><strong>SQL Schema Files:</strong> <code>&lt;dataset_name&gt;.shape.sql</code></p>
+<ul>
+<li>SQL DDL field definitions (not complete CREATE TABLE)</li>
+<li>Ready for integration with SQL databases</li>
+<li>Human-readable schema documentation</li>
+</ul>
+<p><strong>Metadata Files:</strong></p>
+<ul>
+<li><code>.beamline-manifest</code> - Generation parameters in JSON</li>
+<li><code>.beamline-script</code> - Original Ion script for reproducibility</li>
+</ul>
+<h2 id="catalog-creation-options"><a class="header" href="#catalog-creation-options">Catalog Creation Options</a></h2>
+<h3 id="basic-catalog-creation"><a class="header" href="#basic-catalog-creation">Basic Catalog Creation</a></h3>
+<pre><code class="language-bash"># Default catalog in current directory
+partiql-beamline-cli gen db beamline-lite \
+  --seed 42 \
+  --start-auto \
+  --script-path data.ion
+
+# Creates: ./beamline-catalog/
+</code></pre>
+<h3 id="custom-catalog-configuration"><a class="header" href="#custom-catalog-configuration">Custom Catalog Configuration</a></h3>
+<pre><code class="language-bash"># Custom name and location
+partiql-beamline-cli gen db beamline-lite \
+  --seed 12345 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path ecommerce.ion \
+  --sample-count 50000 \
+  --catalog-name ecommerce-prod-simulation \
+  --catalog-path ./production-databases/
+
+# Creates: ./production-databases/ecommerce-prod-simulation/
+</code></pre>
+<h3 id="catalog-naming-best-practices"><a class="header" href="#catalog-naming-best-practices">Catalog Naming Best Practices</a></h3>
+<pre><code class="language-bash"># Good - descriptive, versioned names
+--catalog-name user-analytics-v2-20241201
+--catalog-name integration-test-db-sprint-45  
+--catalog-name demo-ecommerce-q4-2024
+
+# Avoid - generic names
+--catalog-name db
+--catalog-name test
+--catalog-name data
+</code></pre>
+<h2 id="catalog-lifecycle-management"><a class="header" href="#catalog-lifecycle-management">Catalog Lifecycle Management</a></h2>
+<h3 id="safe-overwrite-with-backup"><a class="header" href="#safe-overwrite-with-backup">Safe Overwrite with Backup</a></h3>
+<p>BeamlineLite protects existing catalogs by default:</p>
+<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite --seed 1 --start-auto --script-path data.ion
+creating directory ./beamline-catalog/ failed with the following error:
+File exists (os error 17)
+</code></pre>
+<p>The <code>--force</code> option creates automatic backups:</p>
+<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+    --seed 1 \
+    --start-auto \
+    --script-path updated_data.ion \
+    --force
+
+command is using --force ...
+Beamline catalog ./beamline-catalog/ exists, backing it up to "beamline-catalog.2024-05-10T22:15:54.019316000Z.bkp"...
+back up completed
+writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
+writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
+writing shape file(s)...[COMPLETED]
+writing data file(s)...[COMPLETED]
+done!
+</code></pre>
+<p><strong>Backup naming pattern:</strong>
+<code>&lt;catalog-name&gt;.&lt;ISO-8601-timestamp&gt;.bkp</code></p>
+<h3 id="manual-backup-management"><a class="header" href="#manual-backup-management">Manual Backup Management</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Create manual backup before making changes
+
+CATALOG="important-catalog"
+BACKUP_DIR="./catalog-backups"
+
+# Create timestamped backup
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_NAME="${CATALOG}_manual_backup_${TIMESTAMP}"
+
+mkdir -p "$BACKUP_DIR"
+cp -r "$CATALOG" "$BACKUP_DIR/$BACKUP_NAME"
+
+echo "Manual backup created: $BACKUP_DIR/$BACKUP_NAME"
+
+# Optional compression
+tar -czf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" -C "$BACKUP_DIR" "$BACKUP_NAME"
+rm -rf "$BACKUP_DIR/$BACKUP_NAME"
+
+echo "Compressed backup: $BACKUP_DIR/$BACKUP_NAME.tar.gz"
+</code></pre>
+<h3 id="backup-cleanup"><a class="header" href="#backup-cleanup">Backup Cleanup</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Clean up old automatic backups
+
+BACKUP_PATTERN="*.bkp"
+DAYS_TO_KEEP=7
+
+echo "Cleaning up backups older than $DAYS_TO_KEEP days..."
+
+find . -name "$BACKUP_PATTERN" -type d -mtime +$DAYS_TO_KEEP | while read -r backup; do
+  echo "Removing old backup: $backup"
+  rm -rf "$backup"
+done
+
+echo "Backup cleanup completed"
+</code></pre>
+<h2 id="catalog-organization-strategies"><a class="header" href="#catalog-organization-strategies">Catalog Organization Strategies</a></h2>
+<h3 id="project-based-organization"><a class="header" href="#project-based-organization">Project-Based Organization</a></h3>
+<pre><code class="language-bash"># Organize catalogs by project
+mkdir -p projects/{analytics,ecommerce,iot}/databases
+
+# Analytics project databases
+partiql-beamline-cli gen db beamline-lite \
+  --script-path analytics_v1.ion \
+  --catalog-name analytics-dev \
+  --catalog-path ./projects/analytics/databases/
+
+partiql-beamline-cli gen db beamline-lite \
+  --script-path analytics_v1.ion \
+  --catalog-name analytics-staging \
+  --catalog-path ./projects/analytics/databases/
+
+# E-commerce project databases  
+partiql-beamline-cli gen db beamline-lite \
+  --script-path ecommerce_sim.ion \
+  --catalog-name ecommerce-integration-test \
+  --catalog-path ./projects/ecommerce/databases/
+</code></pre>
+<h3 id="environment-based-organization"><a class="header" href="#environment-based-organization">Environment-Based Organization</a></h3>
+<pre><code class="language-bash"># Organize by deployment environment
+mkdir -p environments/{dev,staging,prod-like}/databases
+
+BASE_SCRIPT="application.ion"
+BASE_SEED=2024
+
+# Development environment
+partiql-beamline-cli gen db beamline-lite \
+  --seed $BASE_SEED \
+  --start-auto \
+  --script-path $BASE_SCRIPT \
+  --sample-count 1000 \
+  --catalog-name app-db \
+  --catalog-path ./environments/dev/databases/
+
+# Staging environment  
+partiql-beamline-cli gen db beamline-lite \
+  --seed $((BASE_SEED + 1)) \
+  --start-auto \
+  --script-path $BASE_SCRIPT \
+  --sample-count 25000 \
+  --catalog-name app-db \
+  --catalog-path ./environments/staging/databases/
+
+# Production-like environment
+partiql-beamline-cli gen db beamline-lite \
+  --seed $((BASE_SEED + 2)) \
+  --start-auto \
+  --script-path $BASE_SCRIPT \
+  --sample-count 500000 \
+  --catalog-name app-db \
+  --catalog-path ./environments/prod-like/databases/
+</code></pre>
+<h3 id="version-based-organization"><a class="header" href="#version-based-organization">Version-Based Organization</a></h3>
+<pre><code class="language-bash"># Organize by database version
+mkdir -p database-versions/{v1.0,v1.1,v2.0}
+
+# Version 1.0 databases
+partiql-beamline-cli gen db beamline-lite \
+  --script-path schema_v1.ion \
+  --catalog-name production-simulation \
+  --catalog-path ./database-versions/v1.0/
+
+# Version 2.0 databases (new schema)
+partiql-beamline-cli gen db beamline-lite \
+  --script-path schema_v2.ion \
+  --catalog-name production-simulation \
+  --catalog-path ./database-versions/v2.0/
+
+# Compare versions
+diff -r database-versions/v1.0/production-simulation/*.shape.sql \
+       database-versions/v2.0/production-simulation/*.shape.sql
+</code></pre>
+<h2 id="catalog-analysis-and-inspection"><a class="header" href="#catalog-analysis-and-inspection">Catalog Analysis and Inspection</a></h2>
+<h3 id="catalog-inventory"><a class="header" href="#catalog-inventory">Catalog Inventory</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Generate catalog inventory report
+
+CATALOG_DIR="$1"
+
+if [ ! -d "$CATALOG_DIR" ]; then
+  echo "Catalog directory not found: $CATALOG_DIR"
+  exit 1
+fi
+
+echo "BeamlineLite Catalog Report"
+echo "=========================="
+echo "Catalog: $CATALOG_DIR"
+echo "Generated: $(date)"
+echo ""
+
+# Generation metadata
+if [ -f "$CATALOG_DIR/.beamline-manifest" ]; then
+  echo "Generation Metadata:"
+  echo "  Seed: $(jq -r '.seed' "$CATALOG_DIR/.beamline-manifest")"
+  echo "  Start: $(jq -r '.start' "$CATALOG_DIR/.beamline-manifest")"
+  echo "  DDL Version: $(jq -r '."ddl_syntax.version"' "$CATALOG_DIR/.beamline-manifest")"
+  echo ""
+fi
+
+# Dataset summary
+echo "Datasets:"
+total_records=0
+for data_file in "$CATALOG_DIR"/*.ion; do
+  if [[ "$data_file" != *".shape.ion" ]]; then
+    dataset=$(basename "$data_file" .ion)
+    records=$(wc -l &lt; "$data_file")
+    size=$(du -h "$data_file" | cut -f1)
+    total_records=$((total_records + records))
+    
+    echo "  $dataset:"
+    echo "    Records: $records"
+    echo "    Size: $size" 
+    
+    # Check for schema files
+    if [ -f "$CATALOG_DIR/$dataset.shape.ion" ]; then
+      echo "    Ion Schema: ✓"
+    else
+      echo "    Ion Schema: ✗ MISSING"
+    fi
+    
+    if [ -f "$CATALOG_DIR/$dataset.shape.sql" ]; then
+      echo "    SQL Schema: ✓"
+    else  
+      echo "    SQL Schema: ✗ MISSING"
+    fi
+    echo ""
+  fi
+done
+
+echo "Total Records: $total_records"
+echo "Total Size: $(du -sh "$CATALOG_DIR" | cut -f1)"
+</code></pre>
+<h3 id="catalog-health-check"><a class="header" href="#catalog-health-check">Catalog Health Check</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Validate catalog integrity
+
+CATALOG="$1"
+
+echo "Catalog Health Check: $CATALOG"
+echo "================================"
+
+errors=0
+warnings=0
+
+# Check required files
+for required in ".beamline-manifest" ".beamline-script"; do
+  if [ ! -f "$CATALOG/$required" ]; then
+    echo "ERROR: Missing required file $required"
+    ((errors++))
+  else
+    echo "✓ Found $required"
+  fi
+done
+
+# Check data/schema file pairs
+for data_file in "$CATALOG"/*.ion; do
+  if [[ "$data_file" != *".shape.ion" ]]; then
+    dataset=$(basename "$data_file" .ion)
+    
+    # Check Ion schema
+    if [ ! -f "$CATALOG/$dataset.shape.ion" ]; then
+      echo "ERROR: Missing Ion schema for dataset $dataset"
+      ((errors++))
+    fi
+    
+    # Check SQL schema
+    if [ ! -f "$CATALOG/$dataset.shape.sql" ]; then
+      echo "ERROR: Missing SQL schema for dataset $dataset"
+      ((errors++))
+    fi
+    
+    # Check for empty data files
+    if [ ! -s "$data_file" ]; then
+      echo "WARNING: Empty data file $dataset.ion"
+      ((warnings++))
+    fi
+  fi
+done
+
+# Check for orphaned schema files
+for schema_file in "$CATALOG"/*.shape.ion; do
+  dataset=$(basename "$schema_file" .shape.ion)
+  if [ ! -f "$CATALOG/$dataset.ion" ]; then
+    echo "WARNING: Orphaned schema file $schema_file (no corresponding data)"
+    ((warnings++))
+  fi
+done
+
+echo ""
+echo "Health Check Results:"
+echo "  Errors: $errors"
+echo "  Warnings: $warnings"
+
+if [ $errors -eq 0 ]; then
+  echo "✓ Catalog is healthy"
+  exit 0
+else
+  echo "✗ Catalog has issues requiring attention"
+  exit 1
+fi
+</code></pre>
+<h2 id="catalog-manipulation-operations"><a class="header" href="#catalog-manipulation-operations">Catalog Manipulation Operations</a></h2>
+<h3 id="catalog-merging"><a class="header" href="#catalog-merging">Catalog Merging</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Merge multiple catalogs (for same schema)
+
+OUTPUT_CATALOG="$1"
+shift
+INPUT_CATALOGS=("$@")
+
+echo "Merging catalogs into: $OUTPUT_CATALOG"
+
+mkdir -p "$OUTPUT_CATALOG"
+
+# Use first catalog's metadata as base
+cp "${INPUT_CATALOGS[0]}/.beamline-manifest" "$OUTPUT_CATALOG/"
+cp "${INPUT_CATALOGS[0]}/.beamline-script" "$OUTPUT_CATALOG/"
+
+# Copy schemas from first catalog
+cp "${INPUT_CATALOGS[0]}"/*.shape.* "$OUTPUT_CATALOG/"
+
+# Merge data files
+for catalog in "${INPUT_CATALOGS[@]}"; do
+  echo "Processing catalog: $catalog"
+  
+  for data_file in "$catalog"/*.ion; do
+    if [[ "$data_file" != *".shape.ion" ]]; then
+      dataset=$(basename "$data_file" .ion)
+      cat "$data_file" &gt;&gt; "$OUTPUT_CATALOG/$dataset.ion"
+    fi
+  done
+done
+
+echo "Catalog merge completed"
+
+# Report merged sizes
+for f in "$OUTPUT_CATALOG"/*.ion; do
+  if [[ "$f" != *".shape.ion" ]]; then
+    echo "$(basename "$f" .ion): $(wc -l &lt; "$f") total records"
+  fi
+done
+</code></pre>
+<h3 id="catalog-splitting-by-dataset"><a class="header" href="#catalog-splitting-by-dataset">Catalog Splitting by Dataset</a></h3>
+<pre><code class="language-bash">#!/bin/bash  
+# Split catalog into individual dataset catalogs
+
+SOURCE_CATALOG="$1"
+OUTPUT_DIR="$2"
+
+if [ ! -d "$SOURCE_CATALOG" ]; then
+  echo "Source catalog not found: $SOURCE_CATALOG"
+  exit 1
+fi
+
+mkdir -p "$OUTPUT_DIR"
+
+# Split each dataset into its own catalog
+for data_file in "$SOURCE_CATALOG"/*.ion; do
+  if [[ "$data_file" != *".shape.ion" ]]; then
+    dataset=$(basename "$data_file" .ion)
+    dataset_catalog="$OUTPUT_DIR/$dataset-catalog"
+    
+    echo "Creating catalog for dataset: $dataset"
+    mkdir -p "$dataset_catalog"
+    
+    # Copy metadata files
+    cp "$SOURCE_CATALOG/.beamline-manifest" "$dataset_catalog/"
+    cp "$SOURCE_CATALOG/.beamline-script" "$dataset_catalog/"
+    
+    # Copy dataset-specific files
+    cp "$data_file" "$dataset_catalog/"
+    cp "$SOURCE_CATALOG/$dataset.shape.ion" "$dataset_catalog/"
+    cp "$SOURCE_CATALOG/$dataset.shape.sql" "$dataset_catalog/"
+    
+    echo "  Created: $dataset_catalog"
+  fi
+done
+
+echo "Catalog splitting completed"
+</code></pre>
+<h3 id="catalog-sampling"><a class="header" href="#catalog-sampling">Catalog Sampling</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Create smaller sample catalog from large catalog
+
+SOURCE_CATALOG="$1"
+SAMPLE_SIZE="$2"  
+OUTPUT_CATALOG="$3"
+
+echo "Creating sample catalog: $OUTPUT_CATALOG"
+echo "Sample size: $SAMPLE_SIZE records per dataset"
+
+mkdir -p "$OUTPUT_CATALOG"
+
+# Copy metadata and schemas
+cp "$SOURCE_CATALOG/.beamline-manifest" "$OUTPUT_CATALOG/"
+cp "$SOURCE_CATALOG/.beamline-script" "$OUTPUT_CATALOG/"
+cp "$SOURCE_CATALOG"/*.shape.* "$OUTPUT_CATALOG/"
+
+# Sample data files
+for data_file in "$SOURCE_CATALOG"/*.ion; do
+  if [[ "$data_file" != *".shape.ion" ]]; then
+    dataset=$(basename "$data_file" .ion)
+    
+    # Take first N records (preserves temporal ordering)
+    head -n "$SAMPLE_SIZE" "$data_file" &gt; "$OUTPUT_CATALOG/$dataset.ion"
+    
+    records=$(wc -l &lt; "$OUTPUT_CATALOG/$dataset.ion")
+    echo "  $dataset: $records records sampled"
+  fi
+done
+
+echo "Sample catalog created: $OUTPUT_CATALOG"
+</code></pre>
+<h2 id="multi-catalog-workflows"><a class="header" href="#multi-catalog-workflows">Multi-Catalog Workflows</a></h2>
+<h3 id="catalog-comparison"><a class="header" href="#catalog-comparison">Catalog Comparison</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Compare two catalogs for differences
+
+CATALOG_A="$1"
+CATALOG_B="$2"
+
+echo "Comparing catalogs:"
+echo "  A: $CATALOG_A"  
+echo "  B: $CATALOG_B"
+echo ""
+
+# Compare metadata
+echo "Metadata Comparison:"
+echo "  Seed A: $(jq -r '.seed' "$CATALOG_A/.beamline-manifest")"
+echo "  Seed B: $(jq -r '.seed' "$CATALOG_B/.beamline-manifest")"
+echo "  Start A: $(jq -r '.start' "$CATALOG_A/.beamline-manifest")"
+echo "  Start B: $(jq -r '.start' "$CATALOG_B/.beamline-manifest")"
+echo ""
+
+# Compare schemas
+echo "Schema Comparison:"
+for schema_a in "$CATALOG_A"/*.shape.sql; do
+  dataset=$(basename "$schema_a" .shape.sql)
+  schema_b="$CATALOG_B/$dataset.shape.sql"
+  
+  if [ -f "$schema_b" ]; then
+    if diff -q "$schema_a" "$schema_b" &gt; /dev/null; then
+      echo "  $dataset: ✓ Schemas identical"
+    else
+      echo "  $dataset: ✗ Schemas differ"
+      diff "$schema_a" "$schema_b"
+    fi
+  else
+    echo "  $dataset: ✗ Missing in catalog B"
+  fi
+done
+
+# Compare record counts
+echo ""
+echo "Record Count Comparison:"
+for data_a in "$CATALOG_A"/*.ion; do
+  if [[ "$data_a" != *".shape.ion" ]]; then
+    dataset=$(basename "$data_a" .ion)
+    data_b="$CATALOG_B/$dataset.ion"
+    
+    count_a=$(wc -l &lt; "$data_a")
+    if [ -f "$data_b" ]; then
+      count_b=$(wc -l &lt; "$data_b")
+      echo "  $dataset: A=$count_a, B=$count_b"
+    else
+      echo "  $dataset: A=$count_a, B=missing"
+    fi
+  fi
+done
+</code></pre>
+<h3 id="catalog-synchronization"><a class="header" href="#catalog-synchronization">Catalog Synchronization</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Synchronize catalog structure (copy schemas, preserve data)
+
+SOURCE_CATALOG="$1"  # Has correct schemas
+TARGET_CATALOG="$2"  # Has data to preserve
+
+echo "Synchronizing catalog structure from $SOURCE_CATALOG to $TARGET_CATALOG"
+
+# Update metadata files
+cp "$SOURCE_CATALOG/.beamline-manifest" "$TARGET_CATALOG/"
+cp "$SOURCE_CATALOG/.beamline-script" "$TARGET_CATALOG/"
+
+# Update schema files
+cp "$SOURCE_CATALOG"/*.shape.ion "$TARGET_CATALOG/"
+cp "$SOURCE_CATALOG"/*.shape.sql "$TARGET_CATALOG/"
+
+echo "Schema synchronization completed"
+echo "Data files in $TARGET_CATALOG preserved"
+</code></pre>
+<h2 id="catalog-integration-patterns"><a class="header" href="#catalog-integration-patterns">Catalog Integration Patterns</a></h2>
+<h3 id="cicd-integration"><a class="header" href="#cicd-integration">CI/CD Integration</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# CI/CD pipeline catalog management
+
+set -e
+
+PROJECT="analytics-pipeline"
+BRANCH="${CI_BRANCH:-main}"
+BUILD_ID="${CI_BUILD_ID:-local}"
+
+# Create build-specific catalog
+CATALOG_NAME="$PROJECT-$BRANCH-$BUILD_ID"
+
+echo "Creating CI/CD test database: $CATALOG_NAME"
+
+# Generate test database
+partiql-beamline-cli gen db beamline-lite \
+  --seed "$BUILD_ID" \
+  --start-auto \
+  --script-path "ci/test-data.ion" \
+  --sample-count 10000 \
+  --catalog-name "$CATALOG_NAME" \
+  --catalog-path "./ci-databases/"
+
+# Validate generated catalog
+./scripts/validate-catalog.sh "ci-databases/$CATALOG_NAME"
+
+# Set environment for tests
+export TEST_CATALOG_PATH="$(pwd)/ci-databases/$CATALOG_NAME"
+export TEST_CATALOG_NAME="$CATALOG_NAME"
+
+echo "CI/CD database ready: $CATALOG_NAME"
+
+# Clean up after tests (if desired)
+# trap "rm -rf ci-databases/$CATALOG_NAME" EXIT
+</code></pre>
+<h3 id="development-workflow-integration"><a class="header" href="#development-workflow-integration">Development Workflow Integration</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Development workflow with catalog management
+
+FEATURE="user-analytics-v3"
+DEV_CATALOG="dev-$FEATURE"
+
+echo "Setting up development environment for: $FEATURE"
+
+# Clean up any existing dev catalog
+if [ -d "$DEV_CATALOG" ]; then
+  echo "Archiving existing dev catalog..."
+  mv "$DEV_CATALOG" "$DEV_CATALOG.$(date +%Y%m%d_%H%M%S).archive"
+fi
+
+# Generate fresh development database
+partiql-beamline-cli gen db beamline-lite \
+  --seed 1000 \
+  --start-auto \
+  --script-path "scripts/$FEATURE.ion" \
+  --sample-count 5000 \
+  --catalog-name "$DEV_CATALOG"
+
+# Setup development environment
+export DEV_DATA_PATH="$(pwd)/$DEV_CATALOG"
+export DEV_SEED="1000"
+
+echo "Development database ready: $DEV_CATALOG"
+echo "Environment variables set:"
+echo "  DEV_DATA_PATH=$DEV_DATA_PATH"
+echo "  DEV_SEED=$DEV_SEED"
+
+# Start development server with database
+# npm run dev
+</code></pre>
+<h2 id="catalog-monitoring-and-maintenance"><a class="header" href="#catalog-monitoring-and-maintenance">Catalog Monitoring and Maintenance</a></h2>
+<h3 id="catalog-size-monitoring"><a class="header" href="#catalog-size-monitoring">Catalog Size Monitoring</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Monitor catalog disk usage
+
+CATALOGS_DIR="$1"
+
+echo "Catalog Size Report - $(date)"
+echo "============================="
+
+find "$CATALOGS_DIR" -name "beamline-catalog*" -o -name "*-catalog" -o -name "*-db" | while read -r catalog; do
+  if [ -d "$catalog" ] &amp;&amp; [ -f "$catalog/.beamline-manifest" ]; then
+    size=$(du -sh "$catalog" | cut -f1)
+    records=0
+    
+    # Count total records
+    for data in "$catalog"/*.ion; do
+      if [[ "$data" != *".shape.ion" ]] &amp;&amp; [ -f "$data" ]; then
+        records=$((records + $(wc -l &lt; "$data")))
+      fi
+    done
+    
+    echo "$(basename "$catalog"): $size ($records records)"
+  fi
+done
+
+echo ""
+echo "Total disk usage: $(du -sh "$CATALOGS_DIR" | cut -f1)"
+</code></pre>
+<h3 id="catalog-cleanup"><a class="header" href="#catalog-cleanup">Catalog Cleanup</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Clean up old catalogs and backups
+
+CATALOGS_DIR="$1" 
+DAYS_OLD="$2"
+
+echo "Cleaning up catalogs older than $DAYS_OLD days in $CATALOGS_DIR"
+
+# Find and list old catalogs
+find "$CATALOGS_DIR" -name "*-catalog" -o -name "*-db" -o -name "*.bkp" | while read -r catalog; do
+  if [ -d "$catalog" ] &amp;&amp; [ "$(find "$catalog" -mtime +$DAYS_OLD -print -quit)" ]; then
+    size=$(du -sh "$catalog" | cut -f1)
+    echo "Would remove: $(basename "$catalog") ($size)"
+  fi
+done
+
+echo ""
+read -p "Proceed with cleanup? (y/N): " -n 1 -r
+echo ""
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  find "$CATALOGS_DIR" -name "*-catalog" -o -name "*-db" -o -name "*.bkp" | while read -r catalog; do
+    if [ -d "$catalog" ] &amp;&amp; [ "$(find "$catalog" -mtime +$DAYS_OLD -print -quit)" ]; then
+      echo "Removing: $(basename "$catalog")"
+      rm -rf "$catalog"
+    fi
+  done
+  echo "Cleanup completed"
+else
+  echo "Cleanup cancelled"
+fi
+</code></pre>
+<h2 id="advanced-catalog-operations"><a class="header" href="#advanced-catalog-operations">Advanced Catalog Operations</a></h2>
+<h3 id="catalog-migration-between-storage-systems"><a class="header" href="#catalog-migration-between-storage-systems">Catalog Migration Between Storage Systems</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Migrate catalog to different storage location
+
+SOURCE_CATALOG="$1"
+TARGET_LOCATION="$2"
+
+echo "Migrating catalog from $SOURCE_CATALOG to $TARGET_LOCATION"
+
+# Validate source catalog
+if [ ! -d "$SOURCE_CATALOG" ] || [ ! -f "$SOURCE_CATALOG/.beamline-manifest" ]; then
+  echo "Invalid source catalog: $SOURCE_CATALOG"
+  exit 1
+fi
+
+# Create target directory
+mkdir -p "$TARGET_LOCATION"
+TARGET_CATALOG="$TARGET_LOCATION/$(basename "$SOURCE_CATALOG")"
+
+# Copy catalog
+echo "Copying catalog..."
+cp -r "$SOURCE_CATALOG" "$TARGET_CATALOG"
+
+# Verify migration
+echo "Verifying migration..."
+diff -r "$SOURCE_CATALOG" "$TARGET_CATALOG"
+
+if [ $? -eq 0 ]; then
+  echo "✓ Migration successful"
+  echo "Source: $SOURCE_CATALOG"
+  echo "Target: $TARGET_CATALOG"
+else
+  echo "✗ Migration verification failed"
+  exit 1
+fi
+</code></pre>
+<h3 id="catalog-consolidation"><a class="header" href="#catalog-consolidation">Catalog Consolidation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Consolidate multiple related catalogs
+
+OUTPUT_CATALOG="$1"
+shift
+INPUT_CATALOGS=("$@")
+
+echo "Consolidating catalogs:"
+for cat in "${INPUT_CATALOGS[@]}"; do
+  echo "  - $cat"
+done
+echo "Into: $OUTPUT_CATALOG"
+
+mkdir -p "$OUTPUT_CATALOG"
+
+# Use first catalog as base for metadata
+BASE_CATALOG="${INPUT_CATALOGS[0]}"
+cp "$BASE_CATALOG/.beamline-manifest" "$OUTPUT_CATALOG/"
+cp "$BASE_CATALOG/.beamline-script" "$OUTPUT_CATALOG/"
+
+# Create consolidated manifest
+cat &gt; "$OUTPUT_CATALOG/.beamline-manifest" &lt;&lt; EOF  
+{
+  "consolidated": true,
+  "created": "$(date -Iseconds)",
+  "source_catalogs": [$(printf '"%s",' "${INPUT_CATALOGS[@]}" | sed 's/,$//')]
+}
+EOF
+
+# Consolidate datasets
+all_datasets=()
+for catalog in "${INPUT_CATALOGS[@]}"; do
+  for data_file in "$catalog"/*.ion; do
+    if [[ "$data_file" != *".shape.ion" ]]; then
+      dataset=$(basename "$data_file" .ion)
+      
+      # Add to dataset list if not already present
+      if [[ ! " ${all_datasets[@]} " =~ " ${dataset} " ]]; then
+        all_datasets+=("$dataset")
+      fi
+    fi
+  done
+done
+
+# Merge each dataset
+for dataset in "${all_datasets[@]}"; do
+  echo "Consolidating dataset: $dataset"
+  
+  # Merge data files
+  for catalog in "${INPUT_CATALOGS[@]}"; do
+    if [ -f "$catalog/$dataset.ion" ]; then
+      cat "$catalog/$dataset.ion" &gt;&gt; "$OUTPUT_CATALOG/$dataset.ion"
+    fi
+  done
+  
+  # Copy schema from first catalog that has this dataset
+  for catalog in "${INPUT_CATALOGS[@]}"; do
+    if [ -f "$catalog/$dataset.shape.ion" ]; then
+      cp "$catalog/$dataset.shape.ion" "$OUTPUT_CATALOG/"
+      cp "$catalog/$dataset.shape.sql" "$OUTPUT_CATALOG/"
+      break
+    fi
+  done
+done
+
+echo "Consolidation completed"
+</code></pre>
+<h2 id="catalog-security-and-access-control"><a class="header" href="#catalog-security-and-access-control">Catalog Security and Access Control</a></h2>
+<h3 id="catalog-permissions"><a class="header" href="#catalog-permissions">Catalog Permissions</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Set appropriate permissions for catalogs
+
+CATALOG="$1"
+MODE="$2"  # "dev", "prod", or "shared"
+
+case $MODE in
+  "dev")
+    # Development - full access for developer
+    chmod -R 755 "$CATALOG"
+    echo "Set development permissions (755) for $CATALOG"
+    ;;
+  "prod")
+    # Production - read-only for most users
+    chmod -R 644 "$CATALOG"
+    chmod 755 "$CATALOG"  # Directory needs execute permission
+    echo "Set production permissions (644/755) for $CATALOG"
+    ;;
+  "shared")
+    # Shared - group writable
+    chmod -R 664 "$CATALOG"
+    chmod -R g+s "$CATALOG"
+    chmod 775 "$CATALOG"
+    echo "Set shared permissions (664/775) for $CATALOG"
+    ;;
+  *)
+    echo "Usage: $0 &lt;catalog&gt; &lt;dev|prod|shared&gt;"
+    exit 1
+    ;;
+esac
+</code></pre>
+<h3 id="catalog-integrity-protection"><a class="header" href="#catalog-integrity-protection">Catalog Integrity Protection</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Protect catalog from accidental modification
+
+CATALOG="$1"
+
+if [ ! -d "$CATALOG" ]; then
+  echo "Catalog not found: $CATALOG"
+  exit 1
+fi
+
+# Make catalog read-only
+chmod -R a-w "$CATALOG"
+
+# Create protection marker
+echo "This catalog has been protected from modification.
+To unprotect: chmod -R u+w $CATALOG
+Protected: $(date)
+" &gt; "$CATALOG/.PROTECTED"
+
+chmod 444 "$CATALOG/.PROTECTED"
+
+echo "Catalog protected: $CATALOG"
+echo "To unprotect: chmod -R u+w $CATALOG"
+</code></pre>
+<h2 id="troubleshooting-catalog-issues"><a class="header" href="#troubleshooting-catalog-issues">Troubleshooting Catalog Issues</a></h2>
+<h3 id="common-catalog-problems"><a class="header" href="#common-catalog-problems">Common Catalog Problems</a></h3>
+<h4 id="corrupted-manifest-file"><a class="header" href="#corrupted-manifest-file">Corrupted Manifest File</a></h4>
+<pre><code class="language-bash"># Symptoms: Can't read generation metadata
+$ cat beamline-catalog/.beamline-manifest
+cat: beamline-catalog/.beamline-manifest: No such file or directory
+
+# Solution: Regenerate from script if available
+if [ -f beamline-catalog/.beamline-script ]; then
+  echo "Regenerating catalog from preserved script..."
+  
+  partiql-beamline-cli gen db beamline-lite \
+    --seed 42 \
+    --start-auto \
+    --script-path beamline-catalog/.beamline-script \
+    --catalog-name recovered-catalog
+fi
+</code></pre>
+<h4 id="missing-schema-files"><a class="header" href="#missing-schema-files">Missing Schema Files</a></h4>
+<pre><code class="language-bash"># Symptoms: Data files without corresponding schemas
+$ ls beamline-catalog/
+users.ion  orders.ion  # Missing .shape.ion and .shape.sql files
+
+# Solution: Regenerate schemas from script
+partiql-beamline-cli infer-shape \
+  --seed 1 \
+  --start-auto \
+  --script-path beamline-catalog/.beamline-script \
+  --output-format basic-ddl &gt; recovered_schema.sql
+
+partiql-beamline-cli infer-shape \
+  --seed 1 \
+  --start-auto \
+  --script-path beamline-catalog/.beamline-script \
+  --output-format beamline-json &gt; recovered_schema.json
+</code></pre>
+<h4 id="large-catalog-performance"><a class="header" href="#large-catalog-performance">Large Catalog Performance</a></h4>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../database/overview.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../examples/sensors.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../database/overview.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../examples/sensors.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

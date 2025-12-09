@@ -1,1 +1,1 @@
-# PartiQL Kollider Integration
+# Kollider

@@ -184,9 +184,9 @@
                         <h1 id="core-concepts"><a class="header" href="#core-concepts">Core Concepts</a></h1>
 <p>Before diving deeper into PartiQL Beamline’s advanced features, it’s essential to understand the fundamental concepts that power its data generation capabilities. This chapter will introduce you to the mathematical and computational foundations that make PartiQL Beamline both powerful and reliable.</p>
 <h2 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h2>
-<p>At the heart of PartiQL Beamline lies the concept of <strong>stochastic processes</strong> - mathematical models that describe systems appearing to vary randomly over time.</p>
+<p>At the heart of PartiQL Beamline lies the concept of <a href="https://en.wikipedia.org/wiki/Stochastic_process"><strong>stochastic processes</strong></a> — mathematical models that describe systems appearing to vary randomly over time.</p>
 <h3 id="what-is-a-stochastic-process"><a class="header" href="#what-is-a-stochastic-process">What is a Stochastic Process?</a></h3>
-<p>A stochastic process is a collection of random variables indexed by time or space. In simpler terms, it’s a way to model how things change randomly over time while still following certain patterns or rules.</p>
+<p>A stochastic process is a collection of <a href="https://en.wikipedia.org/wiki/Random_variable">random variables</a> indexed by time or space. In simpler terms, it’s a way to model how things change randomly over time while still following certain patterns or rules.</p>
 <p><strong>Real-world examples:</strong></p>
 <ul>
 <li>Stock prices over time</li>
@@ -198,7 +198,7 @@
 <h3 id="why-stochastic-processes-matter"><a class="header" href="#why-stochastic-processes-matter">Why Stochastic Processes Matter</a></h3>
 <p>Traditional random data generators often produce data that looks random but lacks the realistic patterns found in real-world data. Stochastic processes allow PartiQL Beamline to:</p>
 <ol>
-<li><strong>Model Temporal Relationships</strong>: Data points aren’t just random - they follow realistic time-based patterns</li>
+<li><strong>Model Temporal Relationships</strong>: Data points aren’t just random — they follow realistic time-based patterns</li>
 <li><strong>Create Correlations</strong>: Different data elements can be related in meaningful ways</li>
 <li><strong>Simulate Real Patterns</strong>: Generate data that behaves like real-world systems</li>
 <li><strong>Maintain Consistency</strong>: Ensure generated data follows logical rules and constraints</li>
@@ -434,13 +434,13 @@ $request_id: $id_gen
 <h3 id="seeds"><a class="header" href="#seeds">Seeds</a></h3>
 <p>Seeds control the random number generation:</p>
 <pre><code class="language-bash"># Same seed = same data
-cargo run gen data --seed 42 --script my-script.ion
-cargo run gen data --seed 42 --script my-script.ion  # Identical output
+partiql-beamline-cli gen data --seed 42 --start-auto --script-path my-script.ion
+partiql-beamline-cli gen data --seed 42 --start-auto --script-path my-script.ion  # Identical output
 </code></pre>
 <h3 id="timestamps"><a class="header" href="#timestamps">Timestamps</a></h3>
 <p>Control the simulation start time:</p>
 <pre><code class="language-bash"># Same timestamp = same temporal patterns
-cargo run gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script my-script.ion
+partiql-beamline-cli gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script-path my-script.ion
 </code></pre>
 <h3 id="deterministic-behavior"><a class="header" href="#deterministic-behavior">Deterministic Behavior</a></h3>
 <p>PartiQL Beamline ensures that:</p>
@@ -501,7 +501,7 @@ cargo run gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script my-scri
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../reference/data-generators.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../basics/reproducible-generation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -515,7 +515,7 @@ cargo run gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script my-scri
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../reference/data-generators.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../basics/reproducible-generation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

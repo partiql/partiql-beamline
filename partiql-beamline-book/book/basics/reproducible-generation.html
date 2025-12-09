@@ -1,0 +1,456 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Reproducible Generation - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/basics/reproducible-generation.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="reproducible-data-generation"><a class="header" href="#reproducible-data-generation">Reproducible Data Generation</a></h1>
+<p>One of PartiQL Beamline’s core strengths is its ability to generate <strong>reproducible data</strong> — the same input parameters will always produce exactly the same output data, no matter when or where you run the generation process.</p>
+<h2 id="what-is-reproducibility"><a class="header" href="#what-is-reproducibility">What is Reproducibility?</a></h2>
+<p>Reproducible data generation means that given the same:</p>
+<ul>
+<li><strong>Seed value</strong> (random number generator seed)</li>
+<li><strong>Configuration parameters</strong> (Ion script, generators, etc.)</li>
+<li><strong>Timestamp</strong> (starting time for temporal data)</li>
+<li><strong>Environment</strong> (same version of Beamline)</li>
+</ul>
+<p>You will get <strong>exactly the same data</strong> every single time, down to the last byte.</p>
+<h2 id="why-reproducibility-matters"><a class="header" href="#why-reproducibility-matters">Why Reproducibility Matters</a></h2>
+<h3 id="debugging-and-testing"><a class="header" href="#debugging-and-testing">Debugging and Testing</a></h3>
+<pre><code class="language-bash"># First run - discovers a bug with specific data
+partiql-beamline-cli gen data --seed 12345 --start-auto --script-path my_script.ion
+
+# Later run - reproduce exact same data to debug
+partiql-beamline-cli gen data --seed 12345 --start-auto --script-path my_script.ion
+</code></pre>
+<p>When you find a bug or unexpected behavior in your tests, reproducibility lets you generate the exact same problematic data to investigate and fix the issue.</p>
+<h3 id="consistent-benchmarking"><a class="header" href="#consistent-benchmarking">Consistent Benchmarking</a></h3>
+<pre><code class="language-bash"># Performance test run 1
+partiql-beamline-cli gen data --seed 42 --start-auto --sample-count 1000000 --script-path perf_test.ion
+
+# Performance test run 2 (weeks later)  
+partiql-beamline-cli gen data --seed 42 --start-auto --sample-count 1000000 --script-path perf_test.ion
+</code></pre>
+<p>For meaningful performance comparisons, you need identical datasets. Reproducibility ensures your benchmarks are comparing like with like.</p>
+<h3 id="ai-model-training"><a class="header" href="#ai-model-training">AI Model Training</a></h3>
+<pre><code class="language-bash"># Training dataset generation
+partiql-beamline-cli gen data --seed 789 --start-auto --script-path training_data.ion --sample-count 50000
+
+# Later: regenerate exact same training data for model comparison
+partiql-beamline-cli gen data --seed 789 --start-auto --script-path training_data.ion --sample-count 50000
+</code></pre>
+<p>When training machine learning models, being able to regenerate identical training data is crucial for comparing model performance and reproducing results.</p>
+<h3 id="regression-testing"><a class="header" href="#regression-testing">Regression Testing</a></h3>
+<pre><code class="language-bash"># Original test data
+partiql-beamline-cli gen data --seed 2024 --start-auto --script-path integration_test.ion
+
+# After code changes - same test data to verify no regressions
+partiql-beamline-cli gen data --seed 2024 --start-auto --script-path integration_test.ion
+</code></pre>
+<p>Regression testing requires the same test data to verify that code changes don’t break existing functionality.</p>
+<h2 id="how-seeds-work"><a class="header" href="#how-seeds-work">How Seeds Work</a></h2>
+<h3 id="pseudorandom-number-generation"><a class="header" href="#pseudorandom-number-generation">Pseudorandom Number Generation</a></h3>
+<p>PartiQL Beamline uses <strong>cryptographically secure pseudorandom number generators</strong> (PRNGs) that are initialized with a seed value:</p>
+<pre><code class="language-bash"># Different seeds = different data
+partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A
+partiql-beamline-cli gen data --seed 2 --start-auto --script-path test.ion    # Generates dataset B
+
+# Same seed = identical data  
+partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A (identical)
+partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A (identical)
+</code></pre>
+<h3 id="seed-propagation"><a class="header" href="#seed-propagation">Seed Propagation</a></h3>
+<p>Seeds propagate through the entire generation process:</p>
+<ul>
+<li><strong>Data generators</strong> use the seed for all random decisions</li>
+<li><strong>Stochastic processes</strong> use the seed for temporal modeling</li>
+<li><strong>Nested structures</strong> maintain seed consistency across all levels</li>
+</ul>
+<h3 id="default-seeds"><a class="header" href="#default-seeds">Default Seeds</a></h3>
+<p>If you don’t specify a seed, Beamline uses a default seed derived from the configuration:</p>
+<pre><code class="language-bash"># These generate identical data (same default seed)
+partiql-beamline-cli gen data --seed-auto --start-auto --script-path my_script.ion
+partiql-beamline-cli gen data --seed-auto --start-auto --script-path my_script.ion
+
+# This generates different data (explicit different seed)
+partiql-beamline-cli gen data --seed 999 --start-auto --script-path my_script.ion
+</code></pre>
+<h2 id="reproducibility-scope"><a class="header" href="#reproducibility-scope">Reproducibility Scope</a></h2>
+<h3 id="what-is-reproduced"><a class="header" href="#what-is-reproduced">What IS Reproduced</a></h3>
+<p>✅ <strong>Data Values</strong>: All generated numbers, strings, booleans, etc.
+✅ <strong>Data Structure</strong>: Object nesting, array lengths, field presence
+✅ <strong>Temporal Patterns</strong>: Event timestamps and intervals
+✅ <strong>Statistical Distributions</strong>: Same distribution samples
+✅ <strong>Relationships</strong>: Cross-field correlations and dependencies</p>
+<h3 id="what-might-vary"><a class="header" href="#what-might-vary">What Might VARY</a></h3>
+<p>❌ <strong>Beamline Version</strong>: Different versions may produce different output
+❌ <strong>System Architecture</strong>: 32-bit vs 64-bit might have subtle differences<br />
+❌ <strong>Floating Point</strong>: Different CPUs might have tiny precision differences
+❌ <strong>Ion Formatting</strong>: Whitespace and formatting might vary slightly</p>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h3 id="1-always-specify-seeds-for-important-use-cases"><a class="header" href="#1-always-specify-seeds-for-important-use-cases">1. Always Specify Seeds for Important Use Cases</a></h3>
+<pre><code class="language-bash"># Good - explicit seed for reproducible testing
+partiql-beamline-cli gen data --seed 12345 --start-auto --script-path test_suite.ion
+
+# Avoid - relying on default seed might change
+partiql-beamline-cli gen data --seed-auto --start-auto --script-path test_suite.ion
+</code></pre>
+<h3 id="2-document-your-seeds"><a class="header" href="#2-document-your-seeds">2. Document Your Seeds</a></h3>
+<pre><code class="language-bash"># Document seeds in your scripts or README
+# Training data: seed 2024
+# Test data: seed 2025  
+# Performance benchmark: seed 3000
+</code></pre>
+<h3 id="3-use-meaningful-seed-values"><a class="header" href="#3-use-meaningful-seed-values">3. Use Meaningful Seed Values</a></h3>
+<pre><code class="language-bash"># Use dates, version numbers, or meaningful identifiers
+partiql-beamline-cli gen data --seed 20241212 --start-auto --script-path data.ion  # Today's date
+partiql-beamline-cli gen data --seed 100 --start-auto --script-path v1.0.0.ion    # Version-based
+</code></pre>
+<h3 id="4-pin-beamline-version-for-critical-use-cases"><a class="header" href="#4-pin-beamline-version-for-critical-use-cases">4. Pin Beamline Version for Critical Use Cases</a></h3>
+<pre><code class="language-toml"># In your Cargo.toml or requirements
+partiql-beamline = "=1.2.3"  # Exact version for reproducibility
+</code></pre>
+<h3 id="5-store-configuration-alongside-data"><a class="header" href="#5-store-configuration-alongside-data">5. Store Configuration Alongside Data</a></h3>
+<pre><code class="language-bash"># Save configuration for later reproduction
+partiql-beamline-cli gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path production_test.ion \
+  --sample-count 1000 \
+  --output-format ion-pretty &gt; data.ion
+  
+# Document generation parameters separately
+echo "Seed: 42, Script: production_test.ion, Count: 1000" &gt; config.txt
+</code></pre>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="basic-reproducibility"><a class="header" href="#basic-reproducibility">Basic Reproducibility</a></h3>
+<pre><code class="language-bash"># Generate same data multiple times
+$ partiql-beamline-cli gen data --seed 100 --start-auto --sample-count 3 --script-path simple.ion
+[1, 2, 5]
+
+$ partiql-beamline-cli gen data --seed 100 --start-auto --sample-count 3 --script-path simple.ion  
+[1, 2, 5]  # Identical output
+
+$ partiql-beamline-cli gen data --seed 101 --start-auto --sample-count 3 --script-path simple.ion
+[7, 1, 9]  # Different seed = different data
+</code></pre>
+<h3 id="complex-structure-reproducibility"><a class="header" href="#complex-structure-reproducibility">Complex Structure Reproducibility</a></h3>
+<pre><code class="language-bash"># Complex nested structures are also reproducible
+$ partiql-beamline-cli gen data --seed 200 --start-auto --sample-count 1 --script-path complex.ion
+{
+  id: 42,
+  name: "Alice Johnson", 
+  scores: [85, 92, 78],
+  metadata: {
+    timestamp: 2024-01-15T10:30:00Z,
+    active: true
+  }
+}
+
+# Run again with same seed
+$ partiql-beamline-cli gen data --seed 200 --start-auto --sample-count 1 --script-path complex.ion
+{
+  id: 42,
+  name: "Alice Johnson",     # Identical name  
+  scores: [85, 92, 78],      # Identical scores
+  metadata: {
+    timestamp: 2024-01-15T10:30:00Z,  # Identical timestamp
+    active: true                      # Identical boolean
+  }
+}
+</code></pre>
+<h3 id="time-based-reproducibility"><a class="header" href="#time-based-reproducibility">Time-based Reproducibility</a></h3>
+<pre><code class="language-bash"># Even temporal data is reproducible
+$ partiql-beamline-cli gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --script-path events.ion --sample-count 3
+[
+  { event: "login", time: "2024-01-01T00:12:34Z" },
+  { event: "action", time: "2024-01-01T00:15:47Z" }, 
+  { event: "logout", time: "2024-01-01T00:23:12Z" }
+]
+
+# Same seed + same start time = identical temporal patterns
+$ partiql-beamline-cli gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --script-path events.ion --sample-count 3
+[
+  { event: "login", time: "2024-01-01T00:12:34Z" },   # Same intervals
+  { event: "action", time: "2024-01-01T00:15:47Z" },  # Same timestamps
+  { event: "logout", time: "2024-01-01T00:23:12Z" }   # Exact reproduction
+]
+</code></pre>
+<h2 id="troubleshooting-reproducibility"><a class="header" href="#troubleshooting-reproducibility">Troubleshooting Reproducibility</a></h2>
+<h3 id="issue-getting-different-data-with-same-seed"><a class="header" href="#issue-getting-different-data-with-same-seed">Issue: Getting Different Data with Same Seed</a></h3>
+<p><strong>Possible Causes:</strong></p>
+<ol>
+<li>Different Beamline versions</li>
+<li>Different script files</li>
+<li>Different command-line parameters</li>
+<li>Different system architectures</li>
+</ol>
+<p><strong>Solution:</strong></p>
+<pre><code class="language-bash"># Check version
+partiql-beamline-cli --version
+
+# Use exact same command-line parameters
+partiql-beamline-cli gen data --seed 123 --start-auto --sample-count 100 --script-path exact_same_script.ion
+
+# Verify script file hasn't changed (use checksums)
+sha256sum my_script.ion
+</code></pre>
+<h3 id="issue-need-to-break-reproducibility"><a class="header" href="#issue-need-to-break-reproducibility">Issue: Need to Break Reproducibility</a></h3>
+<p>Sometimes you want different data each run:</p>
+<pre><code class="language-bash"># Use current timestamp as seed
+partiql-beamline-cli gen data --seed $(date +%s) --start-auto --script-path varied_data.ion
+
+# Use random seed
+partiql-beamline-cli gen data --seed $RANDOM --start-auto --script-path varied_data.ion
+
+# Let Beamline generate a random seed
+partiql-beamline-cli gen data --seed-auto --start-auto --script-path varied_data.ion
+</code></pre>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand reproducible data generation, you’re ready to learn about <a href="./scripts-and-processes.html">Scripts and Processes</a>, which will show you how to configure and control the data generation process through Ion-based scripts.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../basics/core-concepts.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../basics/scripts-and-processes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../basics/core-concepts.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../basics/scripts-and-processes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

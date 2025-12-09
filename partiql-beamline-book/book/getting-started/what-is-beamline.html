@@ -182,31 +182,33 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="what-is-partiql-beamline"><a class="header" href="#what-is-partiql-beamline">What is PartiQL Beamline?</a></h1>
-<p>PartiQL Beamline is a sophisticated tool designed for <strong>fast data generation</strong> specifically tailored for PartiQL testing and experimentation. At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data patterns.</p>
+<p>PartiQL Beamline is a tool designed for <strong>fast data generation</strong> specifically using <a href="https://partiql.org/">PartiQL</a> value system.
+At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data patterns.</p>
 <h2 id="the-problem-it-solves"><a class="header" href="#the-problem-it-solves">The Problem It Solves</a></h2>
-<p>When working with PartiQL implementations, developers and researchers often face several challenges:</p>
+<p>Some of the common software engineering problem that most developers, data engineers, and researchers often face are:</p>
 <ul>
 <li><strong>Lack of Test Data</strong>: Creating realistic test datasets manually is time-consuming and error-prone</li>
 <li><strong>Inconsistent Testing</strong>: Different test runs with different data make it hard to reproduce bugs</li>
 <li><strong>Query Testing</strong>: Writing queries that match your data structures requires understanding both the data shape and query patterns</li>
-<li><strong>Performance Benchmarking</strong>: Consistent, scalable datasets are needed for meaningful performance comparisons</li>
+<li><strong>Performance Benchmarking</strong>: Consistent, scalable datasets are needed for meaningful performance comparisons and AI inferences evaluations</li>
 <li><strong>Schema Evolution</strong>: As data structures change, maintaining test data becomes increasingly complex</li>
 </ul>
 <p>PartiQL Beamline addresses all these challenges with a unified approach to synthetic data generation.</p>
 <h2 id="core-components"><a class="header" href="#core-components">Core Components</a></h2>
 <p>PartiQL Beamline consists of three main components that work together:</p>
 <h3 id="1-data-generator"><a class="header" href="#1-data-generator">1. Data Generator</a></h3>
-<p>The <strong>Data Generator</strong> creates reproducible pseudo-random data based on mathematical distributions and stochastic processes. It can generate:</p>
+<p>The <strong>Data Generator</strong> creates reproducible pseudo-random data based on mathematical distributions and stochastic processes.
+It can generate:</p>
 <ul>
 <li>Simple scalar values (numbers, strings, booleans, dates)</li>
 <li>Complex nested structures (objects, arrays, mixed types)</li>
 <li>Time-series data with realistic temporal patterns</li>
-<li>Related data across multiple datasets</li>
+<li>Sharing data across multiple datasets</li>
 </ul>
 <p><strong>Key Features:</strong></p>
 <ul>
-<li><strong>Reproducible</strong>: Same seed always produces the same data</li>
-<li><strong>Configurable</strong>: Highly customizable through Ion-based scripts</li>
+<li><strong>Reproducible</strong>: Same seed always produces the same data no matter how nested that data is</li>
+<li><strong>Configurable</strong>: Highly customizable through Amazon Ion-based scripts</li>
 <li><strong>Realistic</strong>: Uses statistical distributions to model real-world patterns</li>
 <li><strong>Scalable</strong>: Can generate datasets from small samples to millions of records</li>
 </ul>
@@ -235,7 +237,8 @@
 </ul>
 <h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
 <h3 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h3>
-<p>PartiQL Beamline models data generation as <strong>stochastic processes</strong> - mathematical models that describe systems that appear to vary randomly over time. This approach allows it to:</p>
+<p>PartiQL Beamline models data generation as <strong>stochastic processes</strong> — mathematical models that describe systems that
+appear to vary randomly over time. This approach allows it to:</p>
 <ul>
 <li>Generate data that follows realistic patterns</li>
 <li>Model temporal relationships (like arrival times)</li>
@@ -259,6 +262,15 @@
 <li><strong>Debuggable</strong>: Reproduce exact datasets for debugging and validation</li>
 </ul>
 <h2 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h2>
+<h3 id="ai-model-training-and-inference"><a class="header" href="#ai-model-training-and-inference">AI Model Training and Inference</a></h3>
+<ul>
+<li><strong>Training Data Generation</strong>: Generate datasets that follow specific statistical distributions for machine learning model training</li>
+<li><strong>Distribution-Based Modeling</strong>: Create training data that matches target population distributions for more representative models</li>
+<li><strong>Model Validation</strong>: Generate test datasets with known statistical properties for evaluating model performance</li>
+<li><strong>Feature Engineering</strong>: Create data with controlled statistical characteristics to test feature extraction algorithms</li>
+<li><strong>Synthetic Data Augmentation</strong>: Expand training datasets while preserving underlying statistical distributions</li>
+<li><strong>Edge Case Generation</strong>: Generate rare statistical scenarios for robust model validation</li>
+</ul>
 <h3 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h3>
 <ul>
 <li><strong>Unit Testing</strong>: Generate consistent test data for PartiQL implementations</li>
@@ -275,7 +287,7 @@
 </ul>
 <h3 id="research-and-education"><a class="header" href="#research-and-education">Research and Education</a></h3>
 <ul>
-<li><strong>Algorithm Research</strong>: Generate datasets for testing new PartiQL features</li>
+<li><strong>Algorithm Research</strong>: Generate datasets for testing new features</li>
 <li><strong>Query Pattern Analysis</strong>: Study how different query patterns perform</li>
 <li><strong>Educational Examples</strong>: Create realistic examples for learning PartiQL</li>
 <li><strong>Prototyping</strong>: Quickly generate data for proof-of-concept implementations</li>
@@ -288,22 +300,6 @@
 <li><strong>Stochastic Modeling</strong>: Models real-world processes mathematically</li>
 <li><strong>Temporal Modeling</strong>: Handles time-based data generation correctly</li>
 <li><strong>Correlation Modeling</strong>: Can generate related data across multiple dimensions</li>
-</ul>
-<h3 id="partiql-specific"><a class="header" href="#partiql-specific">PartiQL-Specific</a></h3>
-<p>PartiQL Beamline is designed specifically for PartiQL, which means:</p>
-<ul>
-<li><strong>Native Ion Support</strong>: First-class support for Amazon Ion data format</li>
-<li><strong>PartiQL Types</strong>: Understands PartiQL’s type system and semantics</li>
-<li><strong>Query Generation</strong>: Generates queries that are valid and meaningful for PartiQL</li>
-<li><strong>Schema Integration</strong>: Works seamlessly with PartiQL schema systems</li>
-</ul>
-<h3 id="production-ready"><a class="header" href="#production-ready">Production-Ready</a></h3>
-<p>PartiQL Beamline is built for real-world use:</p>
-<ul>
-<li><strong>Performance</strong>: Optimized for generating large datasets efficiently</li>
-<li><strong>Memory Efficient</strong>: Streams data generation to handle large datasets</li>
-<li><strong>Robust</strong>: Handles edge cases and error conditions gracefully</li>
-<li><strong>Extensible</strong>: Designed to be extended with new generators and formats</li>
 </ul>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
 <p>Now that you understand what PartiQL Beamline is and why it’s useful, let’s get it installed and running on your system. In the next section, we’ll walk through the installation process and verify that everything is working correctly.</p>
