@@ -567,7 +567,7 @@ countries: static_data::{
 <h2 id="output-characteristics"><a class="header" href="#output-characteristics">Output Characteristics</a></h2>
 <h3 id="cli-output-format"><a class="header" href="#cli-output-format">CLI Output Format</a></h3>
 <p>When you run data generation, static data appears first with identical timestamps:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 1234 \
     --start-iso "2019-08-01T00:00:01-07:00" \
     --script-path partiql-beamline-sim/tests/scripts/orders.ion \
@@ -587,7 +587,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 [2019-08-10 5:46:15.24 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': '38900593-e9cc-994a-98d9-0becf77d9144' }
 </code></pre>
 <h3 id="ion-pretty-format"><a class="header" href="#ion-pretty-format">Ion Pretty Format</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 1234 \
     --start-auto \
     --script-path with_static.ion \
@@ -685,7 +685,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 </code></pre>
 <h2 id="database-generation-with-static-data"><a class="header" href="#database-generation-with-static-data">Database Generation with Static Data</a></h2>
 <p>When creating databases with <code>gen db beamline-lite</code>, static data creates separate dataset files:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+<pre><code class="language-bash">$ beamline gen db beamline-lite \
     --seed 1000 \
     --start-auto \
     --script-path partiql-beamline-sim/tests/scripts/orders.ion \

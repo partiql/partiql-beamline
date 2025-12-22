@@ -1,11 +1,11 @@
 # Data Generation Commands
 
-The `partiql-beamline-cli gen data` command generates synthetic data from Ion scripts using stochastic processes. This is the primary command for creating reproducible pseudo-random data in PartiQL Beamline.
+The `beamline gen data` command generates synthetic data from Ion scripts using stochastic processes. This is the primary command for creating reproducible pseudo-random data in PartiQL Beamline.
 
 ## Command Syntax
 
 ```bash
-partiql-beamline-cli gen data [OPTIONS]
+beamline gen data [OPTIONS]
 ```
 
 ## Required Options
@@ -73,14 +73,14 @@ Available formats:
 
 ```bash
 # Generate 100 samples with automatic seed and start time
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed-auto \
   --start-auto \
   --script-path sensors.ion \
   --sample-count 100
 
 # Reproducible generation with specific seed
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path user_data.ion \
@@ -91,21 +91,21 @@ partiql-beamline-cli gen data \
 
 ```bash
 # Text output (human-readable, default)
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
   --output-format text
 
 # Pretty Ion format
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
   --output-format ion-pretty
 
 # Compact binary Ion
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
@@ -118,7 +118,7 @@ Generate data for specific datasets only:
 
 ```bash
 # Generate data for specific datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 45121008347100595 \
   --start-iso "2020-06-16T14:41:51.000000000Z" \
   --script-path client-service.ion \
@@ -134,7 +134,7 @@ partiql-beamline-cli gen data \
 
 ```bash
 # Make all types nullable by default with 10% NULL values
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path data.ion \
@@ -142,7 +142,7 @@ partiql-beamline-cli gen data \
   --sample-count 500
 
 # Disable nullability entirely
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path data.ion \
@@ -154,7 +154,7 @@ partiql-beamline-cli gen data \
 
 ```bash
 # Make all types optional with 5% MISSING values
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 200 \
   --start-auto \
   --script-path data.ion \
@@ -162,7 +162,7 @@ partiql-beamline-cli gen data \
   --sample-count 500
 
 # Disable optionality entirely
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 200 \
   --start-auto \
   --script-path data.ion \
@@ -175,7 +175,7 @@ partiql-beamline-cli gen data \
 For small scripts, you can provide the Ion script content directly:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 300 \
   --start-auto \
   --script 'rand_processes::{ test: rand_process::{ $arrival: HomogeneousPoisson:: { interarrival: seconds::1 }, $data: { id: UniformU8, value: UniformF64 } } }' \
@@ -189,7 +189,7 @@ partiql-beamline-cli gen data \
 
 ```bash
 # First run - note the seed and start time
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed-auto \
   --start-auto \
   --script-path sensors.ion \
@@ -201,7 +201,7 @@ partiql-beamline-cli gen data \
 # [data follows...]
 
 # Reproduce exactly the same data
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12328924104731257599 \
   --start-iso "2024-01-20T20:05:41.000000000Z" \
   --script-path sensors.ion \
@@ -212,13 +212,13 @@ partiql-beamline-cli gen data \
 
 ```bash
 # Same seed, different start time gives same data pattern at different times
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12345 \
   --start-iso "2023-01-01T00:00:00Z" \
   --script-path events.ion \
   --sample-count 5
 
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path events.ion \
@@ -232,7 +232,7 @@ partiql-beamline-cli gen data \
 Human-readable format with timestamps and dataset names:
 
 ```bash
-$ partiql-beamline-cli gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2
+$ beamline gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2
 Seed: 1234
 Start: 2019-08-01T00:00:01.000000000-07:00
 [2019-08-01 7:26:21.964 -07:00:00] : "sensors" { 'f': -2.5436390152455175, 'i8': 4, 'tick': 125532 }
@@ -244,7 +244,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 Pretty-printed Ion with metadata:
 
 ```bash
-$ partiql-beamline-cli gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2 --output-format ion-pretty
+$ beamline gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2 --output-format ion-pretty
 {
   seed: 1234,
   start: "2019-08-01T00:00:01.000000000-07:00",
@@ -278,7 +278,7 @@ Beamline supports static data generation (data generated before simulation start
 
 ```bash
 # Generate data with static customer table and dynamic orders
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1234 \
   --start-iso "2019-08-01T00:00:01-07:00" \
   --script-path orders.ion \
@@ -294,26 +294,26 @@ Static data appears first with the same timestamp, followed by temporally-distri
 
 #### Missing Script File
 ```bash
-$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path nonexistent.ion
+$ beamline gen data --seed-auto --start-auto --script-path nonexistent.ion
 Error: Failed to read script file 'nonexistent.ion': No such file or directory (os error 2)
 ```
 
 #### Invalid Ion Syntax
 ```bash
-$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path invalid.ion
+$ beamline gen data --seed-auto --start-auto --script-path invalid.ion
 Error: Failed to parse Ion script: Invalid Ion syntax at line 5, column 10
 ```
 
 #### Missing Required Arguments
 ```bash
-$ partiql-beamline-cli gen data --script-path data.ion
+$ beamline gen data --script-path data.ion
 Error: One of --seed-auto or --seed is required
 Error: One of --start-auto, --start-epoch-ms, or --start-iso is required
 ```
 
 #### Invalid Percentage Values
 ```bash
-$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path data.ion --pct-null 1.5
+$ beamline gen data --seed-auto --start-auto --script-path data.ion --pct-null 1.5
 Error: Percents must be between 0 and 1: `1.5`
 ```
 
@@ -340,7 +340,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # Generate different datasets
 echo "Generating user data..."
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $SEED \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path "$SCRIPT_PATH" \
@@ -349,7 +349,7 @@ partiql-beamline-cli gen data \
   --output-format ion-pretty > "$OUTPUT_DIR/users.ion"
 
 echo "Generating transaction data..."
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $((SEED + 1)) \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path "$SCRIPT_PATH" \
@@ -364,7 +364,7 @@ echo "Data generation completed!"
 
 ```bash
 # Generate and process data in pipeline
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path metrics.ion \
@@ -375,7 +375,7 @@ partiql-beamline-cli gen data \
   head -10
 
 # Generate multiple formats simultaneously
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path data.ion \
@@ -394,7 +394,7 @@ generate_test_data() {
   local sample_count=$2
   local script=$3
   
-  partiql-beamline-cli gen data \
+  beamline gen data \
     --seed "$seed" \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path "$script" \
@@ -433,31 +433,31 @@ Beamline streams data generation, so memory usage stays constant regardless of s
 ### 1. Use Specific Seeds for Testing
 ```bash
 # Good - reproducible
-partiql-beamline-cli gen data --seed 12345 --start-iso "2024-01-01T00:00:00Z" --script-path test.ion
+beamline gen data --seed 12345 --start-iso "2024-01-01T00:00:00Z" --script-path test.ion
 
 # Avoid - non-reproducible
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path test.ion
+beamline gen data --seed-auto --start-auto --script-path test.ion
 ```
 
 ### 2. Start with Small Sample Counts
 ```bash
 # Validate script first
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 5
+beamline gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 5
 
 # Scale up after validation
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 10000
+beamline gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 10000
 ```
 
 ### 3. Use Appropriate Output Formats
 ```bash
 # Human inspection
-partiql-beamline-cli gen data --script-path data.ion --output-format text --sample-count 10
+beamline gen data --script-path data.ion --output-format text --sample-count 10
 
 # Data processing
-partiql-beamline-cli gen data --script-path data.ion --output-format ion-binary --sample-count 100000
+beamline gen data --script-path data.ion --output-format ion-binary --sample-count 100000
 
 # Configuration files
-partiql-beamline-cli gen data --script-path data.ion --output-format ion-pretty --sample-count 1000
+beamline gen data --script-path data.ion --output-format ion-pretty --sample-count 1000
 ```
 
 ### 4. Document Your Seeds
@@ -467,7 +467,7 @@ partiql-beamline-cli gen data --script-path data.ion --output-format ion-pretty 
 # Integration test data: seed 2024002  
 # Performance test data: seed 2024003
 
-partiql-beamline-cli gen data --seed 2024001 --start-auto --script-path users.ion
+beamline gen data --seed 2024001 --start-auto --script-path users.ion
 ```
 
 ## Next Steps

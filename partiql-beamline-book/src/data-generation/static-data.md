@@ -454,7 +454,7 @@ For large reference datasets, consider if the data really needs to be static or 
 When you run data generation, static data appears first with identical timestamps:
 
 ```bash
-$ partiql-beamline-cli gen data \
+$ beamline gen data \
     --seed 1234 \
     --start-iso "2019-08-01T00:00:01-07:00" \
     --script-path partiql-beamline-sim/tests/scripts/orders.ion \
@@ -477,7 +477,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 ### Ion Pretty Format
 
 ```bash
-$ partiql-beamline-cli gen data \
+$ beamline gen data \
     --seed 1234 \
     --start-auto \
     --script-path with_static.ion \
@@ -586,7 +586,7 @@ rand_processes::{
 When creating databases with `gen db beamline-lite`, static data creates separate dataset files:
 
 ```bash
-$ partiql-beamline-cli gen db beamline-lite \
+$ beamline gen db beamline-lite \
     --seed 1000 \
     --start-auto \
     --script-path partiql-beamline-sim/tests/scripts/orders.ion \

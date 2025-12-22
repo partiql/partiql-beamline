@@ -208,7 +208,7 @@ Start: &lt;start_timestamp&gt;
 ...
 </code></pre>
 <h3 id="example-output"><a class="header" href="#example-output">Example Output</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 1234 \
     --start-auto \
     --script-path sensors.ion \
@@ -239,7 +239,7 @@ Start: 2024-05-10T04:04:53.000000000Z
 <pre><code class="language-ion">{seed:&lt;seed&gt;,start:"&lt;timestamp&gt;",data:{&lt;dataset_name&gt;:[{&lt;record&gt;},{&lt;record&gt;}...]}}
 </code></pre>
 <h3 id="example-output-1"><a class="header" href="#example-output-1">Example Output</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 42 \
     --start-auto \
     --script-path simple.ion \
@@ -282,7 +282,7 @@ Start: 2024-05-10T04:04:53.000000000Z
 }
 </code></pre>
 <h3 id="example-output-2"><a class="header" href="#example-output-2">Example Output</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 123 \
     --start-auto \
     --script-path sensors.ion \
@@ -324,7 +324,7 @@ Start: 2024-05-10T04:04:53.000000000Z
 <li><strong>Not human-readable</strong>: Requires Ion tools to read</li>
 </ul>
 <h3 id="example-usage"><a class="header" href="#example-usage">Example Usage</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 999 \
     --start-auto \
     --script-path large_dataset.ion \
@@ -342,10 +342,10 @@ Start: 2024-05-10T04:04:53.000000000Z
 <h3 id="size-comparison"><a class="header" href="#size-comparison">Size Comparison</a></h3>
 <p>For the same dataset with 1000 records:</p>
 <pre><code class="language-bash"># Generate in all formats for comparison
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format text &gt; data.txt
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format ion &gt; data.ion  
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format ion-pretty &gt; data_pretty.ion
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format ion-binary &gt; data.bin
+beamline gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format text &gt; data.txt
+beamline gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format ion &gt; data.ion  
+beamline gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format ion-pretty &gt; data_pretty.ion
+beamline gen data --seed 1 --start-auto --script-path data.ion --sample-count 1000 --output-format ion-binary &gt; data.bin
 
 # Compare sizes
 ls -lh data.*
@@ -402,7 +402,7 @@ ls -lh data.*
 </code></pre>
 <h2 id="multiple-dataset-output"><a class="header" href="#multiple-dataset-output">Multiple Dataset Output</a></h2>
 <h3 id="text-format-with-multiple-datasets"><a class="header" href="#text-format-with-multiple-datasets">Text Format with Multiple Datasets</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 100 \
     --start-auto \
     --script-path client_service.ion \
@@ -451,48 +451,48 @@ Start: 2024-01-01T00:00:00Z
 <h2 id="choosing-the-right-format"><a class="header" href="#choosing-the-right-format">Choosing the Right Format</a></h2>
 <h3 id="development-and-testing"><a class="header" href="#development-and-testing">Development and Testing</a></h3>
 <pre><code class="language-bash"># Use text for quick debugging
-partiql-beamline-cli gen data --script-path debug.ion --sample-count 5 --output-format text
+beamline gen data --script-path debug.ion --sample-count 5 --output-format text
 
 # Use ion-pretty for understanding structure  
-partiql-beamline-cli gen data --script-path complex.ion --sample-count 10 --output-format ion-pretty
+beamline gen data --script-path complex.ion --sample-count 10 --output-format ion-pretty
 </code></pre>
 <h3 id="production-and-performance"><a class="header" href="#production-and-performance">Production and Performance</a></h3>
 <pre><code class="language-bash"># Use ion-binary for large datasets
-partiql-beamline-cli gen data --script-path production.ion --sample-count 1000000 --output-format ion-binary
+beamline gen data --script-path production.ion --sample-count 1000000 --output-format ion-binary
 
 # Use ion for balance of efficiency and readability
-partiql-beamline-cli gen data --script-path data.ion --sample-count 100000 --output-format ion
+beamline gen data --script-path data.ion --sample-count 100000 --output-format ion
 </code></pre>
 <h3 id="integration-workflows"><a class="header" href="#integration-workflows">Integration Workflows</a></h3>
 <pre><code class="language-bash"># Generate for different consumers
-partiql-beamline-cli gen data --seed 42 --start-auto --script-path data.ion --sample-count 10000 --output-format ion-binary &gt; high_perf.ion
-partiql-beamline-cli gen data --seed 42 --start-auto --script-path data.ion --sample-count 100 --output-format ion-pretty &gt; documentation.ion
-partiql-beamline-cli gen data --seed 42 --start-auto --script-path data.ion --sample-count 1000 --output-format text &gt; debug.txt
+beamline gen data --seed 42 --start-auto --script-path data.ion --sample-count 10000 --output-format ion-binary &gt; high_perf.ion
+beamline gen data --seed 42 --start-auto --script-path data.ion --sample-count 100 --output-format ion-pretty &gt; documentation.ion
+beamline gen data --seed 42 --start-auto --script-path data.ion --sample-count 1000 --output-format text &gt; debug.txt
 </code></pre>
 <h2 id="format-specific-processing"><a class="header" href="#format-specific-processing">Format-Specific Processing</a></h2>
 <h3 id="processing-text-format"><a class="header" href="#processing-text-format">Processing Text Format</a></h3>
 <pre><code class="language-bash"># Extract specific datasets
-partiql-beamline-cli gen data --script-path multi.ion --output-format text | \
+beamline gen data --script-path multi.ion --output-format text | \
   grep '"sensors"' | \
   head -10
 
 # Analyze timestamps
-partiql-beamline-cli gen data --script-path temporal.ion --output-format text | \
+beamline gen data --script-path temporal.ion --output-format text | \
   awk -F'\\[|\\]' '{print $2}' | \
   head -20
 </code></pre>
 <h3 id="processing-ion-formats"><a class="header" href="#processing-ion-formats">Processing Ion Formats</a></h3>
 <pre><code class="language-bash"># Use Ion tools for processing
-partiql-beamline-cli gen data --script-path data.ion --output-format ion-binary | \
+beamline gen data --script-path data.ion --output-format ion-binary | \
   ion-cli query "SELECT * FROM data.sensors WHERE f &gt; 0"
 
 # Convert between formats
-partiql-beamline-cli gen data --script-path data.ion --output-format ion | \
+beamline gen data --script-path data.ion --output-format ion | \
   ion-cli pretty &gt; formatted.ion
 </code></pre>
 <h3 id="pipeline-integration"><a class="header" href="#pipeline-integration">Pipeline Integration</a></h3>
 <pre><code class="language-bash"># Generate and immediately process
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 123 \
   --start-auto \
   --script-path metrics.ion \
@@ -503,7 +503,7 @@ partiql-beamline-cli gen data \
 </code></pre>
 <h2 id="database-generation-formats"><a class="header" href="#database-generation-formats">Database Generation Formats</a></h2>
 <p>Database generation creates multiple file formats automatically:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+<pre><code class="language-bash">$ beamline gen db beamline-lite \
     --seed 42 \
     --start-auto \
     --script-path data.ion \
@@ -574,7 +574,7 @@ $ ls -la beamline-catalog/
 <h2 id="format-conversion-patterns"><a class="header" href="#format-conversion-patterns">Format Conversion Patterns</a></h2>
 <h3 id="manual-conversion"><a class="header" href="#manual-conversion">Manual Conversion</a></h3>
 <pre><code class="language-bash"># Generate in efficient format, convert for specific use
-partiql-beamline-cli gen data --script-path data.ion --sample-count 10000 --output-format ion-binary &gt; efficient.ion
+beamline gen data --script-path data.ion --sample-count 10000 --output-format ion-binary &gt; efficient.ion
 
 # Convert to pretty format for inspection
 ion-cli pretty &lt; efficient.ion &gt; readable.ion
@@ -591,9 +591,9 @@ SEED="$2"
 COUNT="$3"
 
 # Generate in multiple formats
-partiql-beamline-cli gen data --seed $SEED --start-auto --script-path $SCRIPT --sample-count $COUNT --output-format ion-binary &gt; data.bin
-partiql-beamline-cli gen data --seed $SEED --start-auto --script-path $SCRIPT --sample-count 100 --output-format ion-pretty &gt; sample.ion
-partiql-beamline-cli gen data --seed $SEED --start-auto --script-path $SCRIPT --sample-count 10 --output-format text &gt; debug.txt
+beamline gen data --seed $SEED --start-auto --script-path $SCRIPT --sample-count $COUNT --output-format ion-binary &gt; data.bin
+beamline gen data --seed $SEED --start-auto --script-path $SCRIPT --sample-count 100 --output-format ion-pretty &gt; sample.ion
+beamline gen data --seed $SEED --start-auto --script-path $SCRIPT --sample-count 10 --output-format text &gt; debug.txt
 
 echo "Generated:"
 echo "- data.bin (binary, $COUNT records)"  
@@ -603,7 +603,7 @@ echo "- debug.txt (text, 10 records)"
 <h2 id="integration-examples"><a class="header" href="#integration-examples">Integration Examples</a></h2>
 <h3 id="web-api-integration"><a class="header" href="#web-api-integration">Web API Integration</a></h3>
 <pre><code class="language-bash"># Generate data for API testing
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path api_test_data.ion \
@@ -613,7 +613,7 @@ partiql-beamline-cli gen data \
 </code></pre>
 <h3 id="database-loading"><a class="header" href="#database-loading">Database Loading</a></h3>
 <pre><code class="language-bash"># Generate data and schema for database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 100 \
   --start-auto \
   --script-path warehouse_data.ion \
@@ -631,7 +631,7 @@ psql -d warehouse -f beamline-catalog/orders.shape.sql
 # analytics-pipeline.sh
 
 # Generate raw data efficiently  
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 202401 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path analytics.ion \
@@ -639,7 +639,7 @@ partiql-beamline-cli gen data \
   --output-format ion-binary &gt; raw_data.ion
 
 # Generate sample for validation
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 202401 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path analytics.ion \
@@ -653,28 +653,28 @@ echo "- Validation sample: 100 records in pretty format"
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <h3 id="1-match-format-to-purpose"><a class="header" href="#1-match-format-to-purpose">1. Match Format to Purpose</a></h3>
 <pre><code class="language-bash"># Debugging - use text
-partiql-beamline-cli gen data --script-path new_script.ion --sample-count 5 --output-format text
+beamline gen data --script-path new_script.ion --sample-count 5 --output-format text
 
 # Production - use binary
-partiql-beamline-cli gen data --script-path prod_data.ion --sample-count 1000000 --output-format ion-binary
+beamline gen data --script-path prod_data.ion --sample-count 1000000 --output-format ion-binary
 
 # Documentation - use pretty
-partiql-beamline-cli gen data --script-path examples.ion --sample-count 10 --output-format ion-pretty
+beamline gen data --script-path examples.ion --sample-count 10 --output-format ion-pretty
 </code></pre>
 <h3 id="2-consider-file-size-for-large-datasets"><a class="header" href="#2-consider-file-size-for-large-datasets">2. Consider File Size for Large Datasets</a></h3>
 <pre><code class="language-bash"># Check estimated size first
-partiql-beamline-cli gen data --script-path large.ion --sample-count 1000 --output-format ion-binary | wc -c
+beamline gen data --script-path large.ion --sample-count 1000 --output-format ion-binary | wc -c
 # If 1000 records = 50KB, then 1M records ≈ 50MB
 </code></pre>
 <h3 id="3-use-appropriate-format-for-storage"><a class="header" href="#3-use-appropriate-format-for-storage">3. Use Appropriate Format for Storage</a></h3>
 <pre><code class="language-bash"># Long-term storage
-partiql-beamline-cli gen data --script-path archive.ion --sample-count 100000 --output-format ion-binary
+beamline gen data --script-path archive.ion --sample-count 100000 --output-format ion-binary
 
 # Working files  
-partiql-beamline-cli gen data --script-path working.ion --sample-count 1000 --output-format ion-pretty
+beamline gen data --script-path working.ion --sample-count 1000 --output-format ion-pretty
 
 # Quick inspection
-partiql-beamline-cli gen data --script-path inspect.ion --sample-count 20 --output-format text
+beamline gen data --script-path inspect.ion --sample-count 20 --output-format text
 </code></pre>
 <h3 id="4-document-format-choices"><a class="header" href="#4-document-format-choices">4. Document Format Choices</a></h3>
 <pre><code class="language-bash"># Document why you chose specific formats

@@ -38,7 +38,7 @@ rand_processes::{
 
 **Test the catalog:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 100 \
     --start-auto \
     --sample-count 20 \
@@ -117,7 +117,7 @@ rand_processes::{
 
 **Generate customer data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 200 \
     --start-auto \
     --sample-count 50 \
@@ -200,7 +200,7 @@ rand_processes::{
 
 **Test order generation:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 300 \
     --start-auto \
     --sample-count 30 \
@@ -294,7 +294,7 @@ rand_processes::{
 
 **Generate shopping behavior data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 400 \
     --start-iso "2024-01-01T09:00:00Z" \
     --sample-count 100 \
@@ -379,7 +379,7 @@ rand_processes::{
 
 **Test review system:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 500 \
     --start-auto \
     --sample-count 50 \
@@ -595,7 +595,7 @@ rand_processes::{
 
 **Generate complete e-commerce data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 600 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 200 \
@@ -752,7 +752,7 @@ rand_processes::{
 
 **Generate analytics data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 700 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 30 \
@@ -766,7 +766,7 @@ Generate analytical queries for your e-commerce data:
 
 ```bash
 # Generate business intelligence queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 800 \
     --start-auto \
     --script-path ecommerce-platform.ion \
@@ -805,7 +805,7 @@ Create a complete e-commerce database:
 
 ```bash
 # Generate comprehensive e-commerce database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
     --seed 900 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path ecommerce-platform.ion \

@@ -195,46 +195,46 @@
 <h2 id="why-reproducibility-matters"><a class="header" href="#why-reproducibility-matters">Why Reproducibility Matters</a></h2>
 <h3 id="debugging-and-testing"><a class="header" href="#debugging-and-testing">Debugging and Testing</a></h3>
 <pre><code class="language-bash"># First run - discovers a bug with specific data
-partiql-beamline-cli gen data --seed 12345 --start-auto --script-path my_script.ion
+beamline gen data --seed 12345 --start-auto --script-path my_script.ion
 
 # Later run - reproduce exact same data to debug
-partiql-beamline-cli gen data --seed 12345 --start-auto --script-path my_script.ion
+beamline gen data --seed 12345 --start-auto --script-path my_script.ion
 </code></pre>
 <p>When you find a bug or unexpected behavior in your tests, reproducibility lets you generate the exact same problematic data to investigate and fix the issue.</p>
 <h3 id="consistent-benchmarking"><a class="header" href="#consistent-benchmarking">Consistent Benchmarking</a></h3>
 <pre><code class="language-bash"># Performance test run 1
-partiql-beamline-cli gen data --seed 42 --start-auto --sample-count 1000000 --script-path perf_test.ion
+beamline gen data --seed 42 --start-auto --sample-count 1000000 --script-path perf_test.ion
 
 # Performance test run 2 (weeks later)  
-partiql-beamline-cli gen data --seed 42 --start-auto --sample-count 1000000 --script-path perf_test.ion
+beamline gen data --seed 42 --start-auto --sample-count 1000000 --script-path perf_test.ion
 </code></pre>
 <p>For meaningful performance comparisons, you need identical datasets. Reproducibility ensures your benchmarks are comparing like with like.</p>
 <h3 id="ai-model-training"><a class="header" href="#ai-model-training">AI Model Training</a></h3>
 <pre><code class="language-bash"># Training dataset generation
-partiql-beamline-cli gen data --seed 789 --start-auto --script-path training_data.ion --sample-count 50000
+beamline gen data --seed 789 --start-auto --script-path training_data.ion --sample-count 50000
 
 # Later: regenerate exact same training data for model comparison
-partiql-beamline-cli gen data --seed 789 --start-auto --script-path training_data.ion --sample-count 50000
+beamline gen data --seed 789 --start-auto --script-path training_data.ion --sample-count 50000
 </code></pre>
 <p>When training machine learning models, being able to regenerate identical training data is crucial for comparing model performance and reproducing results.</p>
 <h3 id="regression-testing"><a class="header" href="#regression-testing">Regression Testing</a></h3>
 <pre><code class="language-bash"># Original test data
-partiql-beamline-cli gen data --seed 2024 --start-auto --script-path integration_test.ion
+beamline gen data --seed 2024 --start-auto --script-path integration_test.ion
 
 # After code changes - same test data to verify no regressions
-partiql-beamline-cli gen data --seed 2024 --start-auto --script-path integration_test.ion
+beamline gen data --seed 2024 --start-auto --script-path integration_test.ion
 </code></pre>
 <p>Regression testing requires the same test data to verify that code changes don’t break existing functionality.</p>
 <h2 id="how-seeds-work"><a class="header" href="#how-seeds-work">How Seeds Work</a></h2>
 <h3 id="pseudorandom-number-generation"><a class="header" href="#pseudorandom-number-generation">Pseudorandom Number Generation</a></h3>
 <p>PartiQL Beamline uses <strong>cryptographically secure pseudorandom number generators</strong> (PRNGs) that are initialized with a seed value:</p>
 <pre><code class="language-bash"># Different seeds = different data
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A
-partiql-beamline-cli gen data --seed 2 --start-auto --script-path test.ion    # Generates dataset B
+beamline gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A
+beamline gen data --seed 2 --start-auto --script-path test.ion    # Generates dataset B
 
 # Same seed = identical data  
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A (identical)
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A (identical)
+beamline gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A (identical)
+beamline gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A (identical)
 </code></pre>
 <h3 id="seed-propagation"><a class="header" href="#seed-propagation">Seed Propagation</a></h3>
 <p>Seeds propagate through the entire generation process:</p>
@@ -246,11 +246,11 @@ partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion    # 
 <h3 id="default-seeds"><a class="header" href="#default-seeds">Default Seeds</a></h3>
 <p>If you don’t specify a seed, Beamline uses a default seed derived from the configuration:</p>
 <pre><code class="language-bash"># These generate identical data (same default seed)
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path my_script.ion
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path my_script.ion
+beamline gen data --seed-auto --start-auto --script-path my_script.ion
+beamline gen data --seed-auto --start-auto --script-path my_script.ion
 
 # This generates different data (explicit different seed)
-partiql-beamline-cli gen data --seed 999 --start-auto --script-path my_script.ion
+beamline gen data --seed 999 --start-auto --script-path my_script.ion
 </code></pre>
 <h2 id="reproducibility-scope"><a class="header" href="#reproducibility-scope">Reproducibility Scope</a></h2>
 <h3 id="what-is-reproduced"><a class="header" href="#what-is-reproduced">What IS Reproduced</a></h3>
@@ -267,10 +267,10 @@ partiql-beamline-cli gen data --seed 999 --start-auto --script-path my_script.io
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <h3 id="1-always-specify-seeds-for-important-use-cases"><a class="header" href="#1-always-specify-seeds-for-important-use-cases">1. Always Specify Seeds for Important Use Cases</a></h3>
 <pre><code class="language-bash"># Good - explicit seed for reproducible testing
-partiql-beamline-cli gen data --seed 12345 --start-auto --script-path test_suite.ion
+beamline gen data --seed 12345 --start-auto --script-path test_suite.ion
 
 # Avoid - relying on default seed might change
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path test_suite.ion
+beamline gen data --seed-auto --start-auto --script-path test_suite.ion
 </code></pre>
 <h3 id="2-document-your-seeds"><a class="header" href="#2-document-your-seeds">2. Document Your Seeds</a></h3>
 <pre><code class="language-bash"># Document seeds in your scripts or README
@@ -280,8 +280,8 @@ partiql-beamline-cli gen data --seed-auto --start-auto --script-path test_suite.
 </code></pre>
 <h3 id="3-use-meaningful-seed-values"><a class="header" href="#3-use-meaningful-seed-values">3. Use Meaningful Seed Values</a></h3>
 <pre><code class="language-bash"># Use dates, version numbers, or meaningful identifiers
-partiql-beamline-cli gen data --seed 20241212 --start-auto --script-path data.ion  # Today's date
-partiql-beamline-cli gen data --seed 100 --start-auto --script-path v1.0.0.ion    # Version-based
+beamline gen data --seed 20241212 --start-auto --script-path data.ion  # Today's date
+beamline gen data --seed 100 --start-auto --script-path v1.0.0.ion    # Version-based
 </code></pre>
 <h3 id="4-pin-beamline-version-for-critical-use-cases"><a class="header" href="#4-pin-beamline-version-for-critical-use-cases">4. Pin Beamline Version for Critical Use Cases</a></h3>
 <pre><code class="language-toml"># In your Cargo.toml or requirements
@@ -289,7 +289,7 @@ partiql-beamline = "=1.2.3"  # Exact version for reproducibility
 </code></pre>
 <h3 id="5-store-configuration-alongside-data"><a class="header" href="#5-store-configuration-alongside-data">5. Store Configuration Alongside Data</a></h3>
 <pre><code class="language-bash"># Save configuration for later reproduction
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path production_test.ion \
@@ -302,18 +302,18 @@ echo "Seed: 42, Script: production_test.ion, Count: 1000" &gt; config.txt
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <h3 id="basic-reproducibility"><a class="header" href="#basic-reproducibility">Basic Reproducibility</a></h3>
 <pre><code class="language-bash"># Generate same data multiple times
-$ partiql-beamline-cli gen data --seed 100 --start-auto --sample-count 3 --script-path simple.ion
+$ beamline gen data --seed 100 --start-auto --sample-count 3 --script-path simple.ion
 [1, 2, 5]
 
-$ partiql-beamline-cli gen data --seed 100 --start-auto --sample-count 3 --script-path simple.ion  
+$ beamline gen data --seed 100 --start-auto --sample-count 3 --script-path simple.ion  
 [1, 2, 5]  # Identical output
 
-$ partiql-beamline-cli gen data --seed 101 --start-auto --sample-count 3 --script-path simple.ion
+$ beamline gen data --seed 101 --start-auto --sample-count 3 --script-path simple.ion
 [7, 1, 9]  # Different seed = different data
 </code></pre>
 <h3 id="complex-structure-reproducibility"><a class="header" href="#complex-structure-reproducibility">Complex Structure Reproducibility</a></h3>
 <pre><code class="language-bash"># Complex nested structures are also reproducible
-$ partiql-beamline-cli gen data --seed 200 --start-auto --sample-count 1 --script-path complex.ion
+$ beamline gen data --seed 200 --start-auto --sample-count 1 --script-path complex.ion
 {
   id: 42,
   name: "Alice Johnson", 
@@ -325,7 +325,7 @@ $ partiql-beamline-cli gen data --seed 200 --start-auto --sample-count 1 --scrip
 }
 
 # Run again with same seed
-$ partiql-beamline-cli gen data --seed 200 --start-auto --sample-count 1 --script-path complex.ion
+$ beamline gen data --seed 200 --start-auto --sample-count 1 --script-path complex.ion
 {
   id: 42,
   name: "Alice Johnson",     # Identical name  
@@ -338,7 +338,7 @@ $ partiql-beamline-cli gen data --seed 200 --start-auto --sample-count 1 --scrip
 </code></pre>
 <h3 id="time-based-reproducibility"><a class="header" href="#time-based-reproducibility">Time-based Reproducibility</a></h3>
 <pre><code class="language-bash"># Even temporal data is reproducible
-$ partiql-beamline-cli gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --script-path events.ion --sample-count 3
+$ beamline gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --script-path events.ion --sample-count 3
 [
   { event: "login", time: "2024-01-01T00:12:34Z" },
   { event: "action", time: "2024-01-01T00:15:47Z" }, 
@@ -346,7 +346,7 @@ $ partiql-beamline-cli gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --
 ]
 
 # Same seed + same start time = identical temporal patterns
-$ partiql-beamline-cli gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --script-path events.ion --sample-count 3
+$ beamline gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --script-path events.ion --sample-count 3
 [
   { event: "login", time: "2024-01-01T00:12:34Z" },   # Same intervals
   { event: "action", time: "2024-01-01T00:15:47Z" },  # Same timestamps
@@ -364,10 +364,10 @@ $ partiql-beamline-cli gen data --seed 300 --start-iso "2024-01-01T00:00:00Z" --
 </ol>
 <p><strong>Solution:</strong></p>
 <pre><code class="language-bash"># Check version
-partiql-beamline-cli --version
+beamline --version
 
 # Use exact same command-line parameters
-partiql-beamline-cli gen data --seed 123 --start-auto --sample-count 100 --script-path exact_same_script.ion
+beamline gen data --seed 123 --start-auto --sample-count 100 --script-path exact_same_script.ion
 
 # Verify script file hasn't changed (use checksums)
 sha256sum my_script.ion
@@ -375,13 +375,13 @@ sha256sum my_script.ion
 <h3 id="issue-need-to-break-reproducibility"><a class="header" href="#issue-need-to-break-reproducibility">Issue: Need to Break Reproducibility</a></h3>
 <p>Sometimes you want different data each run:</p>
 <pre><code class="language-bash"># Use current timestamp as seed
-partiql-beamline-cli gen data --seed $(date +%s) --start-auto --script-path varied_data.ion
+beamline gen data --seed $(date +%s) --start-auto --script-path varied_data.ion
 
 # Use random seed
-partiql-beamline-cli gen data --seed $RANDOM --start-auto --script-path varied_data.ion
+beamline gen data --seed $RANDOM --start-auto --script-path varied_data.ion
 
 # Let Beamline generate a random seed
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path varied_data.ion
+beamline gen data --seed-auto --start-auto --script-path varied_data.ion
 </code></pre>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
 <p>Now that you understand reproducible data generation, you’re ready to learn about <a href="./scripts-and-processes.html">Scripts and Processes</a>, which will show you how to configure and control the data generation process through Ion-based scripts.</p>

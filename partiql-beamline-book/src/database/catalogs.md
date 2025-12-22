@@ -48,7 +48,7 @@ catalog-name/
 
 ```bash
 # Default catalog in current directory
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 42 \
   --start-auto \
   --script-path data.ion
@@ -60,7 +60,7 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Custom name and location
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path ecommerce.ion \
@@ -92,7 +92,7 @@ partiql-beamline-cli gen db beamline-lite \
 BeamlineLite protects existing catalogs by default:
 
 ```bash
-$ partiql-beamline-cli gen db beamline-lite --seed 1 --start-auto --script-path data.ion
+$ beamline gen db beamline-lite --seed 1 --start-auto --script-path data.ion
 creating directory ./beamline-catalog/ failed with the following error:
 File exists (os error 17)
 ```
@@ -100,7 +100,7 @@ File exists (os error 17)
 The `--force` option creates automatic backups:
 
 ```bash
-$ partiql-beamline-cli gen db beamline-lite \
+$ beamline gen db beamline-lite \
     --seed 1 \
     --start-auto \
     --script-path updated_data.ion \
@@ -172,18 +172,18 @@ echo "Backup cleanup completed"
 mkdir -p projects/{analytics,ecommerce,iot}/databases
 
 # Analytics project databases
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path analytics_v1.ion \
   --catalog-name analytics-dev \
   --catalog-path ./projects/analytics/databases/
 
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path analytics_v1.ion \
   --catalog-name analytics-staging \
   --catalog-path ./projects/analytics/databases/
 
 # E-commerce project databases  
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path ecommerce_sim.ion \
   --catalog-name ecommerce-integration-test \
   --catalog-path ./projects/ecommerce/databases/
@@ -199,7 +199,7 @@ BASE_SCRIPT="application.ion"
 BASE_SEED=2024
 
 # Development environment
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $BASE_SEED \
   --start-auto \
   --script-path $BASE_SCRIPT \
@@ -208,7 +208,7 @@ partiql-beamline-cli gen db beamline-lite \
   --catalog-path ./environments/dev/databases/
 
 # Staging environment  
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $((BASE_SEED + 1)) \
   --start-auto \
   --script-path $BASE_SCRIPT \
@@ -217,7 +217,7 @@ partiql-beamline-cli gen db beamline-lite \
   --catalog-path ./environments/staging/databases/
 
 # Production-like environment
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $((BASE_SEED + 2)) \
   --start-auto \
   --script-path $BASE_SCRIPT \
@@ -233,13 +233,13 @@ partiql-beamline-cli gen db beamline-lite \
 mkdir -p database-versions/{v1.0,v1.1,v2.0}
 
 # Version 1.0 databases
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path schema_v1.ion \
   --catalog-name production-simulation \
   --catalog-path ./database-versions/v1.0/
 
 # Version 2.0 databases (new schema)
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path schema_v2.ion \
   --catalog-name production-simulation \
   --catalog-path ./database-versions/v2.0/
@@ -611,7 +611,7 @@ CATALOG_NAME="$PROJECT-$BRANCH-$BUILD_ID"
 echo "Creating CI/CD test database: $CATALOG_NAME"
 
 # Generate test database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed "$BUILD_ID" \
   --start-auto \
   --script-path "ci/test-data.ion" \
@@ -650,7 +650,7 @@ if [ -d "$DEV_CATALOG" ]; then
 fi
 
 # Generate fresh development database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 1000 \
   --start-auto \
   --script-path "scripts/$FEATURE.ion" \
@@ -931,7 +931,7 @@ cat: beamline-catalog/.beamline-manifest: No such file or directory
 if [ -f beamline-catalog/.beamline-script ]; then
   echo "Regenerating catalog from preserved script..."
   
-  partiql-beamline-cli gen db beamline-lite \
+  beamline gen db beamline-lite \
     --seed 42 \
     --start-auto \
     --script-path beamline-catalog/.beamline-script \
@@ -947,13 +947,13 @@ $ ls beamline-catalog/
 users.ion  orders.ion  # Missing .shape.ion and .shape.sql files
 
 # Solution: Regenerate schemas from script
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path beamline-catalog/.beamline-script \
   --output-format basic-ddl > recovered_schema.sql
 
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path beamline-catalog/.beamline-script \

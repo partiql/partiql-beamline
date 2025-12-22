@@ -188,7 +188,7 @@ through creating a simple sensor data generator and understanding the basic conc
 <p>PartiQL Beamline comes with several example scripts. Let’s start with the sensors example to see data generation in action.</p>
 <h3 id="step-1-generate-your-first-dataset"><a class="header" href="#step-1-generate-your-first-dataset">Step 1: Generate Your First Dataset</a></h3>
 <p>Run the following command to generate 2 sensor readings:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed-auto \
     --start-auto \
     --sample-count 2 \
@@ -215,14 +215,14 @@ Start: 2022-01-08T18:38:38.000000000Z
 </ul>
 <h3 id="step-2-reproduce-the-same-data"><a class="header" href="#step-2-reproduce-the-same-data">Step 2: Reproduce the Same Data</a></h3>
 <p>Let’s generate the exact same data using the seed from the previous run:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 5372343081885320050 \
     --start-auto \
     --sample-count 2 \
     --script-path partiql-beamline-sim/tests/scripts/sensors.ion
 </code></pre>
 <p>Notice that the data values are identical, but the timestamps might be different because we used <code>--start-auto</code>. To get exactly the same output, use the same start time:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 5372343081885320050 \
     --start-iso "2022-01-08T18:38:38.000000000Z" \
     --sample-count 2 \
@@ -346,7 +346,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 <h2 id="exploring-different-output-formats"><a class="header" href="#exploring-different-output-formats">Exploring Different Output Formats</a></h2>
 <p>PartiQL Beamline supports multiple output formats. Let’s try generating the same data in different formats:</p>
 <h3 id="ion-pretty-format"><a class="header" href="#ion-pretty-format">Ion Pretty Format</a></h3>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 5372343081885320050 \
     --start-auto \
     --sample-count 3 \
@@ -383,7 +383,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 </code></pre>
 <h3 id="text-format-default"><a class="header" href="#text-format-default">Text Format (Default)</a></h3>
 <p>The default text format is human-readable and great for quick inspection:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 5372343081885320050 \
     --start-auto \
     --sample-count 3 \
@@ -414,7 +414,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 <li><code>active</code>: Boolean with 90% chance of being true</li>
 </ul>
 <h3 id="test-your-script"><a class="header" href="#test-your-script">Test Your Script</a></h3>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 42 \
     --start-auto \
     --sample-count 5 \
@@ -445,7 +445,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 <h2 id="common-patterns"><a class="header" href="#common-patterns">Common Patterns</a></h2>
 <h3 id="multiple-datasets"><a class="header" href="#multiple-datasets">Multiple Datasets</a></h3>
 <p>You can generate data for specific datasets using the <code>--dataset</code> flag:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 42 \
     --start-auto \
     --sample-count 10 \
@@ -455,7 +455,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 </code></pre>
 <h3 id="controlling-nullability"><a class="header" href="#controlling-nullability">Controlling Nullability</a></h3>
 <p>You can control how often NULL values appear:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 42 \
     --start-auto \
     --sample-count 5 \
@@ -475,19 +475,19 @@ capabilities. In the next section, we’ll explore the core concepts that power 
 <h2 id="quick-reference"><a class="header" href="#quick-reference">Quick Reference</a></h2>
 <p>Here are the commands you’ve learned in this chapter:</p>
 <pre><code class="language-bash"># Basic data generation
-partiql-beamline-cli gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
+beamline gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
 
 # Reproducible generation
-partiql-beamline-cli gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
+beamline gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
 
 # Different output formats
-partiql-beamline-cli gen data ... --output-format [text|ion|ion-pretty]
+beamline gen data ... --output-format [text|ion|ion-pretty]
 
 # Specific datasets
-partiql-beamline-cli gen data ... --dataset DATASET_NAME
+beamline gen data ... --dataset DATASET_NAME
 
 # Control nullability
-partiql-beamline-cli gen data ... --default-nullable true --pct-null 0.1
+beamline gen data ... --default-nullable true --pct-null 0.1
 </code></pre>
 <p>Congratulations on completing your first data generation with PartiQL Beamline! You’re now ready to explore more advanced features and create more sophisticated synthetic datasets.</p>
 

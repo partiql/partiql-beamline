@@ -339,7 +339,7 @@
 <li><strong>Shared variables</strong>: Same request IDs, customer IDs, success rates</li>
 </ul>
 <h3 id="output-example"><a class="header" href="#output-example">Output Example</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 100 \
     --start-auto \
     --script-path client-service.ion \
@@ -357,14 +357,14 @@ Start: 2024-01-01T00:00:00Z
 <h3 id="cli-dataset-selection"><a class="header" href="#cli-dataset-selection">CLI Dataset Selection</a></h3>
 <p>Generate data for specific datasets only:</p>
 <pre><code class="language-bash"># Generate all datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path multi_dataset.ion \
   --sample-count 100
 
 # Generate only specific datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path multi_dataset.ion \
@@ -373,7 +373,7 @@ partiql-beamline-cli gen data \
   --dataset orders
 
 # Generate only one dataset
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path multi_dataset.ion \
@@ -486,7 +486,7 @@ partiql-beamline-cli gen data \
 <h2 id="dataset-analysis-and-inspection"><a class="header" href="#dataset-analysis-and-inspection">Dataset Analysis and Inspection</a></h2>
 <h3 id="examining-generated-datasets"><a class="header" href="#examining-generated-datasets">Examining Generated Datasets</a></h3>
 <pre><code class="language-bash"># Generate multi-dataset output
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 123 \
   --start-auto \
   --script-path complex_system.ion \
@@ -500,7 +500,7 @@ jq '.data | to_entries[] | "\(.key): \(.value | length) records"' output.ion  # 
 </code></pre>
 <h3 id="database-catalog-analysis"><a class="header" href="#database-catalog-analysis">Database Catalog Analysis</a></h3>
 <pre><code class="language-bash"># Generate database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 456 \
   --start-auto \
   --script-path multi_dataset.ion \
@@ -623,7 +623,7 @@ diff beamline-catalog/users.shape.sql beamline-catalog/orders.shape.sql
 </code></pre>
 <h2 id="dataset-output-in-different-formats"><a class="header" href="#dataset-output-in-different-formats">Dataset Output in Different Formats</a></h2>
 <h3 id="text-format-multi-dataset-output"><a class="header" href="#text-format-multi-dataset-output">Text Format Multi-Dataset Output</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data \
+<pre><code class="language-bash">$ beamline gen data \
     --seed 999 \
     --start-auto \
     --script-path multi_dataset.ion \
@@ -657,7 +657,7 @@ diff beamline-catalog/users.shape.sql beamline-catalog/orders.shape.sql
 }
 </code></pre>
 <h3 id="database-generation-multi-dataset-files"><a class="header" href="#database-generation-multi-dataset-files">Database Generation Multi-Dataset Files</a></h3>
-<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+<pre><code class="language-bash">$ beamline gen db beamline-lite \
     --seed 42 \
     --start-auto \
     --script-path client_service.ion \
@@ -733,14 +733,14 @@ rand_processes::{
 </code></pre>
 <h3 id="memory-usage-with-multiple-datasets"><a class="header" href="#memory-usage-with-multiple-datasets">Memory Usage with Multiple Datasets</a></h3>
 <pre><code class="language-bash"># Monitor memory usage with many datasets
-time partiql-beamline-cli gen data \
+time beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path many_datasets.ion \
   --sample-count 10000
 
 # Use dataset filtering to reduce memory
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path many_datasets.ion \
@@ -756,7 +756,7 @@ SCRIPT="multi_system.ion"
 SEED=12345
 
 # Generate full dataset
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $SEED \
   --start-auto \
   --script-path $SCRIPT \
@@ -772,7 +772,7 @@ echo "Datasets extracted for individual processing"
 </code></pre>
 <h3 id="cross-dataset-validation"><a class="header" href="#cross-dataset-validation">Cross-Dataset Validation</a></h3>
 <pre><code class="language-bash"># Generate related datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 999 \
   --start-auto \
   --script-path related_data.ion \
@@ -791,10 +791,10 @@ comm -23 order_customers.txt all_customers.txt  # Orders with invalid customer I
 <p><strong>Cause</strong>: Dataset filtering or script errors</p>
 <p><strong>Solution</strong>:</p>
 <pre><code class="language-bash"># Check all available datasets
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path script.ion --output-format text
+beamline infer-shape --seed 1 --start-auto --script-path script.ion --output-format text
 
 # Generate without filtering
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path script.ion --sample-count 5
+beamline gen data --seed 1 --start-auto --script-path script.ion --sample-count 5
 </code></pre>
 <h3 id="issue-uneven-dataset-sizes"><a class="header" href="#issue-uneven-dataset-sizes">Issue: Uneven Dataset Sizes</a></h3>
 <p><strong>Cause</strong>: Different arrival rates or loop counts</p>
@@ -807,11 +807,11 @@ $arrival2: HomogeneousPoisson::{ interarrival: minutes::1 },   # Less frequent
 <h3 id="issue-memory-issues-with-many-datasets"><a class="header" href="#issue-memory-issues-with-many-datasets">Issue: Memory Issues with Many Datasets</a></h3>
 <p><strong>Solution</strong>:</p>
 <pre><code class="language-bash"># Use dataset filtering
-partiql-beamline-cli gen data --script-path many.ion --dataset important_one --dataset important_two
+beamline gen data --script-path many.ion --dataset important_one --dataset important_two
 
 # Or generate datasets separately
-partiql-beamline-cli gen data --script-path script.ion --dataset batch_1 --sample-count 10000
-partiql-beamline-cli gen data --script-path script.ion --dataset batch_2 --sample-count 10000
+beamline gen data --script-path script.ion --dataset batch_1 --sample-count 10000
+beamline gen data --script-path script.ion --dataset batch_2 --sample-count 10000
 </code></pre>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
 <ul>

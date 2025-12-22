@@ -195,7 +195,7 @@
 <h2 id="select-with-projections-rand-sfw"><a class="header" href="#select-with-projections-rand-sfw">SELECT with Projections (rand-sfw)</a></h2>
 <h3 id="basic-projection-queries"><a class="header" href="#basic-projection-queries">Basic Projection Queries</a></h3>
 <p>Generate queries with specific field selections:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -248,7 +248,7 @@ WHERE (test_data.completed IN [ false, false ] AND
 <h2 id="select--exclude-rand-select-all-efw"><a class="header" href="#select--exclude-rand-select-all-efw">SELECT * EXCLUDE (rand-select-all-efw)</a></h2>
 <h3 id="basic-exclusion-queries"><a class="header" href="#basic-exclusion-queries">Basic Exclusion Queries</a></h3>
 <p>Generate <code>SELECT *</code> queries that exclude specific fields:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -290,7 +290,7 @@ FROM test_data AS test_data WHERE (test_data.price &lt; 15.495327785402296)
 <h2 id="select-exclude-from-where-rand-sefw"><a class="header" href="#select-exclude-from-where-rand-sefw">SELECT EXCLUDE FROM WHERE (rand-sefw)</a></h2>
 <h3 id="complete-query-generation"><a class="header" href="#complete-query-generation">Complete Query Generation</a></h3>
 <p>The most sophisticated strategy combines projections, exclusions, and WHERE clauses:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -350,7 +350,7 @@ WHERE (test_data.completed IN [ false, false ] AND
 <h2 id="deep-path-generation"><a class="header" href="#deep-path-generation">Deep Path Generation</a></h2>
 <h3 id="complex-nested-structures"><a class="header" href="#complex-nested-structures">Complex Nested Structures</a></h3>
 <p>For deeply nested data structures, use higher path depth limits:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path transactions.ion \
@@ -408,7 +408,7 @@ WHERE ((((test_data.price.value &lt;= 6.206304713037888) OR
 </code></pre>
 <h3 id="controlling-path-depth"><a class="header" href="#controlling-path-depth">Controlling Path Depth</a></h3>
 <pre><code class="language-bash"># Moderate depth for readability
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path transactions.ion \
@@ -483,7 +483,7 @@ FROM test_data AS test_data
 <h3 id="path-configuration-examples"><a class="header" href="#path-configuration-examples">Path Configuration Examples</a></h3>
 <h4 id="simple-projections-only"><a class="header" href="#simple-projections-only">Simple Projections Only</a></h4>
 <pre><code class="language-bash"># Only use projection steps
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path nested_data.ion \
@@ -498,7 +498,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h4 id="include-wildcards"><a class="header" href="#include-wildcards">Include Wildcards</a></h4>
 <pre><code class="language-bash"># Add wildcard and unpivot paths
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path array_data.ion \
@@ -515,7 +515,7 @@ partiql-beamline-cli query basic \
 <h2 id="complex-query-combinations"><a class="header" href="#complex-query-combinations">Complex Query Combinations</a></h2>
 <h3 id="full-feature-queries"><a class="header" href="#full-feature-queries">Full Feature Queries</a></h3>
 <p>Use all query features together for comprehensive PartiQL testing:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 2000 \
     --start-auto \
     --script-path comprehensive_schema.ion \
@@ -547,7 +547,7 @@ partiql-beamline-cli query basic \
 <h2 id="type-specific-query-generation"><a class="header" href="#type-specific-query-generation">Type-Specific Query Generation</a></h2>
 <h3 id="scalar-type-focus"><a class="header" href="#scalar-type-focus">Scalar Type Focus</a></h3>
 <p>Generate queries that only work with scalar values:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path mixed_types.ion \
@@ -568,7 +568,7 @@ WHERE (test_data.transaction_id = 'some-uuid' AND test_data.price &gt; 100.0)
 </code></pre>
 <h3 id="structure-type-queries"><a class="header" href="#structure-type-queries">Structure Type Queries</a></h3>
 <p>Generate queries that work with complex structures:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 400 \
     --start-auto \
     --script-path nested_objects.ion \
@@ -584,7 +584,7 @@ WHERE (test_data.transaction_id = 'some-uuid' AND test_data.price &gt; 100.0)
 <h3 id="edge-case-query-generation"><a class="header" href="#edge-case-query-generation">Edge Case Query Generation</a></h3>
 <p>Test PartiQL edge cases and complex scenarios:</p>
 <pre><code class="language-bash"># Generate edge case queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 500 \
     --start-auto \
     --script-path edge_case_schema.ion \
@@ -605,7 +605,7 @@ partiql-beamline-cli query basic \
 <h3 id="performance-stress-testing"><a class="header" href="#performance-stress-testing">Performance Stress Testing</a></h3>
 <p>Generate computationally expensive queries:</p>
 <pre><code class="language-bash"># Create performance stress test queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 600 \
     --start-auto \
     --script-path large_schema.ion \
@@ -634,7 +634,7 @@ SAMPLE_COUNT=10
 echo "Generating comprehensive query test suite..."
 
 # Basic SELECT * queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -645,7 +645,7 @@ partiql-beamline-cli query basic \
         --pred-all &gt; select_star.sql
 
 # Projection queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -659,7 +659,7 @@ partiql-beamline-cli query basic \
         --pred-all &gt; projections.sql
 
 # Exclusion queries  
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((SEED + 2)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -672,7 +672,7 @@ partiql-beamline-cli query basic \
         --pred-all &gt; exclusions.sql
 
 # Complex combined queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((SEED + 3)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -703,7 +703,7 @@ BASE_SEED=1000
 for complexity_level in 1 2 3 5; do
     echo "Generating complexity level $complexity_level queries..."
     
-    partiql-beamline-cli query basic \
+    beamline query basic \
         --seed $((BASE_SEED + complexity_level)) \
         --start-auto \
         --script-path $SCRIPT \
@@ -743,20 +743,20 @@ echo "Query complexity suite completed"
 </code></pre>
 <h3 id="3-test-incrementally"><a class="header" href="#3-test-incrementally">3. Test Incrementally</a></h3>
 <pre><code class="language-bash"># Start simple
-partiql-beamline-cli query basic --script-path data.ion --sample-count 3 rand-select-all-fw --pred-eq
+beamline query basic --script-path data.ion --sample-count 3 rand-select-all-fw --pred-eq
 
 # Add projections
-partiql-beamline-cli query basic --script-path data.ion --sample-count 3 rand-sfw --project-rand-min 2 --project-rand-max 3 --pred-eq
+beamline query basic --script-path data.ion --sample-count 3 rand-sfw --project-rand-min 2 --project-rand-max 3 --pred-eq
 
 # Add exclusions
-partiql-beamline-cli query basic --script-path data.ion --sample-count 3 rand-sefw --project-rand-min 2 --exclude-rand-min 1 --pred-eq
+beamline query basic --script-path data.ion --sample-count 3 rand-sefw --project-rand-min 2 --exclude-rand-min 1 --pred-eq
 
 # Full complexity
-partiql-beamline-cli query basic --script-path data.ion --sample-count 5 rand-sefw --project-rand-min 3 --exclude-rand-min 2 --tbl-flt-rand-min 2 --pred-all
+beamline query basic --script-path data.ion --sample-count 5 rand-sefw --project-rand-min 3 --exclude-rand-min 2 --tbl-flt-rand-min 2 --pred-all
 </code></pre>
 <h3 id="4-validate-complex-queries"><a class="header" href="#4-validate-complex-queries">4. Validate Complex Queries</a></h3>
 <pre><code class="language-bash"># Generate and validate complex queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 700 \
     --start-auto \
     --script-path validation_schema.ion \

@@ -359,7 +359,7 @@ rand_processes::{
 
 **Test this script:**
 ```bash
-target/release/partiql-beamline-cli gen data \
+target/release/beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
@@ -562,14 +562,14 @@ rand_processes::{
 
 ```bash
 # Test script with minimal data generation
-target/release/partiql-beamline-cli gen data \
+target/release/beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
   --sample-count 1
 
 # Check inferred schema
-target/release/partiql-beamline-cli infer-shape \
+target/release/beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
@@ -580,7 +580,7 @@ target/release/partiql-beamline-cli infer-shape \
 
 ```bash
 # Test each dataset individually
-target/release/partiql-beamline-cli gen data \
+target/release/beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path complex_script.ion \
@@ -588,7 +588,7 @@ target/release/partiql-beamline-cli gen data \
   --dataset specific_dataset
 
 # Test all datasets with small sample
-target/release/partiql-beamline-cli gen data \
+target/release/beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path complex_script.ion \
@@ -623,7 +623,7 @@ rand_processes::{
 echo 'rand_processes::{ test: rand_process::{ $arrival: HomogeneousPoisson:: { interarrival: seconds::1 }, $data: { id: UUID } } }' > minimal.ion
 
 # Test basic structure
-target/release/partiql-beamline-cli gen data --seed 1 --start-auto --script-path minimal.ion --sample-count 3
+target/release/beamline gen data --seed 1 --start-auto --script-path minimal.ion --sample-count 3
 ```
 
 ### 3. Use Meaningful Variable Names
@@ -764,7 +764,7 @@ rand_processes::{
 
 ```bash
 # Test with small samples first
-target/release/partiql-beamline-cli gen data \
+target/release/beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
@@ -772,7 +772,7 @@ target/release/partiql-beamline-cli gen data \
   --output-format text
 
 # Scale up after validation
-target/release/partiql-beamline-cli gen data \
+target/release/beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \

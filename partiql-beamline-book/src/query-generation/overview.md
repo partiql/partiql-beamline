@@ -53,7 +53,7 @@ PartiQL Beamline supports four main query generation strategies:
 Generates `SELECT *` queries with WHERE clauses:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -80,7 +80,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.price < 15.495327785402296
 Generates queries with specific field projections and WHERE clauses:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -119,7 +119,7 @@ FROM test_data AS test_data WHERE (NOT ((test_data.transaction_id IS NULL)) OR
 Generates `SELECT * EXCLUDE` queries:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -155,7 +155,7 @@ WHERE (test_data.price < 18.418581624952935)
 Generates queries with projections, exclusions, and WHERE clauses:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -212,7 +212,7 @@ Query generation creates paths that navigate your data structure:
 From the README's transactions.ion example with nested structures:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path transactions.ion \
@@ -329,7 +329,7 @@ Control what types can appear in query paths:
 Based on simple_transactions.ion test script:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -352,7 +352,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.price < 15.495327785402296
 With more complex path generation:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path transactions.ion \
@@ -391,7 +391,7 @@ Use specific seeds for reproducible query sets:
 
 ```bash
 # Generate same queries each time
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 12345 \
     --start-auto \
     --script-path data.ion \
@@ -408,7 +408,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Generate simple queries for basic testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path data.ion \
@@ -424,7 +424,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Generate complex queries for comprehensive testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path nested_data.ion \
@@ -453,7 +453,7 @@ SCRIPT="test_data.ion"
 SEED=12345
 
 # Generate test dataset
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed $SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -461,7 +461,7 @@ partiql-beamline-cli gen data \
     --output-format ion-pretty > test_data.ion
 
 # Generate queries for the dataset
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -478,7 +478,7 @@ echo "Generated test data and matching queries"
 
 ```bash
 # Generate queries to test PartiQL implementation
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path complex_schema.ion \
@@ -506,7 +506,7 @@ done < validation_queries.sql
 Generate queries that test NULL and MISSING value handling:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 400 \
     --start-auto \
     --script-path nullable_data.ion \
@@ -531,7 +531,7 @@ Generate queries for performance benchmarking:
 ```bash
 # Generate queries with different complexity levels
 for complexity in 1 2 5 10; do
-    partiql-beamline-cli query basic \
+    beamline query basic \
         --seed 500 \
         --start-auto \
         --script-path large_dataset.ion \
@@ -549,10 +549,10 @@ done
 
 ```bash
 # Simple flat data - use simple paths
-partiql-beamline-cli query basic --script-path flat_data.ion --project-path-depth-max 2
+beamline query basic --script-path flat_data.ion --project-path-depth-max 2
 
 # Complex nested data - use deeper paths  
-partiql-beamline-cli query basic --script-path nested_data.ion --project-path-depth-max 8
+beamline query basic --script-path nested_data.ion --project-path-depth-max 8
 ```
 
 ### 2. Use Appropriate Predicate Sets
@@ -572,9 +572,9 @@ partiql-beamline-cli query basic --script-path nested_data.ion --project-path-de
 
 ```bash
 # Generate different query types for comprehensive testing
-partiql-beamline-cli query basic --script-path data.ion --sample-count 10 rand-select-all-fw --pred-all > select_star.sql
-partiql-beamline-cli query basic --script-path data.ion --sample-count 10 rand-sfw --pred-all > projections.sql  
-partiql-beamline-cli query basic --script-path data.ion --sample-count 10 rand-select-all-efw --pred-all > excludes.sql
+beamline query basic --script-path data.ion --sample-count 10 rand-select-all-fw --pred-all > select_star.sql
+beamline query basic --script-path data.ion --sample-count 10 rand-sfw --pred-all > projections.sql  
+beamline query basic --script-path data.ion --sample-count 10 rand-select-all-efw --pred-all > excludes.sql
 ```
 
 ### 4. Validate Generated Queries
@@ -583,8 +583,8 @@ Test generated queries against your data:
 
 ```bash
 # Generate data and queries with same script
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path test.ion --sample-count 100 > data.ion
-partiql-beamline-cli query basic --seed 2 --start-auto --script-path test.ion --sample-count 5 rand-select-all-fw --pred-all > queries.sql
+beamline gen data --seed 1 --start-auto --script-path test.ion --sample-count 100 > data.ion
+beamline query basic --seed 2 --start-auto --script-path test.ion --sample-count 5 rand-select-all-fw --pred-all > queries.sql
 
 # Validate queries parse correctly
 # your-partiql-parser --validate queries.sql
@@ -598,7 +598,7 @@ Generate comprehensive query test suites:
 
 ```bash
 # Generate queries covering all PartiQL features
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 600 \
     --start-auto \
     --script-path comprehensive_schema.ion \
@@ -620,7 +620,7 @@ Create query workloads for performance testing:
 
 ```bash
 # Generate queries with increasing complexity
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 700 \
     --start-auto \
     --script-path performance_schema.ion \
@@ -639,7 +639,7 @@ Generate queries that test edge cases:
 
 ```bash
 # Focus on complex path expressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 800 \
     --start-auto \
     --script-path edge_case_data.ion \

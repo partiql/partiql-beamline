@@ -182,9 +182,9 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="database-commands"><a class="header" href="#database-commands">Database Commands</a></h1>
-<p>The <code>partiql-beamline-cli gen db beamline-lite</code> command creates complete BeamlineLite databases containing both synthetic data and inferred schemas. This provides a complete local database for testing and development.</p>
+<p>The <code>beamline gen db beamline-lite</code> command creates complete BeamlineLite databases containing both synthetic data and inferred schemas. This provides a complete local database for testing and development.</p>
 <h2 id="command-syntax"><a class="header" href="#command-syntax">Command Syntax</a></h2>
-<pre><code class="language-bash">partiql-beamline-cli gen db beamline-lite [OPTIONS]
+<pre><code class="language-bash">beamline gen db beamline-lite [OPTIONS]
 </code></pre>
 <h2 id="required-options"><a class="header" href="#required-options">Required Options</a></h2>
 <p>Database generation uses the same core configuration as data generation:</p>
@@ -231,7 +231,7 @@
 </code></pre>
 <h3 id="example-catalog-contents"><a class="header" href="#example-catalog-contents">Example Catalog Contents</a></h3>
 <p>After running:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen db beamline-lite \
+<pre><code class="language-bash">beamline gen db beamline-lite \
   --seed-auto \
   --start-auto \
   --script-path client-service.ion \
@@ -309,7 +309,7 @@ rand_processes::{
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <h3 id="basic-database-creation"><a class="header" href="#basic-database-creation">Basic Database Creation</a></h3>
 <pre><code class="language-bash"># Create database with default settings
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed-auto \
   --start-auto \
   --script-path my_data.ion \
@@ -319,7 +319,7 @@ partiql-beamline-cli gen db beamline-lite \
 </code></pre>
 <h3 id="custom-catalog-configuration"><a class="header" href="#custom-catalog-configuration">Custom Catalog Configuration</a></h3>
 <pre><code class="language-bash"># Create database in custom location
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path production_sim.ion \
@@ -331,7 +331,7 @@ partiql-beamline-cli gen db beamline-lite \
 </code></pre>
 <h3 id="reproducible-database-creation"><a class="header" href="#reproducible-database-creation">Reproducible Database Creation</a></h3>
 <pre><code class="language-bash"># Create reproducible test database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 2024 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path test_suite.ion \
@@ -343,12 +343,12 @@ partiql-beamline-cli gen db beamline-lite \
 <h2 id="overwriting-and-backup"><a class="header" href="#overwriting-and-backup">Overwriting and Backup</a></h2>
 <h3 id="safe-overwrite-with-backup"><a class="header" href="#safe-overwrite-with-backup">Safe Overwrite with Backup</a></h3>
 <p>The CLI protects existing catalogs by default:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path data.ion
+<pre><code class="language-bash">$ beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion
 creating directory ./beamline-catalog/ failed with the following error:
 File exists (os error 17)
 </code></pre>
 <p>Use <code>--force</code> to overwrite with automatic backup:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite \
+<pre><code class="language-bash">$ beamline gen db beamline-lite \
     --seed-auto \
     --start-auto \
     --script-path data.ion \
@@ -400,7 +400,7 @@ echo "Creating test database..."
 rm -rf test-database/
 
 # Generate test database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $TEST_SEED \
   --start-iso $TEST_START \
   --script-path test_data_spec.ion \
@@ -422,7 +422,7 @@ SCRIPT="simulation.ion"
 BASE_SEED=2024
 
 # Development environment
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $BASE_SEED \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path $SCRIPT \
@@ -431,7 +431,7 @@ partiql-beamline-cli gen db beamline-lite \
   --catalog_path ./environments/
 
 # Staging environment  
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $((BASE_SEED + 1)) \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path $SCRIPT \
@@ -440,7 +440,7 @@ partiql-beamline-cli gen db beamline-lite \
   --catalog_path ./environments/
 
 # Production-like environment
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $((BASE_SEED + 2)) \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path $SCRIPT \
@@ -456,7 +456,7 @@ OLD_SCRIPT="data_v1.ion"
 NEW_SCRIPT="data_v2.ion"
 
 # Generate database with old schema
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 100 \
   --start-auto \
   --script-path $OLD_SCRIPT \
@@ -464,7 +464,7 @@ partiql-beamline-cli gen db beamline-lite \
   --sample-count 1000
 
 # Generate database with new schema
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 100 \
   --start-auto \
   --script-path $NEW_SCRIPT \
@@ -484,14 +484,14 @@ diff old-schema/*.shape.sql new-schema/*.shape.sql
 </ol>
 <h3 id="performance-tips"><a class="header" href="#performance-tips">Performance Tips</a></h3>
 <pre><code class="language-bash"># For large databases, monitor progress
-time partiql-beamline-cli gen db beamline-lite \
+time beamline gen db beamline-lite \
   --seed 1 \
   --start-auto \
   --script-path large_sim.ion \
   --sample-count 1000000
 
 # Use faster storage for temporary operations
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 1 \
   --start-auto \
   --script-path data.ion \
@@ -500,19 +500,19 @@ partiql-beamline-cli gen db beamline-lite \
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <h3 id="1-use-meaningful-catalog-names"><a class="header" href="#1-use-meaningful-catalog-names">1. Use Meaningful Catalog Names</a></h3>
 <pre><code class="language-bash"># Good - descriptive names
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path user_analytics.ion \
   --catalog_name user-analytics-2024 \
   --catalog_path ./databases/
 
 # Avoid - generic names
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path data.ion \
   --catalog_name db
 </code></pre>
 <h3 id="2-document-generation-parameters"><a class="header" href="#2-document-generation-parameters">2. Document Generation Parameters</a></h3>
 <pre><code class="language-bash"># Create documentation alongside database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path simulation.ion \
@@ -540,12 +540,12 @@ ls -la beamline-catalog*.bkp
 
 # Manual backup before --force if desired
 cp -r beamline-catalog manual-backup-$(date +%Y%m%d)
-partiql-beamline-cli gen db beamline-lite --script-path updated.ion --force
+beamline gen db beamline-lite --script-path updated.ion --force
 </code></pre>
 <h2 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h2>
 <h3 id="local-development-database"><a class="header" href="#local-development-database">Local Development Database</a></h3>
 <pre><code class="language-bash"># Create local database for development
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 1000 \
   --start-auto \
   --script-path dev_data.ion \
@@ -554,7 +554,7 @@ partiql-beamline-cli gen db beamline-lite \
 </code></pre>
 <h3 id="test-suite-database"><a class="header" href="#test-suite-database">Test Suite Database</a></h3>
 <pre><code class="language-bash"># Create comprehensive test database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 2024001 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path comprehensive_test.ion \
@@ -565,7 +565,7 @@ partiql-beamline-cli gen db beamline-lite \
 </code></pre>
 <h3 id="performance-benchmark-database"><a class="header" href="#performance-benchmark-database">Performance Benchmark Database</a></h3>
 <pre><code class="language-bash"># Create large database for performance testing
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 999999 \
   --start-auto \
   --script-path performance_test.ion \
@@ -611,26 +611,26 @@ done
 <h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
 <h3 id="common-errors"><a class="header" href="#common-errors">Common Errors</a></h3>
 <h4 id="catalog-directory-exists"><a class="header" href="#catalog-directory-exists">Catalog Directory Exists</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path data.ion
+<pre><code class="language-bash">$ beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion
 creating directory ./beamline-catalog/ failed with the following error:
 File exists (os error 17)
 
 # Solution: Use --force or different catalog name
-partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path data.ion --force
+beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion --force
 </code></pre>
 <h4 id="script-parse-errors"><a class="header" href="#script-parse-errors">Script Parse Errors</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path invalid.ion
+<pre><code class="language-bash">$ beamline gen db beamline-lite --seed-auto --start-auto --script-path invalid.ion
 Error: Failed to parse Ion script: Invalid Ion syntax at line 8
 </code></pre>
 <h4 id="insufficient-disk-space"><a class="header" href="#insufficient-disk-space">Insufficient Disk Space</a></h4>
 <pre><code class="language-bash"># Check available space before large database creation
 df -h .
-partiql-beamline-cli gen db beamline-lite --script-path huge_data.ion --sample-count 10000000
+beamline gen db beamline-lite --script-path huge_data.ion --sample-count 10000000
 </code></pre>
 <h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best Practices</a></h2>
 <h3 id="1-plan-storage-requirements"><a class="header" href="#1-plan-storage-requirements">1. Plan Storage Requirements</a></h3>
 <pre><code class="language-bash"># Estimate database size with small sample first
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 1 \
   --start-auto \
   --script-path data.ion \
@@ -643,7 +643,7 @@ du -sh size-test/
 </code></pre>
 <h3 id="2-use-consistent-naming-conventions"><a class="header" href="#2-use-consistent-naming-conventions">2. Use Consistent Naming Conventions</a></h3>
 <pre><code class="language-bash"># Good naming convention
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path ecommerce_v2.ion \
   --catalog_name ecommerce-v2-20241201 \
   --catalog_path ./databases/
@@ -652,7 +652,7 @@ partiql-beamline-cli gen db beamline-lite \
 </code></pre>
 <h3 id="3-document-database-generation"><a class="header" href="#3-document-database-generation">3. Document Database Generation</a></h3>
 <pre><code class="language-bash"># Create database with documentation
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path analytics.ion \

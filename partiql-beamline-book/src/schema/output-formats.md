@@ -26,7 +26,7 @@ The `infer-shape` command supports three output formats via `--output-format`:
 From the README example with sensors.ion:
 
 ```bash
-$ partiql-beamline-cli infer-shape \
+$ beamline infer-shape \
     --seed-auto \
     --start-auto \
     --script-path sensors.ion
@@ -124,7 +124,7 @@ Start: 2022-12-12T19:52:29.000000000Z
 From the README example with sensors-nested.ion:
 
 ```bash
-$ partiql-beamline-cli infer-shape \
+$ beamline infer-shape \
     --seed 7844265201457918498 \
     --start-auto \
     --script-path sensors-nested.ion \
@@ -173,7 +173,7 @@ SCRIPT="ecommerce.ion"
 DB_NAME="ecommerce_test"
 
 # Generate complete DDL
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path "$SCRIPT" \
@@ -225,7 +225,7 @@ echo "Database $DB_NAME created successfully"
 From the README example:
 
 ```bash
-$ partiql-beamline-cli infer-shape \
+$ beamline infer-shape \
     --seed-auto \
     --start-auto \
     --script-path sensors.ion \
@@ -287,15 +287,15 @@ $ partiql-beamline-cli infer-shape \
 
 ```bash
 # Extract dataset names
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path multi.ion --output-format beamline-json | \
+beamline infer-shape --seed 1 --start-auto --script-path multi.ion --output-format beamline-json | \
 jq -r '.shapes | keys[]'
 
 # Count fields in each dataset
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path multi.ion --output-format beamline-json | \
+beamline infer-shape --seed 1 --start-auto --script-path multi.ion --output-format beamline-json | \
 jq -r '.shapes | to_entries[] | "\(.key): \(.value.items.fields | length) fields"'
 
 # Extract field types for specific dataset
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --output-format beamline-json | \
+beamline infer-shape --seed 1 --start-auto --script-path data.ion --output-format beamline-json | \
 jq -r '.shapes.users.items.fields[] | "\(.name): \(.type)"'
 ```
 
@@ -314,9 +314,9 @@ For the same schema with multiple datasets:
 
 ```bash
 # Generate all formats for comparison
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path complex.ion --output-format text > schema.txt
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path complex.ion --output-format basic-ddl > schema.sql
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path complex.ion --output-format beamline-json > schema.json
+beamline infer-shape --seed 1 --start-auto --script-path complex.ion --output-format text > schema.txt
+beamline infer-shape --seed 1 --start-auto --script-path complex.ion --output-format basic-ddl > schema.sql
+beamline infer-shape --seed 1 --start-auto --script-path complex.ion --output-format beamline-json > schema.json
 
 # Compare sizes
 ls -lh schema.*
@@ -340,7 +340,7 @@ ls -lh schema.*
 
 ```bash
 # Analyze complex type structures
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path nested_structures.ion \
@@ -348,7 +348,7 @@ partiql-beamline-cli infer-shape \
 grep -A 20 "StructField"  # Extract field information
 
 # Count nesting levels
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path deep_nesting.ion \
@@ -366,7 +366,7 @@ SCRIPT="$1"
 DATABASE="$2"
 
 # Generate DDL schema
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path "$SCRIPT" \
@@ -416,7 +416,7 @@ SCRIPT="$1"
 echo "Analyzing schema from $SCRIPT..."
 
 # Generate JSON schema
-schema_json=$(partiql-beamline-cli infer-shape \
+schema_json=$(beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path "$SCRIPT" \
@@ -505,7 +505,7 @@ FORMAT="$3"
 
 case $FORMAT in
     "ddl")
-        partiql-beamline-cli infer-shape \
+        beamline infer-shape \
             --seed 1 \
             --start-auto \
             --script-path "$SCRIPT" \
@@ -515,7 +515,7 @@ case $FORMAT in
         ;;
         
     "json")
-        partiql-beamline-cli infer-shape \
+        beamline infer-shape \
             --seed 1 \
             --start-auto \
             --script-path "$SCRIPT" \
@@ -563,7 +563,7 @@ StructField {
 
 ```bash
 # With CLI nullability defaults
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path data.ion \
@@ -595,16 +595,16 @@ echo "Schema Evolution Analysis"
 echo "========================"
 
 # Generate schemas in DDL format for comparison
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$OLD_SCRIPT" --output-format basic-ddl > v1_schema.sql
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$NEW_SCRIPT" --output-format basic-ddl > v2_schema.sql
+beamline infer-shape --seed 1 --start-auto --script-path "$OLD_SCRIPT" --output-format basic-ddl > v1_schema.sql
+beamline infer-shape --seed 1 --start-auto --script-path "$NEW_SCRIPT" --output-format basic-ddl > v2_schema.sql
 
 # Show changes
 echo "Schema changes:"
 diff -u v1_schema.sql v2_schema.sql
 
 # Also generate JSON for programmatic analysis
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$OLD_SCRIPT" --output-format beamline-json > v1_schema.json
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$NEW_SCRIPT" --output-format beamline-json > v2_schema.json
+beamline infer-shape --seed 1 --start-auto --script-path "$OLD_SCRIPT" --output-format beamline-json > v1_schema.json
+beamline infer-shape --seed 1 --start-auto --script-path "$NEW_SCRIPT" --output-format beamline-json > v2_schema.json
 
 # Count field changes
 v1_fields=$(jq -r '.shapes | to_entries[] | .value.items.fields[].name' v1_schema.json | sort)
@@ -637,7 +637,7 @@ echo "Generated: $(date)"
 echo ""
 
 # Generate metadata
-metadata=$(partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$SCRIPT" --output-format basic-ddl | head -3)
+metadata=$(beamline infer-shape --seed 1 --start-auto --script-path "$SCRIPT" --output-format basic-ddl | head -3)
 echo "## Generation Metadata"
 echo '```'
 echo "$metadata"
@@ -647,7 +647,7 @@ echo ""
 # SQL DDL for database developers
 echo "## SQL DDL Schema"
 echo '```sql'
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path "$SCRIPT" \
@@ -658,7 +658,7 @@ echo ""
 # JSON for tool developers
 echo "## JSON Schema (for tools)"
 echo '```json'
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path "$SCRIPT" \
@@ -668,7 +668,7 @@ echo ""
 
 # Analysis summary
 echo "## Schema Analysis"
-schema_json=$(partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path "$SCRIPT" --output-format beamline-json)
+schema_json=$(beamline infer-shape --seed 1 --start-auto --script-path "$SCRIPT" --output-format beamline-json)
 dataset_count=$(echo "$schema_json" | jq '.shapes | length')
 total_fields=$(echo "$schema_json" | jq '[.shapes[].items.fields | length] | add')
 
@@ -683,20 +683,20 @@ echo "- **Source script**: \`$SCRIPT\`"
 
 ```bash
 # Understanding complex types
-partiql-beamline-cli infer-shape --script-path complex.ion --output-format text
+beamline infer-shape --script-path complex.ion --output-format text
 
 # Database creation
-partiql-beamline-cli infer-shape --script-path db_model.ion --output-format basic-ddl
+beamline infer-shape --script-path db_model.ion --output-format basic-ddl
 
 # Automated processing
-partiql-beamline-cli infer-shape --script-path data.ion --output-format beamline-json
+beamline infer-shape --script-path data.ion --output-format beamline-json
 ```
 
 ### 2. Use Consistent Parameters
 
 ```bash
 # Always use same seed for reproducible schema generation
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path script.ion --output-format basic-ddl
+beamline infer-shape --seed 1 --start-auto --script-path script.ion --output-format basic-ddl
 ```
 
 ### 3. Version Schema Output
@@ -714,8 +714,8 @@ git commit -m "Add schema v2 in SQL and JSON formats
 
 ```bash
 # Ensure all formats represent same schema
-partiql-beamline-cli infer-shape --seed 42 --start-auto --script-path test.ion --output-format basic-ddl > test.sql
-partiql-beamline-cli infer-shape --seed 42 --start-auto --script-path test.ion --output-format beamline-json > test.json
+beamline infer-shape --seed 42 --start-auto --script-path test.ion --output-format basic-ddl > test.sql
+beamline infer-shape --seed 42 --start-auto --script-path test.ion --output-format beamline-json > test.json
 
 # Extract field count from both formats  
 sql_fields=$(grep '^"' test.sql | wc -l)

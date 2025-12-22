@@ -182,9 +182,9 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="data-generation-commands"><a class="header" href="#data-generation-commands">Data Generation Commands</a></h1>
-<p>The <code>partiql-beamline-cli gen data</code> command generates synthetic data from Ion scripts using stochastic processes. This is the primary command for creating reproducible pseudo-random data in PartiQL Beamline.</p>
+<p>The <code>beamline gen data</code> command generates synthetic data from Ion scripts using stochastic processes. This is the primary command for creating reproducible pseudo-random data in PartiQL Beamline.</p>
 <h2 id="command-syntax"><a class="header" href="#command-syntax">Command Syntax</a></h2>
-<pre><code class="language-bash">partiql-beamline-cli gen data [OPTIONS]
+<pre><code class="language-bash">beamline gen data [OPTIONS]
 </code></pre>
 <h2 id="required-options"><a class="header" href="#required-options">Required Options</a></h2>
 <p>All data generation requires these three configuration groups (exactly one option from each group):</p>
@@ -230,14 +230,14 @@
 <h2 id="basic-examples"><a class="header" href="#basic-examples">Basic Examples</a></h2>
 <h3 id="simple-data-generation"><a class="header" href="#simple-data-generation">Simple Data Generation</a></h3>
 <pre><code class="language-bash"># Generate 100 samples with automatic seed and start time
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed-auto \
   --start-auto \
   --script-path sensors.ion \
   --sample-count 100
 
 # Reproducible generation with specific seed
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path user_data.ion \
@@ -245,21 +245,21 @@ partiql-beamline-cli gen data \
 </code></pre>
 <h3 id="different-output-formats"><a class="header" href="#different-output-formats">Different Output Formats</a></h3>
 <pre><code class="language-bash"># Text output (human-readable, default)
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
   --output-format text
 
 # Pretty Ion format
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
   --output-format ion-pretty
 
 # Compact binary Ion
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
@@ -268,7 +268,7 @@ partiql-beamline-cli gen data \
 <h3 id="dataset-filtering-1"><a class="header" href="#dataset-filtering-1">Dataset Filtering</a></h3>
 <p>Generate data for specific datasets only:</p>
 <pre><code class="language-bash"># Generate data for specific datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 45121008347100595 \
   --start-iso "2020-06-16T14:41:51.000000000Z" \
   --script-path client-service.ion \
@@ -280,7 +280,7 @@ partiql-beamline-cli gen data \
 <h2 id="advanced-configuration"><a class="header" href="#advanced-configuration">Advanced Configuration</a></h2>
 <h3 id="controlling-null-values"><a class="header" href="#controlling-null-values">Controlling NULL Values</a></h3>
 <pre><code class="language-bash"># Make all types nullable by default with 10% NULL values
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path data.ion \
@@ -288,7 +288,7 @@ partiql-beamline-cli gen data \
   --sample-count 500
 
 # Disable nullability entirely
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path data.ion \
@@ -297,7 +297,7 @@ partiql-beamline-cli gen data \
 </code></pre>
 <h3 id="controlling-missing-values"><a class="header" href="#controlling-missing-values">Controlling MISSING Values</a></h3>
 <pre><code class="language-bash"># Make all types optional with 5% MISSING values
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 200 \
   --start-auto \
   --script-path data.ion \
@@ -305,7 +305,7 @@ partiql-beamline-cli gen data \
   --sample-count 500
 
 # Disable optionality entirely
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 200 \
   --start-auto \
   --script-path data.ion \
@@ -314,7 +314,7 @@ partiql-beamline-cli gen data \
 </code></pre>
 <h3 id="inline-scripts"><a class="header" href="#inline-scripts">Inline Scripts</a></h3>
 <p>For small scripts, you can provide the Ion script content directly:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
   --seed 300 \
   --start-auto \
   --script 'rand_processes::{ test: rand_process::{ $arrival: HomogeneousPoisson:: { interarrival: seconds::1 }, $data: { id: UniformU8, value: UniformF64 } } }' \
@@ -324,7 +324,7 @@ partiql-beamline-cli gen data \
 <h2 id="reproducibility-examples"><a class="header" href="#reproducibility-examples">Reproducibility Examples</a></h2>
 <h3 id="exact-reproduction"><a class="header" href="#exact-reproduction">Exact Reproduction</a></h3>
 <pre><code class="language-bash"># First run - note the seed and start time
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed-auto \
   --start-auto \
   --script-path sensors.ion \
@@ -336,7 +336,7 @@ partiql-beamline-cli gen data \
 # [data follows...]
 
 # Reproduce exactly the same data
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12328924104731257599 \
   --start-iso "2024-01-20T20:05:41.000000000Z" \
   --script-path sensors.ion \
@@ -344,13 +344,13 @@ partiql-beamline-cli gen data \
 </code></pre>
 <h3 id="reproducible-with-different-start-times"><a class="header" href="#reproducible-with-different-start-times">Reproducible with Different Start Times</a></h3>
 <pre><code class="language-bash"># Same seed, different start time gives same data pattern at different times
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12345 \
   --start-iso "2023-01-01T00:00:00Z" \
   --script-path events.ion \
   --sample-count 5
 
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path events.ion \
@@ -359,7 +359,7 @@ partiql-beamline-cli gen data \
 <h2 id="output-format-details"><a class="header" href="#output-format-details">Output Format Details</a></h2>
 <h3 id="text-format-default"><a class="header" href="#text-format-default">Text Format (Default)</a></h3>
 <p>Human-readable format with timestamps and dataset names:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2
+<pre><code class="language-bash">$ beamline gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2
 Seed: 1234
 Start: 2019-08-01T00:00:01.000000000-07:00
 [2019-08-01 7:26:21.964 -07:00:00] : "sensors" { 'f': -2.5436390152455175, 'i8': 4, 'tick': 125532 }
@@ -367,7 +367,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 </code></pre>
 <h3 id="ion-pretty-format"><a class="header" href="#ion-pretty-format">Ion Pretty Format</a></h3>
 <p>Pretty-printed Ion with metadata:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2 --output-format ion-pretty
+<pre><code class="language-bash">$ beamline gen data --seed 1234 --start-auto --script-path sensors.ion --sample-count 2 --output-format ion-pretty
 {
   seed: 1234,
   start: "2019-08-01T00:00:01.000000000-07:00",
@@ -396,7 +396,7 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 <h2 id="static-data-generation"><a class="header" href="#static-data-generation">Static Data Generation</a></h2>
 <p>Beamline supports static data generation (data generated before simulation starts):</p>
 <pre><code class="language-bash"># Generate data with static customer table and dynamic orders
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1234 \
   --start-iso "2019-08-01T00:00:01-07:00" \
   --script-path orders.ion \
@@ -407,20 +407,20 @@ partiql-beamline-cli gen data \
 <h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
 <h3 id="common-error-scenarios"><a class="header" href="#common-error-scenarios">Common Error Scenarios</a></h3>
 <h4 id="missing-script-file"><a class="header" href="#missing-script-file">Missing Script File</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path nonexistent.ion
+<pre><code class="language-bash">$ beamline gen data --seed-auto --start-auto --script-path nonexistent.ion
 Error: Failed to read script file 'nonexistent.ion': No such file or directory (os error 2)
 </code></pre>
 <h4 id="invalid-ion-syntax"><a class="header" href="#invalid-ion-syntax">Invalid Ion Syntax</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path invalid.ion
+<pre><code class="language-bash">$ beamline gen data --seed-auto --start-auto --script-path invalid.ion
 Error: Failed to parse Ion script: Invalid Ion syntax at line 5, column 10
 </code></pre>
 <h4 id="missing-required-arguments"><a class="header" href="#missing-required-arguments">Missing Required Arguments</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data --script-path data.ion
+<pre><code class="language-bash">$ beamline gen data --script-path data.ion
 Error: One of --seed-auto or --seed is required
 Error: One of --start-auto, --start-epoch-ms, or --start-iso is required
 </code></pre>
 <h4 id="invalid-percentage-values"><a class="header" href="#invalid-percentage-values">Invalid Percentage Values</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path data.ion --pct-null 1.5
+<pre><code class="language-bash">$ beamline gen data --seed-auto --start-auto --script-path data.ion --pct-null 1.5
 Error: Percents must be between 0 and 1: `1.5`
 </code></pre>
 <h3 id="debugging-tips"><a class="header" href="#debugging-tips">Debugging Tips</a></h3>
@@ -443,7 +443,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # Generate different datasets
 echo "Generating user data..."
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $SEED \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path "$SCRIPT_PATH" \
@@ -452,7 +452,7 @@ partiql-beamline-cli gen data \
   --output-format ion-pretty &gt; "$OUTPUT_DIR/users.ion"
 
 echo "Generating transaction data..."
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $((SEED + 1)) \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path "$SCRIPT_PATH" \
@@ -464,7 +464,7 @@ echo "Data generation completed!"
 </code></pre>
 <h3 id="pipeline-processing"><a class="header" href="#pipeline-processing">Pipeline Processing</a></h3>
 <pre><code class="language-bash"># Generate and process data in pipeline
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path metrics.ion \
@@ -475,7 +475,7 @@ partiql-beamline-cli gen data \
   head -10
 
 # Generate multiple formats simultaneously
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path data.ion \
@@ -491,7 +491,7 @@ generate_test_data() {
   local sample_count=$2
   local script=$3
   
-  partiql-beamline-cli gen data \
+  beamline gen data \
     --seed "$seed" \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path "$script" \
@@ -524,27 +524,27 @@ generate_test_data 12346 50 "test_orders.ion" &gt; test_orders.ion
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <h3 id="1-use-specific-seeds-for-testing"><a class="header" href="#1-use-specific-seeds-for-testing">1. Use Specific Seeds for Testing</a></h3>
 <pre><code class="language-bash"># Good - reproducible
-partiql-beamline-cli gen data --seed 12345 --start-iso "2024-01-01T00:00:00Z" --script-path test.ion
+beamline gen data --seed 12345 --start-iso "2024-01-01T00:00:00Z" --script-path test.ion
 
 # Avoid - non-reproducible
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path test.ion
+beamline gen data --seed-auto --start-auto --script-path test.ion
 </code></pre>
 <h3 id="2-start-with-small-sample-counts"><a class="header" href="#2-start-with-small-sample-counts">2. Start with Small Sample Counts</a></h3>
 <pre><code class="language-bash"># Validate script first
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 5
+beamline gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 5
 
 # Scale up after validation
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 10000
+beamline gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 10000
 </code></pre>
 <h3 id="3-use-appropriate-output-formats"><a class="header" href="#3-use-appropriate-output-formats">3. Use Appropriate Output Formats</a></h3>
 <pre><code class="language-bash"># Human inspection
-partiql-beamline-cli gen data --script-path data.ion --output-format text --sample-count 10
+beamline gen data --script-path data.ion --output-format text --sample-count 10
 
 # Data processing
-partiql-beamline-cli gen data --script-path data.ion --output-format ion-binary --sample-count 100000
+beamline gen data --script-path data.ion --output-format ion-binary --sample-count 100000
 
 # Configuration files
-partiql-beamline-cli gen data --script-path data.ion --output-format ion-pretty --sample-count 1000
+beamline gen data --script-path data.ion --output-format ion-pretty --sample-count 1000
 </code></pre>
 <h3 id="4-document-your-seeds"><a class="header" href="#4-document-your-seeds">4. Document Your Seeds</a></h3>
 <pre><code class="language-bash"># Good practice - document seeds used
@@ -552,7 +552,7 @@ partiql-beamline-cli gen data --script-path data.ion --output-format ion-pretty 
 # Integration test data: seed 2024002  
 # Performance test data: seed 2024003
 
-partiql-beamline-cli gen data --seed 2024001 --start-auto --script-path users.ion
+beamline gen data --seed 2024001 --start-auto --script-path users.ion
 </code></pre>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
 <p>Now that you understand data generation commands, explore:</p>

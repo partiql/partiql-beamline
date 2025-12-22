@@ -403,7 +403,7 @@
 <h2 id="configuration-examples"><a class="header" href="#configuration-examples">Configuration Examples</a></h2>
 <h3 id="simple-configuration"><a class="header" href="#simple-configuration">Simple Configuration</a></h3>
 <p>For basic testing with readable queries:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path data.ion \
@@ -419,7 +419,7 @@
 </code></pre>
 <h3 id="moderate-configuration"><a class="header" href="#moderate-configuration">Moderate Configuration</a></h3>
 <p>For comprehensive testing with controlled complexity:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path data.ion \
@@ -441,7 +441,7 @@
 </code></pre>
 <h3 id="complex-configuration"><a class="header" href="#complex-configuration">Complex Configuration</a></h3>
 <p>For edge case testing with maximum complexity:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path nested_data.ion \
@@ -473,7 +473,7 @@
 <h3 id="testing-specific-partiql-features"><a class="header" href="#testing-specific-partiql-features">Testing Specific PartiQL Features</a></h3>
 <h4 id="test-wildcard-paths"><a class="header" href="#test-wildcard-paths">Test Wildcard Paths</a></h4>
 <pre><code class="language-bash"># Focus on [*] and .* path expressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 400 \
     --start-auto \
     --script-path array_data.ion \
@@ -489,7 +489,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h4 id="test-deep-nesting"><a class="header" href="#test-deep-nesting">Test Deep Nesting</a></h4>
 <pre><code class="language-bash"># Generate very deep path expressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 500 \
     --start-auto \
     --script-path deeply_nested.ion \
@@ -505,7 +505,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h4 id="test-null-handling"><a class="header" href="#test-null-handling">Test Null Handling</a></h4>
 <pre><code class="language-bash"># Focus on null and missing value predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 600 \
     --start-auto \
     --script-path nullable_schema.ion \
@@ -518,7 +518,7 @@ partiql-beamline-cli query basic \
 <h3 id="performance-testing-configurations"><a class="header" href="#performance-testing-configurations">Performance Testing Configurations</a></h3>
 <h4 id="lightweight-queries"><a class="header" href="#lightweight-queries">Lightweight Queries</a></h4>
 <pre><code class="language-bash"># Generate simple, fast-executing queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 700 \
     --start-auto \
     --script-path performance_data.ion \
@@ -532,7 +532,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h4 id="heavy-queries"><a class="header" href="#heavy-queries">Heavy Queries</a></h4>
 <pre><code class="language-bash"># Generate complex, resource-intensive queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 800 \
     --start-auto \
     --script-path large_data.ion \
@@ -606,7 +606,7 @@ partiql-beamline-cli query basic \
 <h3 id="targeted-testing"><a class="header" href="#targeted-testing">Targeted Testing</a></h3>
 <h4 id="test-specific-path-types"><a class="header" href="#test-specific-path-types">Test Specific Path Types</a></h4>
 <pre><code class="language-bash"># Test only wildcard expressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path array_data.ion \
     --sample-count 10 \
     rand-sfw \
@@ -617,7 +617,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h4 id="test-specific-predicates"><a class="header" href="#test-specific-predicates">Test Specific Predicates</a></h4>
 <pre><code class="language-bash"># Test only string operations
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path text_data.ion \
     --sample-count 10 \
     rand-select-all-fw \
@@ -631,7 +631,7 @@ SCRIPT="test_schema.ion"
 BASE_SEED=1000
 
 # Level 1: Simple queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $BASE_SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -641,7 +641,7 @@ partiql-beamline-cli query basic \
         --pred-eq &gt; level1.sql
 
 # Level 2: Add comparisons  
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -651,7 +651,7 @@ partiql-beamline-cli query basic \
         --pred-comparison &gt; level2.sql
 
 # Level 3: Add projections
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 2)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -662,7 +662,7 @@ partiql-beamline-cli query basic \
         --pred-all &gt; level3.sql
 
 # Level 4: Add exclusions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 3)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -693,7 +693,7 @@ echo "Generated graduated complexity test suite"
 </ul>
 <h3 id="performance-optimization"><a class="header" href="#performance-optimization">Performance Optimization</a></h3>
 <pre><code class="language-bash"># Optimized for speed
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path data.ion \
     --sample-count 100 \
     rand-select-all-fw \
@@ -704,7 +704,7 @@ partiql-beamline-cli query basic \
         --pred-comparison
 
 # Comprehensive but slower
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path data.ion \
     --sample-count 25 \
     rand-sefw \
@@ -732,7 +732,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h3 id="parameter-testing"><a class="header" href="#parameter-testing">Parameter Testing</a></h3>
 <pre><code class="language-bash"># Test parameter combinations before large generation
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path test.ion \
@@ -777,8 +777,8 @@ partiql-beamline-cli query basic \
 SIMPLE_CONFIG="--tbl-flt-rand-min 1 --tbl-flt-rand-max 2 --pred-comparison"
 MODERATE_CONFIG="--project-rand-min 2 --project-rand-max 4 --tbl-flt-rand-min 1 --tbl-flt-rand-max 3 --pred-all"
 
-partiql-beamline-cli query basic --script-path data.ion --sample-count 10 rand-select-all-fw $SIMPLE_CONFIG
-partiql-beamline-cli query basic --script-path data.ion --sample-count 10 rand-sfw $MODERATE_CONFIG
+beamline query basic --script-path data.ion --sample-count 10 rand-select-all-fw $SIMPLE_CONFIG
+beamline query basic --script-path data.ion --sample-count 10 rand-sfw $MODERATE_CONFIG
 </code></pre>
 <h2 id="reference-quick-guide"><a class="header" href="#reference-quick-guide">Reference Quick Guide</a></h2>
 <h3 id="most-common-configurations"><a class="header" href="#most-common-configurations">Most Common Configurations</a></h3>

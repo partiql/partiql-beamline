@@ -112,7 +112,7 @@ rand_processes::{
 ### Text Format Output
 
 ```bash
-$ partiql-beamline-cli gen data \
+$ beamline gen data \
     --seed 1000 \
     --start-auto \
     --script-path nullability_test.ion \
@@ -170,21 +170,21 @@ You can set global nullability and optionality defaults via CLI options:
 
 ```bash
 # Make all types nullable with 10% NULL values
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
   --pct-null 0.1
 
 # Make all types optional with 5% MISSING values  
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
   --pct-optional 0.05
 
 # Combine both
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
@@ -192,7 +192,7 @@ partiql-beamline-cli gen data \
   --pct-optional 0.05
 
 # Disable both globally
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
@@ -209,7 +209,7 @@ partiql-beamline-cli gen data \
 **Example:**
 ```bash
 # CLI sets 20% NULL globally
-partiql-beamline-cli gen data \
+beamline gen data \
   --pct-null 0.2 \
   --script-path mixed_config.ion
 ```
@@ -465,7 +465,7 @@ Nullability and optionality affect inferred schemas:
 ### Schema Inference Output
 
 ```bash
-$ partiql-beamline-cli infer-shape \
+$ beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path nullability_test.ion \
@@ -481,7 +481,7 @@ $ partiql-beamline-cli infer-shape \
 ### CLI Default Impact on Schema
 
 ```bash
-$ partiql-beamline-cli infer-shape \
+$ beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path simple_data.ion \
@@ -658,9 +658,9 @@ rand_processes::{
 
 ```bash
 # Generate datasets with different missingness for testing
-partiql-beamline-cli gen data --seed 1 --start-auto --script data.ion --pct-null 0.0 --sample-count 1000 > clean.ion
-partiql-beamline-cli gen data --seed 1 --start-auto --script data.ion --pct-null 0.1 --sample-count 1000 > noisy.ion  
-partiql-beamline-cli gen data --seed 1 --start-auto --script data.ion --pct-null 0.3 --sample-count 1000 > sparse.ion
+beamline gen data --seed 1 --start-auto --script data.ion --pct-null 0.0 --sample-count 1000 > clean.ion
+beamline gen data --seed 1 --start-auto --script data.ion --pct-null 0.1 --sample-count 1000 > noisy.ion  
+beamline gen data --seed 1 --start-auto --script data.ion --pct-null 0.3 --sample-count 1000 > sparse.ion
 ```
 
 ## Common Patterns
@@ -752,7 +752,7 @@ rand_processes::{
 **Check CLI defaults:**
 ```bash
 # Check if CLI is setting global defaults
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --default-nullable false
+beamline infer-shape --seed 1 --start-auto --script-path data.ion --default-nullable false
 ```
 
 ## Integration with Query Generation
@@ -761,7 +761,7 @@ NULL and MISSING values affect query generation:
 
 ```bash
 # Generate data with nullability
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path nullable_data.ion \
@@ -769,7 +769,7 @@ partiql-beamline-cli gen data \
   --output-format ion-pretty > test_data.ion
 
 # Generate queries that handle NULL/MISSING
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 2 \
   --start-auto \
   --script-path nullable_data.ion \

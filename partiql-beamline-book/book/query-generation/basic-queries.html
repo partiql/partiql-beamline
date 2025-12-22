@@ -205,7 +205,7 @@
 </code></pre>
 <p>This script creates transaction data with various field types that the query generator can reference.</p>
 <h3 id="basic-query-generation-command"><a class="header" href="#basic-query-generation-command">Basic Query Generation Command</a></h3>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -237,7 +237,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.price &lt; 15.495327785402
 <h2 id="different-predicate-types"><a class="header" href="#different-predicate-types">Different Predicate Types</a></h2>
 <h3 id="comparison-predicates"><a class="header" href="#comparison-predicates">Comparison Predicates</a></h3>
 <pre><code class="language-bash"># Less than predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -253,7 +253,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.marketplace_id &lt; 42)
 </code></pre>
 <h3 id="equality-predicates"><a class="header" href="#equality-predicates">Equality Predicates</a></h3>
 <pre><code class="language-bash"># Equality predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -269,7 +269,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.country_code = 'US')
 </code></pre>
 <h3 id="all-predicate-types"><a class="header" href="#all-predicate-types">All Predicate Types</a></h3>
 <pre><code class="language-bash"># Use all available predicates for comprehensive testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -301,7 +301,7 @@ SELECT * FROM test_data AS test_data WHERE (((test_data.transaction_id IS NULL)
 <h3 id="combining-predicates"><a class="header" href="#combining-predicates">Combining Predicates</a></h3>
 <p>Increase predicate count to create more complex WHERE clauses:</p>
 <pre><code class="language-bash"># Generate queries with 2-5 predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 400 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -402,7 +402,7 @@ SELECT * FROM nullable_test WHERE (nullable_test.required_field IS NOT NULL AND 
 </code></pre>
 <h3 id="focusing-on-nullmissing-tests"><a class="header" href="#focusing-on-nullmissing-tests">Focusing on Null/Missing Tests</a></h3>
 <pre><code class="language-bash"># Generate queries focused on null/missing testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 500 \
     --start-auto \
     --script-path nullable_data.ion \
@@ -415,7 +415,7 @@ partiql-beamline-cli query basic \
 <h2 id="progressive-query-complexity"><a class="header" href="#progressive-query-complexity">Progressive Query Complexity</a></h2>
 <h3 id="start-simple"><a class="header" href="#start-simple">Start Simple</a></h3>
 <pre><code class="language-bash"># Begin with single predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path data.ion \
@@ -427,7 +427,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h3 id="add-more-predicates"><a class="header" href="#add-more-predicates">Add More Predicates</a></h3>
 <pre><code class="language-bash"># Increase to 2-3 predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path data.ion \
@@ -439,7 +439,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h3 id="enable-all-predicates"><a class="header" href="#enable-all-predicates">Enable All Predicates</a></h3>
 <pre><code class="language-bash"># Use all available predicates for full complexity
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path data.ion \
@@ -452,7 +452,7 @@ partiql-beamline-cli query basic \
 <h2 id="real-examples-from-readme"><a class="header" href="#real-examples-from-readme">Real Examples from README</a></h2>
 <h3 id="single-predicate-queries"><a class="header" href="#single-predicate-queries">Single Predicate Queries</a></h3>
 <p>From the README example:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -473,7 +473,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.price &lt; 15.495327785402
 </code></pre>
 <h3 id="multiple-predicate-queries"><a class="header" href="#multiple-predicate-queries">Multiple Predicate Queries</a></h3>
 <p>From the README example with more complex predicates:</p>
-<pre><code class="language-bash">partiql-beamline-cli query basic \
+<pre><code class="language-bash">beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -522,7 +522,7 @@ WHERE (((((test_data.country_code &lt;&gt; 'Qua maxime ceterorum.') AND
 <h2 id="specific-predicate-types"><a class="header" href="#specific-predicate-types">Specific Predicate Types</a></h2>
 <h3 id="comparison-predicates-1"><a class="header" href="#comparison-predicates-1">Comparison Predicates</a></h3>
 <pre><code class="language-bash"># Only numeric comparisons
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path numeric_data.ion \
@@ -539,7 +539,7 @@ SELECT * FROM test_data WHERE (test_data.score &lt;&gt; 75.5)
 </code></pre>
 <h3 id="string-pattern-matching"><a class="header" href="#string-pattern-matching">String Pattern Matching</a></h3>
 <pre><code class="language-bash"># Focus on LIKE predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path text_data.ion \
@@ -555,7 +555,7 @@ SELECT * FROM test_data WHERE (test_data.country_code LIKE 'U_')
 </code></pre>
 <h3 id="set-membership"><a class="header" href="#set-membership">Set Membership</a></h3>
 <pre><code class="language-bash"># Use IN and NOT IN predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path categorical_data.ion \
@@ -579,7 +579,7 @@ SCRIPT="test_schema.ion"
 BASE_SEED=12345
 
 # Simple queries for basic functionality
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $BASE_SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -590,7 +590,7 @@ partiql-beamline-cli query basic \
         --pred-eq &gt; basic_equality.sql
 
 # Comparison queries for numeric testing  
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -601,7 +601,7 @@ partiql-beamline-cli query basic \
         --pred-comparison &gt; numeric_comparisons.sql
 
 # Complex queries for comprehensive testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 2)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -618,7 +618,7 @@ echo "- complex_queries.sql: $(wc -l &lt; complex_queries.sql) queries"
 </code></pre>
 <h3 id="regression-testing"><a class="header" href="#regression-testing">Regression Testing</a></h3>
 <pre><code class="language-bash"># Generate baseline queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 999 \
     --start-auto \
     --script-path stable_schema.ion \
@@ -629,7 +629,7 @@ partiql-beamline-cli query basic \
         --pred-all &gt; baseline_queries.sql
 
 # Later: regenerate with same seed to verify no regressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 999 \
     --start-auto \
     --script-path stable_schema.ion \
@@ -646,7 +646,7 @@ diff baseline_queries.sql regression_test_queries.sql
 <h3 id="data-validation-queries"><a class="header" href="#data-validation-queries">Data Validation Queries</a></h3>
 <p>Generate queries that validate data constraints:</p>
 <pre><code class="language-bash"># Focus on range and constraint validation
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 600 \
     --start-auto \
     --script-path validation_schema.ion \
@@ -662,7 +662,7 @@ SELECT * FROM test_data WHERE (test_data.email IS NOT NULL)
 <h3 id="performance-baseline-queries"><a class="header" href="#performance-baseline-queries">Performance Baseline Queries</a></h3>
 <p>Create simple queries for performance baseline:</p>
 <pre><code class="language-bash"># Simple queries for baseline performance measurement
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 700 \
     --start-auto \
     --script-path performance_data.ion \
@@ -681,7 +681,7 @@ SCRIPT="customer_transactions.ion"
 SEED=12345
 
 echo "Generating test data..."
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed $SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -689,7 +689,7 @@ partiql-beamline-cli gen data \
     --output-format ion-pretty &gt; test_data.ion
 
 echo "Generating basic queries..."
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -710,7 +710,7 @@ done
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <h3 id="1-start-with-simple-configurations"><a class="header" href="#1-start-with-simple-configurations">1. Start with Simple Configurations</a></h3>
 <pre><code class="language-bash"># Begin testing with minimal complexity
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path new_schema.ion \
@@ -732,7 +732,7 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h3 id="3-test-query-coverage"><a class="header" href="#3-test-query-coverage">3. Test Query Coverage</a></h3>
 <pre><code class="language-bash"># Generate enough queries to cover different data patterns
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path comprehensive_data.ion \
@@ -744,8 +744,8 @@ partiql-beamline-cli query basic \
 </code></pre>
 <h3 id="4-validate-against-real-data"><a class="header" href="#4-validate-against-real-data">4. Validate Against Real Data</a></h3>
 <pre><code class="language-bash"># Always test generated queries work with generated data
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path schema.ion --sample-count 100 &gt; data.ion
-partiql-beamline-cli query basic --seed 2 --start-auto --script-path schema.ion --sample-count 5 rand-select-all-fw --pred-all &gt; queries.sql
+beamline gen data --seed 1 --start-auto --script-path schema.ion --sample-count 100 &gt; data.ion
+beamline query basic --seed 2 --start-auto --script-path schema.ion --sample-count 5 rand-select-all-fw --pred-all &gt; queries.sql
 
 # Validate each query
 # for query in $(cat queries.sql); do

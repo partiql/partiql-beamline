@@ -329,8 +329,8 @@ Seeds control the random number generation:
 
 ```bash
 # Same seed = same data
-partiql-beamline-cli gen data --seed 42 --start-auto --script-path my-script.ion
-partiql-beamline-cli gen data --seed 42 --start-auto --script-path my-script.ion  # Identical output
+beamline gen data --seed 42 --start-auto --script-path my-script.ion
+beamline gen data --seed 42 --start-auto --script-path my-script.ion  # Identical output
 ```
 
 ### Timestamps
@@ -339,7 +339,7 @@ Control the simulation start time:
 
 ```bash
 # Same timestamp = same temporal patterns
-partiql-beamline-cli gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script-path my-script.ion
+beamline gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script-path my-script.ion
 ```
 
 ### Deterministic Behavior

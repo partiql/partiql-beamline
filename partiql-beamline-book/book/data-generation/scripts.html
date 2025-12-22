@@ -199,14 +199,14 @@
 <h3 id="script-validation"><a class="header" href="#script-validation">Script Validation</a></h3>
 <p>Before generating large datasets, validate your script:</p>
 <pre><code class="language-bash"># Quick validation with minimal generation
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
   --sample-count 1
 
 # Check inferred schema
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
@@ -587,16 +587,16 @@ partiql-beamline-cli infer-shape \
 echo 'rand_processes::{ test: rand_process::{ $arrival: HomogeneousPoisson::{ interarrival: seconds::1 }, $data: { id: UUID } } }' &gt; minimal.ion
 
 # 2. Validate basic structure
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path minimal.ion --sample-count 3
+beamline gen data --seed 1 --start-auto --script-path minimal.ion --sample-count 3
 
 # 3. Add complexity incrementally
 # ... edit script to add fields, variables, etc.
 
 # 4. Test each addition
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path enhanced.ion --sample-count 5
+beamline gen data --seed 1 --start-auto --script-path enhanced.ion --sample-count 5
 
 # 5. Validate schema
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path enhanced.ion --output-format basic-ddl
+beamline infer-shape --seed 1 --start-auto --script-path enhanced.ion --output-format basic-ddl
 </code></pre>
 <h3 id="script-debugging-techniques"><a class="header" href="#script-debugging-techniques">Script Debugging Techniques</a></h3>
 <h4 id="add-debug-fields"><a class="header" href="#add-debug-fields">Add Debug Fields</a></h4>
@@ -634,7 +634,7 @@ partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path enhanced.io
 <h4 id="test-script-fragments"><a class="header" href="#test-script-fragments">Test Script Fragments</a></h4>
 <pre><code class="language-bash"># Test individual components
 echo 'rand_processes::{ test_generators: rand_process::{ $arrival: HomogeneousPoisson::{ interarrival: seconds::1 }, $data: { test_field: NormalF64::{ mean: 0.0, std_dev: 1.0 } } } }' | \
-partiql-beamline-cli gen data --seed 1 --start-auto --script - --sample-count 5
+beamline gen data --seed 1 --start-auto --script - --sample-count 5
 </code></pre>
 <h2 id="performance-optimization-in-scripts"><a class="header" href="#performance-optimization-in-scripts">Performance Optimization in Scripts</a></h2>
 <h3 id="generator-efficiency"><a class="header" href="#generator-efficiency">Generator Efficiency</a></h3>
@@ -899,12 +899,12 @@ rand_processes::{
 </code></pre>
 <h3 id="migration-between-script-versions"><a class="header" href="#migration-between-script-versions">Migration Between Script Versions</a></h3>
 <pre><code class="language-bash"># Test new script version against old version
-partiql-beamline-cli gen data --seed 1000 --start-auto --script-path data_v3.ion --sample-count 100 &gt; new_output.ion
-partiql-beamline-cli gen data --seed 1000 --start-auto --script-path data_v2.ion --sample-count 100 &gt; old_output.ion
+beamline gen data --seed 1000 --start-auto --script-path data_v3.ion --sample-count 100 &gt; new_output.ion
+beamline gen data --seed 1000 --start-auto --script-path data_v2.ion --sample-count 100 &gt; old_output.ion
 
 # Compare schemas
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data_v3.ion --output-format basic-ddl &gt; new_schema.sql
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data_v2.ion --output-format basic-ddl &gt; old_schema.sql
+beamline infer-shape --seed 1 --start-auto --script-path data_v3.ion --output-format basic-ddl &gt; new_schema.sql
+beamline infer-shape --seed 1 --start-auto --script-path data_v2.ion --output-format basic-ddl &gt; old_schema.sql
 diff old_schema.sql new_schema.sql
 </code></pre>
 <h2 id="real-world-script-examples"><a class="header" href="#real-world-script-examples">Real-World Script Examples</a></h2>

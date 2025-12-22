@@ -17,7 +17,7 @@ cd partiql-beamline
 cargo build --release
 
 # The CLI binary will be available at:
-./target/release/partiql-beamline-cli
+./target/release/beamline
 ```
 
 ### Verification
@@ -26,10 +26,10 @@ After building, verify the CLI is working:
 
 ```bash
 # Check version
-./target/release/partiql-beamline-cli --version
+./target/release/beamline --version
 
 # View help
-./target/release/partiql-beamline-cli --help
+./target/release/beamline --help
 ```
 
 ## Command Structure
@@ -37,7 +37,7 @@ After building, verify the CLI is working:
 All Beamline CLI commands follow this structure:
 
 ```bash
-partiql-beamline-cli <COMMAND> [SUBCOMMAND] [OPTIONS]
+beamline <COMMAND> [SUBCOMMAND] [OPTIONS]
 ```
 
 ## Available Commands
@@ -54,7 +54,7 @@ Generate synthetic data and create databases.
 
 **Example:**
 ```bash
-partiql-beamline-cli gen data --seed-auto --start-auto --sample-count 100 --script-path my_script.ion
+beamline gen data --seed-auto --start-auto --sample-count 100 --script-path my_script.ion
 ```
 
 ### 2. `infer-shape` - Schema Inference
@@ -63,7 +63,7 @@ Infer data schemas from Ion scripts without generating full datasets.
 
 **Example:**
 ```bash
-partiql-beamline-cli infer-shape --seed-auto --start-auto --script-path my_script.ion --output-format basic-ddl
+beamline infer-shape --seed-auto --start-auto --script-path my_script.ion --output-format basic-ddl
 ```
 
 ### 3. `query` - Query Generation
@@ -75,7 +75,7 @@ Generate PartiQL queries that match your data structures.
 
 **Example:**
 ```bash
-partiql-beamline-cli query basic --seed 1234 --start-auto --script-path data_script.ion --sample-count 5 rand-select-all-fw --tbl-flt-rand-min 1 --tbl-flt-rand-max 1 --pred-lt
+beamline query basic --seed 1234 --start-auto --script-path data_script.ion --sample-count 5 rand-select-all-fw --tbl-flt-rand-min 1 --tbl-flt-rand-max 1 --pred-lt
 ```
 
 ### 4. `help` - Help Information
@@ -143,7 +143,7 @@ For `gen data`, specify output format with `--output-format`:
 
 **Example:**
 ```bash
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path data.ion --output-format ion-pretty
+beamline gen data --seed-auto --start-auto --script-path data.ion --output-format ion-pretty
 ```
 
 ### Shape Inference Formats
@@ -161,14 +161,14 @@ For `infer-shape`, specify format with `--output-format`:
 ### Generate Data
 ```bash
 # Simple data generation
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed-auto \
   --start-auto \
   --sample-count 1000 \
   --script-path sensors.ion
 
 # Reproducible generation with specific seed
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --sample-count 500 \
@@ -180,7 +180,7 @@ partiql-beamline-cli gen data \
 Generate data for specific datasets only:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path client_service.ion \
@@ -192,14 +192,14 @@ partiql-beamline-cli gen data \
 ### Infer Schema
 ```bash
 # Get SQL DDL schema
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed-auto \
   --start-auto \
   --script-path my_script.ion \
   --output-format basic-ddl
 
 # Get detailed shape information  
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1234 \
   --start-auto \
   --script-path complex_data.ion \
@@ -209,14 +209,14 @@ partiql-beamline-cli infer-shape \
 ### Create Database
 ```bash
 # Create BeamlineLite database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed-auto \
   --start-auto \
   --script-path database_script.ion \
   --sample-count 10000
 
 # Custom catalog location
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 2024 \
   --start-auto \
   --script-path data.ion \
@@ -228,7 +228,7 @@ partiql-beamline-cli gen db beamline-lite \
 ### Generate Queries
 ```bash
 # Simple query generation
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 100 \
   --start-auto \
   --script-path transactions.ion \
@@ -246,7 +246,7 @@ Control NULL and MISSING value generation:
 
 ```bash
 # Make all types nullable with 10% NULL values
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
@@ -254,7 +254,7 @@ partiql-beamline-cli gen data \
   --sample-count 1000
 
 # Make types optional with 5% MISSING values
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
@@ -262,7 +262,7 @@ partiql-beamline-cli gen data \
   --sample-count 1000
 
 # Disable nullability and optionality
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path data.ion \
@@ -277,19 +277,19 @@ partiql-beamline-cli gen data \
 
 #### Script Not Found
 ```bash
-$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path missing.ion
+$ beamline gen data --seed-auto --start-auto --script-path missing.ion
 Error: Unable to read script file 'missing.ion': No such file or directory
 ```
 
 #### Invalid Ion Script
 ```bash
-$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path invalid.ion
+$ beamline gen data --seed-auto --start-auto --script-path invalid.ion
 Error: Failed to parse Ion script: Invalid syntax at line 5
 ```
 
 #### Invalid Seed Value
 ```bash
-$ partiql-beamline-cli gen data --seed invalid --start-auto --script-path data.ion
+$ beamline gen data --seed invalid --start-auto --script-path data.ion
 Error: Invalid value 'invalid' for '--seed <SEED>': invalid digit found in string
 ```
 
@@ -298,7 +298,7 @@ Error: Invalid value 'invalid' for '--seed <SEED>': invalid digit found in strin
 For troubleshooting, examine the generated seed and start time:
 
 ```bash
-$ partiql-beamline-cli gen data --seed-auto --start-auto --script-path sensors.ion --sample-count 2
+$ beamline gen data --seed-auto --start-auto --script-path sensors.ion --sample-count 2
 Seed: 12328924104731257599
 Start: 2024-01-20T20:05:41.000000000Z
 [2024-01-20 20:07:46.532 +00:00:00] : "sensors" { 'f': -2.5436390152455175, 'i8': 4, 'tick': 125532 }
@@ -319,7 +319,7 @@ SEED=12345
 START_TIME="2024-01-01T00:00:00Z"
 
 # Generate user data
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $SEED \
   --start-iso $START_TIME \
   --script-path users.ion \
@@ -327,7 +327,7 @@ partiql-beamline-cli gen data \
   --output-format ion-pretty > users.ion
 
 # Generate transaction data
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $((SEED + 1)) \
   --start-iso $START_TIME \
   --script-path transactions.ion \
@@ -341,7 +341,7 @@ echo "Data generation completed!"
 
 ```bash
 # Generate data and pipe to other tools
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path events.ion \
@@ -350,7 +350,7 @@ partiql-beamline-cli gen data \
   head -20
 
 # Combine with analysis tools
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path metrics.ion \
@@ -366,40 +366,40 @@ partiql-beamline-cli gen data \
 
 ```bash
 # Good - explicit seed for test scenarios
-partiql-beamline-cli gen data --seed 12345 --start-iso "2024-01-01T00:00:00Z" --script-path test.ion
+beamline gen data --seed 12345 --start-iso "2024-01-01T00:00:00Z" --script-path test.ion
 
 # Avoid - auto seed makes reproduction difficult
-partiql-beamline-cli gen data --seed-auto --start-auto --script-path test.ion
+beamline gen data --seed-auto --start-auto --script-path test.ion
 ```
 
 ### 2. Start Small, Scale Up
 
 ```bash
 # Test with small sample first
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 10
+beamline gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 10
 
 # Scale up after validation
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 100000
+beamline gen data --seed 1 --start-auto --script-path new_script.ion --sample-count 100000
 ```
 
 ### 3. Use Appropriate Output Formats
 
 ```bash
 # Ion formats for data processing
-partiql-beamline-cli gen data --script-path data.ion --output-format ion-binary
+beamline gen data --script-path data.ion --output-format ion-binary
 
 # Text format for debugging
-partiql-beamline-cli gen data --script-path data.ion --output-format text --sample-count 5
+beamline gen data --script-path data.ion --output-format text --sample-count 5
 ```
 
 ### 4. Validate Schemas Before Large Generation
 
 ```bash
 # Check schema first
-partiql-beamline-cli infer-shape --seed-auto --start-auto --script-path data.ion --output-format basic-ddl
+beamline infer-shape --seed-auto --start-auto --script-path data.ion --output-format basic-ddl
 
 # Then generate data
-partiql-beamline-cli gen data --seed 42 --start-auto --script-path data.ion --sample-count 10000
+beamline gen data --seed 42 --start-auto --script-path data.ion --sample-count 10000
 ```
 
 ## Next Steps

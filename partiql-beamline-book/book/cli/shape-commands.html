@@ -182,9 +182,9 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="shape-commands"><a class="header" href="#shape-commands">Shape Commands</a></h1>
-<p>The <code>partiql-beamline-cli infer-shape</code> command analyzes Ion scripts to infer the data schemas without generating full datasets. This is useful for understanding data structures, creating database schemas, and validating script configurations.</p>
+<p>The <code>beamline infer-shape</code> command analyzes Ion scripts to infer the data schemas without generating full datasets. This is useful for understanding data structures, creating database schemas, and validating script configurations.</p>
 <h2 id="command-syntax"><a class="header" href="#command-syntax">Command Syntax</a></h2>
-<pre><code class="language-bash">partiql-beamline-cli infer-shape [OPTIONS]
+<pre><code class="language-bash">beamline infer-shape [OPTIONS]
 </code></pre>
 <h2 id="required-options"><a class="header" href="#required-options">Required Options</a></h2>
 <p>Shape inference uses the same core configuration as data generation:</p>
@@ -220,7 +220,7 @@
 <h2 id="output-formats"><a class="header" href="#output-formats">Output Formats</a></h2>
 <h3 id="text-format-default"><a class="header" href="#text-format-default">Text Format (Default)</a></h3>
 <p>Provides detailed type information in Rust debug format:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli infer-shape --seed-auto --start-auto --script-path sensors.ion
+<pre><code class="language-bash">$ beamline infer-shape --seed-auto --start-auto --script-path sensors.ion
 Seed: 17685918364143248531
 Start: 2022-12-12T19:52:29.000000000Z
 {
@@ -270,7 +270,7 @@ Start: 2022-12-12T19:52:29.000000000Z
 </ul>
 <h3 id="basic-ddl-format"><a class="header" href="#basic-ddl-format">Basic DDL Format</a></h3>
 <p>Generates SQL DDL statements for database schema creation:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli infer-shape \
+<pre><code class="language-bash">$ beamline infer-shape \
     --seed 7844265201457918498 \
     --start-auto \
     --script-path sensors-nested.ion \
@@ -295,7 +295,7 @@ Start: 2022-12-12T19:52:29.000000000Z
 </ul>
 <h3 id="beamline-json-format"><a class="header" href="#beamline-json-format">Beamline JSON Format</a></h3>
 <p>Structured JSON format used by PartiQL testing tools:</p>
-<pre><code class="language-bash">$ partiql-beamline-cli infer-shape \
+<pre><code class="language-bash">$ beamline infer-shape \
     --seed-auto \
     --start-auto \
     --script-path sensors.ion \
@@ -349,13 +349,13 @@ Start: 2022-12-12T19:52:29.000000000Z
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <h3 id="basic-shape-inference"><a class="header" href="#basic-shape-inference">Basic Shape Inference</a></h3>
 <pre><code class="language-bash"># Get basic shape information
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed-auto \
   --start-auto \
   --script-path my_data.ion
 
 # Get reproducible shape with specific seed
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 12345 \
   --start-auto \
   --script-path my_data.ion \
@@ -363,7 +363,7 @@ partiql-beamline-cli infer-shape \
 </code></pre>
 <h3 id="database-schema-generation"><a class="header" href="#database-schema-generation">Database Schema Generation</a></h3>
 <pre><code class="language-bash"># Generate SQL DDL for database creation
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 100 \
   --start-auto \
   --script-path ecommerce.ion \
@@ -374,7 +374,7 @@ psql -d mydb -f schema.sql
 </code></pre>
 <h3 id="multiple-dataset-schemas"><a class="header" href="#multiple-dataset-schemas">Multiple Dataset Schemas</a></h3>
 <pre><code class="language-bash"># Infer shapes for complex multi-dataset scripts
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 42 \
   --start-auto \
   --script-path client-service.ion \
@@ -405,7 +405,7 @@ partiql-beamline-cli infer-shape \
 <h3 id="schema-with-nullability-and-optionality"><a class="header" href="#schema-with-nullability-and-optionality">Schema with Nullability and Optionality</a></h3>
 <p>Configure NULL and MISSING value behavior in schema:</p>
 <pre><code class="language-bash"># Schema with all types nullable and optional
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path data.ion \
@@ -421,27 +421,27 @@ partiql-beamline-cli infer-shape \
 <h3 id="schema-validation-workflow"><a class="header" href="#schema-validation-workflow">Schema Validation Workflow</a></h3>
 <p>Use shape inference to validate scripts before large data generation:</p>
 <pre><code class="language-bash"># 1. Validate script syntax and structure
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed-auto \
   --start-auto \
   --script-path new_script.ion
 
 # 2. Generate SQL schema
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
   --output-format basic-ddl &gt; schema.sql
 
 # 3. Generate small sample to verify
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
   --sample-count 5
 
 # 4. Generate full dataset
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path new_script.ion \
@@ -464,14 +464,14 @@ mkdir -p "$OUTPUT_DIR"
 
 # Generate DDL schema
 echo "Generating database schema for $SCRIPT..."
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path "$SCRIPT" \
   --output-format basic-ddl &gt; "$OUTPUT_DIR/$(basename "$SCRIPT" .ion).sql"
 
 # Generate Beamline JSON for testing
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path "$SCRIPT" \
@@ -491,7 +491,7 @@ for script in scripts/*.ion; do
   echo "Checking $script..."
   
   # Validate script can generate valid schema
-  if ! partiql-beamline-cli infer-shape \
+  if ! beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path "$script" \
@@ -513,7 +513,7 @@ for script in data_scripts/*.ion; do
   echo "## $name Dataset" &gt;&gt; SCHEMAS.md
   echo '```sql' &gt;&gt; SCHEMAS.md
   
-  partiql-beamline-cli infer-shape \
+  beamline infer-shape \
     --seed 1 \
     --start-auto \
     --script-path "$script" \
@@ -526,16 +526,16 @@ done
 <h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
 <h3 id="common-errors"><a class="header" href="#common-errors">Common Errors</a></h3>
 <h4 id="script-syntax-errors"><a class="header" href="#script-syntax-errors">Script Syntax Errors</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli infer-shape --seed-auto --start-auto --script-path invalid.ion
+<pre><code class="language-bash">$ beamline infer-shape --seed-auto --start-auto --script-path invalid.ion
 Error: Failed to parse Ion script: Invalid Ion syntax at line 5, column 10
 </code></pre>
 <h4 id="missing-required-options"><a class="header" href="#missing-required-options">Missing Required Options</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli infer-shape --script-path data.ion
+<pre><code class="language-bash">$ beamline infer-shape --script-path data.ion
 Error: One of --seed-auto or --seed is required
 Error: One of --start-auto, --start-epoch-ms, or --start-iso is required
 </code></pre>
 <h4 id="invalid-output-format"><a class="header" href="#invalid-output-format">Invalid Output Format</a></h4>
-<pre><code class="language-bash">$ partiql-beamline-cli infer-shape --seed-auto --start-auto --script-path data.ion --output-format invalid
+<pre><code class="language-bash">$ beamline infer-shape --seed-auto --start-auto --script-path data.ion --output-format invalid
 Error: 'invalid' isn't a valid value for '--output-format &lt;OUTPUT_FORMAT&gt;'
 </code></pre>
 <h2 id="performance-considerations"><a class="header" href="#performance-considerations">Performance Considerations</a></h2>
@@ -555,21 +555,21 @@ Error: 'invalid' isn't a valid value for '--output-format &lt;OUTPUT_FORMAT&gt;'
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <h3 id="1-validate-scripts-early"><a class="header" href="#1-validate-scripts-early">1. Validate Scripts Early</a></h3>
 <pre><code class="language-bash"># Always infer shape before generating large datasets
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path new_script.ion
+beamline infer-shape --seed 1 --start-auto --script-path new_script.ion
 </code></pre>
 <h3 id="2-use-appropriate-output-formats"><a class="header" href="#2-use-appropriate-output-formats">2. Use Appropriate Output Formats</a></h3>
 <pre><code class="language-bash"># DDL for database work
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --output-format basic-ddl
+beamline infer-shape --seed 1 --start-auto --script-path data.ion --output-format basic-ddl
 
 # Text for debugging
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --output-format text
+beamline infer-shape --seed 1 --start-auto --script-path data.ion --output-format text
 
 # JSON for automation
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --output-format beamline-json
+beamline infer-shape --seed 1 --start-auto --script-path data.ion --output-format beamline-json
 </code></pre>
 <h3 id="3-document-your-schemas"><a class="header" href="#3-document-your-schemas">3. Document Your Schemas</a></h3>
 <p>Save schema outputs for reference and version control:</p>
-<pre><code class="language-bash">partiql-beamline-cli infer-shape \
+<pre><code class="language-bash">beamline infer-shape \
   --seed 1 \
   --start-auto \
   --script-path production_data.ion \
@@ -578,7 +578,7 @@ partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --
 <h3 id="4-use-consistent-seeds"><a class="header" href="#4-use-consistent-seeds">4. Use Consistent Seeds</a></h3>
 <p>For reproducible schema documentation:</p>
 <pre><code class="language-bash"># Always use seed 1 for schema documentation
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path data.ion --output-format basic-ddl
+beamline infer-shape --seed 1 --start-auto --script-path data.ion --output-format basic-ddl
 </code></pre>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
 <ul>

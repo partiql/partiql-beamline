@@ -1,11 +1,11 @@
 # Database Commands
 
-The `partiql-beamline-cli gen db beamline-lite` command creates complete BeamlineLite databases containing both synthetic data and inferred schemas. This provides a complete local database for testing and development.
+The `beamline gen db beamline-lite` command creates complete BeamlineLite databases containing both synthetic data and inferred schemas. This provides a complete local database for testing and development.
 
 ## Command Syntax
 
 ```bash
-partiql-beamline-cli gen db beamline-lite [OPTIONS]
+beamline gen db beamline-lite [OPTIONS]
 ```
 
 ## Required Options
@@ -77,7 +77,7 @@ beamline-catalog/
 
 After running:
 ```bash
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed-auto \
   --start-auto \
   --script-path client-service.ion \
@@ -179,7 +179,7 @@ $ cat beamline-catalog/service.shape.sql
 
 ```bash
 # Create database with default settings
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed-auto \
   --start-auto \
   --script-path my_data.ion \
@@ -192,7 +192,7 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Create database in custom location
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path production_sim.ion \
@@ -207,7 +207,7 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Create reproducible test database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 2024 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path test_suite.ion \
@@ -224,7 +224,7 @@ partiql-beamline-cli gen db beamline-lite \
 The CLI protects existing catalogs by default:
 
 ```bash
-$ partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path data.ion
+$ beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion
 creating directory ./beamline-catalog/ failed with the following error:
 File exists (os error 17)
 ```
@@ -232,7 +232,7 @@ File exists (os error 17)
 Use `--force` to overwrite with automatic backup:
 
 ```bash
-$ partiql-beamline-cli gen db beamline-lite \
+$ beamline gen db beamline-lite \
     --seed-auto \
     --start-auto \
     --script-path data.ion \
@@ -295,7 +295,7 @@ echo "Creating test database..."
 rm -rf test-database/
 
 # Generate test database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $TEST_SEED \
   --start-iso $TEST_START \
   --script-path test_data_spec.ion \
@@ -320,7 +320,7 @@ SCRIPT="simulation.ion"
 BASE_SEED=2024
 
 # Development environment
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $BASE_SEED \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path $SCRIPT \
@@ -329,7 +329,7 @@ partiql-beamline-cli gen db beamline-lite \
   --catalog_path ./environments/
 
 # Staging environment  
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $((BASE_SEED + 1)) \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path $SCRIPT \
@@ -338,7 +338,7 @@ partiql-beamline-cli gen db beamline-lite \
   --catalog_path ./environments/
 
 # Production-like environment
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed $((BASE_SEED + 2)) \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path $SCRIPT \
@@ -357,7 +357,7 @@ OLD_SCRIPT="data_v1.ion"
 NEW_SCRIPT="data_v2.ion"
 
 # Generate database with old schema
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 100 \
   --start-auto \
   --script-path $OLD_SCRIPT \
@@ -365,7 +365,7 @@ partiql-beamline-cli gen db beamline-lite \
   --sample-count 1000
 
 # Generate database with new schema
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 100 \
   --start-auto \
   --script-path $NEW_SCRIPT \
@@ -388,14 +388,14 @@ Database creation involves:
 
 ```bash
 # For large databases, monitor progress
-time partiql-beamline-cli gen db beamline-lite \
+time beamline gen db beamline-lite \
   --seed 1 \
   --start-auto \
   --script-path large_sim.ion \
   --sample-count 1000000
 
 # Use faster storage for temporary operations
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 1 \
   --start-auto \
   --script-path data.ion \
@@ -408,13 +408,13 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Good - descriptive names
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path user_analytics.ion \
   --catalog_name user-analytics-2024 \
   --catalog_path ./databases/
 
 # Avoid - generic names
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path data.ion \
   --catalog_name db
 ```
@@ -423,7 +423,7 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Create documentation alongside database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path simulation.ion \
@@ -458,7 +458,7 @@ ls -la beamline-catalog*.bkp
 
 # Manual backup before --force if desired
 cp -r beamline-catalog manual-backup-$(date +%Y%m%d)
-partiql-beamline-cli gen db beamline-lite --script-path updated.ion --force
+beamline gen db beamline-lite --script-path updated.ion --force
 ```
 
 ## Use Cases
@@ -467,7 +467,7 @@ partiql-beamline-cli gen db beamline-lite --script-path updated.ion --force
 
 ```bash
 # Create local database for development
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 1000 \
   --start-auto \
   --script-path dev_data.ion \
@@ -479,7 +479,7 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Create comprehensive test database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 2024001 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path comprehensive_test.ion \
@@ -493,7 +493,7 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Create large database for performance testing
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 999999 \
   --start-auto \
   --script-path performance_test.ion \
@@ -550,17 +550,17 @@ done
 
 #### Catalog Directory Exists
 ```bash
-$ partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path data.ion
+$ beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion
 creating directory ./beamline-catalog/ failed with the following error:
 File exists (os error 17)
 
 # Solution: Use --force or different catalog name
-partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path data.ion --force
+beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion --force
 ```
 
 #### Script Parse Errors
 ```bash
-$ partiql-beamline-cli gen db beamline-lite --seed-auto --start-auto --script-path invalid.ion
+$ beamline gen db beamline-lite --seed-auto --start-auto --script-path invalid.ion
 Error: Failed to parse Ion script: Invalid Ion syntax at line 8
 ```
 
@@ -568,7 +568,7 @@ Error: Failed to parse Ion script: Invalid Ion syntax at line 8
 ```bash
 # Check available space before large database creation
 df -h .
-partiql-beamline-cli gen db beamline-lite --script-path huge_data.ion --sample-count 10000000
+beamline gen db beamline-lite --script-path huge_data.ion --sample-count 10000000
 ```
 
 ## Best Practices
@@ -577,7 +577,7 @@ partiql-beamline-cli gen db beamline-lite --script-path huge_data.ion --sample-c
 
 ```bash
 # Estimate database size with small sample first
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 1 \
   --start-auto \
   --script-path data.ion \
@@ -593,7 +593,7 @@ du -sh size-test/
 
 ```bash
 # Good naming convention
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --script-path ecommerce_v2.ion \
   --catalog_name ecommerce-v2-20241201 \
   --catalog_path ./databases/
@@ -605,7 +605,7 @@ partiql-beamline-cli gen db beamline-lite \
 
 ```bash
 # Create database with documentation
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path analytics.ion \

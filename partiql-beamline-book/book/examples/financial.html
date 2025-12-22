@@ -258,7 +258,7 @@
 }
 </code></pre>
 <p><strong>Test basic banking:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 100 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 50 \
@@ -321,7 +321,7 @@
 }
 </code></pre>
 <p><strong>Test customer profiles:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 200 \
     --start-auto \
     --sample-count 25 \
@@ -476,7 +476,7 @@
 }
 </code></pre>
 <p><strong>Test basic financial system:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 300 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 40 \
@@ -583,7 +583,7 @@
 }
 </code></pre>
 <p><strong>Generate trading data:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 400 \
     --start-auto \
     --sample-count 100 \
@@ -713,7 +713,7 @@
 }
 </code></pre>
 <p><strong>Generate fraud detection data:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 500 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 75 \
@@ -816,7 +816,7 @@
 }
 </code></pre>
 <p><strong>Generate credit and lending data:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 600 \
     --start-auto \
     --sample-count 60 \
@@ -946,7 +946,7 @@
 <h3 id="full-banking-system"><a class="header" href="#full-banking-system">Full Banking System</a></h3>
 <p>Create <code>complete-banking.ion</code> combining all components:</p>
 <pre><code class="language-bash"># Generate complete financial database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
     --seed 1000 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path fraud-detection.ion \
@@ -965,7 +965,7 @@ cat financial-database/financial-system-db/suspicious_transactions.shape.sql
 <p>Generate queries for financial analysis and regulatory reporting.</p>
 <h3 id="risk-and-compliance-queries"><a class="header" href="#risk-and-compliance-queries">Risk and Compliance Queries</a></h3>
 <pre><code class="language-bash"># Generate regulatory compliance queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1100 \
     --start-auto \
     --script-path fraud-detection.ion \
@@ -1000,7 +1000,7 @@ WHERE (cr.regulatory.priority = 'immediate'
 </code></pre>
 <h3 id="investment-analysis-queries"><a class="header" href="#investment-analysis-queries">Investment Analysis Queries</a></h3>
 <pre><code class="language-bash"># Generate portfolio analysis queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1200 \
     --start-auto \
     --script-path investment-portfolios.ion \
@@ -1019,7 +1019,7 @@ partiql-beamline-cli query basic \
 <h2 id="part-11-schema-analysis"><a class="header" href="#part-11-schema-analysis">Part 11: Schema Analysis</a></h2>
 <p>Examine the financial data schemas:</p>
 <pre><code class="language-bash"># Analyze financial transaction schema
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 500 \
     --start-auto \
     --script-path fraud-detection.ion \
@@ -1107,7 +1107,7 @@ secondary_phone: Regex::{ pattern: "[0-9]{10}", nullable: 0.15, optional: 0.3 },
 <h2 id="database-generation"><a class="header" href="#database-generation">Database Generation</a></h2>
 <p>Create a complete financial analytics database:</p>
 <pre><code class="language-bash"># Generate comprehensive financial database with all datasets
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
     --seed 2000 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path fraud-detection.ion \

@@ -233,7 +233,7 @@ cd partiql-beamline
 </li>
 <li>
 <p><strong>Verify the Installation</strong></p>
-<pre><code class="language-bash">./target/release/partiql-beamline-cli --version
+<pre><code class="language-bash">./target/release/beamline --version
 </code></pre>
 <p>You should see version information for PartiQL Beamline.</p>
 </li>
@@ -242,10 +242,10 @@ cd partiql-beamline
 <p>For easier access, you can add the binary to your PATH or create a symlink:</p>
 <p><strong>On macOS/Linux:</strong></p>
 <pre><code class="language-bash"># Option 1: Copy to a directory in your PATH
-sudo cp target/release/partiql-beamline-cli /usr/local/bin/
+sudo cp target/release/beamline /usr/local/bin/
 
 # Option 2: Create a symlink
-ln -s $(pwd)/target/release/partiql-beamline-cli ~/.local/bin/partiql-beamline-cli
+ln -s $(pwd)/target/release/beamline ~/.local/bin/beamline
 
 # Option 3: Add to your shell profile
 echo 'export PATH="'$(pwd)'/target/release:$PATH"' &gt;&gt; ~/.bashrc
@@ -260,20 +260,20 @@ source ~/.bashrc
 <h3 id="method-2-using-cargo-install-not-available-yet"><a class="header" href="#method-2-using-cargo-install-not-available-yet">Method 2: Using Cargo Install (Not available yet)</a></h3>
 <p>Once PartiQL Beamline is published to crates.io, you’ll be able to install it directly:</p>
 <pre><code class="language-bash"># This will be available in the future
-cargo install partiql-beamline-cli
+cargo install beamline
 </code></pre>
 <h2 id="verifying-your-installation"><a class="header" href="#verifying-your-installation">Verifying Your Installation</a></h2>
 <p>Let’s verify that PartiQL Beamline is installed correctly by running a few basic commands:</p>
 <h3 id="1-check-version"><a class="header" href="#1-check-version">1. Check Version</a></h3>
-<pre><code class="language-bash">partiql-beamline-cli --version
+<pre><code class="language-bash">beamline --version
 </code></pre>
 <h3 id="2-view-help"><a class="header" href="#2-view-help">2. View Help</a></h3>
-<pre><code class="language-bash">partiql-beamline-cli --help
+<pre><code class="language-bash">beamline --help
 </code></pre>
 <p>You should see output similar to:</p>
 <pre><code>PartiQL Beamline CLI
 
-Usage: partiql-beamline-cli &lt;COMMAND&gt;
+Usage: beamline &lt;COMMAND&gt;
 
 Commands:
   gen          Run the generator
@@ -286,7 +286,7 @@ Options:
 </code></pre>
 <h3 id="3-test-data-generation"><a class="header" href="#3-test-data-generation">3. Test Data Generation</a></h3>
 <p>Let’s run a simple test to ensure data generation works:</p>
-<pre><code class="language-bash">partiql-beamline-cli gen data --help
+<pre><code class="language-bash">beamline gen data --help
 </code></pre>
 <p>This should display the help for the data generation command, confirming that the core functionality is available.</p>
 <h2 id="development-environment-setup"><a class="header" href="#development-environment-setup">Development Environment Setup</a></h2>
@@ -308,9 +308,9 @@ cd ~/partiql-beamline-workspace
 <h3 id="shell-aliases-optional"><a class="header" href="#shell-aliases-optional">Shell Aliases (Optional)</a></h3>
 <p>For convenience, you might want to create shell aliases:</p>
 <pre><code class="language-bash"># Add to your ~/.bashrc, ~/.zshrc, or equivalent
-alias pql-gen='partiql-beamline-cli gen data'
-alias pql-query='partiql-beamline-cli query'
-alias pql-shape='partiql-beamline-cli infer-shape'
+alias pql-gen='beamline gen data'
+alias pql-query='beamline query'
+alias pql-shape='beamline infer-shape'
 </code></pre>
 <h2 id="troubleshooting-installation"><a class="header" href="#troubleshooting-installation">Troubleshooting Installation</a></h2>
 <h3 id="common-issues"><a class="header" href="#common-issues">Common Issues</a></h3>
@@ -336,12 +336,12 @@ cargo build --release
 <p><strong>Solution</strong>: Use <code>sudo</code> or choose a different installation location:</p>
 <pre><code class="language-bash"># Install to user directory instead
 mkdir -p ~/.local/bin
-cp target/release/partiql-beamline-cli ~/.local/bin/
+cp target/release/beamline ~/.local/bin/
 </code></pre>
 <h4 id="path-issues"><a class="header" href="#path-issues">PATH Issues</a></h4>
-<p><strong>Error</strong>: <code>command not found: partiql-beamline-cli</code></p>
+<p><strong>Error</strong>: <code>command not found: beamline</code></p>
 <p><strong>Solution</strong>: Verify the binary is in your PATH:</p>
-<pre><code class="language-bash">which partiql-beamline-cli
+<pre><code class="language-bash">which beamline
 echo $PATH
 </code></pre>
 <h3 id="getting-help"><a class="header" href="#getting-help">Getting Help</a></h3>

@@ -1,11 +1,11 @@
 # Query Commands
 
-The `partiql-beamline-cli query` command generates PartiQL queries that match the shapes and types of data defined in Ion scripts. This allows you to create realistic queries for testing PartiQL implementations.
+The `beamline query` command generates PartiQL queries that match the shapes and types of data defined in Ion scripts. This allows you to create realistic queries for testing PartiQL implementations.
 
 ## Command Syntax
 
 ```bash
-partiql-beamline-cli query basic [OPTIONS] <STRATEGY>
+beamline query basic [OPTIONS] <STRATEGY>
 ```
 
 ## Required Options
@@ -45,7 +45,7 @@ PartiQL Beamline supports four different query generation strategies:
 Generates `SELECT *` queries with randomly generated WHERE clauses.
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 1234 \
   --start-auto \
   --script-path simple_transactions.ion \
@@ -74,7 +74,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.price < 15.495327785402296
 Generates queries with random projections and WHERE clauses.
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 1234 \
   --start-auto \
   --script-path simple_transactions.ion \
@@ -113,7 +113,7 @@ FROM test_data AS test_data WHERE (NOT ((test_data.transaction_id IS NULL)) OR
 Generates `SELECT * EXCLUDE` queries with WHERE clauses.
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 1234 \
   --start-auto \
   --script-path simple_transactions.ion \
@@ -140,7 +140,7 @@ partiql-beamline-cli query basic \
 Generates queries with projections, exclusions, and WHERE clauses.
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 1234 \
   --start-auto \
   --script-path simple_transactions.ion \
@@ -266,7 +266,7 @@ Control EXCLUDE clause generation:
 For nested data structures, control path depth:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 1234 \
   --start-auto \
   --script-path transactions.ion \
@@ -311,7 +311,7 @@ Use specific seeds for consistent query generation:
 
 ```bash
 # Generate same queries each time
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 12345 \
   --start-iso "2024-01-01T00:00:00Z" \
   --script-path data.ion \
@@ -328,7 +328,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Begin with basic queries
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 1 \
   --start-auto \
   --script-path data.ion \
@@ -369,7 +369,7 @@ Combine query and data generation for complete testing:
 
 ```bash
 # Generate test data
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 100 \
   --start-auto \
   --script-path test_data.ion \
@@ -377,7 +377,7 @@ partiql-beamline-cli gen data \
   --output-format ion-pretty > test_data.ion
 
 # Generate matching queries  
-partiql-beamline-cli query basic \
+beamline query basic \
   --seed 101 \
   --start-auto \
   --script-path test_data.ion \

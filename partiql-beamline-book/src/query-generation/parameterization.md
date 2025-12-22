@@ -271,7 +271,7 @@ Different parameters apply to different query strategies:
 For basic testing with readable queries:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path data.ion \
@@ -291,7 +291,7 @@ partiql-beamline-cli query basic \
 For comprehensive testing with controlled complexity:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path data.ion \
@@ -317,7 +317,7 @@ partiql-beamline-cli query basic \
 For edge case testing with maximum complexity:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path nested_data.ion \
@@ -354,7 +354,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Focus on [*] and .* path expressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 400 \
     --start-auto \
     --script-path array_data.ion \
@@ -373,7 +373,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Generate very deep path expressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 500 \
     --start-auto \
     --script-path deeply_nested.ion \
@@ -392,7 +392,7 @@ partiql-beamline-cli query basic \
 
 ```bash  
 # Focus on null and missing value predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 600 \
     --start-auto \
     --script-path nullable_schema.ion \
@@ -409,7 +409,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Generate simple, fast-executing queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 700 \
     --start-auto \
     --script-path performance_data.ion \
@@ -426,7 +426,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Generate complex, resource-intensive queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 800 \
     --start-auto \
     --script-path large_data.ion \
@@ -522,7 +522,7 @@ When parameters are not specified:
 
 ```bash
 # Test only wildcard expressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path array_data.ion \
     --sample-count 10 \
     rand-sfw \
@@ -536,7 +536,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Test only string operations
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path text_data.ion \
     --sample-count 10 \
     rand-select-all-fw \
@@ -553,7 +553,7 @@ SCRIPT="test_schema.ion"
 BASE_SEED=1000
 
 # Level 1: Simple queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $BASE_SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -563,7 +563,7 @@ partiql-beamline-cli query basic \
         --pred-eq > level1.sql
 
 # Level 2: Add comparisons  
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -573,7 +573,7 @@ partiql-beamline-cli query basic \
         --pred-comparison > level2.sql
 
 # Level 3: Add projections
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 2)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -584,7 +584,7 @@ partiql-beamline-cli query basic \
         --pred-all > level3.sql
 
 # Level 4: Add exclusions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 3)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -621,7 +621,7 @@ These parameters have minimal impact:
 
 ```bash
 # Optimized for speed
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path data.ion \
     --sample-count 100 \
     rand-select-all-fw \
@@ -632,7 +632,7 @@ partiql-beamline-cli query basic \
         --pred-comparison
 
 # Comprehensive but slower
-partiql-beamline-cli query basic \
+beamline query basic \
     --script-path data.ion \
     --sample-count 25 \
     rand-sefw \
@@ -671,7 +671,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Test parameter combinations before large generation
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path test.ion \
@@ -729,8 +729,8 @@ partiql-beamline-cli query basic \
 SIMPLE_CONFIG="--tbl-flt-rand-min 1 --tbl-flt-rand-max 2 --pred-comparison"
 MODERATE_CONFIG="--project-rand-min 2 --project-rand-max 4 --tbl-flt-rand-min 1 --tbl-flt-rand-max 3 --pred-all"
 
-partiql-beamline-cli query basic --script-path data.ion --sample-count 10 rand-select-all-fw $SIMPLE_CONFIG
-partiql-beamline-cli query basic --script-path data.ion --sample-count 10 rand-sfw $MODERATE_CONFIG
+beamline query basic --script-path data.ion --sample-count 10 rand-select-all-fw $SIMPLE_CONFIG
+beamline query basic --script-path data.ion --sample-count 10 rand-sfw $MODERATE_CONFIG
 ```
 
 ## Reference Quick Guide

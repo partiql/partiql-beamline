@@ -36,7 +36,7 @@ rand_processes::{
 
 **Test it:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 42 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 10 \
@@ -136,7 +136,7 @@ rand_processes::{
 
 **Test with specific sensors:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 42 \
     --start-auto \
     --sample-count 20 \
@@ -199,7 +199,7 @@ rand_processes::{
 
 **Generate network data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 123 \
     --start-auto \
     --sample-count 50 \
@@ -289,7 +289,7 @@ rand_processes::{
 
 **Generate complete system data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 456 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 100 \
@@ -405,7 +405,7 @@ Now let's generate some queries to analyze our sensor data:
 
 ```bash
 # Generate queries for sensor data analysis
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 789 \
     --start-auto \
     --script-path simple-sensor.ion \
@@ -444,7 +444,7 @@ Let's examine the data shapes our sensors generate:
 
 ```bash
 # Infer shapes from our IoT system
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 456 \
     --start-auto \
     --script-path iot-system.ion \
@@ -478,7 +478,7 @@ Finally, let's create a complete database with our IoT system:
 
 ```bash
 # Generate a complete IoT database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
     --seed 456 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path iot-system.ion \

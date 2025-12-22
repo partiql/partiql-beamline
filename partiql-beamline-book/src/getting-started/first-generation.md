@@ -12,7 +12,7 @@ PartiQL Beamline comes with several example scripts. Let's start with the sensor
 Run the following command to generate 2 sensor readings:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed-auto \
     --start-auto \
     --sample-count 2 \
@@ -45,7 +45,7 @@ Let's break down what happened:
 Let's generate the exact same data using the seed from the previous run:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 5372343081885320050 \
     --start-auto \
     --sample-count 2 \
@@ -55,7 +55,7 @@ partiql-beamline-cli gen data \
 Notice that the data values are identical, but the timestamps might be different because we used `--start-auto`. To get exactly the same output, use the same start time:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 5372343081885320050 \
     --start-iso "2022-01-08T18:38:38.000000000Z" \
     --sample-count 2 \
@@ -179,7 +179,7 @@ PartiQL Beamline supports multiple output formats. Let's try generating the same
 ### Ion Pretty Format
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 5372343081885320050 \
     --start-auto \
     --sample-count 3 \
@@ -223,7 +223,7 @@ This produces nicely formatted Ion output:
 The default text format is human-readable and great for quick inspection:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 5372343081885320050 \
     --start-auto \
     --sample-count 3 \
@@ -260,7 +260,7 @@ This script creates a simple weather sensor that generates:
 ### Test Your Script
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 42 \
     --start-auto \
     --sample-count 5 \
@@ -297,7 +297,7 @@ The `--sample-count` parameter controls how many data points to generate. This i
 You can generate data for specific datasets using the `--dataset` flag:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 42 \
     --start-auto \
     --sample-count 10 \
@@ -311,7 +311,7 @@ partiql-beamline-cli gen data \
 You can control how often NULL values appear:
 
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 42 \
     --start-auto \
     --sample-count 5 \
@@ -336,19 +336,19 @@ Here are the commands you've learned in this chapter:
 
 ```bash
 # Basic data generation
-partiql-beamline-cli gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
+beamline gen data --seed-auto --start-auto --sample-count N --script-path SCRIPT
 
 # Reproducible generation
-partiql-beamline-cli gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
+beamline gen data --seed SEED --start-iso "TIMESTAMP" --sample-count N --script-path SCRIPT
 
 # Different output formats
-partiql-beamline-cli gen data ... --output-format [text|ion|ion-pretty]
+beamline gen data ... --output-format [text|ion|ion-pretty]
 
 # Specific datasets
-partiql-beamline-cli gen data ... --dataset DATASET_NAME
+beamline gen data ... --dataset DATASET_NAME
 
 # Control nullability
-partiql-beamline-cli gen data ... --default-nullable true --pct-null 0.1
+beamline gen data ... --default-nullable true --pct-null 0.1
 ```
 
 Congratulations on completing your first data generation with PartiQL Beamline! You're now ready to explore more advanced features and create more sophisticated synthetic datasets.

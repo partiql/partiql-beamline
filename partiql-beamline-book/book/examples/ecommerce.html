@@ -212,7 +212,7 @@
 }
 </code></pre>
 <p><strong>Test the catalog:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 100 \
     --start-auto \
     --sample-count 20 \
@@ -281,7 +281,7 @@
 }
 </code></pre>
 <p><strong>Generate customer data:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 200 \
     --start-auto \
     --sample-count 50 \
@@ -356,7 +356,7 @@
 }
 </code></pre>
 <p><strong>Test order generation:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 300 \
     --start-auto \
     --sample-count 30 \
@@ -443,7 +443,7 @@
 }
 </code></pre>
 <p><strong>Generate shopping behavior data:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 400 \
     --start-iso "2024-01-01T09:00:00Z" \
     --sample-count 100 \
@@ -520,7 +520,7 @@
 }
 </code></pre>
 <p><strong>Test review system:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 500 \
     --start-auto \
     --sample-count 50 \
@@ -728,7 +728,7 @@
 }
 </code></pre>
 <p><strong>Generate complete e-commerce data:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 600 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 200 \
@@ -873,7 +873,7 @@
 }
 </code></pre>
 <p><strong>Generate analytics data:</strong></p>
-<pre><code class="language-bash">partiql-beamline-cli gen data \
+<pre><code class="language-bash">beamline gen data \
     --seed 700 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 30 \
@@ -883,7 +883,7 @@
 <h2 id="part-9-query-generation-for-e-commerce"><a class="header" href="#part-9-query-generation-for-e-commerce">Part 9: Query Generation for E-commerce</a></h2>
 <p>Generate analytical queries for your e-commerce data:</p>
 <pre><code class="language-bash"># Generate business intelligence queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 800 \
     --start-auto \
     --script-path ecommerce-platform.ion \
@@ -916,7 +916,7 @@ WHERE (products.pricing.base_price &lt; 50.0
 <h2 id="part-10-database-generation"><a class="header" href="#part-10-database-generation">Part 10: Database Generation</a></h2>
 <p>Create a complete e-commerce database:</p>
 <pre><code class="language-bash"># Generate comprehensive e-commerce database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
     --seed 900 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path ecommerce-platform.ion \

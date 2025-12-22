@@ -181,7 +181,7 @@ This creates:
 ### Output Example
 
 ```bash
-$ partiql-beamline-cli gen data \
+$ beamline gen data \
     --seed 100 \
     --start-auto \
     --script-path client-service.ion \
@@ -204,14 +204,14 @@ Generate data for specific datasets only:
 
 ```bash
 # Generate all datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path multi_dataset.ion \
   --sample-count 100
 
 # Generate only specific datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path multi_dataset.ion \
@@ -220,7 +220,7 @@ partiql-beamline-cli gen data \
   --dataset orders
 
 # Generate only one dataset
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 42 \
   --start-auto \
   --script-path multi_dataset.ion \
@@ -347,7 +347,7 @@ rand_processes::{
 
 ```bash
 # Generate multi-dataset output
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 123 \
   --start-auto \
   --script-path complex_system.ion \
@@ -364,7 +364,7 @@ jq '.data | to_entries[] | "\(.key): \(.value | length) records"' output.ion  # 
 
 ```bash
 # Generate database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
   --seed 456 \
   --start-auto \
   --script-path multi_dataset.ion \
@@ -501,7 +501,7 @@ rand_processes::{
 ### Text Format Multi-Dataset Output
 
 ```bash
-$ partiql-beamline-cli gen data \
+$ beamline gen data \
     --seed 999 \
     --start-auto \
     --script-path multi_dataset.ion \
@@ -541,7 +541,7 @@ $ partiql-beamline-cli gen data \
 ### Database Generation Multi-Dataset Files
 
 ```bash
-$ partiql-beamline-cli gen db beamline-lite \
+$ beamline gen db beamline-lite \
     --seed 42 \
     --start-auto \
     --script-path client_service.ion \
@@ -634,14 +634,14 @@ rand_processes::{
 
 ```bash
 # Monitor memory usage with many datasets
-time partiql-beamline-cli gen data \
+time beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path many_datasets.ion \
   --sample-count 10000
 
 # Use dataset filtering to reduce memory
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 1 \
   --start-auto \
   --script-path many_datasets.ion \
@@ -661,7 +661,7 @@ SCRIPT="multi_system.ion"
 SEED=12345
 
 # Generate full dataset
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed $SEED \
   --start-auto \
   --script-path $SCRIPT \
@@ -680,7 +680,7 @@ echo "Datasets extracted for individual processing"
 
 ```bash
 # Generate related datasets
-partiql-beamline-cli gen data \
+beamline gen data \
   --seed 999 \
   --start-auto \
   --script-path related_data.ion \
@@ -704,10 +704,10 @@ comm -23 order_customers.txt all_customers.txt  # Orders with invalid customer I
 **Solution**: 
 ```bash
 # Check all available datasets
-partiql-beamline-cli infer-shape --seed 1 --start-auto --script-path script.ion --output-format text
+beamline infer-shape --seed 1 --start-auto --script-path script.ion --output-format text
 
 # Generate without filtering
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path script.ion --sample-count 5
+beamline gen data --seed 1 --start-auto --script-path script.ion --sample-count 5
 ```
 
 ### Issue: Uneven Dataset Sizes
@@ -727,11 +727,11 @@ $arrival2: HomogeneousPoisson::{ interarrival: minutes::1 },   # Less frequent
 **Solution**:
 ```bash
 # Use dataset filtering
-partiql-beamline-cli gen data --script-path many.ion --dataset important_one --dataset important_two
+beamline gen data --script-path many.ion --dataset important_one --dataset important_two
 
 # Or generate datasets separately
-partiql-beamline-cli gen data --script-path script.ion --dataset batch_1 --sample-count 10000
-partiql-beamline-cli gen data --script-path script.ion --dataset batch_2 --sample-count 10000
+beamline gen data --script-path script.ion --dataset batch_1 --sample-count 10000
+beamline gen data --script-path script.ion --dataset batch_2 --sample-count 10000
 ```
 
 ## Next Steps

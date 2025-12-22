@@ -32,7 +32,7 @@ This script creates transaction data with various field types that the query gen
 ### Basic Query Generation Command
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -70,7 +70,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.price < 15.495327785402296
 
 ```bash
 # Less than predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -91,7 +91,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.marketplace_id < 42)
 
 ```bash
 # Equality predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -112,7 +112,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.country_code = 'US')
 
 ```bash
 # Use all available predicates for comprehensive testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -151,7 +151,7 @@ Increase predicate count to create more complex WHERE clauses:
 
 ```bash
 # Generate queries with 2-5 predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 400 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -283,7 +283,7 @@ SELECT * FROM nullable_test WHERE (nullable_test.required_field IS NOT NULL AND 
 
 ```bash
 # Generate queries focused on null/missing testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 500 \
     --start-auto \
     --script-path nullable_data.ion \
@@ -300,7 +300,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Begin with single predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path data.ion \
@@ -315,7 +315,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Increase to 2-3 predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path data.ion \
@@ -330,7 +330,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Use all available predicates for full complexity
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path data.ion \
@@ -348,7 +348,7 @@ partiql-beamline-cli query basic \
 From the README example:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -375,7 +375,7 @@ SELECT * FROM test_data AS test_data WHERE (test_data.price < 15.495327785402296
 From the README example with more complex predicates:
 
 ```bash
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1234 \
     --start-auto \
     --script-path simple_transactions.ion \
@@ -430,7 +430,7 @@ WHERE (((((test_data.country_code <> 'Qua maxime ceterorum.') AND
 
 ```bash
 # Only numeric comparisons
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path numeric_data.ion \
@@ -452,7 +452,7 @@ SELECT * FROM test_data WHERE (test_data.score <> 75.5)
 
 ```bash
 # Focus on LIKE predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 200 \
     --start-auto \
     --script-path text_data.ion \
@@ -473,7 +473,7 @@ SELECT * FROM test_data WHERE (test_data.country_code LIKE 'U_')
 
 ```bash
 # Use IN and NOT IN predicates
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 300 \
     --start-auto \
     --script-path categorical_data.ion \
@@ -504,7 +504,7 @@ SCRIPT="test_schema.ion"
 BASE_SEED=12345
 
 # Simple queries for basic functionality
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $BASE_SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -515,7 +515,7 @@ partiql-beamline-cli query basic \
         --pred-eq > basic_equality.sql
 
 # Comparison queries for numeric testing  
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -526,7 +526,7 @@ partiql-beamline-cli query basic \
         --pred-comparison > numeric_comparisons.sql
 
 # Complex queries for comprehensive testing
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((BASE_SEED + 2)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -546,7 +546,7 @@ echo "- complex_queries.sql: $(wc -l < complex_queries.sql) queries"
 
 ```bash
 # Generate baseline queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 999 \
     --start-auto \
     --script-path stable_schema.ion \
@@ -557,7 +557,7 @@ partiql-beamline-cli query basic \
         --pred-all > baseline_queries.sql
 
 # Later: regenerate with same seed to verify no regressions
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 999 \
     --start-auto \
     --script-path stable_schema.ion \
@@ -579,7 +579,7 @@ Generate queries that validate data constraints:
 
 ```bash
 # Focus on range and constraint validation
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 600 \
     --start-auto \
     --script-path validation_schema.ion \
@@ -601,7 +601,7 @@ Create simple queries for performance baseline:
 
 ```bash
 # Simple queries for baseline performance measurement
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 700 \
     --start-auto \
     --script-path performance_data.ion \
@@ -624,7 +624,7 @@ SCRIPT="customer_transactions.ion"
 SEED=12345
 
 echo "Generating test data..."
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed $SEED \
     --start-auto \
     --script-path $SCRIPT \
@@ -632,7 +632,7 @@ partiql-beamline-cli gen data \
     --output-format ion-pretty > test_data.ion
 
 echo "Generating basic queries..."
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed $((SEED + 1)) \
     --start-auto \
     --script-path $SCRIPT \
@@ -657,7 +657,7 @@ done
 
 ```bash
 # Begin testing with minimal complexity
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1 \
     --start-auto \
     --script-path new_schema.ion \
@@ -685,7 +685,7 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Generate enough queries to cover different data patterns
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 100 \
     --start-auto \
     --script-path comprehensive_data.ion \
@@ -700,8 +700,8 @@ partiql-beamline-cli query basic \
 
 ```bash
 # Always test generated queries work with generated data
-partiql-beamline-cli gen data --seed 1 --start-auto --script-path schema.ion --sample-count 100 > data.ion
-partiql-beamline-cli query basic --seed 2 --start-auto --script-path schema.ion --sample-count 5 rand-select-all-fw --pred-all > queries.sql
+beamline gen data --seed 1 --start-auto --script-path schema.ion --sample-count 100 > data.ion
+beamline query basic --seed 2 --start-auto --script-path schema.ion --sample-count 5 rand-select-all-fw --pred-all > queries.sql
 
 # Validate each query
 # for query in $(cat queries.sql); do

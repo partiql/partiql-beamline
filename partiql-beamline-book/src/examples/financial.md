@@ -84,7 +84,7 @@ rand_processes::{
 
 **Test basic banking:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 100 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 50 \
@@ -155,7 +155,7 @@ rand_processes::{
 
 **Test customer profiles:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 200 \
     --start-auto \
     --sample-count 25 \
@@ -318,7 +318,7 @@ rand_processes::{
 
 **Test basic financial system:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 300 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 40 \
@@ -433,7 +433,7 @@ rand_processes::{
 
 **Generate trading data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 400 \
     --start-auto \
     --sample-count 100 \
@@ -571,7 +571,7 @@ rand_processes::{
 
 **Generate fraud detection data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 500 \
     --start-iso "2024-01-01T00:00:00Z" \
     --sample-count 75 \
@@ -682,7 +682,7 @@ rand_processes::{
 
 **Generate credit and lending data:**
 ```bash
-partiql-beamline-cli gen data \
+beamline gen data \
     --seed 600 \
     --start-auto \
     --sample-count 60 \
@@ -830,7 +830,7 @@ Create `complete-banking.ion` combining all components:
 
 ```bash
 # Generate complete financial database
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
     --seed 1000 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path fraud-detection.ion \
@@ -854,7 +854,7 @@ Generate queries for financial analysis and regulatory reporting.
 
 ```bash
 # Generate regulatory compliance queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1100 \
     --start-auto \
     --script-path fraud-detection.ion \
@@ -894,7 +894,7 @@ WHERE (cr.regulatory.priority = 'immediate'
 
 ```bash
 # Generate portfolio analysis queries
-partiql-beamline-cli query basic \
+beamline query basic \
     --seed 1200 \
     --start-auto \
     --script-path investment-portfolios.ion \
@@ -917,7 +917,7 @@ Examine the financial data schemas:
 
 ```bash
 # Analyze financial transaction schema
-partiql-beamline-cli infer-shape \
+beamline infer-shape \
     --seed 500 \
     --start-auto \
     --script-path fraud-detection.ion \
@@ -1024,7 +1024,7 @@ Create a complete financial analytics database:
 
 ```bash
 # Generate comprehensive financial database with all datasets
-partiql-beamline-cli gen db beamline-lite \
+beamline gen db beamline-lite \
     --seed 2000 \
     --start-iso "2024-01-01T00:00:00Z" \
     --script-path fraud-detection.ion \

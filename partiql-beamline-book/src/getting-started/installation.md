@@ -66,7 +66,7 @@ This is currently the primary method for installing PartiQL Beamline:
 
 3. **Verify the Installation**
    ```bash
-   ./target/release/partiql-beamline-cli --version
+   ./target/release/beamline --version
    ```
 
    You should see version information for PartiQL Beamline.
@@ -78,10 +78,10 @@ This is currently the primary method for installing PartiQL Beamline:
    **On macOS/Linux:**
    ```bash
    # Option 1: Copy to a directory in your PATH
-   sudo cp target/release/partiql-beamline-cli /usr/local/bin/
+   sudo cp target/release/beamline /usr/local/bin/
    
    # Option 2: Create a symlink
-   ln -s $(pwd)/target/release/partiql-beamline-cli ~/.local/bin/partiql-beamline-cli
+   ln -s $(pwd)/target/release/beamline ~/.local/bin/beamline
    
    # Option 3: Add to your shell profile
    echo 'export PATH="'$(pwd)'/target/release:$PATH"' >> ~/.bashrc
@@ -100,7 +100,7 @@ Once PartiQL Beamline is published to crates.io, you'll be able to install it di
 
 ```bash
 # This will be available in the future
-cargo install partiql-beamline-cli
+cargo install beamline
 ```
 
 ## Verifying Your Installation
@@ -110,13 +110,13 @@ Let's verify that PartiQL Beamline is installed correctly by running a few basic
 ### 1. Check Version
 
 ```bash
-partiql-beamline-cli --version
+beamline --version
 ```
 
 ### 2. View Help
 
 ```bash
-partiql-beamline-cli --help
+beamline --help
 ```
 
 You should see output similar to:
@@ -124,7 +124,7 @@ You should see output similar to:
 ```
 PartiQL Beamline CLI
 
-Usage: partiql-beamline-cli <COMMAND>
+Usage: beamline <COMMAND>
 
 Commands:
   gen          Run the generator
@@ -141,7 +141,7 @@ Options:
 Let's run a simple test to ensure data generation works:
 
 ```bash
-partiql-beamline-cli gen data --help
+beamline gen data --help
 ```
 
 This should display the help for the data generation command, confirming that the core functionality is available.
@@ -177,9 +177,9 @@ For convenience, you might want to create shell aliases:
 
 ```bash
 # Add to your ~/.bashrc, ~/.zshrc, or equivalent
-alias pql-gen='partiql-beamline-cli gen data'
-alias pql-query='partiql-beamline-cli query'
-alias pql-shape='partiql-beamline-cli infer-shape'
+alias pql-gen='beamline gen data'
+alias pql-query='beamline query'
+alias pql-shape='beamline infer-shape'
 ```
 
 ## Troubleshooting Installation
@@ -216,16 +216,16 @@ rustup update
 ```bash
 # Install to user directory instead
 mkdir -p ~/.local/bin
-cp target/release/partiql-beamline-cli ~/.local/bin/
+cp target/release/beamline ~/.local/bin/
 ```
 
 #### PATH Issues
 
-**Error**: `command not found: partiql-beamline-cli`
+**Error**: `command not found: beamline`
 
 **Solution**: Verify the binary is in your PATH:
 ```bash
-which partiql-beamline-cli
+which beamline
 echo $PATH
 ```
 
