@@ -205,7 +205,7 @@
             category: Uniform::{ choices: ["Electronics", "Clothing", "Books", "Home", "Sports"] },
             price: LogNormalF64::{ location: 3.0, scale: 0.8 },  // Realistic price distribution
             in_stock: Bool::{ p: 0.92 },  // 92% of products in stock
-            sku: Format::{ pattern: "{UUID}" },
+            sku: UUID,
             description: LoremIpsum::{ min_words: 10, max_words: 50 }
         }
     }
@@ -248,7 +248,7 @@
     customers: static_data::{
         $data: {
             customer_id: UUID,
-            email: Format::{ pattern: "user{UniformU32::{ low: 1000, high: 9999 }}@email.com" },
+            id: UUID,
             name: LoremIpsumTitle,
             
             // Realistic demographics
@@ -266,7 +266,7 @@
             },
             
             // Account information
-            registration_date: Date,
+            registration_date: Instant,
             email_verified: Bool::{ p: 0.85 },
             marketing_consent: Bool::{ p: 0.60 },
             
@@ -306,7 +306,7 @@
             customer_id: Uniform::{ choices: $customer_ids },
             name: LoremIpsumTitle,
             email: Format::{ pattern: "customer{UUID}@shop.com" },
-            registration_date: Date
+            registration_date: Instant
         }
     },
     
@@ -410,14 +410,15 @@
                     added_to_cart: Bool::{ p: 0.4 },  // 40% add items to cart
                     purchased: Bool::{ p: $purchase_probability },  // Customer-specific conversion
                     cart_abandonment_reason: Uniform::{ 
-                        choices: ["high_shipping", "price_check", "distracted", "payment_issue", null],
+                        choices: ["high_shipping", "price_check", "distracted", "payment_issue", "none"],
                     }
                 }
             },
             
             // Actual orders from successful sessions
             'orders_{$@n}': rand_process::{
-                $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 7, high: 45 } },
+                $interval: UniformU8::{ low: 7, high: 45 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
                 $data: {
                     order_id: UUID,
                     customer_id: $customer_id,
@@ -568,7 +569,7 @@
             
             // Account settings
             account: {
-                registration_date: Date,
+                registration_date: Instant,
                 tier: Uniform::{ choices: ["standard", "premium", "vip"] },
                 email_verified: Bool::{ p: 0.88 },
                 phone_verified: Bool::{ p: 0.65 },
@@ -616,7 +617,8 @@
     
     // Order events with realistic timing
     orders: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: minutes::UniformU8::{ low: 3, high: 45 } },
+        $interval: UniformU8::{ low: 3, high: 45 },
+        $arrival: HomogeneousPoisson::{ interarrival: minutes::$interval },
         $data: {
             order_id: UUID,
             customer_id: Uniform::{ choices: $customer_ids },
@@ -663,7 +665,8 @@
     
     // Product reviews (less frequent than orders)
     reviews: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: hours::UniformU8::{ low: 6, high: 72 } },
+        $interval: UniformU8::{ low: 6, high: 72 },
+        $arrival: HomogeneousPoisson::{ interarrival: hours::$interval },
         $data: {
             review_id: UUID,
             product_id: Uniform::{ choices: $product_ids },
@@ -697,7 +700,8 @@
     
     // Customer support tickets
     support_tickets: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: hours::UniformU16::{ low: 4, high: 96 } },
+        $interval: UniformU16::{ low: 4, high: 96 },
+        $arrival: HomogeneousPoisson::{ interarrival: hours::$interval },
         $data: {
             ticket_id: UUID,
             customer_id: Uniform::{ choices: $customer_ids },
@@ -738,7 +742,8 @@
     // Black Friday / Cyber Monday pattern
     holiday_shopping: rand_process::{
         // Much higher frequency during sales events
-        $arrival: HomogeneousPoisson::{ interarrival: seconds::UniformU16::{ low: 30, high: 300 } },
+        $interval: UniformU16::{ low: 30, high: 300 },
+        $arrival: HomogeneousPoisson::{ interarrival: seconds::$interval },
         $data: {
             order_id: UUID,
             customer_id: UUID,
@@ -772,7 +777,8 @@
     
     // Regular shopping pattern (baseline)
     regular_shopping: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: hours::UniformU8::{ low: 1, high: 12 } },
+        $interval: UniformU8::{ low: 1, high: 12 },
+        $arrival: HomogeneousPoisson::{ interarrival: hours::$interval },
         $data: {
             order_id: UUID,
             customer_id: UUID,
@@ -798,7 +804,8 @@
 <pre><code class="language-ion">rand_processes::{
     // Website analytics events
     web_analytics: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: seconds::UniformU8::{ low: 1, high: 30 } },
+        $interval: UniformU8::{ low: 1, high: 30 },
+        $arrival: HomogeneousPoisson::{ interarrival: seconds::$interval },
         $data: {
             event_id: UUID,
             session_id: UUID,
@@ -837,7 +844,7 @@
     daily_metrics: rand_process::{
         $arrival: HomogeneousPoisson::{ interarrival: days::1 },
         $data: {
-            metric_date: Date,
+            metric_date: Instant,
             
             // Sales metrics
             sales: {
@@ -945,7 +952,7 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
                     churn_score: $churn_probability,
                     
                     // Behavioral indicators
-                    first_purchase_date: Date,
+                    first_purchase_date: Instant,
                     last_purchase_days_ago: UniformU16::{ low: 0, high: 365 },
                     total_orders: LogNormalF64::{ location: 2.5, scale: 1.0 },
                     total_spent: $lifetime_value,

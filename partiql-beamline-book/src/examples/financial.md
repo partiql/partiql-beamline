@@ -31,7 +31,7 @@ rand_processes::{
             customer_id: UUID,
             
             // Account details
-            opening_date: Date,
+            opening_date: Instant,
             status: Uniform::{ choices: ["active", "closed", "frozen", "dormant"] },
             currency: Uniform::{ choices: ["USD", "EUR", "GBP", "CAD"] },
             
@@ -111,7 +111,7 @@ rand_processes::{
                 first_name: LoremIpsumTitle,
                 last_name: LoremIpsumTitle,
                 ssn: Regex::{ pattern: "[0-9]{3}-[0-9]{2}-[0-9]{4}" },  // Format only
-                date_of_birth: Date,
+                date_of_birth: Instant,
                 phone: Regex::{ pattern: "[0-9]{3}-[0-9]{3}-[0-9]{4}" },
                 email: Format::{ pattern: "customer{UUID}@email.com" }
             },
@@ -138,7 +138,7 @@ rand_processes::{
                 employer: LoremIpsumTitle,
                 
                 // Banking relationship
-                customer_since: Date,
+                customer_since: Instant,
                 risk_category: Uniform::{ choices: ["low", "medium", "high"] },
                 kyc_verified: Bool::{ p: 0.95 },  // 95% KYC verified
                 
@@ -308,7 +308,7 @@ rand_processes::{
             // Status (most succeed, occasional failures)
             status: Uniform::{ choices: ["completed", "completed", "completed", "failed"] },
             failure_reason: Uniform::{ 
-                choices: ["insufficient_funds", "account_closed", "technical_error", null],
+                choices: ["insufficient_funds", "account_closed", "technical_error", "none"],
                 // Only relevant when status = "failed"
             }
         }
@@ -534,7 +534,8 @@ rand_processes::{
     
     // Compliance reporting events
     compliance_reports: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 1, high: 7 } },
+        $interval: UniformU8::{ low: 1, high: 7 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             report_id: UUID,
             report_type: Uniform::{ choices: ["CTR", "SAR", "OFAC_ALERT", "BSA_REPORT"] },
@@ -594,7 +595,8 @@ rand_processes::{
     
     // Credit applications
     credit_applications: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 1, high: 14 } },
+        $interval: UniformU8::{ low: 1, high: 14 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             application_id: UUID,
             customer_id: Uniform::{ choices: $customer_ids },
@@ -725,7 +727,7 @@ rand_processes::{
             
             // Account details
             account_value: LogNormalF64::{ location: 10.0, scale: 1.5 },  // $10K-$10M range
-            inception_date: Date,
+            inception_date: Instant,
             managed: Bool::{ p: 0.6 },  // 60% professionally managed
             advisor_id: UUID
         }
@@ -733,7 +735,8 @@ rand_processes::{
     
     // Portfolio transactions (rebalancing, deposits, withdrawals)
     portfolio_transactions: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 7, high: 60 } },
+        $interval: UniformU8::{ low: 7, high: 60 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             transaction_id: UUID,
             portfolio_id: UUID,
@@ -782,7 +785,8 @@ Create `compliance-system.ion`:
 rand_processes::{
     // Regulatory examinations
     examinations: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU16::{ low: 30, high: 180 } },
+        $interval: UniformU16::{ low: 30, high: 180 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             examination_id: UUID,
             examination_date: Instant,

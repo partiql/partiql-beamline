@@ -1,10 +1,12 @@
 # Core Concepts
 
-Before diving deeper into PartiQL Beamline's advanced features, it's essential to understand the fundamental concepts that power its data generation capabilities. This chapter will introduce you to the mathematical and computational foundations that make PartiQL Beamline both powerful and reliable.
+Before diving deeper into Beamline's advanced features, it's essential to understand the fundamental concepts that power
+its data generation capabilities. This chapter will introduce you to the mathematical and computational foundations that
+make Beamline both powerful and reliable.
 
 ## Stochastic Processes
 
-At the heart of PartiQL Beamline lies the concept of [**stochastic processes**](https://en.wikipedia.org/wiki/Stochastic_process) — mathematical models that describe systems appearing to vary randomly over time.
+At the heart of Beamline lies the concept of [**stochastic processes**](https://en.wikipedia.org/wiki/Stochastic_process) — mathematical models that describe systems appearing to vary randomly over time.
 
 ### What is a Stochastic Process?
 

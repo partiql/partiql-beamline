@@ -1,19 +1,19 @@
 # Introduction
 
-Welcome to the **[PartiQL](https://partiql.org/) Beamline Guide** — your comprehensive resource for mastering synthetic data and query generation 
-for your  AI/ML, testing and simulation use-cases.
+Welcome to the **Beamline Guide** — your comprehensive resource for mastering synthetic data and query generation 
+for your  AI/ML, testing, and simulation use-cases.
 
 ## What You'll Learn
 
-This guide will take you on a journey from understanding the basics of PartiQL Beamline to becoming proficient in generating
+This guide will take you on a journey from understanding the basics of Beamline to becoming proficient in generating
 sophisticated synthetic datasets and queries. Whether you are an AI/ML researcher, a developer looking to test your 
-implementations, or a data engineer needing realistic test data, this guide has you covered.
+implementations, or a data scientist needing realistic test data, this guide has you covered.
 
 ## How This Guide is Organized
 
 The guide is structured to gradually build your understanding and skills:
 
-1. **Getting Started** — Learn what PartiQL Beamline is and get your first data generation running
+1. **Getting Started** — Learn what Beamline is and get your first data generation running
 2. **Understanding the Basics** — Grasp core concepts like random processes and reproducible generation
 3. **Data Generation** — Master the art of creating synthetic data with various types and patterns
 4. **Query Generation** — Learn to generate PartiQL queries that match your data shapes
@@ -22,13 +22,13 @@ The guide is structured to gradually build your understanding and skills:
 7. **Command Line Interface** — Become proficient with all CLI commands and options
 10. **Examples and Tutorials** — Hands-on tutorials with real-world scenarios
 
-## What is PartiQL Beamline?
+## What is Beamline?
 
-PartiQL Beamline is a tool for **fast data generation**. 
+Beamline is a tool for **fast data generation**. 
 It generates **reproducible pseudo-random data** using a **stochastic approach** and **statistical distributions**, 
 meaning you can create realistic datasets that follow specific mathematical patterns. This makes the data both random
-enough to be useful for testing and AI/ML model training, while remaining deterministic enough to be reproducible for 
-debugging and validation.
+enough to be useful for  AI/ML model training, simulation, and testing purposing, while remaining deterministic enough 
+to be reproducible for debugging and validation.
 
 The tool's ability to generate data based on statistical distributions makes it particularly valuable for AI model 
 training scenarios where you need synthetic data that resembles specific population distributions or statistical characteristics.

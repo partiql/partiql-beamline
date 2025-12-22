@@ -181,11 +181,12 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="what-is-partiql-beamline"><a class="header" href="#what-is-partiql-beamline">What is PartiQL Beamline?</a></h1>
-<p>PartiQL Beamline is a tool designed for <strong>fast data generation</strong> specifically using <a href="https://partiql.org/">PartiQL</a> value system.
-At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data patterns.</p>
+                        <h1 id="what-is-beamline"><a class="header" href="#what-is-beamline">What is Beamline?</a></h1>
+<p>Beamline is a tool designed for <strong>fast data generation</strong> specifically using <a href="https://partiql.org/">PartiQL</a> value system.
+At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data
+patterns.</p>
 <h2 id="the-problem-it-solves"><a class="header" href="#the-problem-it-solves">The Problem It Solves</a></h2>
-<p>Some of the common software engineering problem that most developers, data engineers, and researchers often face are:</p>
+<p>Some of the common software engineering problems that most developers, data scientists, and researchers often face are:</p>
 <ul>
 <li><strong>Lack of Test Data</strong>: Creating realistic test datasets manually is time-consuming and error-prone</li>
 <li><strong>Inconsistent Testing</strong>: Different test runs with different data make it hard to reproduce bugs</li>
@@ -193,15 +194,15 @@ At its core, it generates <strong>reproducible pseudo-random data</strong> using
 <li><strong>Performance Benchmarking</strong>: Consistent, scalable datasets are needed for meaningful performance comparisons and AI inferences evaluations</li>
 <li><strong>Schema Evolution</strong>: As data structures change, maintaining test data becomes increasingly complex</li>
 </ul>
-<p>PartiQL Beamline addresses all these challenges with a unified approach to synthetic data generation.</p>
+<p>Beamline addresses all these challenges with a unified approach to synthetic data generation.</p>
 <h2 id="core-components"><a class="header" href="#core-components">Core Components</a></h2>
-<p>PartiQL Beamline consists of three main components that work together:</p>
+<p>Beamline consists of three main components that work together:</p>
 <h3 id="1-data-generator"><a class="header" href="#1-data-generator">1. Data Generator</a></h3>
 <p>The <strong>Data Generator</strong> creates reproducible pseudo-random data based on mathematical distributions and stochastic processes.
 It can generate:</p>
 <ul>
 <li>Simple scalar values (numbers, strings, booleans, dates)</li>
-<li>Complex nested structures (objects, arrays, mixed types)</li>
+<li>Complex nested structures (structs, arrays, mixed types)</li>
 <li>Time-series data with realistic temporal patterns</li>
 <li>Sharing data across multiple datasets</li>
 </ul>
@@ -213,7 +214,8 @@ It can generate:</p>
 <li><strong>Scalable</strong>: Can generate datasets from small samples to millions of records</li>
 </ul>
 <h3 id="2-query-generator"><a class="header" href="#2-query-generator">2. Query Generator</a></h3>
-<p>The <strong>Query Generator</strong> creates PartiQL queries that match the shapes and types of your generated data. It can produce:</p>
+<p>The <strong>Query Generator</strong> creates SQL-like queries (starting from <a href="https://partiql.org">PartiQL</a>) that match the shapes
+and types of your generated data. It can produce:</p>
 <ul>
 <li><code>SELECT * FROM ... WHERE ...</code> queries with various predicates</li>
 <li><code>SELECT ... FROM ... WHERE ...</code> queries with custom projections</li>
@@ -222,9 +224,9 @@ It can generate:</p>
 </ul>
 <p><strong>Key Features:</strong></p>
 <ul>
-<li><strong>Shape-Aware</strong>: Generates queries that match your data structure</li>
+<li><strong>Shape-Aware</strong>: Generates queries that match your data types</li>
 <li><strong>Parameterizable</strong>: Control query complexity, depth, and patterns</li>
-<li><strong>Comprehensive</strong>: Supports all major PartiQL query patterns</li>
+<li></li>
 <li><strong>Reproducible</strong>: Same seed produces the same query patterns</li>
 </ul>
 <h3 id="3-cli-interface"><a class="header" href="#3-cli-interface">3. CLI Interface</a></h3>
@@ -237,7 +239,7 @@ It can generate:</p>
 </ul>
 <h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
 <h3 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h3>
-<p>PartiQL Beamline models data generation as <strong>stochastic processes</strong> — mathematical models that describe systems that
+<p>Beamline models data generation as <strong>stochastic processes</strong> — mathematical models that describe systems that
 appear to vary randomly over time. This approach allows it to:</p>
 <ul>
 <li>Generate data that follows realistic patterns</li>
@@ -254,7 +256,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 <li><strong>Constraints</strong>: Rules and patterns the data should follow</li>
 </ul>
 <h3 id="reproducibility"><a class="header" href="#reproducibility">Reproducibility</a></h3>
-<p>One of PartiQL Beamline’s key strengths is <strong>reproducibility</strong>:</p>
+<p>One of Beamline’s key strengths is <strong>reproducibility</strong>:</p>
 <ul>
 <li><strong>Seeds</strong>: Control the random number generation for consistent results</li>
 <li><strong>Timestamps</strong>: Control the starting time for temporal data</li>
@@ -273,7 +275,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 </ul>
 <h3 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h3>
 <ul>
-<li><strong>Unit Testing</strong>: Generate consistent test data for PartiQL implementations</li>
+<li><strong>Unit Testing</strong>: Generate consistent test data for implementations</li>
 <li><strong>Integration Testing</strong>: Create realistic datasets for end-to-end testing</li>
 <li><strong>Regression Testing</strong>: Ensure changes don’t break existing functionality</li>
 <li><strong>Edge Case Testing</strong>: Generate data that exercises boundary conditions</li>
@@ -294,7 +296,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 </ul>
 <h2 id="what-makes-it-special"><a class="header" href="#what-makes-it-special">What Makes It Special</a></h2>
 <h3 id="mathematical-foundation"><a class="header" href="#mathematical-foundation">Mathematical Foundation</a></h3>
-<p>Unlike simple random data generators, PartiQL Beamline is built on solid mathematical foundations:</p>
+<p>Unlike simple random data generators, Beamline is built on solid mathematical foundations:</p>
 <ul>
 <li><strong>Probability Distributions</strong>: Uses proper statistical distributions for realistic data</li>
 <li><strong>Stochastic Modeling</strong>: Models real-world processes mathematically</li>
@@ -302,7 +304,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 <li><strong>Correlation Modeling</strong>: Can generate related data across multiple dimensions</li>
 </ul>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
-<p>Now that you understand what PartiQL Beamline is and why it’s useful, let’s get it installed and running on your system. In the next section, we’ll walk through the installation process and verify that everything is working correctly.</p>
+<p>Now that you understand what Beamline is and why it’s useful, let’s get it installed and running on your system. In the next section, we’ll walk through the installation process and verify that everything is working correctly.</p>
 
                     </main>
 

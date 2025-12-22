@@ -180,16 +180,16 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Welcome to the <strong><a href="https://partiql.org/">PartiQL</a> Beamline Guide</strong> — your comprehensive resource for mastering synthetic data and query generation
-for your  AI/ML, testing and simulation use-cases.</p>
+<p>Welcome to the <strong>Beamline Guide</strong> — your comprehensive resource for mastering synthetic data and query generation
+for your  AI/ML, testing, and simulation use-cases.</p>
 <h2 id="what-youll-learn"><a class="header" href="#what-youll-learn">What You’ll Learn</a></h2>
-<p>This guide will take you on a journey from understanding the basics of PartiQL Beamline to becoming proficient in generating
+<p>This guide will take you on a journey from understanding the basics of Beamline to becoming proficient in generating
 sophisticated synthetic datasets and queries. Whether you are an AI/ML researcher, a developer looking to test your
-implementations, or a data engineer needing realistic test data, this guide has you covered.</p>
+implementations, or a data scientist needing realistic test data, this guide has you covered.</p>
 <h2 id="how-this-guide-is-organized"><a class="header" href="#how-this-guide-is-organized">How This Guide is Organized</a></h2>
 <p>The guide is structured to gradually build your understanding and skills:</p>
 <ol>
-<li><strong>Getting Started</strong> — Learn what PartiQL Beamline is and get your first data generation running</li>
+<li><strong>Getting Started</strong> — Learn what Beamline is and get your first data generation running</li>
 <li><strong>Understanding the Basics</strong> — Grasp core concepts like random processes and reproducible generation</li>
 <li><strong>Data Generation</strong> — Master the art of creating synthetic data with various types and patterns</li>
 <li><strong>Query Generation</strong> — Learn to generate PartiQL queries that match your data shapes</li>
@@ -198,12 +198,12 @@ implementations, or a data engineer needing realistic test data, this guide has 
 <li><strong>Command Line Interface</strong> — Become proficient with all CLI commands and options</li>
 <li><strong>Examples and Tutorials</strong> — Hands-on tutorials with real-world scenarios</li>
 </ol>
-<h2 id="what-is-partiql-beamline"><a class="header" href="#what-is-partiql-beamline">What is PartiQL Beamline?</a></h2>
-<p>PartiQL Beamline is a tool for <strong>fast data generation</strong>.
+<h2 id="what-is-beamline"><a class="header" href="#what-is-beamline">What is Beamline?</a></h2>
+<p>Beamline is a tool for <strong>fast data generation</strong>.
 It generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> and <strong>statistical distributions</strong>,
 meaning you can create realistic datasets that follow specific mathematical patterns. This makes the data both random
-enough to be useful for testing and AI/ML model training, while remaining deterministic enough to be reproducible for
-debugging and validation.</p>
+enough to be useful for  AI/ML model training, simulation, and testing purposing, while remaining deterministic enough
+to be reproducible for debugging and validation.</p>
 <p>The tool’s ability to generate data based on statistical distributions makes it particularly valuable for AI model
 training scenarios where you need synthetic data that resembles specific population distributions or statistical characteristics.</p>
 <h3 id="key-features"><a class="header" href="#key-features">Key Features</a></h3>
@@ -233,11 +233,12 @@ training scenarios where you need synthetic data that resembles specific populat
 <li>Visit the <a href="https://github.com/partiql/partiql-beamline">PartiQL Beamline GitHub repository</a> for the latest updates and community support</li>
 </ul>
 <p>Let’s begin your journey with PartiQL Beamline!</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="what-is-partiql-beamline-1"><a class="header" href="#what-is-partiql-beamline-1">What is PartiQL Beamline?</a></h1>
-<p>PartiQL Beamline is a tool designed for <strong>fast data generation</strong> specifically using <a href="https://partiql.org/">PartiQL</a> value system.
-At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data patterns.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="what-is-beamline-1"><a class="header" href="#what-is-beamline-1">What is Beamline?</a></h1>
+<p>Beamline is a tool designed for <strong>fast data generation</strong> specifically using <a href="https://partiql.org/">PartiQL</a> value system.
+At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data
+patterns.</p>
 <h2 id="the-problem-it-solves"><a class="header" href="#the-problem-it-solves">The Problem It Solves</a></h2>
-<p>Some of the common software engineering problem that most developers, data engineers, and researchers often face are:</p>
+<p>Some of the common software engineering problems that most developers, data scientists, and researchers often face are:</p>
 <ul>
 <li><strong>Lack of Test Data</strong>: Creating realistic test datasets manually is time-consuming and error-prone</li>
 <li><strong>Inconsistent Testing</strong>: Different test runs with different data make it hard to reproduce bugs</li>
@@ -245,15 +246,15 @@ At its core, it generates <strong>reproducible pseudo-random data</strong> using
 <li><strong>Performance Benchmarking</strong>: Consistent, scalable datasets are needed for meaningful performance comparisons and AI inferences evaluations</li>
 <li><strong>Schema Evolution</strong>: As data structures change, maintaining test data becomes increasingly complex</li>
 </ul>
-<p>PartiQL Beamline addresses all these challenges with a unified approach to synthetic data generation.</p>
+<p>Beamline addresses all these challenges with a unified approach to synthetic data generation.</p>
 <h2 id="core-components"><a class="header" href="#core-components">Core Components</a></h2>
-<p>PartiQL Beamline consists of three main components that work together:</p>
+<p>Beamline consists of three main components that work together:</p>
 <h3 id="1-data-generator"><a class="header" href="#1-data-generator">1. Data Generator</a></h3>
 <p>The <strong>Data Generator</strong> creates reproducible pseudo-random data based on mathematical distributions and stochastic processes.
 It can generate:</p>
 <ul>
 <li>Simple scalar values (numbers, strings, booleans, dates)</li>
-<li>Complex nested structures (objects, arrays, mixed types)</li>
+<li>Complex nested structures (structs, arrays, mixed types)</li>
 <li>Time-series data with realistic temporal patterns</li>
 <li>Sharing data across multiple datasets</li>
 </ul>
@@ -265,7 +266,8 @@ It can generate:</p>
 <li><strong>Scalable</strong>: Can generate datasets from small samples to millions of records</li>
 </ul>
 <h3 id="2-query-generator"><a class="header" href="#2-query-generator">2. Query Generator</a></h3>
-<p>The <strong>Query Generator</strong> creates PartiQL queries that match the shapes and types of your generated data. It can produce:</p>
+<p>The <strong>Query Generator</strong> creates SQL-like queries (starting from <a href="https://partiql.org">PartiQL</a>) that match the shapes
+and types of your generated data. It can produce:</p>
 <ul>
 <li><code>SELECT * FROM ... WHERE ...</code> queries with various predicates</li>
 <li><code>SELECT ... FROM ... WHERE ...</code> queries with custom projections</li>
@@ -274,9 +276,9 @@ It can generate:</p>
 </ul>
 <p><strong>Key Features:</strong></p>
 <ul>
-<li><strong>Shape-Aware</strong>: Generates queries that match your data structure</li>
+<li><strong>Shape-Aware</strong>: Generates queries that match your data types</li>
 <li><strong>Parameterizable</strong>: Control query complexity, depth, and patterns</li>
-<li><strong>Comprehensive</strong>: Supports all major PartiQL query patterns</li>
+<li></li>
 <li><strong>Reproducible</strong>: Same seed produces the same query patterns</li>
 </ul>
 <h3 id="3-cli-interface"><a class="header" href="#3-cli-interface">3. CLI Interface</a></h3>
@@ -289,7 +291,7 @@ It can generate:</p>
 </ul>
 <h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
 <h3 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h3>
-<p>PartiQL Beamline models data generation as <strong>stochastic processes</strong> — mathematical models that describe systems that
+<p>Beamline models data generation as <strong>stochastic processes</strong> — mathematical models that describe systems that
 appear to vary randomly over time. This approach allows it to:</p>
 <ul>
 <li>Generate data that follows realistic patterns</li>
@@ -306,7 +308,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 <li><strong>Constraints</strong>: Rules and patterns the data should follow</li>
 </ul>
 <h3 id="reproducibility"><a class="header" href="#reproducibility">Reproducibility</a></h3>
-<p>One of PartiQL Beamline’s key strengths is <strong>reproducibility</strong>:</p>
+<p>One of Beamline’s key strengths is <strong>reproducibility</strong>:</p>
 <ul>
 <li><strong>Seeds</strong>: Control the random number generation for consistent results</li>
 <li><strong>Timestamps</strong>: Control the starting time for temporal data</li>
@@ -325,7 +327,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 </ul>
 <h3 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h3>
 <ul>
-<li><strong>Unit Testing</strong>: Generate consistent test data for PartiQL implementations</li>
+<li><strong>Unit Testing</strong>: Generate consistent test data for implementations</li>
 <li><strong>Integration Testing</strong>: Create realistic datasets for end-to-end testing</li>
 <li><strong>Regression Testing</strong>: Ensure changes don’t break existing functionality</li>
 <li><strong>Edge Case Testing</strong>: Generate data that exercises boundary conditions</li>
@@ -346,7 +348,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 </ul>
 <h2 id="what-makes-it-special"><a class="header" href="#what-makes-it-special">What Makes It Special</a></h2>
 <h3 id="mathematical-foundation"><a class="header" href="#mathematical-foundation">Mathematical Foundation</a></h3>
-<p>Unlike simple random data generators, PartiQL Beamline is built on solid mathematical foundations:</p>
+<p>Unlike simple random data generators, Beamline is built on solid mathematical foundations:</p>
 <ul>
 <li><strong>Probability Distributions</strong>: Uses proper statistical distributions for realistic data</li>
 <li><strong>Stochastic Modeling</strong>: Models real-world processes mathematically</li>
@@ -354,7 +356,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 <li><strong>Correlation Modeling</strong>: Can generate related data across multiple dimensions</li>
 </ul>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
-<p>Now that you understand what PartiQL Beamline is and why it’s useful, let’s get it installed and running on your system. In the next section, we’ll walk through the installation process and verify that everything is working correctly.</p>
+<p>Now that you understand what Beamline is and why it’s useful, let’s get it installed and running on your system. In the next section, we’ll walk through the installation process and verify that everything is working correctly.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installation-and-setup"><a class="header" href="#installation-and-setup">Installation and Setup</a></h1>
 <p>This chapter will guide you through installing PartiQL Beamline and setting up your development environment.
 PartiQL Beamline is written in Rust, so we’ll cover both building from source and using pre-built binaries when available.</p>
@@ -862,9 +864,11 @@ partiql-beamline-cli gen data ... --default-nullable true --pct-null 0.1
 </code></pre>
 <p>Congratulations on completing your first data generation with PartiQL Beamline! You’re now ready to explore more advanced features and create more sophisticated synthetic datasets.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="core-concepts"><a class="header" href="#core-concepts">Core Concepts</a></h1>
-<p>Before diving deeper into PartiQL Beamline’s advanced features, it’s essential to understand the fundamental concepts that power its data generation capabilities. This chapter will introduce you to the mathematical and computational foundations that make PartiQL Beamline both powerful and reliable.</p>
+<p>Before diving deeper into Beamline’s advanced features, it’s essential to understand the fundamental concepts that power
+its data generation capabilities. This chapter will introduce you to the mathematical and computational foundations that
+make Beamline both powerful and reliable.</p>
 <h2 id="stochastic-processes-1"><a class="header" href="#stochastic-processes-1">Stochastic Processes</a></h2>
-<p>At the heart of PartiQL Beamline lies the concept of <a href="https://en.wikipedia.org/wiki/Stochastic_process"><strong>stochastic processes</strong></a> — mathematical models that describe systems appearing to vary randomly over time.</p>
+<p>At the heart of Beamline lies the concept of <a href="https://en.wikipedia.org/wiki/Stochastic_process"><strong>stochastic processes</strong></a> — mathematical models that describe systems appearing to vary randomly over time.</p>
 <h3 id="what-is-a-stochastic-process"><a class="header" href="#what-is-a-stochastic-process">What is a Stochastic Process?</a></h3>
 <p>A stochastic process is a collection of <a href="https://en.wikipedia.org/wiki/Random_variable">random variables</a> indexed by time or space. In simpler terms, it’s a way to model how things change randomly over time while still following certain patterns or rules.</p>
 <p><strong>Real-world examples:</strong></p>
@@ -14779,7 +14783,7 @@ partiql-beamline-cli gen db beamline-lite \
             category: Uniform::{ choices: ["Electronics", "Clothing", "Books", "Home", "Sports"] },
             price: LogNormalF64::{ location: 3.0, scale: 0.8 },  // Realistic price distribution
             in_stock: Bool::{ p: 0.92 },  // 92% of products in stock
-            sku: Format::{ pattern: "{UUID}" },
+            sku: UUID,
             description: LoremIpsum::{ min_words: 10, max_words: 50 }
         }
     }
@@ -14822,7 +14826,7 @@ partiql-beamline-cli gen db beamline-lite \
     customers: static_data::{
         $data: {
             customer_id: UUID,
-            email: Format::{ pattern: "user{UniformU32::{ low: 1000, high: 9999 }}@email.com" },
+            id: UUID,
             name: LoremIpsumTitle,
             
             // Realistic demographics
@@ -14840,7 +14844,7 @@ partiql-beamline-cli gen db beamline-lite \
             },
             
             // Account information
-            registration_date: Date,
+            registration_date: Instant,
             email_verified: Bool::{ p: 0.85 },
             marketing_consent: Bool::{ p: 0.60 },
             
@@ -14880,7 +14884,7 @@ partiql-beamline-cli gen db beamline-lite \
             customer_id: Uniform::{ choices: $customer_ids },
             name: LoremIpsumTitle,
             email: Format::{ pattern: "customer{UUID}@shop.com" },
-            registration_date: Date
+            registration_date: Instant
         }
     },
     
@@ -14984,14 +14988,15 @@ partiql-beamline-cli gen db beamline-lite \
                     added_to_cart: Bool::{ p: 0.4 },  // 40% add items to cart
                     purchased: Bool::{ p: $purchase_probability },  // Customer-specific conversion
                     cart_abandonment_reason: Uniform::{ 
-                        choices: ["high_shipping", "price_check", "distracted", "payment_issue", null],
+                        choices: ["high_shipping", "price_check", "distracted", "payment_issue", "none"],
                     }
                 }
             },
             
             // Actual orders from successful sessions
             'orders_{$@n}': rand_process::{
-                $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 7, high: 45 } },
+                $interval: UniformU8::{ low: 7, high: 45 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
                 $data: {
                     order_id: UUID,
                     customer_id: $customer_id,
@@ -15142,7 +15147,7 @@ partiql-beamline-cli gen db beamline-lite \
             
             // Account settings
             account: {
-                registration_date: Date,
+                registration_date: Instant,
                 tier: Uniform::{ choices: ["standard", "premium", "vip"] },
                 email_verified: Bool::{ p: 0.88 },
                 phone_verified: Bool::{ p: 0.65 },
@@ -15190,7 +15195,8 @@ partiql-beamline-cli gen db beamline-lite \
     
     // Order events with realistic timing
     orders: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: minutes::UniformU8::{ low: 3, high: 45 } },
+        $interval: UniformU8::{ low: 3, high: 45 },
+        $arrival: HomogeneousPoisson::{ interarrival: minutes::$interval },
         $data: {
             order_id: UUID,
             customer_id: Uniform::{ choices: $customer_ids },
@@ -15237,7 +15243,8 @@ partiql-beamline-cli gen db beamline-lite \
     
     // Product reviews (less frequent than orders)
     reviews: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: hours::UniformU8::{ low: 6, high: 72 } },
+        $interval: UniformU8::{ low: 6, high: 72 },
+        $arrival: HomogeneousPoisson::{ interarrival: hours::$interval },
         $data: {
             review_id: UUID,
             product_id: Uniform::{ choices: $product_ids },
@@ -15271,7 +15278,8 @@ partiql-beamline-cli gen db beamline-lite \
     
     // Customer support tickets
     support_tickets: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: hours::UniformU16::{ low: 4, high: 96 } },
+        $interval: UniformU16::{ low: 4, high: 96 },
+        $arrival: HomogeneousPoisson::{ interarrival: hours::$interval },
         $data: {
             ticket_id: UUID,
             customer_id: Uniform::{ choices: $customer_ids },
@@ -15312,7 +15320,8 @@ partiql-beamline-cli gen db beamline-lite \
     // Black Friday / Cyber Monday pattern
     holiday_shopping: rand_process::{
         // Much higher frequency during sales events
-        $arrival: HomogeneousPoisson::{ interarrival: seconds::UniformU16::{ low: 30, high: 300 } },
+        $interval: UniformU16::{ low: 30, high: 300 },
+        $arrival: HomogeneousPoisson::{ interarrival: seconds::$interval },
         $data: {
             order_id: UUID,
             customer_id: UUID,
@@ -15346,7 +15355,8 @@ partiql-beamline-cli gen db beamline-lite \
     
     // Regular shopping pattern (baseline)
     regular_shopping: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: hours::UniformU8::{ low: 1, high: 12 } },
+        $interval: UniformU8::{ low: 1, high: 12 },
+        $arrival: HomogeneousPoisson::{ interarrival: hours::$interval },
         $data: {
             order_id: UUID,
             customer_id: UUID,
@@ -15372,7 +15382,8 @@ partiql-beamline-cli gen db beamline-lite \
 <pre><code class="language-ion">rand_processes::{
     // Website analytics events
     web_analytics: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: seconds::UniformU8::{ low: 1, high: 30 } },
+        $interval: UniformU8::{ low: 1, high: 30 },
+        $arrival: HomogeneousPoisson::{ interarrival: seconds::$interval },
         $data: {
             event_id: UUID,
             session_id: UUID,
@@ -15411,7 +15422,7 @@ partiql-beamline-cli gen db beamline-lite \
     daily_metrics: rand_process::{
         $arrival: HomogeneousPoisson::{ interarrival: days::1 },
         $data: {
-            metric_date: Date,
+            metric_date: Instant,
             
             // Sales metrics
             sales: {
@@ -15519,7 +15530,7 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
                     churn_score: $churn_probability,
                     
                     // Behavioral indicators
-                    first_purchase_date: Date,
+                    first_purchase_date: Instant,
                     last_purchase_days_ago: UniformU16::{ low: 0, high: 365 },
                     total_orders: LogNormalF64::{ location: 2.5, scale: 1.0 },
                     total_spent: $lifetime_value,
@@ -15605,7 +15616,7 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
             customer_id: UUID,
             
             // Account details
-            opening_date: Date,
+            opening_date: Instant,
             status: Uniform::{ choices: ["active", "closed", "frozen", "dormant"] },
             currency: Uniform::{ choices: ["USD", "EUR", "GBP", "CAD"] },
             
@@ -15677,7 +15688,7 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
                 first_name: LoremIpsumTitle,
                 last_name: LoremIpsumTitle,
                 ssn: Regex::{ pattern: "[0-9]{3}-[0-9]{2}-[0-9]{4}" },  // Format only
-                date_of_birth: Date,
+                date_of_birth: Instant,
                 phone: Regex::{ pattern: "[0-9]{3}-[0-9]{3}-[0-9]{4}" },
                 email: Format::{ pattern: "customer{UUID}@email.com" }
             },
@@ -15704,7 +15715,7 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
                 employer: LoremIpsumTitle,
                 
                 // Banking relationship
-                customer_since: Date,
+                customer_since: Instant,
                 risk_category: Uniform::{ choices: ["low", "medium", "high"] },
                 kyc_verified: Bool::{ p: 0.95 },  // 95% KYC verified
                 
@@ -15866,7 +15877,7 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
             // Status (most succeed, occasional failures)
             status: Uniform::{ choices: ["completed", "completed", "completed", "failed"] },
             failure_reason: Uniform::{ 
-                choices: ["insufficient_funds", "account_closed", "technical_error", null],
+                choices: ["insufficient_funds", "account_closed", "technical_error", "none"],
                 // Only relevant when status = "failed"
             }
         }
@@ -16076,7 +16087,8 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
     
     // Compliance reporting events
     compliance_reports: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 1, high: 7 } },
+        $interval: UniformU8::{ low: 1, high: 7 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             report_id: UUID,
             report_type: Uniform::{ choices: ["CTR", "SAR", "OFAC_ALERT", "BSA_REPORT"] },
@@ -16128,7 +16140,8 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
     
     // Credit applications
     credit_applications: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 1, high: 14 } },
+        $interval: UniformU8::{ low: 1, high: 14 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             application_id: UUID,
             customer_id: Uniform::{ choices: $customer_ids },
@@ -16251,7 +16264,7 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
             
             // Account details
             account_value: LogNormalF64::{ location: 10.0, scale: 1.5 },  // $10K-$10M range
-            inception_date: Date,
+            inception_date: Instant,
             managed: Bool::{ p: 0.6 },  // 60% professionally managed
             advisor_id: UUID
         }
@@ -16259,7 +16272,8 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
     
     // Portfolio transactions (rebalancing, deposits, withdrawals)
     portfolio_transactions: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU8::{ low: 7, high: 60 } },
+        $interval: UniformU8::{ low: 7, high: 60 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             transaction_id: UUID,
             portfolio_id: UUID,
@@ -16302,7 +16316,8 @@ cat ecommerce-database/ecommerce-demo-db/customers.shape.sql
 <pre><code class="language-ion">rand_processes::{
     // Regulatory examinations
     examinations: rand_process::{
-        $arrival: HomogeneousPoisson::{ interarrival: days::UniformU16::{ low: 30, high: 180 } },
+        $interval: UniformU16::{ low: 30, high: 180 },
+        $arrival: HomogeneousPoisson::{ interarrival: days::$interval },
         $data: {
             examination_id: UUID,
             examination_date: Instant,
