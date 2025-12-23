@@ -4,7 +4,7 @@
 
 # Getting Started
 
-- [What is PartiQL Beamline?](./getting-started/what-is-beamline.md)
+- [What is Beamline?](./getting-started/what-is-beamline.md)
 - [Installation and Setup](./getting-started/installation.md)
 - [Your First Data Generation](./getting-started/first-generation.md)
 

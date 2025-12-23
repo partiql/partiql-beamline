@@ -1,17 +1,17 @@
 # Output Formats
 
-PartiQL Beamline supports multiple output formats for generated data, each optimized for different use cases. Understanding these formats helps you choose the right one for your workflow.
+Beamline supports multiple output formats for generated data, each optimized for different use cases. Understanding these formats helps you choose the right one for your workflow.
 
 ## Available Formats
 
 The CLI supports four main output formats via `--output-format`:
 
-| Format | Description | Use Case | Performance |
-|--------|-------------|----------|-------------|
-| `text` | Human-readable timestamped format | Debugging, inspection | Moderate |
-| `ion` | Compact Ion text format | Data processing | Fast |
-| `ion-pretty` | Pretty-printed Ion with metadata | Configuration, documentation | Slower |
-| `ion-binary` | Binary Ion format | High-performance storage | Fastest |
+| Format       | Description                       | Use Case                     | Performance |
+|--------------|-----------------------------------|------------------------------|-------------|
+| `text`       | Human-readable timestamped format | Debugging, inspection        | Moderate    |
+| `ion`        | Compact Ion text format           | Data processing              | Fast        |
+| `ion-pretty` | Pretty-printed Ion with metadata  | Configuration, documentation | Slower      |
+| `ion-binary` | Binary Ion format                 | High-performance storage     | Fastest     |
 
 ## Text Format (Default)
 

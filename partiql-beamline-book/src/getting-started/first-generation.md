@@ -1,11 +1,11 @@
 # Your First Data Generation
 
-Now that you have PartiQL Beamline installed, let's generate your first dataset! This hands-on tutorial will walk you 
+Now that you have Beamline installed, let's generate your first dataset! This hands-on tutorial will walk you 
 through creating a simple sensor data generator and understanding the basic concepts.
 
 ## Quick Start: Using an Example Script
 
-PartiQL Beamline comes with several example scripts. Let's start with the sensors example to see data generation in action.
+Beamline comes with several example scripts. Let's start with the sensors example to see data generation in action.
 
 ### Step 1: Generate Your First Dataset
 
@@ -27,7 +27,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 [2022-01-08 18:38:57.155 +00:00:00] : DataSetName("sensors") { 'tick': 19155, 'i8': 57, 'f': 30.103028021670184, 'w': 3.2669, 'd': 2, 'a': 'ed6b2d0c-dd09-4d7e-b1d3-fc16e3547eb5', 'ar1': [1.2, 1.4, 0.8], 'ar2': ['8fe9ee2c-a9e0-462a-8a44-a9abc51e759b', '0411eace-53be-4647-b351-3fa2de9b8e5f'], 'ar3': [3.2669, NULL, 3.0777], 'ar4': [10, 4, 8, 2], 'ar5': ['ed6b2d0c-dd09-4d7e-b1d3-fc16e3547eb5'] }
 ```
 
-Congratulations! You've just generated your first synthetic dataset with PartiQL Beamline.
+Congratulations! You've just generated your first synthetic dataset with Beamline.
 
 ### Understanding the Output
 
@@ -154,7 +154,7 @@ rand_processes::{
 
 ### Script Breakdown
 
-1. **`rand_processes::`**: This annotation tells PartiQL Beamline that this structure defines random processes
+1. **`rand_processes::`**: This annotation tells Beamline that this structure defines random processes
 
 2. **`$n: UniformU8::{ low: 1, high: 3 }`**: Creates a variable `n` that generates a random number between 1 and 3
 
@@ -164,7 +164,7 @@ rand_processes::{
 
 5. **`$r: Uniform::[5,10]`**: Creates a variable `r` that randomly selects between 5 and 10
 
-6. **`$arrival: HomogeneousPoisson:: { interarrival: minutes::$r }`**: Defines how often data arrives (every `r` minutes using a Poisson process)
+6. **`$arrival: HomogeneousPoisson:: { interarrival: minutes::$r }`**: Defines how often data arrives (every `r` minutes using a [Poisson process](https://en.wikipedia.org/wiki/Poisson_point_process))
 
 7. **`$data:`**: Defines the structure of each generated data record:
    - `tick: Tick` - Current simulation tick
@@ -174,7 +174,7 @@ rand_processes::{
 
 ## Exploring Different Output Formats
 
-PartiQL Beamline supports multiple output formats. Let's try generating the same data in different formats:
+Beamline supports multiple output formats. Let's try generating the same data in different formats:
 
 ### Ion Pretty Format
 
@@ -322,8 +322,8 @@ beamline gen data \
 
 ## Next Steps
 
-Now that you've successfully generated your first datasets, you're ready to dive deeper into PartiQL Beamline's 
-capabilities. In the next section, we'll explore the core concepts that power PartiQL Beamline's data generation, including:
+Now that you've successfully generated your first datasets, you are ready to dive deeper into Beamline's 
+capabilities. In the next section, we'll explore the core concepts that power Beamline's data generation, including:
 
 - Random processes and stochastic modeling
 - Data generators and their configurations
@@ -351,4 +351,4 @@ beamline gen data ... --dataset DATASET_NAME
 beamline gen data ... --default-nullable true --pct-null 0.1
 ```
 
-Congratulations on completing your first data generation with PartiQL Beamline! You're now ready to explore more advanced features and create more sophisticated synthetic datasets.
+Congratulations on completing your first data generation with Beamline! You're now ready to explore more advanced features and create more sophisticated synthetic datasets.

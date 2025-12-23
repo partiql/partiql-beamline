@@ -1,6 +1,6 @@
 # Query Generation Parameterization
 
-This section provides a complete reference for all query generation parameters. PartiQL Beamline's query generator is highly configurable, allowing you to control every aspect of query generation from simple predicates to complex nested path expressions.
+This section provides a complete reference for all query generation parameters. Beamline's query generator is highly configurable, allowing you to control every aspect of query generation from simple predicates to complex nested path expressions.
 
 ## Parameter Categories
 

@@ -182,7 +182,8 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="scripts-and-random-processes"><a class="header" href="#scripts-and-random-processes">Scripts and Random Processes</a></h1>
-<p>PartiQL Beamline uses <strong>Ion-based scripts</strong> to define data generation configurations and <strong>stochastic processes</strong> to model how data arrives and evolves over time. This combination provides powerful, flexible control over synthetic data generation.</p>
+<p>Beamline uses <strong>Ion-based scripts</strong> to define data generation configurations and <strong>stochastic processes</strong> to model how
+data arrives and evolves over time. This combination provides powerful, flexible control over synthetic data generation.</p>
 <h2 id="ion-scripts-overview"><a class="header" href="#ion-scripts-overview">Ion Scripts Overview</a></h2>
 <h3 id="what-are-ion-scripts"><a class="header" href="#what-are-ion-scripts">What are Ion Scripts?</a></h3>
 <p>Ion scripts are configuration files written in <a href="https://amazon-ion.github.io/ion-docs/">Amazon Ion</a> format that define:</p>
@@ -193,7 +194,7 @@
 <li><strong>How much data</strong> (counts, durations, stopping conditions)</li>
 </ul>
 <h3 id="basic-script-structure"><a class="header" href="#basic-script-structure">Basic Script Structure</a></h3>
-<p>Every PartiQL Beamline script follows this structure:</p>
+<p>Every Beamline script follows this structure:</p>
 <pre><code class="language-ion">rand_processes::{
     // Variable definitions (optional)
     $variable_name: GeneratorType::{ configuration },
@@ -698,7 +699,7 @@ target/release/beamline gen data \
 </code></pre>
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <h3 id="1-use-real-test-script-patterns"><a class="header" href="#1-use-real-test-script-patterns">1. Use Real Test Script Patterns</a></h3>
-<pre><code class="language-ion">// Good - follows actual PartiQL Beamline syntax
+<pre><code class="language-ion">// Good - follows actual Beamline syntax
 rand_processes::{
     $arrival_rate: Uniform::{ choices: [5, 10] },
     
@@ -851,7 +852,7 @@ target/release/beamline gen data \
   --output-format ion-binary
 </code></pre>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
-<p>Now that you understand real Ion scripts and stochastic processes, you’re ready to dive deeper into the <a href="../data-generation/overview.html">Data Generation</a> section, where you’ll learn about specific generator types, output formats, and advanced data modeling techniques using the actual PartiQL Beamline syntax.</p>
+<p>Now that you understand real Ion scripts and stochastic processes, you’re ready to dive deeper into the <a href="../data-generation/overview.html">Data Generation</a> section, where you’ll learn about specific generator types, output formats, and advanced data modeling techniques using the actual Beamline syntax.</p>
 
                     </main>
 

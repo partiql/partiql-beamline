@@ -1,12 +1,12 @@
 # CLI Overview
 
-The PartiQL Beamline Command Line Interface (CLI) provides access to all of Beamline's core functionality: data generation, query generation, schema inference, and database creation. The CLI is built using Rust and follows a simple, consistent command structure.
+The Beamline Command Line Interface (CLI) provides access to all of Beamline's core functionality: data generation, query generation, schema inference, and database creation. The CLI is built using Rust and follows a simple, consistent command structure.
 
 ## Installation and Setup
 
 ### Building from Source
 
-The CLI is built as part of the PartiQL Beamline project:
+The CLI is built as part of the Beamline project:
 
 ```bash
 # Clone the repository

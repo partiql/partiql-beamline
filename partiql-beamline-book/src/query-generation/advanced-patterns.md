@@ -319,7 +319,7 @@ WHERE ((((test_data.price.value <= 6.206304713037888) OR
 
 ### Path Step Types
 
-PartiQL Beamline can generate different path step types:
+Beamline can generate different path step types:
 
 #### Projection Steps (`.field`)
 ```sql

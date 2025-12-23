@@ -182,7 +182,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="reproducible-data-generation"><a class="header" href="#reproducible-data-generation">Reproducible Data Generation</a></h1>
-<p>One of PartiQL Beamline’s core strengths is its ability to generate <strong>reproducible data</strong> — the same input parameters will always produce exactly the same output data, no matter when or where you run the generation process.</p>
+<p>One of Beamline’s core strengths is its ability to generate <strong>reproducible data</strong> — the same input parameters will always produce exactly the same output data, no matter when or where you run the generation process.</p>
 <h2 id="what-is-reproducibility"><a class="header" href="#what-is-reproducibility">What is Reproducibility?</a></h2>
 <p>Reproducible data generation means that given the same:</p>
 <ul>
@@ -227,7 +227,7 @@ beamline gen data --seed 2024 --start-auto --script-path integration_test.ion
 <p>Regression testing requires the same test data to verify that code changes don’t break existing functionality.</p>
 <h2 id="how-seeds-work"><a class="header" href="#how-seeds-work">How Seeds Work</a></h2>
 <h3 id="pseudorandom-number-generation"><a class="header" href="#pseudorandom-number-generation">Pseudorandom Number Generation</a></h3>
-<p>PartiQL Beamline uses <strong>cryptographically secure pseudorandom number generators</strong> (PRNGs) that are initialized with a seed value:</p>
+<p>Beamline uses <strong>cryptographically secure pseudorandom number generators</strong> (PRNGs) that are initialized with a seed value:</p>
 <pre><code class="language-bash"># Different seeds = different data
 beamline gen data --seed 1 --start-auto --script-path test.ion    # Generates dataset A
 beamline gen data --seed 2 --start-auto --script-path test.ion    # Generates dataset B

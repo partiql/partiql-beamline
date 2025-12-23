@@ -1,6 +1,6 @@
 # Query Generator Overview
 
-PartiQL Beamline's query generator creates reproducible PartiQL queries that match the shapes and types of data defined in Ion scripts. This allows you to generate realistic test queries for PartiQL implementations, ensuring your queries are both syntactically valid and semantically meaningful for your data structures.
+Beamline's query generator creates reproducible PartiQL queries that match the shapes and types of data defined in Ion scripts. This allows you to generate realistic test queries for PartiQL implementations, ensuring your queries are both syntactically valid and semantically meaningful for your data structures.
 
 ## What is Query Generation?
 
@@ -46,7 +46,7 @@ Generated queries will reference actual fields like `transaction_id`, `marketpla
 
 ## Query Generation Strategies
 
-PartiQL Beamline supports four main query generation strategies:
+Beamline supports four main query generation strategies:
 
 ### 1. `rand-select-all-fw` - SELECT * FROM WHERE
 

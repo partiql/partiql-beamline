@@ -182,13 +182,13 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="installation-and-setup"><a class="header" href="#installation-and-setup">Installation and Setup</a></h1>
-<p>This chapter will guide you through installing PartiQL Beamline and setting up your development environment.
-PartiQL Beamline is written in Rust, so we’ll cover both building from source and using pre-built binaries when available.</p>
+<p>This chapter will guide you through installing Beamline and setting up your development environment.
+Beamline is written in Rust, so we weill cover both building from source and using pre-built binaries when available.</p>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
-<p>Before installing PartiQL Beamline, ensure you have the following prerequisites:</p>
+<p>Before installing Beamline, ensure you have the following prerequisites:</p>
 <h3 id="required"><a class="header" href="#required">Required</a></h3>
 <ul>
-<li><strong>Rust Toolchain</strong>: PartiQL Beamline requires Rust 1.70 or later</li>
+<li><strong>Rust Toolchain</strong>: Beamline requires Rust 1.70 or later</li>
 <li><strong>Git</strong>: For cloning the repository</li>
 <li><strong>Command Line Access</strong>: Terminal or command prompt</li>
 </ul>
@@ -199,6 +199,8 @@ PartiQL Beamline is written in Rust, so we’ll cover both building from source 
 examining generated data</li>
 </ul>
 <h2 id="installing-rust"><a class="header" href="#installing-rust">Installing Rust</a></h2>
+<p>Read the following for more details on installing Rust on your machine:
+https://rust-lang.org/tools/install/</p>
 <p>If you don’t have Rust installed, follow these steps:</p>
 <h3 id="on-macos-linux-or-wsl"><a class="header" href="#on-macos-linux-or-wsl">On macOS, Linux, or WSL</a></h3>
 <pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -215,9 +217,9 @@ source ~/.cargo/env
 cargo --version
 </code></pre>
 <p>You should see version information for both <code>rustc</code> and <code>cargo</code>.</p>
-<h2 id="installing-partiql-beamline"><a class="header" href="#installing-partiql-beamline">Installing PartiQL Beamline</a></h2>
+<h2 id="installing-beamline"><a class="header" href="#installing-beamline">Installing Beamline</a></h2>
 <h3 id="method-1-building-from-source-recommended"><a class="header" href="#method-1-building-from-source-recommended">Method 1: Building from Source (Recommended)</a></h3>
-<p>This is currently the primary method for installing PartiQL Beamline:</p>
+<p>This is currently the primary method for installing Beamline:</p>
 <ol>
 <li>
 <p><strong>Clone the Repository</strong></p>
@@ -229,13 +231,13 @@ cd partiql-beamline
 <p><strong>Build the Project</strong></p>
 <pre><code class="language-bash">cargo build --release
 </code></pre>
-<p>This will compile PartiQL Beamline in release mode, which provides better performance for data generation.</p>
+<p>This will compile Beamline in release mode, which provides better performance for data generation.</p>
 </li>
 <li>
 <p><strong>Verify the Installation</strong></p>
 <pre><code class="language-bash">./target/release/beamline --version
 </code></pre>
-<p>You should see version information for PartiQL Beamline.</p>
+<p>You should see version information for Beamline.</p>
 </li>
 <li>
 <p><strong>Optional: Add to PATH</strong></p>
@@ -258,12 +260,12 @@ source ~/.bashrc
 </li>
 </ol>
 <h3 id="method-2-using-cargo-install-not-available-yet"><a class="header" href="#method-2-using-cargo-install-not-available-yet">Method 2: Using Cargo Install (Not available yet)</a></h3>
-<p>Once PartiQL Beamline is published to crates.io, you’ll be able to install it directly:</p>
+<p>Once Beamline is published to <a href="https://crates.io/">crates.io</a>, you’ll be able to install it directly:</p>
 <pre><code class="language-bash"># This will be available in the future
 cargo install beamline
 </code></pre>
 <h2 id="verifying-your-installation"><a class="header" href="#verifying-your-installation">Verifying Your Installation</a></h2>
-<p>Let’s verify that PartiQL Beamline is installed correctly by running a few basic commands:</p>
+<p>Let’s verify that Beamline is installed correctly by running a few basic commands:</p>
 <h3 id="1-check-version"><a class="header" href="#1-check-version">1. Check Version</a></h3>
 <pre><code class="language-bash">beamline --version
 </code></pre>
@@ -271,7 +273,7 @@ cargo install beamline
 <pre><code class="language-bash">beamline --help
 </code></pre>
 <p>You should see output similar to:</p>
-<pre><code>PartiQL Beamline CLI
+<pre><code>Beamline CLI
 
 Usage: beamline &lt;COMMAND&gt;
 
@@ -291,7 +293,7 @@ Options:
 <p>This should display the help for the data generation command, confirming that the core functionality is available.</p>
 <h2 id="development-environment-setup"><a class="header" href="#development-environment-setup">Development Environment Setup</a></h2>
 <h3 id="setting-up-your-workspace"><a class="header" href="#setting-up-your-workspace">Setting Up Your Workspace</a></h3>
-<p>Create a directory for your PartiQL Beamline projects:</p>
+<p>Create a directory for your Beamline projects:</p>
 <pre><code class="language-bash">mkdir ~/partiql-beamline-workspace
 cd ~/partiql-beamline-workspace
 </code></pre>
@@ -300,11 +302,10 @@ cd ~/partiql-beamline-workspace
 <p>If you’re using VS Code, consider installing these extensions for better Ion support:</p>
 <ol>
 <li><strong>Rust Analyzer</strong>: For Rust syntax highlighting if you plan to contribute</li>
+<li><strong>ion-vscode-plugin</strong>: For Syntax Highlighting, Error Reporting, and Formatting of Beamline scripts</li>
 <li><strong>JSON</strong>: For viewing generated JSON output</li>
 <li><strong>Better TOML</strong>: For configuration files</li>
 </ol>
-<h4 id="vimneovim"><a class="header" href="#vimneovim">Vim/Neovim</a></h4>
-<p>Add Ion syntax highlighting by creating <code>~/.vim/syntax/ion.vim</code> or using existing Ion plugins.</p>
 <h3 id="shell-aliases-optional"><a class="header" href="#shell-aliases-optional">Shell Aliases (Optional)</a></h3>
 <p>For convenience, you might want to create shell aliases:</p>
 <pre><code class="language-bash"># Add to your ~/.bashrc, ~/.zshrc, or equivalent
@@ -369,14 +370,14 @@ cargo build --release
 </code></pre>
 <p>Release builds can be 10-100x faster than debug builds for data generation tasks.</p>
 <h3 id="system-resources"><a class="header" href="#system-resources">System Resources</a></h3>
-<p>PartiQL Beamline is designed to be memory-efficient, but consider your system resources:</p>
+<p>Beamline is designed to be memory-efficient, but consider your system resources:</p>
 <ul>
 <li><strong>RAM</strong>: 4GB minimum, 8GB+ recommended for large datasets</li>
 <li><strong>Storage</strong>: Ensure adequate disk space for generated data</li>
 <li><strong>CPU</strong>: Multi-core processors will benefit from parallel processing features</li>
 </ul>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
-<p>Now that you have PartiQL Beamline installed and verified, you’re ready to generate your first dataset!
+<p>Now that you have Beamline installed and verified, you’re ready to generate your first dataset!
 In the next section, we’ll walk through creating your first data generation script and producing some sample data.</p>
 
                     </main>

@@ -1,6 +1,6 @@
 # Nullability and Optionality
 
-PartiQL Beamline provides fine-grained control over `NULL` and `MISSING` values in generated data. Understanding the distinction between these concepts and how to configure them is crucial for creating realistic datasets that match real-world data patterns.
+Beamline provides fine-grained control over `NULL` and `MISSING` values in generated data. Understanding the distinction between these concepts and how to configure them is crucial for creating realistic datasets that match real-world data patterns.
 
 ## NULL vs MISSING Values
 

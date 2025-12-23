@@ -182,10 +182,10 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="your-first-data-generation"><a class="header" href="#your-first-data-generation">Your First Data Generation</a></h1>
-<p>Now that you have PartiQL Beamline installed, let’s generate your first dataset! This hands-on tutorial will walk you
+<p>Now that you have Beamline installed, let’s generate your first dataset! This hands-on tutorial will walk you
 through creating a simple sensor data generator and understanding the basic concepts.</p>
 <h2 id="quick-start-using-an-example-script"><a class="header" href="#quick-start-using-an-example-script">Quick Start: Using an Example Script</a></h2>
-<p>PartiQL Beamline comes with several example scripts. Let’s start with the sensors example to see data generation in action.</p>
+<p>Beamline comes with several example scripts. Let’s start with the sensors example to see data generation in action.</p>
 <h3 id="step-1-generate-your-first-dataset"><a class="header" href="#step-1-generate-your-first-dataset">Step 1: Generate Your First Dataset</a></h3>
 <p>Run the following command to generate 2 sensor readings:</p>
 <pre><code class="language-bash">beamline gen data \
@@ -199,7 +199,7 @@ through creating a simple sensor data generator and understanding the basic conc
 Start: 2022-01-08T18:38:38.000000000Z
 [2022-01-08 18:38:57.155 +00:00:00] : DataSetName("sensors") { 'tick': 19155, 'i8': 57, 'f': 30.103028021670184, 'w': 3.2669, 'd': 2, 'a': 'ed6b2d0c-dd09-4d7e-b1d3-fc16e3547eb5', 'ar1': [1.2, 1.4, 0.8], 'ar2': ['8fe9ee2c-a9e0-462a-8a44-a9abc51e759b', '0411eace-53be-4647-b351-3fa2de9b8e5f'], 'ar3': [3.2669, NULL, 3.0777], 'ar4': [10, 4, 8, 2], 'ar5': ['ed6b2d0c-dd09-4d7e-b1d3-fc16e3547eb5'] }
 </code></pre>
-<p>Congratulations! You’ve just generated your first synthetic dataset with PartiQL Beamline.</p>
+<p>Congratulations! You’ve just generated your first synthetic dataset with Beamline.</p>
 <h3 id="understanding-the-output"><a class="header" href="#understanding-the-output">Understanding the Output</a></h3>
 <p>Let’s break down what happened:</p>
 <ul>
@@ -316,7 +316,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 <h3 id="script-breakdown"><a class="header" href="#script-breakdown">Script Breakdown</a></h3>
 <ol>
 <li>
-<p><strong><code>rand_processes::</code></strong>: This annotation tells PartiQL Beamline that this structure defines random processes</p>
+<p><strong><code>rand_processes::</code></strong>: This annotation tells Beamline that this structure defines random processes</p>
 </li>
 <li>
 <p><strong><code>$n: UniformU8::{ low: 1, high: 3 }</code></strong>: Creates a variable <code>n</code> that generates a random number between 1 and 3</p>
@@ -331,7 +331,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 <p><strong><code>$r: Uniform::[5,10]</code></strong>: Creates a variable <code>r</code> that randomly selects between 5 and 10</p>
 </li>
 <li>
-<p><strong><code>$arrival: HomogeneousPoisson:: { interarrival: minutes::$r }</code></strong>: Defines how often data arrives (every <code>r</code> minutes using a Poisson process)</p>
+<p><strong><code>$arrival: HomogeneousPoisson:: { interarrival: minutes::$r }</code></strong>: Defines how often data arrives (every <code>r</code> minutes using a <a href="https://en.wikipedia.org/wiki/Poisson_point_process">Poisson process</a>)</p>
 </li>
 <li>
 <p><strong><code>$data:</code></strong>: Defines the structure of each generated data record:</p>
@@ -344,7 +344,7 @@ Start: 2022-01-08T18:38:38.000000000Z
 </li>
 </ol>
 <h2 id="exploring-different-output-formats"><a class="header" href="#exploring-different-output-formats">Exploring Different Output Formats</a></h2>
-<p>PartiQL Beamline supports multiple output formats. Let’s try generating the same data in different formats:</p>
+<p>Beamline supports multiple output formats. Let’s try generating the same data in different formats:</p>
 <h3 id="ion-pretty-format"><a class="header" href="#ion-pretty-format">Ion Pretty Format</a></h3>
 <pre><code class="language-bash">beamline gen data \
     --seed 5372343081885320050 \
@@ -464,8 +464,8 @@ Start: 2022-01-08T18:38:38.000000000Z
     --pct-null 0.1  # 10% chance of NULL values
 </code></pre>
 <h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
-<p>Now that you’ve successfully generated your first datasets, you’re ready to dive deeper into PartiQL Beamline’s
-capabilities. In the next section, we’ll explore the core concepts that power PartiQL Beamline’s data generation, including:</p>
+<p>Now that you’ve successfully generated your first datasets, you are ready to dive deeper into Beamline’s
+capabilities. In the next section, we’ll explore the core concepts that power Beamline’s data generation, including:</p>
 <ul>
 <li>Random processes and stochastic modeling</li>
 <li>Data generators and their configurations</li>
@@ -489,7 +489,7 @@ beamline gen data ... --dataset DATASET_NAME
 # Control nullability
 beamline gen data ... --default-nullable true --pct-null 0.1
 </code></pre>
-<p>Congratulations on completing your first data generation with PartiQL Beamline! You’re now ready to explore more advanced features and create more sophisticated synthetic datasets.</p>
+<p>Congratulations on completing your first data generation with Beamline! You’re now ready to explore more advanced features and create more sophisticated synthetic datasets.</p>
 
                     </main>
 

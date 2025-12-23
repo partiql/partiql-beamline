@@ -25,7 +25,8 @@ The guide is structured to gradually build your understanding and skills:
 ## What is Beamline?
 
 Beamline is a tool for **fast data generation**. 
-It generates **reproducible pseudo-random data** using a **stochastic approach** and **statistical distributions**, 
+It generates **reproducible pseudo-random data** using a **[stochastic approach](https://en.wikipedia.org/wiki/Stochastic_process)** and 
+**[probability distributions](https://en.wikipedia.org/wiki/Probability_distribution)**, 
 meaning you can create realistic datasets that follow specific mathematical patterns. This makes the data both random
 enough to be useful for  AI/ML model training, simulation, and testing purposing, while remaining deterministic enough 
 to be reproducible for debugging and validation.
@@ -41,7 +42,7 @@ training scenarios where you need synthetic data that resembles specific populat
 - **Schema Inference**: Automatically infer and export data schemas in various formats
 - **Multiple Output Formats**: Support for [Amazon Ion](https://amazon-ion.github.io/ion-docs/), JSON, and SQL DDL
 - **Database Generation**: Create complete local copies of the generated data with both data and schemas
-- **Flexible Configuration**: Highly configurable through Ion-based scripts
+- **Flexible Configuration**: Highly configurable through scripts
 
 ## Prerequisites
 
@@ -55,9 +56,9 @@ Don't worry if you're new to some of these concepts — we'll explain everything
 
 ## Getting Help
 
-If you encounter issues or have questions while following this guide:
-- Check the [Troubleshooting](./reference/troubleshooting.md) section
-- Review the [Command Reference](./reference/commands.md) for detailed CLI options
-- Visit the [PartiQL Beamline GitHub repository](https://github.com/partiql/partiql-beamline) for the latest updates and community support
+If you encounter issues or have questions while following this guide please open an issue on 
+[Beamline GitHub repository](https://github.com/partiql/partiql-beamline/issues/new/choose). 
+or [start a dicussion](https://github.com/partiql/partiql-beamline/discussions) on our GitHub repositories 
+Discussions section.
 
-Let's begin your journey with PartiQL Beamline!
+Let's begin your journey with Beamline!

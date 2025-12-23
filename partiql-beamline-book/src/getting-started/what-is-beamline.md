@@ -1,8 +1,7 @@
 # What is Beamline?
 
-Beamline is a tool designed for **fast data generation** specifically using [PartiQL](https://partiql.org/) value system.
-At its core, it generates **reproducible pseudo-random data** using a **stochastic approach** that models real-world data
-patterns.
+Beamline is a tool designed for **fast data generation**. At its core, it generates **reproducible pseudo-random data** 
+using a **[stochastic approach](https://en.wikipedia.org/wiki/Stochastic_process)** that models real-world data patterns.
 
 ## The Problem It Solves
 
@@ -32,13 +31,13 @@ It can generate:
 
 **Key Features:**
 - **Reproducible**: Same seed always produces the same data no matter how nested that data is
-- **Configurable**: Highly customizable through Amazon Ion-based scripts
+- **Configurable**: Highly customizable through scripts
 - **Realistic**: Uses statistical distributions to model real-world patterns
 - **Scalable**: Can generate datasets from small samples to millions of records
 
 ### 2. Query Generator
 
-The **Query Generator** creates SQL-like queries (starting from [PartiQL](https://partiql.org)) that match the shapes 
+The **Query Generator** creates SQL-like queries (starting from [PartiQL](https://partiql.org) support) that match the shapes 
 and types of your generated data. It can produce:
 
 - `SELECT * FROM ... WHERE ...` queries with various predicates
@@ -47,9 +46,8 @@ and types of your generated data. It can produce:
 - Complex nested queries with deep path expressions
 
 **Key Features:**
-- **Shape-Aware**: Generates queries that match your data types
+- **Datatype-Aware**: Generates queries that match your data types
 - **Parameterizable**: Control query complexity, depth, and patterns
-- 
 - **Reproducible**: Same seed produces the same query patterns
 
 ### 3. CLI Interface
@@ -59,7 +57,7 @@ The **Command Line Interface** provides easy access to all functionality with co
 - Data generation with various output formats
 - Query generation with extensive parameterization
 - Schema inference and export
-- Database creation with both data and schemas
+- Local data file creation with both data and schemas
 
 ## How It Works
 
@@ -70,12 +68,11 @@ appear to vary randomly over time. This approach allows it to:
 
 - Generate data that follows realistic patterns
 - Model temporal relationships (like arrival times)
-- Create correlated data across different fields
 - Simulate real-world variability while maintaining reproducibility
 
 ### Scripts and Configuration
 
-Data generation is controlled through **Ion-based scripts** that define:
+Data generation is controlled through **scripts** that define:
 
 - **Random Processes**: How data arrives and is generated over time
 - **Data Generators**: What types of data to create and their distributions
@@ -86,7 +83,7 @@ Data generation is controlled through **Ion-based scripts** that define:
 
 One of Beamline's key strengths is **reproducibility**:
 
-- **Seeds**: Control the random number generation for consistent results
+- **Seeds**: Control the random data generation for consistent results
 - **Timestamps**: Control the starting time for temporal data
 - **Deterministic**: Same inputs always produce the same outputs
 - **Debuggable**: Reproduce exact datasets for debugging and validation
@@ -97,8 +94,6 @@ One of Beamline's key strengths is **reproducibility**:
 
 - **Training Data Generation**: Generate datasets that follow specific statistical distributions for machine learning model training
 - **Distribution-Based Modeling**: Create training data that matches target population distributions for more representative models
-- **Model Validation**: Generate test datasets with known statistical properties for evaluating model performance
-- **Feature Engineering**: Create data with controlled statistical characteristics to test feature extraction algorithms
 - **Synthetic Data Augmentation**: Expand training datasets while preserving underlying statistical distributions
 - **Edge Case Generation**: Generate rare statistical scenarios for robust model validation
 
@@ -112,7 +107,6 @@ One of Beamline's key strengths is **reproducibility**:
 ### Performance and Benchmarking
 
 - **Load Testing**: Generate large datasets for performance evaluation
-- **Comparative Analysis**: Create consistent datasets for comparing implementations
 - **Scalability Testing**: Test how systems perform with growing data sizes
 - **Query Optimization**: Generate queries to test optimization strategies
 

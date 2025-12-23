@@ -1,13 +1,13 @@
 # Data Generation Overview
 
-PartiQL Beamline's data generation system creates synthetic data using 
+Beamline's data generation system creates synthetic data using 
 **[stochastic processes](https://en.wikipedia.org/wiki/Stochastic_process)** and 
 **[probability distributions](https://en.wikipedia.org/wiki/Probability_distribution)**. 
 The system is built around three core concepts: **random processes**, **value generators**, and **temporal modeling**.
 
 ## Architecture Overview
 
-Data generation in PartiQL Beamline follows a layered architecture:
+Data generation in Beamline follows a layered architecture:
 
 1. **Random Processes** — Mathematical models that describe how events occur over time
 2. **Value Generators** — Components that create specific data types and values
@@ -271,7 +271,7 @@ price: UniformDecimal::{
 
 ## Arrival Processes
 
-Control when events occur in simulation time. PartiQL Beamline is currently supporintg only
+Control when events occur in simulation time. Beamline is currently supporintg only
 [Homogeneous Poisson Process](https://en.wikipedia.org/wiki/Poisson_point_process):
 
 ### Homogeneous Poisson Process
@@ -452,7 +452,7 @@ rand_processes::{
 
 ## Probability Distribution Support
 
-PartiQL Beamline provides support for data generation based on probability distributions, 
+Beamline provides support for data generation based on probability distributions, 
 making it particularly valuable for AI model training and statistical simulation:
 
 ### Available Distributions

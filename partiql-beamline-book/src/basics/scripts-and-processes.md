@@ -1,6 +1,7 @@
 # Scripts and Random Processes
 
-PartiQL Beamline uses **Ion-based scripts** to define data generation configurations and **stochastic processes** to model how data arrives and evolves over time. This combination provides powerful, flexible control over synthetic data generation.
+Beamline uses **Ion-based scripts** to define data generation configurations and **stochastic processes** to model how 
+data arrives and evolves over time. This combination provides powerful, flexible control over synthetic data generation.
 
 ## Ion Scripts Overview
 
@@ -14,7 +15,7 @@ Ion scripts are configuration files written in [Amazon Ion](https://amazon-ion.g
 
 ### Basic Script Structure
 
-Every PartiQL Beamline script follows this structure:
+Every Beamline script follows this structure:
 
 ```ion
 rand_processes::{
@@ -601,7 +602,7 @@ target/release/beamline gen data \
 ### 1. Use Real Test Script Patterns
 
 ```ion
-// Good - follows actual PartiQL Beamline syntax
+// Good - follows actual Beamline syntax
 rand_processes::{
     $arrival_rate: Uniform::{ choices: [5, 10] },
     
@@ -782,4 +783,4 @@ target/release/beamline gen data \
 
 ## Next Steps
 
-Now that you understand real Ion scripts and stochastic processes, you're ready to dive deeper into the [Data Generation](../data-generation/overview.md) section, where you'll learn about specific generator types, output formats, and advanced data modeling techniques using the actual PartiQL Beamline syntax.
+Now that you understand real Ion scripts and stochastic processes, you're ready to dive deeper into the [Data Generation](../data-generation/overview.md) section, where you'll learn about specific generator types, output formats, and advanced data modeling techniques using the actual Beamline syntax.

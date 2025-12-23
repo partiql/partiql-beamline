@@ -1,6 +1,6 @@
 # Data Generation Commands
 
-The `beamline gen data` command generates synthetic data from Ion scripts using stochastic processes. This is the primary command for creating reproducible pseudo-random data in PartiQL Beamline.
+The `beamline gen data` command generates synthetic data from Ion scripts using stochastic processes. This is the primary command for creating reproducible pseudo-random data in Beamline.
 
 ## Command Syntax
 

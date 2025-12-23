@@ -1,6 +1,6 @@
 # Understanding Shapes
 
-In PartiQL Beamline, **shapes** (also called schemas) describe the structure and types of your generated data. Shape inference analyzes Ion scripts to determine what types of data will be generated, without actually generating the full dataset. This is essential for database schema creation, query validation, and understanding your data structure.
+In Beamline, **shapes** (also called schemas) describe the structure and types of your generated data. Shape inference analyzes Ion scripts to determine what types of data will be generated, without actually generating the full dataset. This is essential for database schema creation, query validation, and understanding your data structure.
 
 ## What are Shapes?
 
@@ -653,7 +653,7 @@ Based on the actual implementation and README:
 
 ### Precision and Scale Inference
 
-For decimal types, PartiQL Beamline infers precision and scale:
+For decimal types, Beamline infers precision and scale:
 
 ```ion
 rand_processes::{

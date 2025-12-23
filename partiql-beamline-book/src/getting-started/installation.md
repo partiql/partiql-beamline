@@ -1,15 +1,15 @@
 # Installation and Setup
 
-This chapter will guide you through installing PartiQL Beamline and setting up your development environment. 
-PartiQL Beamline is written in Rust, so we'll cover both building from source and using pre-built binaries when available.
+This chapter will guide you through installing Beamline and setting up your development environment. 
+Beamline is written in Rust, so we weill cover both building from source and using pre-built binaries when available.
 
 ## Prerequisites
 
-Before installing PartiQL Beamline, ensure you have the following prerequisites:
+Before installing Beamline, ensure you have the following prerequisites:
 
 ### Required
 
-- **Rust Toolchain**: PartiQL Beamline requires Rust 1.70 or later
+- **Rust Toolchain**: Beamline requires Rust 1.70 or later
 - **Git**: For cloning the repository
 - **Command Line Access**: Terminal or command prompt
 
@@ -20,6 +20,9 @@ Before installing PartiQL Beamline, ensure you have the following prerequisites:
 examining generated data
 
 ## Installing Rust
+
+Read the following for more details on installing Rust on your machine:
+https://rust-lang.org/tools/install/
 
 If you don't have Rust installed, follow these steps:
 
@@ -45,11 +48,11 @@ cargo --version
 
 You should see version information for both `rustc` and `cargo`.
 
-## Installing PartiQL Beamline
+## Installing Beamline
 
 ### Method 1: Building from Source (Recommended)
 
-This is currently the primary method for installing PartiQL Beamline:
+This is currently the primary method for installing Beamline:
 
 1. **Clone the Repository**
    ```bash
@@ -62,14 +65,14 @@ This is currently the primary method for installing PartiQL Beamline:
    cargo build --release
    ```
 
-   This will compile PartiQL Beamline in release mode, which provides better performance for data generation.
+   This will compile Beamline in release mode, which provides better performance for data generation.
 
 3. **Verify the Installation**
    ```bash
    ./target/release/beamline --version
    ```
 
-   You should see version information for PartiQL Beamline.
+   You should see version information for Beamline.
 
 4. **Optional: Add to PATH**
    
@@ -96,7 +99,7 @@ This is currently the primary method for installing PartiQL Beamline:
 
 ### Method 2: Using Cargo Install (Not available yet)
 
-Once PartiQL Beamline is published to crates.io, you'll be able to install it directly:
+Once Beamline is published to [crates.io](https://crates.io/), you'll be able to install it directly:
 
 ```bash
 # This will be available in the future
@@ -105,7 +108,7 @@ cargo install beamline
 
 ## Verifying Your Installation
 
-Let's verify that PartiQL Beamline is installed correctly by running a few basic commands:
+Let's verify that Beamline is installed correctly by running a few basic commands:
 
 ### 1. Check Version
 
@@ -122,7 +125,7 @@ beamline --help
 You should see output similar to:
 
 ```
-PartiQL Beamline CLI
+Beamline CLI
 
 Usage: beamline <COMMAND>
 
@@ -150,7 +153,7 @@ This should display the help for the data generation command, confirming that th
 
 ### Setting Up Your Workspace
 
-Create a directory for your PartiQL Beamline projects:
+Create a directory for your Beamline projects:
 
 ```bash
 mkdir ~/partiql-beamline-workspace
@@ -164,12 +167,9 @@ cd ~/partiql-beamline-workspace
 If you're using VS Code, consider installing these extensions for better Ion support:
 
 1. **Rust Analyzer**: For Rust syntax highlighting if you plan to contribute
-2. **JSON**: For viewing generated JSON output
-3. **Better TOML**: For configuration files
-
-#### Vim/Neovim
-
-Add Ion syntax highlighting by creating `~/.vim/syntax/ion.vim` or using existing Ion plugins.
+2. **ion-vscode-plugin**: For Syntax Highlighting, Error Reporting, and Formatting of Beamline scripts
+3. **JSON**: For viewing generated JSON output
+4. **Better TOML**: For configuration files
 
 ### Shell Aliases (Optional)
 
@@ -259,7 +259,7 @@ Release builds can be 10-100x faster than debug builds for data generation tasks
 
 ### System Resources
 
-PartiQL Beamline is designed to be memory-efficient, but consider your system resources:
+Beamline is designed to be memory-efficient, but consider your system resources:
 
 - **RAM**: 4GB minimum, 8GB+ recommended for large datasets
 - **Storage**: Ensure adequate disk space for generated data
@@ -267,5 +267,5 @@ PartiQL Beamline is designed to be memory-efficient, but consider your system re
 
 ## Next Steps
 
-Now that you have PartiQL Beamline installed and verified, you're ready to generate your first dataset!
+Now that you have Beamline installed and verified, you're ready to generate your first dataset!
 In the next section, we'll walk through creating your first data generation script and producing some sample data.

@@ -1,6 +1,6 @@
 # Working with Scripts
 
-Ion scripts are the core of PartiQL Beamline's data generation system. This section covers advanced scripting techniques, best practices, and patterns for creating sophisticated data generation scenarios.
+Ion scripts are the core of Beamline's data generation system. This section covers advanced scripting techniques, best practices, and patterns for creating sophisticated data generation scenarios.
 
 ## Ion Script Fundamentals
 

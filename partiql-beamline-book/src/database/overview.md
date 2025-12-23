@@ -1,10 +1,10 @@
 # Database Overview
 
-PartiQL Beamline provides powerful database generation capabilities through the **BeamlineLite** system. Unlike simple data generation, database generation creates complete, self-contained databases with both data and schemas, making them ideal for testing, development, and demonstrations.
+Beamline provides powerful database generation capabilities through the **BeamlineLite** system. Unlike simple data generation, database generation creates complete, self-contained databases with both data and schemas, making them ideal for testing, development, and demonstrations.
 
 ## What is BeamlineLite?
 
-**BeamlineLite** is PartiQL Beamline's database generation system that creates filesystem-based databases containing:
+**BeamlineLite** is Beamline's database generation system that creates filesystem-based databases containing:
 
 - **Generated data** in Ion format  
 - **Inferred schemas** in both Ion and SQL DDL formats

@@ -182,7 +182,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="query-generator-overview"><a class="header" href="#query-generator-overview">Query Generator Overview</a></h1>
-<p>PartiQL Beamline’s query generator creates reproducible PartiQL queries that match the shapes and types of data defined in Ion scripts. This allows you to generate realistic test queries for PartiQL implementations, ensuring your queries are both syntactically valid and semantically meaningful for your data structures.</p>
+<p>Beamline’s query generator creates reproducible PartiQL queries that match the shapes and types of data defined in Ion scripts. This allows you to generate realistic test queries for PartiQL implementations, ensuring your queries are both syntactically valid and semantically meaningful for your data structures.</p>
 <h2 id="what-is-query-generation"><a class="header" href="#what-is-query-generation">What is Query Generation?</a></h2>
 <p>The query generator analyzes the data shapes from your Ion scripts and creates PartiQL queries that:</p>
 <ul>
@@ -219,7 +219,7 @@
 </code></pre>
 <p>Generated queries will reference actual fields like <code>transaction_id</code>, <code>marketplace_id</code>, <code>country_code</code>, etc.</p>
 <h2 id="query-generation-strategies"><a class="header" href="#query-generation-strategies">Query Generation Strategies</a></h2>
-<p>PartiQL Beamline supports four main query generation strategies:</p>
+<p>Beamline supports four main query generation strategies:</p>
 <h3 id="1-rand-select-all-fw---select--from-where"><a class="header" href="#1-rand-select-all-fw---select--from-where">1. <code>rand-select-all-fw</code> - SELECT * FROM WHERE</a></h3>
 <p>Generates <code>SELECT *</code> queries with WHERE clauses:</p>
 <pre><code class="language-bash">beamline query basic \

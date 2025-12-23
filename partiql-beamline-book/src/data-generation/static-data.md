@@ -1,6 +1,6 @@
 # Static Data Generation
 
-Static data in PartiQL Beamline refers to data that is generated once at the beginning of the simulation, before any temporal events occur. This is useful for creating reference tables, lookup data, or any information that doesn't change over the course of your simulation.
+Static data in Beamline refers to data that is generated once at the beginning of the simulation, before any temporal events occur. This is useful for creating reference tables, lookup data, or any information that doesn't change over the course of your simulation.
 
 ## What is Static Data?
 

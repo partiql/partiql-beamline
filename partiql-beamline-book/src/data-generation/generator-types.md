@@ -1,6 +1,6 @@
 # Data Generator Types
 
-PartiQL Beamline provides a comprehensive set of data generators that can create values following various statistical distributions and patterns. Each generator is designed to produce realistic data for specific use cases and data types.
+Beamline provides a comprehensive set of data generators that can create values following various statistical distributions and patterns. Each generator is designed to produce realistic data for specific use cases and data types.
 
 ## Generator Categories
 
@@ -8,13 +8,13 @@ PartiQL Beamline provides a comprehensive set of data generators that can create
 
 These generators provide fundamental values based on simulation state:
 
-| Generator | PartiQL Type | Description | Configuration |
-|-----------|--------------|-------------|---------------|
-| `Bool` | BOOL | Boolean values using Bernoulli distribution | `p: f64` (probability of true, default: 0.5) |
-| `Date` | DATETIME | Current simulation date | No configuration |
-| `Instant` | DATETIME | Current simulation timestamp with timezone | No configuration |
-| `Tick` | Int64 | Current simulation tick counter | No configuration |
-| `UUID` | STRING | Version 4 UUID identifiers | No configuration |
+| Generator | PartiQL Type | Description                                 | Configuration                                |
+|-----------|--------------|---------------------------------------------|----------------------------------------------|
+| `Bool`    | BOOL         | Boolean values using Bernoulli distribution | `p: f64` (probability of true, default: 0.5) |
+| `Date`    | DATETIME     | Current simulation date                     | No configuration                             |
+| `Instant` | DATETIME     | Current simulation timestamp with timezone  | No configuration                             |
+| `Tick`    | Int64        | Current simulation tick counter             | No configuration                             |
+| `UUID`    | STRING       | Version 4 UUID identifiers                  | No configuration                             |
 
 #### Examples
 
@@ -41,20 +41,20 @@ Generate integers using discrete uniform distribution:
 
 #### Unsigned Integers
 
-| Generator | Range | Default Range | Configuration |
-|-----------|-------|---------------|---------------|
-| `UniformU8` | 0 to 255 | `low: 0, high: 255` | `low: u8, high: u8` |
-| `UniformU16` | 0 to 65,535 | `low: 0, high: 65535` | `low: u16, high: u16` |
-| `UniformU32` | 0 to 4,294,967,295 | `low: 0, high: 4294967295` | `low: u32, high: u32` |
+| Generator    | Range                          | Default Range                       | Configuration         |
+|--------------|--------------------------------|-------------------------------------|-----------------------|
+| `UniformU8`  | 0 to 255                       | `low: 0, high: 255`                 | `low: u8, high: u8`   |
+| `UniformU16` | 0 to 65,535                    | `low: 0, high: 65535`               | `low: u16, high: u16` |
+| `UniformU32` | 0 to 4,294,967,295             | `low: 0, high: 4294967295`          | `low: u32, high: u32` |
 | `UniformU64` | 0 to 9,223,372,036,854,775,807 | `low: 0, high: 9223372036854775807` | `low: u64, high: u64` |
 
 #### Signed Integers
 
-| Generator | Range | Default Range | Configuration |
-|-----------|-------|---------------|---------------|
-| `UniformI8` | -128 to 127 | `low: -127, high: 127` | `low: i8, high: i8` |
-| `UniformI16` | -32,768 to 32,767 | `low: -32767, high: 32767` | `low: i16, high: i16` |
-| `UniformI32` | -2,147,483,648 to 2,147,483,647 | `low: -2147483647, high: 2147483647` | `low: i32, high: i32` |
+| Generator    | Range                                                   | Default Range                                          | Configuration         |
+|--------------|---------------------------------------------------------|--------------------------------------------------------|-----------------------|
+| `UniformI8`  | -128 to 127                                             | `low: -127, high: 127`                                 | `low: i8, high: i8`   |
+| `UniformI16` | -32,768 to 32,767                                       | `low: -32767, high: 32767`                             | `low: i16, high: i16` |
+| `UniformI32` | -2,147,483,648 to 2,147,483,647                         | `low: -2147483647, high: 2147483647`                   | `low: i32, high: i32` |
 | `UniformI64` | -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807 | `low: -9223372036854775807, high: 9223372036854775807` | `low: i64, high: i64` |
 
 #### Examples
@@ -115,7 +115,7 @@ rand_processes::{
 
 ### Statistical Distribution Generators
 
-PartiQL Beamline supports several important probability distributions:
+Beamline supports several important probability distributions:
 
 #### Normal Distribution
 

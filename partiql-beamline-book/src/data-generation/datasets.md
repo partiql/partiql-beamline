@@ -1,6 +1,6 @@
 # Datasets and Collections
 
-Datasets in PartiQL Beamline represent collections of related data records that share the same structure. Understanding how to design, organize, and work with multiple datasets is essential for creating realistic data generation scenarios.
+Datasets in Beamline represent collections of related data records that share the same structure. Understanding how to design, organize, and work with multiple datasets is essential for creating realistic data generation scenarios.
 
 ## What are Datasets?
 

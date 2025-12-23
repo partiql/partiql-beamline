@@ -182,12 +182,12 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="data-generation-overview"><a class="header" href="#data-generation-overview">Data Generation Overview</a></h1>
-<p>PartiQL Beamline’s data generation system creates synthetic data using
+<p>Beamline’s data generation system creates synthetic data using
 <strong><a href="https://en.wikipedia.org/wiki/Stochastic_process">stochastic processes</a></strong> and
 <strong><a href="https://en.wikipedia.org/wiki/Probability_distribution">probability distributions</a></strong>.
 The system is built around three core concepts: <strong>random processes</strong>, <strong>value generators</strong>, and <strong>temporal modeling</strong>.</p>
 <h2 id="architecture-overview"><a class="header" href="#architecture-overview">Architecture Overview</a></h2>
-<p>Data generation in PartiQL Beamline follows a layered architecture:</p>
+<p>Data generation in Beamline follows a layered architecture:</p>
 <ol>
 <li><strong>Random Processes</strong> — Mathematical models that describe how events occur over time</li>
 <li><strong>Value Generators</strong> — Components that create specific data types and values</li>
@@ -390,7 +390,7 @@ price: UniformDecimal::{
 }
 </code></pre>
 <h2 id="arrival-processes"><a class="header" href="#arrival-processes">Arrival Processes</a></h2>
-<p>Control when events occur in simulation time. PartiQL Beamline is currently supporintg only
+<p>Control when events occur in simulation time. Beamline is currently supporintg only
 <a href="https://en.wikipedia.org/wiki/Poisson_point_process">Homogeneous Poisson Process</a>:</p>
 <h3 id="homogeneous-poisson-process"><a class="header" href="#homogeneous-poisson-process">Homogeneous Poisson Process</a></h3>
 <p>Statistically indepe events occur at a constant average rate with random intervals:</p>
@@ -544,7 +544,7 @@ clients: $n::[
 }
 </code></pre>
 <h2 id="probability-distribution-support"><a class="header" href="#probability-distribution-support">Probability Distribution Support</a></h2>
-<p>PartiQL Beamline provides support for data generation based on probability distributions,
+<p>Beamline provides support for data generation based on probability distributions,
 making it particularly valuable for AI model training and statistical simulation:</p>
 <h3 id="available-distributions"><a class="header" href="#available-distributions">Available Distributions</a></h3>
 <ul>

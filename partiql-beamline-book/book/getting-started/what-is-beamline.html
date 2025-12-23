@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>What is PartiQL Beamline? - PartiQL Beamline</title>
+        <title>What is Beamline? - PartiQL Beamline</title>
 
 
         <!-- Custom HTML head -->
@@ -182,9 +182,8 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="what-is-beamline"><a class="header" href="#what-is-beamline">What is Beamline?</a></h1>
-<p>Beamline is a tool designed for <strong>fast data generation</strong> specifically using <a href="https://partiql.org/">PartiQL</a> value system.
-At its core, it generates <strong>reproducible pseudo-random data</strong> using a <strong>stochastic approach</strong> that models real-world data
-patterns.</p>
+<p>Beamline is a tool designed for <strong>fast data generation</strong>. At its core, it generates <strong>reproducible pseudo-random data</strong>
+using a <strong><a href="https://en.wikipedia.org/wiki/Stochastic_process">stochastic approach</a></strong> that models real-world data patterns.</p>
 <h2 id="the-problem-it-solves"><a class="header" href="#the-problem-it-solves">The Problem It Solves</a></h2>
 <p>Some of the common software engineering problems that most developers, data scientists, and researchers often face are:</p>
 <ul>
@@ -209,12 +208,12 @@ It can generate:</p>
 <p><strong>Key Features:</strong></p>
 <ul>
 <li><strong>Reproducible</strong>: Same seed always produces the same data no matter how nested that data is</li>
-<li><strong>Configurable</strong>: Highly customizable through Amazon Ion-based scripts</li>
+<li><strong>Configurable</strong>: Highly customizable through scripts</li>
 <li><strong>Realistic</strong>: Uses statistical distributions to model real-world patterns</li>
 <li><strong>Scalable</strong>: Can generate datasets from small samples to millions of records</li>
 </ul>
 <h3 id="2-query-generator"><a class="header" href="#2-query-generator">2. Query Generator</a></h3>
-<p>The <strong>Query Generator</strong> creates SQL-like queries (starting from <a href="https://partiql.org">PartiQL</a>) that match the shapes
+<p>The <strong>Query Generator</strong> creates SQL-like queries (starting from <a href="https://partiql.org">PartiQL</a> support) that match the shapes
 and types of your generated data. It can produce:</p>
 <ul>
 <li><code>SELECT * FROM ... WHERE ...</code> queries with various predicates</li>
@@ -224,9 +223,8 @@ and types of your generated data. It can produce:</p>
 </ul>
 <p><strong>Key Features:</strong></p>
 <ul>
-<li><strong>Shape-Aware</strong>: Generates queries that match your data types</li>
+<li><strong>Datatype-Aware</strong>: Generates queries that match your data types</li>
 <li><strong>Parameterizable</strong>: Control query complexity, depth, and patterns</li>
-<li></li>
 <li><strong>Reproducible</strong>: Same seed produces the same query patterns</li>
 </ul>
 <h3 id="3-cli-interface"><a class="header" href="#3-cli-interface">3. CLI Interface</a></h3>
@@ -235,7 +233,7 @@ and types of your generated data. It can produce:</p>
 <li>Data generation with various output formats</li>
 <li>Query generation with extensive parameterization</li>
 <li>Schema inference and export</li>
-<li>Database creation with both data and schemas</li>
+<li>Local data file creation with both data and schemas</li>
 </ul>
 <h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
 <h3 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h3>
@@ -244,11 +242,10 @@ appear to vary randomly over time. This approach allows it to:</p>
 <ul>
 <li>Generate data that follows realistic patterns</li>
 <li>Model temporal relationships (like arrival times)</li>
-<li>Create correlated data across different fields</li>
 <li>Simulate real-world variability while maintaining reproducibility</li>
 </ul>
 <h3 id="scripts-and-configuration"><a class="header" href="#scripts-and-configuration">Scripts and Configuration</a></h3>
-<p>Data generation is controlled through <strong>Ion-based scripts</strong> that define:</p>
+<p>Data generation is controlled through <strong>scripts</strong> that define:</p>
 <ul>
 <li><strong>Random Processes</strong>: How data arrives and is generated over time</li>
 <li><strong>Data Generators</strong>: What types of data to create and their distributions</li>
@@ -258,7 +255,7 @@ appear to vary randomly over time. This approach allows it to:</p>
 <h3 id="reproducibility"><a class="header" href="#reproducibility">Reproducibility</a></h3>
 <p>One of Beamline’s key strengths is <strong>reproducibility</strong>:</p>
 <ul>
-<li><strong>Seeds</strong>: Control the random number generation for consistent results</li>
+<li><strong>Seeds</strong>: Control the random data generation for consistent results</li>
 <li><strong>Timestamps</strong>: Control the starting time for temporal data</li>
 <li><strong>Deterministic</strong>: Same inputs always produce the same outputs</li>
 <li><strong>Debuggable</strong>: Reproduce exact datasets for debugging and validation</li>
@@ -268,8 +265,6 @@ appear to vary randomly over time. This approach allows it to:</p>
 <ul>
 <li><strong>Training Data Generation</strong>: Generate datasets that follow specific statistical distributions for machine learning model training</li>
 <li><strong>Distribution-Based Modeling</strong>: Create training data that matches target population distributions for more representative models</li>
-<li><strong>Model Validation</strong>: Generate test datasets with known statistical properties for evaluating model performance</li>
-<li><strong>Feature Engineering</strong>: Create data with controlled statistical characteristics to test feature extraction algorithms</li>
 <li><strong>Synthetic Data Augmentation</strong>: Expand training datasets while preserving underlying statistical distributions</li>
 <li><strong>Edge Case Generation</strong>: Generate rare statistical scenarios for robust model validation</li>
 </ul>
@@ -283,7 +278,6 @@ appear to vary randomly over time. This approach allows it to:</p>
 <h3 id="performance-and-benchmarking"><a class="header" href="#performance-and-benchmarking">Performance and Benchmarking</a></h3>
 <ul>
 <li><strong>Load Testing</strong>: Generate large datasets for performance evaluation</li>
-<li><strong>Comparative Analysis</strong>: Create consistent datasets for comparing implementations</li>
 <li><strong>Scalability Testing</strong>: Test how systems perform with growing data sizes</li>
 <li><strong>Query Optimization</strong>: Generate queries to test optimization strategies</li>
 </ul>

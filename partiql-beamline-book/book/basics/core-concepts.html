@@ -188,7 +188,8 @@ make Beamline both powerful and reliable.</p>
 <h2 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h2>
 <p>At the heart of Beamline lies the concept of <a href="https://en.wikipedia.org/wiki/Stochastic_process"><strong>stochastic processes</strong></a> — mathematical models that describe systems appearing to vary randomly over time.</p>
 <h3 id="what-is-a-stochastic-process"><a class="header" href="#what-is-a-stochastic-process">What is a Stochastic Process?</a></h3>
-<p>A stochastic process is a collection of <a href="https://en.wikipedia.org/wiki/Random_variable">random variables</a> indexed by time or space. In simpler terms, it’s a way to model how things change randomly over time while still following certain patterns or rules.</p>
+<p>A stochastic process is a collection of <a href="https://en.wikipedia.org/wiki/Random_variable">random variables</a> indexed by time or space. In simpler terms, it is a way
+to model how things change randomly over time while still following certain patterns or rules.</p>
 <p><strong>Real-world examples:</strong></p>
 <ul>
 <li>Stock prices over time</li>
@@ -198,7 +199,8 @@ make Beamline both powerful and reliable.</p>
 <li>Temperature measurements</li>
 </ul>
 <h3 id="why-stochastic-processes-matter"><a class="header" href="#why-stochastic-processes-matter">Why Stochastic Processes Matter</a></h3>
-<p>Traditional random data generators often produce data that looks random but lacks the realistic patterns found in real-world data. Stochastic processes allow PartiQL Beamline to:</p>
+<p>Traditional random data generators often produce data that looks random but lacks the realistic patterns found in
+real-world data. Stochastic processes allow Beamline to:</p>
 <ol>
 <li><strong>Model Temporal Relationships</strong>: Data points aren’t just random — they follow realistic time-based patterns</li>
 <li><strong>Create Correlations</strong>: Different data elements can be related in meaningful ways</li>
@@ -217,8 +219,8 @@ temperature: UniformF64::{ low: -10.0, high: 40.0 }
 // Stochastic process (realistic)
 temperature: NormalF64::{ mean: 22.0, std_dev: 5.0 }
 </code></pre>
-<h2 id="random-processes-in-partiql-beamline"><a class="header" href="#random-processes-in-partiql-beamline">Random Processes in PartiQL Beamline</a></h2>
-<p>PartiQL Beamline implements stochastic processes through <strong>random processes</strong> defined in Ion scripts.</p>
+<h2 id="random-processes-in-beamline"><a class="header" href="#random-processes-in-beamline">Random Processes in Beamline</a></h2>
+<p>Beamline implements stochastic processes through <strong>random processes</strong> defined in scripts in <a href="https://amazon-ion.github.io/ion-docs/">Amazon Ion Format</a>.</p>
 <h3 id="anatomy-of-a-random-process"><a class="header" href="#anatomy-of-a-random-process">Anatomy of a Random Process</a></h3>
 <pre><code class="language-ion">rand_process::{
     $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
@@ -229,11 +231,12 @@ temperature: NormalF64::{ mean: 22.0, std_dev: 5.0 }
 </code></pre>
 <p>Every random process has two key components:</p>
 <ol>
-<li><strong>Arrival Process</strong> (<code>$arrival</code>): Defines <em>when</em> data is generated</li>
+<li><strong>Arrival Process</strong> (<code>$arrival</code>): Defines the statistical pattern of new data arrivals, i.e., <em>when</em> the data arrives</li>
 <li><strong>Data Structure</strong> (<code>$data</code>): Defines <em>what</em> data is generated</li>
 </ol>
 <h3 id="arrival-processes"><a class="header" href="#arrival-processes">Arrival Processes</a></h3>
-<p>Arrival processes control the timing of data generation. PartiQL Beamline supports several types:</p>
+<p>Arrival processes control the timing of data generation. Beamline only supports <a href="https://en.wikipedia.org/wiki/Poisson_point_process">Homogeneous Poisson Process</a>
+at the moment:</p>
 <h4 id="homogeneous-poisson-process"><a class="header" href="#homogeneous-poisson-process">Homogeneous Poisson Process</a></h4>
 <p>The most common arrival process, modeling events that occur at a constant average rate:</p>
 <pre><code class="language-ion">$arrival: HomogeneousPoisson:: { interarrival: minutes::5 }
@@ -253,7 +256,7 @@ temperature: NormalF64::{ mean: 22.0, std_dev: 5.0 }
 <li>System alerts</li>
 </ul>
 <h4 id="time-units"><a class="header" href="#time-units">Time Units</a></h4>
-<p>PartiQL Beamline supports various time units for arrival processes:</p>
+<p>Beamline supports various time units for arrival processes:</p>
 <pre><code class="language-ion">// Different time units
 seconds::30      // 30 seconds
 minutes::5       // 5 minutes  
@@ -264,7 +267,7 @@ milliseconds::100 // 100 milliseconds
 <h2 id="data-generators"><a class="header" href="#data-generators">Data Generators</a></h2>
 <p>Data generators define the structure and content of generated data. They use probability distributions to create realistic values.</p>
 <h3 id="probability-distributions"><a class="header" href="#probability-distributions">Probability Distributions</a></h3>
-<p>PartiQL Beamline supports many probability distributions, each suited for different types of data:</p>
+<p>Beamline supports many probability distributions, each suited for different types of data:</p>
 <h4 id="uniform-distributions"><a class="header" href="#uniform-distributions">Uniform Distributions</a></h4>
 <p>Generate values where each value in a range is equally likely:</p>
 <pre><code class="language-ion">// Discrete uniform (integers)
@@ -309,7 +312,7 @@ file_size: LogNormalF64::{ location: 10.0, scale: 1.0 }
 device_lifetime: WeibullF64::{ shape: 2.0, scale: 1000.0 }
 </code></pre>
 <h3 id="data-types"><a class="header" href="#data-types">Data Types</a></h3>
-<p>PartiQL Beamline supports all PartiQL data types:</p>
+<p>Beamline supports the following data types:</p>
 <h4 id="scalar-types"><a class="header" href="#scalar-types">Scalar Types</a></h4>
 <pre><code class="language-ion">// Numbers
 integer_val: UniformI32::{ low: 1, high: 1000 }
@@ -358,22 +361,37 @@ value: UniformAnyOf::{ types: [
 ]}
 </code></pre>
 <h2 id="variables-and-references"><a class="header" href="#variables-and-references">Variables and References</a></h2>
-<p>PartiQL Beamline supports variables for creating relationships and reusing values:</p>
+<p>Beamline supports variables for creating relationships and reusing values:</p>
 <h3 id="variable-definition"><a class="header" href="#variable-definition">Variable Definition</a></h3>
 <pre><code class="language-ion">rand_processes::{
-    // Define variables at the top level
-    $user_count: UniformU8::{ low: 5, high: 20 },
-    $id_generator: UUID,
-    
-    // Use variables in processes
-    users: $user_count::[
+$n: UniformU8::{ low: 2, high: 10 },
+
+    sensors: $n::[
         rand_process::{
+            $r: Uniform::{ choices: [5,10] },
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $weight: UniformDecimal::{ nullable: 0.75, low: 1.995, high: 4.9999, optional: true },
+            $anyof: UniformAnyOf::{ types: [Tick, UniformF64, UUID, UniformDecimal::{ low: 1.995, high: 4.9999, nullable: false }] },
+            $array: UniformArray::{
+                min_size: 3,
+                max_size: 3,
+                element_type: UniformDecimal::{ low: 0.5, high: 1.5 }
+            },
             $data: {
-                id: $id_generator,
-                name: LoremIpsumTitle
+                tick: Tick,
+                i8: UniformI8,
+                f: UniformF64,
+                w: $weight,
+                d: UniformDecimal::{ low: 0d0, high: 4.2d1, nullable: false },
+                a: $anyof,
+                ar1: $array,
+                ar2: UniformArray::{ min_size: 2, max_size: 4, element_type: UUID },
+                ar3: UniformArray::{ min_size: 2, max_size: 4, element_type: $weight },
+                ar4: UniformArray::{ min_size: 2, max_size: 4, element_type: UniformI8::{ low: 2, high: 10 } },
+                ar5: UniformArray::{ min_size: 1, max_size: 1, element_type: $anyof }
             }
         }
-    ]
+    ],
 }
 </code></pre>
 <h3 id="variable-types"><a class="header" href="#variable-types">Variable Types</a></h3>
@@ -384,7 +402,7 @@ $id_gen: UUID
 </code></pre>
 <h4 id="value-variables"><a class="header" href="#value-variables">Value Variables</a></h4>
 <p>Store computed values:</p>
-<pre><code class="language-ion">$success_rate: UniformF64::{ low: 0.95, high: 1.0 }
+<pre><code class="language-ion">$success_rate: UniformF64::{ low: 0.95, high: 1.0 },
 $is_successful: Bool::{ p: $success_rate }
 </code></pre>
 <h4 id="evaluation-control"><a class="header" href="#evaluation-control">Evaluation Control</a></h4>
@@ -396,7 +414,7 @@ $user_id: $id_gen::()
 $request_id: $id_gen
 </code></pre>
 <h2 id="datasets-and-collections"><a class="header" href="#datasets-and-collections">Datasets and Collections</a></h2>
-<p>PartiQL Beamline organizes generated data into datasets, which represent collections of related data.</p>
+<p>Beamline organizes generated data into datasets, which represent collections of related data.</p>
 <h3 id="single-dataset"><a class="header" href="#single-dataset">Single Dataset</a></h3>
 <pre><code class="language-ion">rand_processes::{
     sensors: rand_process::{
@@ -432,7 +450,7 @@ $request_id: $id_gen
 }
 </code></pre>
 <h2 id="reproducibility-and-determinism"><a class="header" href="#reproducibility-and-determinism">Reproducibility and Determinism</a></h2>
-<p>One of PartiQL Beamline’s key strengths is its ability to generate reproducible data.</p>
+<p>One of Beamline’s key strengths is its ability to generate reproducible data.</p>
 <h3 id="seeds"><a class="header" href="#seeds">Seeds</a></h3>
 <p>Seeds control the random number generation:</p>
 <pre><code class="language-bash"># Same seed = same data
@@ -445,7 +463,7 @@ beamline gen data --seed 42 --start-auto --script-path my-script.ion  # Identica
 beamline gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script-path my-script.ion
 </code></pre>
 <h3 id="deterministic-behavior"><a class="header" href="#deterministic-behavior">Deterministic Behavior</a></h3>
-<p>PartiQL Beamline ensures that:</p>
+<p>Beamline ensures that:</p>
 <ul>
 <li>Same inputs always produce same outputs</li>
 <li>Random sequences are predictable and reproducible</li>
@@ -453,7 +471,7 @@ beamline gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script-path my-
 <li>Tests can be reliable and repeatable</li>
 </ul>
 <h2 id="static-vs-dynamic-data"><a class="header" href="#static-vs-dynamic-data">Static vs. Dynamic Data</a></h2>
-<p>PartiQL Beamline supports both static and dynamic data generation:</p>
+<p>Beamline supports both static and dynamic data generation:</p>
 <h3 id="dynamic-data-default"><a class="header" href="#dynamic-data-default">Dynamic Data (Default)</a></h3>
 <p>Generated during simulation with temporal patterns:</p>
 <pre><code class="language-ion">rand_process::{
@@ -482,10 +500,10 @@ beamline gen data --seed 42 --start-iso "2024-01-01T00:00:00Z" --script-path my-
 <li>Master data</li>
 </ul>
 <h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
-<p>Understanding these core concepts is crucial for effectively using PartiQL Beamline:</p>
+<p>Understanding these core concepts is crucial for effectively using Beamline:</p>
 <ol>
 <li><strong>Stochastic Processes</strong>: Mathematical foundation for realistic data patterns</li>
-<li><strong>Random Processes</strong>: Implementation of stochastic processes in PartiQL Beamline</li>
+<li><strong>Random Processes</strong>: Implementation of stochastic processes in Beamline</li>
 <li><strong>Arrival Processes</strong>: Control timing of data generation</li>
 <li><strong>Data Generators</strong>: Create realistic values using probability distributions</li>
 <li><strong>Variables</strong>: Enable relationships and reuse in data generation</li>

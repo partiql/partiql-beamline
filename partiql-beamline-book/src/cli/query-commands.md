@@ -38,7 +38,7 @@ Query generation requires the same core configuration as data generation:
 
 ## Query Strategies
 
-PartiQL Beamline supports four different query generation strategies:
+Beamline supports four different query generation strategies:
 
 ### 1. `rand-select-all-fw` - SELECT * with WHERE
 

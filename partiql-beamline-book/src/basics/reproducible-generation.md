@@ -1,6 +1,6 @@
 # Reproducible Data Generation
 
-One of PartiQL Beamline's core strengths is its ability to generate **reproducible data** — the same input parameters will always produce exactly the same output data, no matter when or where you run the generation process.
+One of Beamline's core strengths is its ability to generate **reproducible data** — the same input parameters will always produce exactly the same output data, no matter when or where you run the generation process.
 
 ## What is Reproducibility?
 
@@ -62,7 +62,7 @@ Regression testing requires the same test data to verify that code changes don't
 
 ### Pseudorandom Number Generation
 
-PartiQL Beamline uses **cryptographically secure pseudorandom number generators** (PRNGs) that are initialized with a seed value:
+Beamline uses **cryptographically secure pseudorandom number generators** (PRNGs) that are initialized with a seed value:
 
 ```bash
 # Different seeds = different data

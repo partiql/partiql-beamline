@@ -1,6 +1,6 @@
 # Schema Output Formats
 
-PartiQL Beamline supports three distinct output formats for schema information, each optimized for different use cases. Understanding these formats helps you choose the right one for your workflow and integrate schemas effectively with your tools and processes.
+Beamline supports three distinct output formats for schema information, each optimized for different use cases. Understanding these formats helps you choose the right one for your workflow and integrate schemas effectively with your tools and processes.
 
 ## Available Schema Formats
 

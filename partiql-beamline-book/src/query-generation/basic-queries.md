@@ -1,6 +1,6 @@
 # Basic Query Generation
 
-This section covers fundamental query generation patterns using PartiQL Beamline's `rand-select-all-fw` strategy, which generates simple `SELECT *` queries with WHERE clauses. This is the best starting point for understanding how query generation works.
+This section covers fundamental query generation patterns using Beamline's `rand-select-all-fw` strategy, which generates simple `SELECT *` queries with WHERE clauses. This is the best starting point for understanding how query generation works.
 
 ## Getting Started with Basic Queries
 
