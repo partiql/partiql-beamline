@@ -50,8 +50,6 @@
 - [Overview](./database/overview.md)
 - [Catalogs](./database/catalogs.md)
 
-
-
 # Examples and Tutorials
 
 - [Sensor Data Tutorial](./examples/sensors.md)
