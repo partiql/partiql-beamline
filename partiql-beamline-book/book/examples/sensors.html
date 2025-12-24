@@ -182,6 +182,463 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="sensor-data-tutorial"><a class="header" href="#sensor-data-tutorial">Sensor Data Tutorial</a></h1>
+<p>This tutorial will walk you through creating a comprehensive sensor data generation system using Beamline. We’ll start with simple sensor readings and gradually build up to a complex IoT monitoring system with multiple sensor types, realistic patterns, and related datasets.</p>
+<h2 id="tutorial-overview"><a class="header" href="#tutorial-overview">Tutorial Overview</a></h2>
+<p>By the end of this tutorial, you’ll have created:</p>
+<ul>
+<li>Basic sensor data generators</li>
+<li>Multiple sensor types with different characteristics</li>
+<li>Realistic temporal patterns</li>
+<li>Static reference data</li>
+<li>Related datasets for a complete IoT system</li>
+<li>Queries to analyze the generated data</li>
+</ul>
+<h2 id="part-1-simple-sensor-data"><a class="header" href="#part-1-simple-sensor-data">Part 1: Simple Sensor Data</a></h2>
+<p>Let’s start with a basic temperature sensor that takes readings every few minutes.</p>
+<h3 id="basic-temperature-sensor"><a class="header" href="#basic-temperature-sensor">Basic Temperature Sensor</a></h3>
+<p>Create a file called <code>simple-sensor.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    temperature_readings: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_001",
+            timestamp: Instant,
+            temperature: NormalF64::{ mean: 22.0, std_dev: 3.0 },
+            unit: "celsius"
+        }
+    }
+}
+</code></pre>
+<p><strong>Test it:</strong></p>
+<pre><code class="language-bash">beamline gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --sample-count 10 \
+    --script-path simple-sensor.ion \
+    --output-format ion-pretty
+</code></pre>
+<p><strong>Expected Output:</strong></p>
+<pre><code class="language-ion">{
+  seed: 42,
+  start: "2024-01-01T00:00:00Z",
+  data: {
+    temperature_readings: [
+      {
+        sensor_id: "TEMP_001",
+        timestamp: 2024-01-01T00:03:45.123000000+00:00,
+        temperature: 24.5,
+        unit: "celsius"
+      },
+      // ... more readings
+    ]
+  }
+}
+</code></pre>
+<h3 id="understanding-the-script"><a class="header" href="#understanding-the-script">Understanding the Script</a></h3>
+<ul>
+<li><strong><code>HomogeneousPoisson</code></strong>: Models realistic sensor reading intervals</li>
+<li><strong><code>NormalF64</code></strong>: Creates realistic temperature variations around 22°C</li>
+<li><strong><code>Instant</code></strong>: Captures the exact time of each reading</li>
+<li><strong>Fixed values</strong>: <code>sensor_id</code> and <code>unit</code> remain constant</li>
+</ul>
+<h2 id="part-2-multiple-sensor-types"><a class="header" href="#part-2-multiple-sensor-types">Part 2: Multiple Sensor Types</a></h2>
+<p>Now let’s create a more realistic system with different types of sensors.</p>
+<h3 id="multi-sensor-system"><a class="header" href="#multi-sensor-system">Multi-Sensor System</a></h3>
+<p>Create <code>multi-sensor.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Temperature sensor - indoor environment
+    temperature: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_001",
+            sensor_type: "temperature",
+            timestamp: Instant,
+            value: NormalF64::{ mean: 22.0, std_dev: 2.0 },
+            unit: "celsius",
+            location: "office_main"
+        }
+    },
+    
+    // Humidity sensor - correlated with temperature
+    humidity: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::7 },
+        $data: {
+            sensor_id: "HUM_001",
+            sensor_type: "humidity",
+            timestamp: Instant,
+            value: NormalF64::{ mean: 45.0, std_dev: 8.0 },
+            unit: "percent",
+            location: "office_main"
+        }
+    },
+    
+    // Motion sensor - binary events
+    motion: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::15 },
+        $data: {
+            sensor_id: "MOT_001",
+            sensor_type: "motion",
+            timestamp: Instant,
+            value: Bool::{ p: 0.3 },  // 30% chance of motion detected
+            unit: "boolean",
+            location: "office_main"
+        }
+    },
+    
+    // Light sensor - varies throughout the day
+    light: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::10 },
+        $data: {
+            sensor_id: "LUX_001",
+            sensor_type: "light",
+            timestamp: Instant,
+            value: LogNormalF64::{ location: 6.0, scale: 0.5 },  // Realistic light distribution
+            unit: "lux",
+            location: "office_main"
+        }
+    }
+}
+</code></pre>
+<p><strong>Test with specific sensors:</strong></p>
+<pre><code class="language-bash">beamline gen data \
+    --seed 42 \
+    --start-auto \
+    --sample-count 20 \
+    --script-path multi-sensor.ion \
+    --dataset temperature --dataset motion \
+    --output-format ion-pretty
+</code></pre>
+<h2 id="part-3-realistic-sensor-networks"><a class="header" href="#part-3-realistic-sensor-networks">Part 3: Realistic Sensor Networks</a></h2>
+<p>Let’s create a more sophisticated system with multiple locations and sensor relationships.</p>
+<h3 id="sensor-network-with-variables"><a class="header" href="#sensor-network-with-variables">Sensor Network with Variables</a></h3>
+<p>Create <code>sensor-network.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Generate between 3 &amp; 5 sensor locations  
+    $n: UniformU8::{ low: 3, high: 5 },
+
+    // Multiple sensor locations
+    locations: $n::[
+        // each iteration of the loop will assign an index from 0..=$n to the variable $@n
+        {
+            // Sensor interval varies per location
+            $interval: Uniform::{ choices: [3, 5, 8] },
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$interval },
+
+            // Temperature sensor for this location  
+            temperature: rand_process::{
+                $data: {
+                    sensor_id: Format::{ pattern: "TEMP_{ $@n }" },
+                    location: Format::{ pattern: "ROOM_{ $@n }" },
+                    timestamp: Instant,
+                    value: NormalF64::{ mean: 20.0, std_dev: 3.0 },
+                    unit: "celsius",
+                    battery_level: UniformF64::{ low: 0.8, high: 1.0 },
+                    signal_strength: UniformI8::{ low: -80, high: -20 }
+                }
+            },
+            
+            // Humidity sensor for this location
+            'humidity_{ $@n }': rand_process::{
+                $arrival: HomogeneousPoisson:: { interarrival: minutes::6 },
+                $data: {
+                    sensor_id: Format::{ pattern: "HUM_{ $@n }" },
+                    location: Format::{ pattern: "ROOM_{ $@n }" },
+                    timestamp: Instant,
+                    value: NormalF64::{ mean: 40.0, std_dev: 10.0 },
+                    unit: "percent",
+                    battery_level: UniformF64::{ low: 0.7, high: 1.0 },
+                    signal_strength: UniformI8::{ low: -85, high: -25 }
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<p><strong>Generate network data:</strong></p>
+<pre><code class="language-bash">beamline gen data \
+    --seed 123 \
+    --start-auto \
+    --sample-count 50 \
+    --script-path sensor-network.ion \
+    --output-format text
+</code></pre>
+<h2 id="part-4-adding-static-reference-data"><a class="header" href="#part-4-adding-static-reference-data">Part 4: Adding Static Reference Data</a></h2>
+<p>Real IoT systems need configuration and reference data. Let’s add static sensor metadata.</p>
+<h3 id="complete-iot-system"><a class="header" href="#complete-iot-system">Complete IoT System</a></h3>
+<p>Create <code>iot-system.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Static sensor configuration data
+    sensor_registry: static_data::{
+        $data: {
+            sensor_id: "TEMP_001",
+            model: "TempSense Pro",
+            manufacturer: "IoT Corp",
+            firmware_version: "2.1.4",
+            installation_date: "2024-01-01",
+            calibration_date: "2024-01-01",
+            location: "office_main",
+            coordinates: { lat: 37.7749e0, lon: -122.4194e0 },
+            specifications: {
+                range_min: -40.0e0,
+                range_max: 85.0e0,
+                accuracy: 0.5e0,
+                resolution: 0.1e0
+            }
+        }
+    },
+    
+    // Dynamic sensor readings
+    temperature_readings: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_001",
+            timestamp: Instant,
+            sequence: Tick,
+            reading: {
+                value: NormalF64::{ mean: 22.0, std_dev: 2.0 },
+                unit: "celsius",
+                quality: Uniform::{ choices: ["good", "fair", "poor"] },
+                confidence: UniformF64::{ low: 0.85, high: 1.0 }
+            },
+            metadata: {
+                battery_voltage: UniformF64::{ low: 3.0, high: 4.2 },
+                signal_rssi: UniformI8::{ low: -90, high: -30 },
+                uptime_seconds: Tick,  // tick count since start
+                memory_usage: UniformF64::{ low: 0.2, high: 0.8 }
+            },
+            status: {
+                operational: Bool::{ p: 0.95 },
+                error_code: Uniform::{ choices: ["NONE", "LOW_BATTERY", "COMM_ERROR", "CALIBRATION"] },
+                last_maintenance: "2024-01-01T00:00:00Z"
+            }
+        }
+    },
+    
+    // Sensor alerts/events
+    sensor_alerts: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: hours::2 },
+        $data: {
+            alert_id: UUID,
+            sensor_id: "TEMP_001",
+            timestamp: Instant,
+            alert_type: Uniform::{ choices: [
+                "temperature_high", 
+                "temperature_low", 
+                "battery_low", 
+                "communication_lost",
+                "calibration_needed"
+            ]},
+            severity: Uniform::{ choices: ["info", "warning", "critical"] },
+            message: LoremIpsum::{ min_words: 5, max_words: 15 },
+            acknowledged: Bool::{ p: 0.7 },
+            resolved: Bool::{ p: 0.8 }
+        }
+    }
+}
+</code></pre>
+<p><strong>Generate complete system data:</strong></p>
+<pre><code class="language-bash">beamline gen data \
+    --seed 456 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --sample-count 100 \
+    --script-path iot-system.ion \
+    --output-format ion-pretty
+</code></pre>
+<h2 id="part-5-advanced-patterns"><a class="header" href="#part-5-advanced-patterns">Part 5: Advanced Patterns</a></h2>
+<h3 id="time-based-variations"><a class="header" href="#time-based-variations">Time-Based Variations</a></h3>
+<p>Let’s create sensors that show realistic daily patterns:</p>
+<p>Create <code>daily-patterns.ion</code>:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Office temperature with daily cycle
+    office_temperature: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::10 },
+        $data: {
+            sensor_id: "TEMP_OFFICE",
+            timestamp: Instant,
+            // Simulate daily temperature cycle (warmer during work hours)
+            base_temp: NormalF64::{ mean: 21.0, std_dev: 1.0 },
+            // Add some randomness for HVAC cycles
+            hvac_variation: NormalF64::{ mean: 0.0, std_dev: 0.5 },
+            temperature_celsius: NormalF64::{ mean: 21.0, std_dev: 1.5 },
+            occupancy_detected: Bool::{ p: 0.6 },  // 60% chance during work hours
+            unit: "celsius"
+        }
+    },
+    
+    // Outdoor weather station
+    weather_station: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::15 },
+        $data: {
+            station_id: "WEATHER_001",
+            timestamp: Instant,
+            measurements: {
+                temperature: NormalF64::{ mean: 15.0, std_dev: 8.0 },
+                humidity: NormalF64::{ mean: 65.0, std_dev: 15.0 },
+                pressure: NormalF64::{ mean: 1013.25, std_dev: 20.0 },
+                wind_speed: WeibullF64::{ shape: 2.0, scale: 5.0 },
+                wind_direction: UniformU16::{ low: 0, high: 359 },
+                precipitation: ExpF64::{ rate: 10.0 }  // Most readings are 0, occasional rain
+            },
+            conditions: Uniform::{ choices: [
+                "clear", "partly_cloudy", "cloudy", "overcast", 
+                "light_rain", "rain", "heavy_rain", "snow"
+            ]},
+            visibility_km: LogNormalF64::{ location: 2.0, scale: 0.5 }
+        }
+    }
+}
+</code></pre>
+<h3 id="correlated-sensors"><a class="header" href="#correlated-sensors">Correlated Sensors</a></h3>
+<p>Create sensors where readings are related to each other:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Shared variables for correlation
+    $room_base_temp: NormalF64::{ mean: 22.0, std_dev: 1.0 },
+    $is_occupied: Bool::{ p: 0.4 },
+    $hvac_active: Bool::{ p: 0.3 },
+    
+    // Temperature affected by occupancy and HVAC
+    temperature: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: "TEMP_CORR",
+            timestamp: Instant,
+            base_temperature: $room_base_temp,
+            occupancy_detected: $is_occupied,
+            hvac_running: $hvac_active,
+            temperature_celsius: NormalF64::{ mean: 22.0, std_dev: 2.0 },
+            unit: "celsius"
+        }
+    },
+    
+    // CO2 levels affected by occupancy
+    co2_levels: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::8 },
+        $data: {
+            sensor_id: "CO2_CORR",
+            timestamp: Instant,
+            base_co2: NormalF64::{ mean: 400.0, std_dev: 50.0 },
+            occupancy_detected: $is_occupied,
+            co2_ppm: NormalF64::{ mean: 450.0, std_dev: 75.0 },
+            unit: "ppm"
+        }
+    },
+    
+    // Occupancy sensor (source of truth)
+    occupancy: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::3 },
+        $data: {
+            sensor_id: "OCC_CORR",
+            timestamp: Instant,
+            occupied: $is_occupied,
+            person_count: UniformU8::{ low: 0, high: 8 },
+            confidence: UniformF64::{ low: 0.8, high: 1.0 }
+        }
+    }
+}
+</code></pre>
+<h2 id="part-6-generating-queries"><a class="header" href="#part-6-generating-queries">Part 6: Generating Queries</a></h2>
+<p>Now let’s generate some queries to analyze our sensor data:</p>
+<pre><code class="language-bash"># Generate queries for sensor data analysis
+beamline query basic \
+    --seed 789 \
+    --start-auto \
+    --script-path simple-sensor.ion \
+    --sample-count 3 \
+    rand-select-all-fw \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 1 \
+        --tbl-flt-path-depth-max 2 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-project \
+        --tbl-flt-type-final-scalar \
+        --pred-all
+</code></pre>
+<p><strong>Example generated queries:</strong></p>
+<pre><code class="language-sql">SELECT * FROM temperature_readings AS temperature_readings
+WHERE NOT ((temperature_readings.unit IS NULL))
+
+SELECT * FROM temperature_readings AS temperature_readings
+WHERE temperature_readings.timestamp IN [
+    UTCNOW(),
+    UTCNOW(),
+    UTCNOW(),
+    UTCNOW(),
+    UTCNOW()
+  ]
+
+SELECT * FROM temperature_readings AS temperature_readings
+WHERE (temperature_readings.temperature &lt; -30.634268316887464)
+</code></pre>
+<h2 id="part-7-shape-inference"><a class="header" href="#part-7-shape-inference">Part 7: Shape Inference</a></h2>
+<p>Let’s examine the data shapes our sensors generate:</p>
+<pre><code class="language-bash"># Infer shapes from our IoT system
+beamline infer-shape \
+    --seed 456 \
+    --start-auto \
+    --script-path iot-system.ion \
+    --output-format basic-ddl
+</code></pre>
+<p><strong>Expected DDL output:</strong></p>
+<pre><code class="language-sql">-- Dataset: sensor_registry
+"coordinates" STRUCT&lt;"lat": DOUBLE,"lon": DOUBLE&gt;,
+"firmware_version" VARCHAR,
+"installation_date" VARCHAR,
+"location" VARCHAR,
+"manufacturer" VARCHAR,
+"model" VARCHAR,
+"sensor_id" VARCHAR,
+"specifications" STRUCT&lt;"accuracy": DOUBLE,"range_max": DOUBLE,"range_min": DOUBLE,"resolution": DOUBLE&gt;
+
+-- Dataset: temperature_readings  
+"metadata" STRUCT&lt;"battery_voltage": DOUBLE,"memory_usage": DOUBLE,"signal_rssi": TINYINT,"uptime_seconds": INT8&gt;,
+"reading" STRUCT&lt;"confidence": DOUBLE,"quality": VARCHAR,"unit": VARCHAR,"value": DOUBLE&gt;,
+"sensor_id" VARCHAR,
+"sequence" INT8,
+"status" STRUCT&lt;"error_code": VARCHAR,"last_maintenance": VARCHAR,"operational": BOOL&gt;,
+"timestamp" TIMESTAMP
+</code></pre>
+<h2 id="part-8-database-generation"><a class="header" href="#part-8-database-generation">Part 8: Database Generation</a></h2>
+<p>Finally, let’s create a complete database with our IoT system:</p>
+<pre><code class="language-bash"># Generate a complete IoT database
+beamline gen db beamline-lite \
+    --seed 456 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --script-path iot-system.ion \
+    --catalog_name iot-monitoring \
+    --catalog_path ./iot-database
+</code></pre>
+<p>This creates a complete database with:</p>
+<ul>
+<li>Data files for each dataset</li>
+<li>Shape files describing the schema</li>
+<li>Manifest with generation metadata</li>
+<li>Script backup for reproducibility</li>
+</ul>
+<h2 id="key-concepts-demonstrated"><a class="header" href="#key-concepts-demonstrated">Key Concepts Demonstrated</a></h2>
+<p>Through this tutorial, you’ve learned:</p>
+<ol>
+<li><strong>Basic Sensor Modeling</strong>: Simple periodic readings with realistic distributions</li>
+<li><strong>Multi-Sensor Systems</strong>: Different sensor types with appropriate characteristics</li>
+<li><strong>Variable Usage</strong>: Sharing configuration and creating relationships</li>
+<li><strong>Static vs Dynamic Data</strong>: Reference data vs. time-series readings</li>
+<li><strong>Complex Data Structures</strong>: Nested objects for rich sensor metadata</li>
+<li><strong>Realistic Patterns</strong>: Using appropriate probability distributions</li>
+<li><strong>Correlated Data</strong>: Making sensor readings influence each other</li>
+<li><strong>Query Generation</strong>: Creating queries that match your data patterns</li>
+<li><strong>Shape Inference</strong>: Understanding the schema of generated data</li>
+<li><strong>Database Creation</strong>: Building complete, queryable databases</li>
+</ol>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Try these extensions to deepen your understanding:</p>
+<ol>
+<li><strong>Add More Sensor Types</strong>: Create pressure, vibration, or chemical sensors</li>
+<li><strong>Implement Sensor Failures</strong>: Model realistic failure patterns and recovery</li>
+<li><strong>Create Sensor Networks</strong>: Build hierarchical sensor deployments</li>
+<li><strong>Add Data Quality Issues</strong>: Simulate missing readings, outliers, and errors</li>
+<li><strong>Model Seasonal Patterns</strong>: Create long-term variations in sensor readings</li>
+<li><strong>Build Alert Systems</strong>: Generate complex alert and notification patterns</li>
+</ol>
+<p>This tutorial provides a solid foundation for modeling any IoT or sensor-based system with Beamline. The patterns you’ve learned can be adapted to industrial monitoring, smart buildings, environmental sensing, and many other domains.</p>
 
                     </main>
 
