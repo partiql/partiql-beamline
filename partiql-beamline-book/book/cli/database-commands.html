@@ -1,0 +1,753 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Database Commands - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/cli/database-commands.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="database-commands"><a class="header" href="#database-commands">Database Commands</a></h1>
+<p>The <code>beamline gen db beamline-lite</code> command creates complete BeamlineLite databases containing both synthetic data and inferred schemas. This provides a complete local database for testing and development.</p>
+<h2 id="command-syntax"><a class="header" href="#command-syntax">Command Syntax</a></h2>
+<pre><code class="language-bash">beamline gen db beamline-lite [OPTIONS]
+</code></pre>
+<h2 id="required-options"><a class="header" href="#required-options">Required Options</a></h2>
+<p>Database generation uses the same core configuration as data generation:</p>
+<h3 id="seed-configuration-required---choose-one"><a class="header" href="#seed-configuration-required---choose-one">Seed Configuration (Required - choose one)</a></h3>
+<pre><code class="language-bash">--seed-auto                    # Generate random seed automatically
+--seed &lt;SEED&gt;                  # Use specific numeric seed for reproducibility
+</code></pre>
+<h3 id="start-time-configuration-required---choose-one"><a class="header" href="#start-time-configuration-required---choose-one">Start Time Configuration (Required - choose one)</a></h3>
+<pre><code class="language-bash">--start-auto                   # Generate random start time
+--start-epoch-ms &lt;EPOCH_MS&gt;    # Use Unix timestamp in milliseconds
+--start-iso &lt;ISO_8601&gt;         # Use ISO 8601 format (e.g., 2024-01-01T00:00:00Z)
+</code></pre>
+<h3 id="script-configuration-required---choose-one"><a class="header" href="#script-configuration-required---choose-one">Script Configuration (Required - choose one)</a></h3>
+<pre><code class="language-bash">--script-path &lt;PATH&gt;           # Path to Ion script file
+--script &lt;SCRIPT_DATA&gt;         # Inline Ion script content
+</code></pre>
+<h2 id="optional-parameters"><a class="header" href="#optional-parameters">Optional Parameters</a></h2>
+<h3 id="sample-count"><a class="header" href="#sample-count">Sample Count</a></h3>
+<pre><code class="language-bash">--sample-count &lt;COUNT&gt;         # Number of samples to generate (default: 10)
+</code></pre>
+<h3 id="catalog-configuration"><a class="header" href="#catalog-configuration">Catalog Configuration</a></h3>
+<pre><code class="language-bash">--catalog_name &lt;NAME&gt;          # Name of the catalog directory (default: "beamline-catalog")
+--catalog_path &lt;PATH&gt;          # Path where catalog will be created (default: ".")
+--force                        # Overwrite existing catalog (creates backup first)
+</code></pre>
+<h3 id="target"><a class="header" href="#target">Target</a></h3>
+<pre><code class="language-bash">--target filesystem            # Create filesystem-based database (default and only option)
+</code></pre>
+<h3 id="nullability-and-optionality"><a class="header" href="#nullability-and-optionality">Nullability and Optionality</a></h3>
+<pre><code class="language-bash">--default-nullable &lt;true|false&gt;    # Set default nullability behavior
+--pct-null &lt;PERCENTAGE&gt;            # Percentage of NULL values (0.0-1.0)
+--default-optional &lt;true|false&gt;    # Set default optionality behavior  
+--pct-optional &lt;PERCENTAGE&gt;        # Percentage of MISSING values (0.0-1.0)
+</code></pre>
+<h2 id="what-gets-created"><a class="header" href="#what-gets-created">What Gets Created</a></h2>
+<p>A BeamlineLite database consists of multiple files in a catalog directory:</p>
+<h3 id="catalog-structure"><a class="header" href="#catalog-structure">Catalog Structure</a></h3>
+<pre><code>beamline-catalog/
+├── .beamline-manifest          # Metadata (seed, start time, DDL syntax version)
+├── .beamline-script           # Original Ion script used for generation
+├── &lt;dataset_name&gt;.ion         # Data files (one per dataset)
+├── &lt;dataset_name&gt;.shape.ion   # Schema files in Ion format
+└── &lt;dataset_name&gt;.shape.sql   # Schema files in SQL DDL format
+</code></pre>
+<h3 id="example-catalog-contents"><a class="header" href="#example-catalog-contents">Example Catalog Contents</a></h3>
+<p>After running:</p>
+<pre><code class="language-bash">beamline gen db beamline-lite \
+  --seed-auto \
+  --start-auto \
+  --script-path client-service.ion \
+  --sample-count 1000
+</code></pre>
+<p><strong>Generated files:</strong></p>
+<pre><code>beamline-catalog/
+├── .beamline-manifest
+├── .beamline-script  
+├── service.ion
+├── service.shape.ion
+├── service.shape.sql
+├── client_0.ion
+├── client_0.shape.ion
+├── client_0.shape.sql
+├── client_1.ion
+├── client_1.shape.ion
+├── client_1.shape.sql
+└── ... (more client datasets)
+</code></pre>
+<h2 id="file-contents"><a class="header" href="#file-contents">File Contents</a></h2>
+<h3 id="manifest-file"><a class="header" href="#manifest-file">Manifest File</a></h3>
+<p>Contains generation metadata:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/.beamline-manifest
+{"seed": "949665520117506306", "start": "2023-02-06T12:52:29.000000000Z", "ddl_syntax.version": "partiql_datatype_syntax.0.1"}
+</code></pre>
+<h3 id="script-file"><a class="header" href="#script-file">Script File</a></h3>
+<p>Original Ion script used for generation:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/.beamline-script
+rand_processes::{
+    // generate between 5 &amp; 20 customers
+    $n: UniformU8::{ low: 5, high: 20 },
+    
+    // A generator for client ids
+    $id_gen: UUID,
+    
+    // ... rest of script
+}
+</code></pre>
+<h3 id="data-files"><a class="header" href="#data-files">Data Files</a></h3>
+<p>Generated synthetic data in Ion format:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/client_0.ion
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "0de35d1e-a87c-e540-734d-6f2a4fa410c3", request_time: 2021-01-05T03:55:01.035000000+00:00}
+{success: true, id: "7dbd12cf-b506-22ad-2d81-b0a1cd259697", request_id: "3539cdf0-6f7e-6bdc-c25a-4e0b7d8f8bac", request_time: 2021-01-05T03:55:01.182000000+00:00}
+</code></pre>
+<h3 id="schema-files"><a class="header" href="#schema-files">Schema Files</a></h3>
+<p>Ion format schema:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/client_0.shape.ion
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [ordered, closed],
+    fields: [
+      { name: "id", type: "string" },
+      { name: "request_id", type: "string" },
+      { name: "request_time", type: "datetime" },
+      { name: "success", type: "bool" }
+    ]
+  }
+}
+</code></pre>
+<p>SQL DDL format schema:</p>
+<pre><code class="language-bash">$ cat beamline-catalog/service.shape.sql
+"Account" VARCHAR,
+"Distance" DECIMAL(2, 0),
+"Operation" VARCHAR,
+"Program" VARCHAR,
+"Request" VARCHAR,
+"StartTime" TIMESTAMP,
+"Weight" DECIMAL(5, 4),
+"client" VARCHAR,
+"success" BOOL
+</code></pre>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="basic-database-creation"><a class="header" href="#basic-database-creation">Basic Database Creation</a></h3>
+<pre><code class="language-bash"># Create database with default settings
+beamline gen db beamline-lite \
+  --seed-auto \
+  --start-auto \
+  --script-path my_data.ion \
+  --sample-count 1000
+
+# Creates ./beamline-catalog/ with all files
+</code></pre>
+<h3 id="custom-catalog-configuration"><a class="header" href="#custom-catalog-configuration">Custom Catalog Configuration</a></h3>
+<pre><code class="language-bash"># Create database in custom location
+beamline gen db beamline-lite \
+  --seed 12345 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path production_sim.ion \
+  --sample-count 50000 \
+  --catalog_name production-data \
+  --catalog_path ./databases/
+  
+# Creates ./databases/production-data/ with all files
+</code></pre>
+<h3 id="reproducible-database-creation"><a class="header" href="#reproducible-database-creation">Reproducible Database Creation</a></h3>
+<pre><code class="language-bash"># Create reproducible test database
+beamline gen db beamline-lite \
+  --seed 2024 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path test_suite.ion \
+  --sample-count 10000 \
+  --catalog_name test-db-2024 \
+  --default-nullable false \
+  --default-optional false
+</code></pre>
+<h2 id="overwriting-and-backup"><a class="header" href="#overwriting-and-backup">Overwriting and Backup</a></h2>
+<h3 id="safe-overwrite-with-backup"><a class="header" href="#safe-overwrite-with-backup">Safe Overwrite with Backup</a></h3>
+<p>The CLI protects existing catalogs by default:</p>
+<pre><code class="language-bash">$ beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion
+creating directory ./beamline-catalog/ failed with the following error:
+File exists (os error 17)
+</code></pre>
+<p>Use <code>--force</code> to overwrite with automatic backup:</p>
+<pre><code class="language-bash">$ beamline gen db beamline-lite \
+    --seed-auto \
+    --start-auto \
+    --script-path data.ion \
+    --force
+
+command is using --force ...
+Beamline catalog ./beamline-catalog/ exists, backing it up to "beamline-catalog.2024-05-10T22:15:54.019316000Z.bkp"...
+back up completed
+writing manifest file ./beamline-catalog/.beamline-manifest ...[COMPLETED]
+writing script file ./beamline-catalog/.beamline-script ...[COMPLETED]
+writing shape file(s)...[COMPLETED]
+writing data file(s)...[COMPLETED]
+done!
+</code></pre>
+<h2 id="database-structure-analysis"><a class="header" href="#database-structure-analysis">Database Structure Analysis</a></h2>
+<h3 id="examine-generated-database"><a class="header" href="#examine-generated-database">Examine Generated Database</a></h3>
+<pre><code class="language-bash"># View catalog structure
+tree beamline-catalog/
+
+# Examine manifest
+cat beamline-catalog/.beamline-manifest
+
+# Check a data file
+head -5 beamline-catalog/service.ion
+
+# Check schema
+cat beamline-catalog/service.shape.sql
+</code></pre>
+<h3 id="validate-database-consistency"><a class="header" href="#validate-database-consistency">Validate Database Consistency</a></h3>
+<pre><code class="language-bash"># Count records in each dataset
+for data_file in beamline-catalog/*.ion; do
+  if [[ "$data_file" != *".shape.ion"* ]]; then
+    echo "$(basename "$data_file"): $(wc -l &lt; "$data_file") records"
+  fi
+done
+</code></pre>
+<h2 id="integration-patterns"><a class="header" href="#integration-patterns">Integration Patterns</a></h2>
+<h3 id="testing-database-setup"><a class="header" href="#testing-database-setup">Testing Database Setup</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# setup-test-database.sh
+
+TEST_SEED=12345
+TEST_START="2024-01-01T00:00:00Z"
+TEST_SAMPLES=10000
+
+echo "Creating test database..."
+
+# Clean up any existing test database
+rm -rf test-database/
+
+# Generate test database
+beamline gen db beamline-lite \
+  --seed $TEST_SEED \
+  --start-iso $TEST_START \
+  --script-path test_data_spec.ion \
+  --sample-count $TEST_SAMPLES \
+  --catalog_name test-database \
+  --catalog_path . \
+  --default-nullable false
+
+echo "Test database created in ./test-database/"
+echo "Records generated: $TEST_SAMPLES"
+echo "Seed used: $TEST_SEED"
+echo "Start time: $TEST_START"
+</code></pre>
+<h3 id="multi-environment-database-generation"><a class="header" href="#multi-environment-database-generation">Multi-Environment Database Generation</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# generate-env-databases.sh
+
+SCRIPT="simulation.ion"
+BASE_SEED=2024
+
+# Development environment
+beamline gen db beamline-lite \
+  --seed $BASE_SEED \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path $SCRIPT \
+  --sample-count 1000 \
+  --catalog_name dev-db \
+  --catalog_path ./environments/
+
+# Staging environment  
+beamline gen db beamline-lite \
+  --seed $((BASE_SEED + 1)) \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path $SCRIPT \
+  --sample-count 10000 \
+  --catalog_name staging-db \
+  --catalog_path ./environments/
+
+# Production-like environment
+beamline gen db beamline-lite \
+  --seed $((BASE_SEED + 2)) \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path $SCRIPT \
+  --sample-count 100000 \
+  --catalog_name prod-like-db \
+  --catalog_path ./environments/
+</code></pre>
+<h3 id="database-migration-testing"><a class="header" href="#database-migration-testing">Database Migration Testing</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# test-schema-migration.sh
+
+OLD_SCRIPT="data_v1.ion"
+NEW_SCRIPT="data_v2.ion"
+
+# Generate database with old schema
+beamline gen db beamline-lite \
+  --seed 100 \
+  --start-auto \
+  --script-path $OLD_SCRIPT \
+  --catalog_name old-schema \
+  --sample-count 1000
+
+# Generate database with new schema
+beamline gen db beamline-lite \
+  --seed 100 \
+  --start-auto \
+  --script-path $NEW_SCRIPT \
+  --catalog_name new-schema \
+  --sample-count 1000
+
+# Compare schemas
+diff old-schema/*.shape.sql new-schema/*.shape.sql
+</code></pre>
+<h2 id="performance-considerations"><a class="header" href="#performance-considerations">Performance Considerations</a></h2>
+<p>Database creation involves:</p>
+<ol>
+<li><strong>Script parsing</strong> (milliseconds)</li>
+<li><strong>Data generation</strong> (scales with <code>--sample-count</code>)</li>
+<li><strong>Schema inference</strong> (nearly instantaneous)</li>
+<li><strong>File I/O</strong> (depends on dataset size and disk speed)</li>
+</ol>
+<h3 id="performance-tips"><a class="header" href="#performance-tips">Performance Tips</a></h3>
+<pre><code class="language-bash"># For large databases, monitor progress
+time beamline gen db beamline-lite \
+  --seed 1 \
+  --start-auto \
+  --script-path large_sim.ion \
+  --sample-count 1000000
+
+# Use faster storage for temporary operations
+beamline gen db beamline-lite \
+  --seed 1 \
+  --start-auto \
+  --script-path data.ion \
+  --catalog_path /tmp/fast-storage/
+</code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h3 id="1-use-meaningful-catalog-names"><a class="header" href="#1-use-meaningful-catalog-names">1. Use Meaningful Catalog Names</a></h3>
+<pre><code class="language-bash"># Good - descriptive names
+beamline gen db beamline-lite \
+  --script-path user_analytics.ion \
+  --catalog_name user-analytics-2024 \
+  --catalog_path ./databases/
+
+# Avoid - generic names
+beamline gen db beamline-lite \
+  --script-path data.ion \
+  --catalog_name db
+</code></pre>
+<h3 id="2-document-generation-parameters"><a class="header" href="#2-document-generation-parameters">2. Document Generation Parameters</a></h3>
+<pre><code class="language-bash"># Create documentation alongside database
+beamline gen db beamline-lite \
+  --seed 12345 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path simulation.ion \
+  --sample-count 50000 \
+  --catalog_name analytics-db-v1
+
+# Document the generation
+echo "Analytics Database v1
+Generated: $(date)
+Seed: 12345
+Start: 2024-01-01T00:00:00Z
+Sample Count: 50000
+Script: simulation.ion" &gt; analytics-db-v1/README.txt
+</code></pre>
+<h3 id="3-use-version-control-for-catalog-manifests"><a class="header" href="#3-use-version-control-for-catalog-manifests">3. Use Version Control for Catalog Manifests</a></h3>
+<p>Track database generation metadata:</p>
+<pre><code class="language-bash"># Add manifest files to version control
+git add beamline-catalog/.beamline-manifest
+git add beamline-catalog/.beamline-script
+git commit -m "Add database generation manifest for test-db v2.1"
+</code></pre>
+<h3 id="4-backup-before-force-operations"><a class="header" href="#4-backup-before-force-operations">4. Backup Before –force Operations</a></h3>
+<pre><code class="language-bash"># The CLI creates backups automatically with --force, but verify
+ls -la beamline-catalog*.bkp
+
+# Manual backup before --force if desired
+cp -r beamline-catalog manual-backup-$(date +%Y%m%d)
+beamline gen db beamline-lite --script-path updated.ion --force
+</code></pre>
+<h2 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h2>
+<h3 id="local-development-database"><a class="header" href="#local-development-database">Local Development Database</a></h3>
+<pre><code class="language-bash"># Create local database for development
+beamline gen db beamline-lite \
+  --seed 1000 \
+  --start-auto \
+  --script-path dev_data.ion \
+  --sample-count 5000 \
+  --catalog_name dev-local
+</code></pre>
+<h3 id="test-suite-database"><a class="header" href="#test-suite-database">Test Suite Database</a></h3>
+<pre><code class="language-bash"># Create comprehensive test database
+beamline gen db beamline-lite \
+  --seed 2024001 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path comprehensive_test.ion \
+  --sample-count 50000 \
+  --catalog_name integration-test-db \
+  --default-nullable false \
+  --default-optional false
+</code></pre>
+<h3 id="performance-benchmark-database"><a class="header" href="#performance-benchmark-database">Performance Benchmark Database</a></h3>
+<pre><code class="language-bash"># Create large database for performance testing
+beamline gen db beamline-lite \
+  --seed 999999 \
+  --start-auto \
+  --script-path performance_test.ion \
+  --sample-count 1000000 \
+  --catalog_name perf-benchmark \
+  --catalog_path ./benchmarks/
+</code></pre>
+<h2 id="database-analysis"><a class="header" href="#database-analysis">Database Analysis</a></h2>
+<h3 id="examine-database-contents"><a class="header" href="#examine-database-contents">Examine Database Contents</a></h3>
+<pre><code class="language-bash"># Check database size
+du -sh beamline-catalog/
+
+# Count records per dataset
+for f in beamline-catalog/*.ion; do
+  if [[ "$f" != *".shape.ion"* ]]; then
+    echo "$(basename "$f" .ion): $(wc -l &lt; "$f") records"
+  fi
+done
+
+# View sample data
+head -3 beamline-catalog/service.ion
+
+# View schema
+cat beamline-catalog/service.shape.sql
+</code></pre>
+<h3 id="validate-database-integrity"><a class="header" href="#validate-database-integrity">Validate Database Integrity</a></h3>
+<pre><code class="language-bash"># Verify manifest matches generation
+cat beamline-catalog/.beamline-manifest
+
+# Verify script is preserved
+diff original_script.ion beamline-catalog/.beamline-script
+
+# Check all datasets have corresponding schemas
+for data in beamline-catalog/*.ion; do
+  if [[ "$data" != *".shape.ion"* ]]; then
+    dataset=$(basename "$data" .ion)
+    if [[ ! -f "beamline-catalog/${dataset}.shape.ion" ]]; then
+      echo "Missing schema for $dataset"
+    fi
+  fi
+done
+</code></pre>
+<h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
+<h3 id="common-errors"><a class="header" href="#common-errors">Common Errors</a></h3>
+<h4 id="catalog-directory-exists"><a class="header" href="#catalog-directory-exists">Catalog Directory Exists</a></h4>
+<pre><code class="language-bash">$ beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion
+creating directory ./beamline-catalog/ failed with the following error:
+File exists (os error 17)
+
+# Solution: Use --force or different catalog name
+beamline gen db beamline-lite --seed-auto --start-auto --script-path data.ion --force
+</code></pre>
+<h4 id="script-parse-errors"><a class="header" href="#script-parse-errors">Script Parse Errors</a></h4>
+<pre><code class="language-bash">$ beamline gen db beamline-lite --seed-auto --start-auto --script-path invalid.ion
+Error: Failed to parse Ion script: Invalid Ion syntax at line 8
+</code></pre>
+<h4 id="insufficient-disk-space"><a class="header" href="#insufficient-disk-space">Insufficient Disk Space</a></h4>
+<pre><code class="language-bash"># Check available space before large database creation
+df -h .
+beamline gen db beamline-lite --script-path huge_data.ion --sample-count 10000000
+</code></pre>
+<h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best Practices</a></h2>
+<h3 id="1-plan-storage-requirements"><a class="header" href="#1-plan-storage-requirements">1. Plan Storage Requirements</a></h3>
+<pre><code class="language-bash"># Estimate database size with small sample first
+beamline gen db beamline-lite \
+  --seed 1 \
+  --start-auto \
+  --script-path data.ion \
+  --sample-count 100 \
+  --catalog_name size-test
+
+# Check size and extrapolate
+du -sh size-test/
+# If 100 samples = 1MB, then 100,000 samples ≈ 1GB
+</code></pre>
+<h3 id="2-use-consistent-naming-conventions"><a class="header" href="#2-use-consistent-naming-conventions">2. Use Consistent Naming Conventions</a></h3>
+<pre><code class="language-bash"># Good naming convention
+beamline gen db beamline-lite \
+  --script-path ecommerce_v2.ion \
+  --catalog_name ecommerce-v2-20241201 \
+  --catalog_path ./databases/
+
+# Include date, version, purpose in catalog name
+</code></pre>
+<h3 id="3-document-database-generation"><a class="header" href="#3-document-database-generation">3. Document Database Generation</a></h3>
+<pre><code class="language-bash"># Create database with documentation
+beamline gen db beamline-lite \
+  --seed 12345 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --script-path analytics.ion \
+  --sample-count 25000 \
+  --catalog_name analytics-q4-2024
+
+# Add README
+echo "Analytics Database Q4 2024
+Purpose: Customer behavior analysis
+Generated: $(date)
+Script: analytics.ion  
+Seed: 12345
+Records: 25000
+Contact: analytics-team@company.com" &gt; analytics-q4-2024/README.txt
+</code></pre>
+<h3 id="4-validate-generated-databases"><a class="header" href="#4-validate-generated-databases">4. Validate Generated Databases</a></h3>
+<pre><code class="language-bash"># Verify database creation was successful
+ls -la beamline-catalog/
+cat beamline-catalog/.beamline-manifest
+wc -l beamline-catalog/*.ion
+</code></pre>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand all CLI commands:</p>
+<ul>
+<li><a href="./overview.html">CLI Overview</a> - Review complete CLI capabilities</li>
+<li><a href="../data-generation/overview.html">Data Generation Guide</a> - Learn about Ion scripts and generators</li>
+<li><a href="../database/overview.html">Database Guide</a> - Learn about database concepts and usage</li>
+<li><a href="../examples/sensors.html">Examples</a> - See complete workflows in action</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../cli/shape-commands.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../database/overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../cli/shape-commands.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../database/overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,924 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Scripts and Processes - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/basics/scripts-and-processes.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="scripts-and-random-processes"><a class="header" href="#scripts-and-random-processes">Scripts and Random Processes</a></h1>
+<p>Beamline uses <strong>Ion-based scripts</strong> to define data generation configurations and <strong>stochastic processes</strong> to model how
+data arrives and evolves over time. This combination provides powerful, flexible control over synthetic data generation.</p>
+<h2 id="ion-scripts-overview"><a class="header" href="#ion-scripts-overview">Ion Scripts Overview</a></h2>
+<h3 id="what-are-ion-scripts"><a class="header" href="#what-are-ion-scripts">What are Ion Scripts?</a></h3>
+<p>Ion scripts are configuration files written in <a href="https://amazon-ion.github.io/ion-docs/">Amazon Ion</a> format that define:</p>
+<ul>
+<li><strong>What data to generate</strong> (data types, structures, values)</li>
+<li><strong>How data arrives</strong> (temporal patterns, frequencies)</li>
+<li><strong>How data relates</strong> (cross-field dependencies, correlations)</li>
+<li><strong>How much data</strong> (counts, durations, stopping conditions)</li>
+</ul>
+<h3 id="basic-script-structure"><a class="header" href="#basic-script-structure">Basic Script Structure</a></h3>
+<p>Every Beamline script follows this structure:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Variable definitions (optional)
+    $variable_name: GeneratorType::{ configuration },
+    
+    // Dataset definitions (required)
+    dataset_name: rand_process::{
+        $arrival: ArrivalProcess::{ configuration },
+        $data: {
+            field_name: GeneratorType::{ configuration },
+            // ... more fields
+        }
+    }
+}
+</code></pre>
+<h3 id="real-example-from-test-suite"><a class="header" href="#real-example-from-test-suite">Real Example from Test Suite</a></h3>
+<p>From <code>sensors.ion</code> test script:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 2, high: 10 },
+
+    sensors: $n::[
+        rand_process::{
+            $r: Uniform::{ choices: [5,10] },
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $weight: UniformDecimal::{ nullable: 0.75, low: 1.995, high: 4.9999, optional: true },
+            $data: {
+                tick: Tick,
+                i8: UniformI8,
+                f: UniformF64,
+                w: $weight,
+                d: UniformDecimal::{ low: 0d0, high: 4.2d1, nullable: false }
+            }
+        }
+    ]
+}
+</code></pre>
+<h3 id="ion-format-benefits"><a class="header" href="#ion-format-benefits">Ion Format Benefits</a></h3>
+<p>Ion provides several advantages for configuration:</p>
+<ul>
+<li><strong>Type Safety</strong>: Native support for numbers, strings, booleans, timestamps</li>
+<li><strong>Comments</strong>: Document your configuration inline with <code>//</code></li>
+<li><strong>Annotations</strong>: Add type annotations like <code>minutes::$r</code></li>
+<li><strong>Nested Structures</strong>: Define complex object hierarchies naturally</li>
+<li><strong>Variable References</strong>: Use <code>$variable</code> for reusable components</li>
+</ul>
+<h2 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h2>
+<h3 id="what-are-stochastic-processes"><a class="header" href="#what-are-stochastic-processes">What are Stochastic Processes?</a></h3>
+<p><strong>Stochastic processes</strong> are mathematical models that describe how events occur over time in a seemingly random but statistically predictable way. In Beamline, they’re defined using the <code>$arrival</code> field in <code>rand_process</code> blocks.</p>
+<h3 id="arrival-process-types"><a class="header" href="#arrival-process-types">Arrival Process Types</a></h3>
+<h4 id="1-homogeneous-poisson-process"><a class="header" href="#1-homogeneous-poisson-process">1. Homogeneous Poisson Process</a></h4>
+<p>Models events that occur at a constant average rate with random intervals:</p>
+<pre><code class="language-ion">rand_processes::{
+    sensor_readings: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::5 },
+        $data: {
+            sensor_id: UUID,
+            reading: UniformF64::{ low: 0.0, high: 100.0 },
+            timestamp: Instant
+        }
+    }
+}
+</code></pre>
+<p><strong>Time Units:</strong></p>
+<ul>
+<li><code>milliseconds::N</code> - N milliseconds between events</li>
+<li><code>seconds::N</code> - N seconds between events</li>
+<li><code>minutes::N</code> - N minutes between events</li>
+<li><code>hours::N</code> - N hours between events</li>
+<li><code>days::N</code> - N days between events</li>
+</ul>
+<p><strong>Use Cases:</strong></p>
+<ul>
+<li>User logins to a website</li>
+<li>Network packet arrivals</li>
+<li>Customer service calls</li>
+<li>Sensor readings</li>
+</ul>
+<h4 id="2-variable-arrival-rates"><a class="header" href="#2-variable-arrival-rates">2. Variable Arrival Rates</a></h4>
+<p>Use variables to create dynamic arrival patterns:</p>
+<pre><code class="language-ion">rand_processes::{
+    user_events: rand_process::{
+        $r: Uniform::{ choices: [2, 5, 10] },  // Variable rate
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+        $data: {
+            event_type: Uniform::{ choices: ["login", "logout", "action"] },
+            user_id: UUID
+        }
+    }
+}
+</code></pre>
+<h2 id="data-generators"><a class="header" href="#data-generators">Data Generators</a></h2>
+<h3 id="basic-generator-types"><a class="header" href="#basic-generator-types">Basic Generator Types</a></h3>
+<p>From the actual implementation:</p>
+<h4 id="numeric-generators"><a class="header" href="#numeric-generators">Numeric Generators</a></h4>
+<pre><code class="language-ion">rand_processes::{
+    numeric_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            // Integer generators
+            small_int: UniformI8,                                    // -127 to 127
+            medium_int: UniformI16::{ low: 100, high: 1000 },       // Custom range
+            large_int: UniformU32::{ low: 1, high: 1000000 },       // Unsigned
+            
+            // Float generators  
+            decimal_value: UniformDecimal::{ low: 1.99, high: 99.99 },  // Exact decimal
+            float_value: UniformF64::{ low: 0.0, high: 1.0 },           // Float
+            
+            // Statistical distributions
+            normal_score: NormalF64::{ mean: 100.0, std_dev: 15.0 },
+            exponential_wait: ExpF64::{ rate: 0.1 },
+            weibull_lifetime: WeibullF64::{ shape: 2.0, scale: 1000.0 }
+        }
+    }
+}
+</code></pre>
+<h4 id="string-generators"><a class="header" href="#string-generators">String Generators</a></h4>
+<pre><code class="language-ion">rand_processes::{
+    text_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::2 },
+        $data: {
+            // UUID generator
+            id: UUID,
+            
+            // Lorem Ipsum text
+            description: LoremIpsum::{ min_words: 5, max_words: 20 },
+            title: LoremIpsumTitle,  // 3-8 title-cased words
+            
+            // Regular expressions
+            country_code: Regex::{ pattern: "[A-Z]{2}" },
+            phone: Regex::{ pattern: "[0-9]{3}-[0-9]{3}-[0-9]{4}" },
+            
+            // Format strings with variables
+            formatted_name: Format::{ pattern: "User #{UUID}" }
+        }
+    }
+}
+</code></pre>
+<h4 id="system-generators"><a class="header" href="#system-generators">System Generators</a></h4>
+<pre><code class="language-ion">rand_processes::{
+    system_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            // System state generators
+            current_time: Instant,      // Current simulation time
+            current_date: Date,         // Current simulation date
+            event_tick: Tick,           // Current tick counter
+            
+            // Boolean generator
+            active: Bool,               // 50% true by default
+            premium: Bool::{ p: 0.1 }   // 10% true
+        }
+    }
+}
+</code></pre>
+<h4 id="complex-type-generators"><a class="header" href="#complex-type-generators">Complex Type Generators</a></h4>
+<pre><code class="language-ion">rand_processes::{
+    complex_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::5 },
+        $data: {
+            // Array generator
+            measurements: UniformArray::{
+                min_size: 3,
+                max_size: 8,
+                element_type: UniformF64::{ low: 0.0, high: 100.0 }
+            },
+            
+            // Union type generator (any of several types)
+            mixed_value: UniformAnyOf::{
+                types: [
+                    UUID,
+                    UniformI32::{ low: 1, high: 1000 },
+                    LoremIpsumTitle
+                ]
+            },
+            
+            // Choice from literals
+            status: Uniform::{ choices: ["active", "inactive", "pending"] }
+        }
+    }
+}
+</code></pre>
+<h2 id="advanced-script-features"><a class="header" href="#advanced-script-features">Advanced Script Features</a></h2>
+<h3 id="variable-definitions-and-references"><a class="header" href="#variable-definitions-and-references">Variable Definitions and References</a></h3>
+<p>From the real client-service.ion script:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Define reusable generators
+    $n: UniformU8::{ low: 5, high: 20 },
+    $id_gen: UUID,
+    $rid_gen: UUID,
+    
+    requests: $n::[
+        {
+            // Force evaluation at script read time
+            $id: $id_gen::(),
+            $rate: UniformF64::{ low: 0.995e0, high: 1.0e0 },
+            $success: Bool::{ p: $rate },
+            
+            service: rand_process::{
+                $r: UniformU8::{ low: 20, high: 150 },
+                $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+                $data: {
+                    Request: $rid_gen,
+                    Account: $id,
+                    client: Format::{ pattern: "customer #{ $@n }" },
+                    success: $success
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<p><strong>Key concepts:</strong></p>
+<ul>
+<li><strong>Variables</strong>: <code>$variable_name</code> for reusable generators</li>
+<li><strong>Forced evaluation</strong>: <code>$id_gen::()</code> evaluates once at script read time</li>
+<li><strong>Loop arrays</strong>: <code>$n::[...]</code> creates N instances</li>
+<li><strong>Loop index</strong>: <code>$@n</code> accesses current iteration index</li>
+</ul>
+<h3 id="static-data"><a class="header" href="#static-data">Static Data</a></h3>
+<p>From the orders.ion test script:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 5, high: 20 },
+    $id_gen: UUID,
+    
+    customers: $n::[
+        {
+            $id: $id_gen::(),
+            
+            // Static data - generated once at simulation start
+            customer_table: static_data::{
+                $data: {
+                    id: $id,
+                    address: Format::{ pattern: "{ $@n } Foo Bar Ave" }
+                }
+            },
+            
+            // Dynamic data - generated over time
+            orders: rand_process::{
+                $arrival: HomogeneousPoisson:: { interarrival: days::UniformU8::{ low: 1, high: 150 } },
+                $data: {
+                    Order: UUID,
+                    Customer: $id,
+                    Time: Instant
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<h3 id="nullability-and-optionality"><a class="header" href="#nullability-and-optionality">Nullability and Optionality</a></h3>
+<p>Real syntax from test scripts:</p>
+<pre><code class="language-ion">rand_processes::{
+    nullable_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            // 75% chance of NULL, can also be MISSING
+            weight: UniformDecimal::{ 
+                nullable: 0.75, 
+                optional: true,
+                low: 1.995, 
+                high: 4.9999 
+            },
+            
+            // Never NULL
+            id: UUID::{ nullable: false },
+            
+            // 10% chance of MISSING (field won't appear)
+            optional_field: UniformI32::{ optional: 0.1, low: 1, high: 100 }
+        }
+    }
+}
+</code></pre>
+<h2 id="real-script-examples"><a class="header" href="#real-script-examples">Real Script Examples</a></h2>
+<h3 id="simple-sensor-script"><a class="header" href="#simple-sensor-script">Simple Sensor Script</a></h3>
+<p>Based on the actual sensors.ion test:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 2, high: 10 },
+
+    sensors: $n::[
+        rand_process::{
+            $r: Uniform::{ choices: [5,10] },
+            $arrival: HomogeneousPoisson:: { interarrival: minutes::$r },
+            $weight: UniformDecimal::{ nullable: 0.75, low: 1.995, high: 4.9999, optional: true },
+            $data: {
+                tick: Tick,
+                i8: UniformI8,
+                f: UniformF64,
+                w: $weight,
+                d: UniformDecimal::{ low: 0d0, high: 4.2d1, nullable: false }
+            }
+        }
+    ]
+}
+</code></pre>
+<p><strong>Test this script:</strong></p>
+<pre><code class="language-bash">target/release/beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
+  --sample-count 10 \
+  --output-format ion-pretty
+</code></pre>
+<h3 id="client-service-system"><a class="header" href="#client-service-system">Client-Service System</a></h3>
+<p>Based on client-service.ion test:</p>
+<pre><code class="language-ion">rand_processes::{
+    // Generate between 5 &amp; 20 customers
+    $n: UniformU8::{ low: 5, high: 20 },
+
+    // Shared generators
+    $id_gen: UUID,
+    $rid_gen: UUID,
+
+    requests: $n::[
+        {
+            // Each customer gets unique ID
+            $id: $id_gen::(),
+            $rate: UniformF64::{ low: 0.995e0, high: 1.0e0 },
+            $success: Bool::{ p: $rate },
+
+            // Service dataset
+            service: rand_process::{
+                $r: UniformU8::{ low: 20, high: 150 },
+                $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+                $data: {
+                    Request: $rid_gen,
+                    StartTime: Instant,
+                    Program: "FancyService",
+                    Operation: "GetMyData",
+                    Account: $id,
+                    client: Format::{ pattern: "customer #{ $@n }" },
+                    success: $success
+                }
+            },
+
+            // Individual client datasets
+            'client_{ $@n }': rand_process::{
+                $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+                $data: {
+                    id: $id,
+                    request_time: Instant,
+                    request_id: $rid_gen,
+                    success: $success
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<h3 id="transaction-data-script"><a class="header" href="#transaction-data-script">Transaction Data Script</a></h3>
+<p>Based on simple_transactions.ion test:</p>
+<pre><code class="language-ion">rand_processes::{
+    test_data: rand_process::{
+        $r: Uniform::{ choices: [5,10] },
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+        
+        $data: {
+            transaction_id: UUID::{ nullable: false },
+            marketplace_id: UniformU8::{ nullable: false },
+            country_code: Regex::{ pattern: "[A-Z]{2}" },
+            created_at: Instant,
+            completed: Bool,
+            description: LoremIpsum::{ min_words:10, max_words:200 },
+            price: UniformDecimal::{ low: 2.99, high: 99999.99, optional: true }
+        }
+    }
+}
+</code></pre>
+<h2 id="advanced-script-patterns"><a class="header" href="#advanced-script-patterns">Advanced Script Patterns</a></h2>
+<h3 id="complex-statistical-distributions"><a class="header" href="#complex-statistical-distributions">Complex Statistical Distributions</a></h3>
+<p>From numbers.ion test script:</p>
+<pre><code class="language-ion">rand_processes::{
+    test_data: rand_process::{
+        $r: Uniform::{ choices: [5,10] },
+        $arrival: HomogeneousPoisson:: { interarrival: milliseconds::$r },
+
+        $data: {
+            uniform: {
+                // Uniform distributions
+                uniform_u8: UniformU8::{ low: 13, high: 42 },
+                uniform_f64: UniformF64::{ low: -13.0, high: 42.0 },
+                uniform_decimal: UniformDecimal::{ low: 0.995, high: 499.9999 }
+            },
+
+            statistical: {
+                // Statistical distributions
+                normal: NormalF64::{ mean: 14.3, std_dev: 3.0 },
+                lognormal: LogNormalF64::{ location: 14.3, scale: 3.0 },
+                weibull: WeibullF64::{ shape: 14.3, scale: 3.0 },
+                exponential: ExpF64::{ rate: 3.0 }
+            },
+            
+            // With nullability and optionality
+            nullable_field: UniformI32::{ 
+                nullable: 0.2,    // 20% NULL
+                optional: 0.1,    // 10% MISSING
+                low: 1, 
+                high: 100 
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="multiple-datasets-with-relationships"><a class="header" href="#multiple-datasets-with-relationships">Multiple Datasets with Relationships</a></h3>
+<p>Real pattern from client-service.ion:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 5, high: 20 },
+    $id_gen: UUID,
+
+    requests: $n::[
+        {
+            $id: $id_gen::(),  // One ID per customer
+            $rid_gen: UUID,    // Separate request ID generator per customer
+            
+            // Shared service dataset
+            service: rand_process::{
+                $arrival: HomogeneousPoisson:: { interarrival: milliseconds::50 },
+                $data: {
+                    Request: $rid_gen,
+                    StartTime: Instant,
+                    Account: $id,
+                    client: Format::{ pattern: "customer #{ $@n }" }
+                }
+            },
+            
+            // Individual client dataset for this customer
+            'client_{ $@n }': rand_process::{
+                $arrival: HomogeneousPoisson:: { interarrival: milliseconds::50 },
+                $data: {
+                    id: $id,
+                    request_time: Instant,
+                    request_id: $rid_gen
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<h3 id="static-data-with-dynamic-references"><a class="header" href="#static-data-with-dynamic-references">Static Data with Dynamic References</a></h3>
+<p>From orders.ion test script:</p>
+<pre><code class="language-ion">rand_processes::{
+    $n: UniformU8::{ low: 5, high: 20 },
+    $id_gen: UUID,
+    $oid_gen: UUID,
+
+    customers: $n::[
+        {
+            $id: $id_gen::(),
+
+            // Static customer data (generated once)
+            customer_table: static_data::{
+                $data: {
+                    id: $id,
+                    address: Format::{ pattern: "{ $@n } Foo Bar Ave" }
+                }
+            },
+
+            // Dynamic orders (generated over time)  
+            orders: rand_process::{
+                $r: UniformU8::{ low: 1, high: 150 },
+                $arrival: HomogeneousPoisson:: { interarrival: days::$r },
+                $data: {
+                    Order: $oid_gen,
+                    Time: Instant,
+                    Customer: $id  // Links to customer_table
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<h2 id="script-testing-and-validation"><a class="header" href="#script-testing-and-validation">Script Testing and Validation</a></h2>
+<h3 id="testing-script-syntax"><a class="header" href="#testing-script-syntax">Testing Script Syntax</a></h3>
+<pre><code class="language-bash"># Test script with minimal data generation
+target/release/beamline gen data \
+  --seed 1 \
+  --start-auto \
+  --script-path new_script.ion \
+  --sample-count 1
+
+# Check inferred schema
+target/release/beamline infer-shape \
+  --seed 1 \
+  --start-auto \
+  --script-path new_script.ion \
+  --output-format basic-ddl
+</code></pre>
+<h3 id="testing-with-small-samples"><a class="header" href="#testing-with-small-samples">Testing with Small Samples</a></h3>
+<pre><code class="language-bash"># Test each dataset individually
+target/release/beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path complex_script.ion \
+  --sample-count 5 \
+  --dataset specific_dataset
+
+# Test all datasets with small sample
+target/release/beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path complex_script.ion \
+  --sample-count 5 \
+  --output-format text
+</code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h3 id="1-use-real-test-script-patterns"><a class="header" href="#1-use-real-test-script-patterns">1. Use Real Test Script Patterns</a></h3>
+<pre><code class="language-ion">// Good - follows actual Beamline syntax
+rand_processes::{
+    $arrival_rate: Uniform::{ choices: [5, 10] },
+    
+    events: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: minutes::$arrival_rate },
+        $data: {
+            event_id: UUID,
+            timestamp: Instant,
+            value: UniformF64::{ low: 0.0, high: 100.0 }
+        }
+    }
+}
+</code></pre>
+<h3 id="2-test-scripts-incrementally"><a class="header" href="#2-test-scripts-incrementally">2. Test Scripts Incrementally</a></h3>
+<pre><code class="language-bash"># Start with basic structure
+echo 'rand_processes::{ test: rand_process::{ $arrival: HomogeneousPoisson:: { interarrival: seconds::1 }, $data: { id: UUID } } }' &gt; minimal.ion
+
+# Test basic structure
+target/release/beamline gen data --seed 1 --start-auto --script-path minimal.ion --sample-count 3
+</code></pre>
+<h3 id="3-use-meaningful-variable-names"><a class="header" href="#3-use-meaningful-variable-names">3. Use Meaningful Variable Names</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    // Clear variable names
+    $customer_count: UniformU8::{ low: 10, high: 50 },
+    $order_frequency: Uniform::{ choices: [1, 3, 7] },  // Days
+    $customer_id_generator: UUID,
+    
+    orders: $customer_count::[
+        rand_process::{
+            $arrival: HomogeneousPoisson:: { interarrival: days::$order_frequency },
+            $data: {
+                customer_id: $customer_id_generator,
+                order_time: Instant
+            }
+        }
+    ]
+}
+</code></pre>
+<h3 id="4-document-complex-patterns"><a class="header" href="#4-document-complex-patterns">4. Document Complex Patterns</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    // === Customer Simulation Configuration ===
+    // Generate 10-50 customers, each placing orders every 1-30 days
+    
+    $customer_count: UniformU8::{ low: 10, high: 50 },
+    $shared_customer_id: UUID,
+    
+    customer_orders: $customer_count::[
+        {
+            // Each customer gets unique ID for all their orders
+            $id: $shared_customer_id::(),
+            
+            // Customer places orders with variable frequency
+            orders: rand_process::{
+                $days_between_orders: UniformU8::{ low: 1, high: 30 },
+                $arrival: HomogeneousPoisson:: { interarrival: days::$days_between_orders },
+                $data: {
+                    customer_id: $id,
+                    order_id: UUID,
+                    order_time: Instant,
+                    amount: UniformDecimal::{ low: 10.00, high: 500.00 }
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+<h2 id="common-script-errors-and-solutions"><a class="header" href="#common-script-errors-and-solutions">Common Script Errors and Solutions</a></h2>
+<h3 id="error-invalid-ion-syntax"><a class="header" href="#error-invalid-ion-syntax">Error: Invalid Ion Syntax</a></h3>
+<pre><code class="language-ion">// Wrong - missing closing brace
+rand_processes::{
+    test: rand_process::{
+        $data: { id: UUID }
+    // Missing closing brace for rand_processes
+</code></pre>
+<h3 id="error-missing-required-fields"><a class="header" href="#error-missing-required-fields">Error: Missing Required Fields</a></h3>
+<pre><code class="language-ion">// Wrong - missing $arrival
+rand_processes::{
+    test: rand_process::{
+        $data: { id: UUID }  // Missing $arrival definition
+    }
+}
+
+// Correct
+rand_processes::{
+    test: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: { id: UUID }
+    }
+}
+</code></pre>
+<h3 id="error-invalid-generator-configuration"><a class="header" href="#error-invalid-generator-configuration">Error: Invalid Generator Configuration</a></h3>
+<pre><code class="language-ion">// Wrong - low &gt; high
+rand_processes::{
+    test: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            bad_range: UniformI32::{ low: 100, high: 50 }  // Invalid
+        }
+    }
+}
+
+// Correct
+rand_processes::{
+    test: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            good_range: UniformI32::{ low: 50, high: 100 }
+        }
+    }
+}
+</code></pre>
+<h2 id="performance-optimization"><a class="header" href="#performance-optimization">Performance Optimization</a></h2>
+<h3 id="efficient-generator-usage"><a class="header" href="#efficient-generator-usage">Efficient Generator Usage</a></h3>
+<pre><code class="language-ion">rand_processes::{
+    // Efficient - reuse expensive generators
+    $expensive_distribution: NormalF64::{ mean: 100.0, std_dev: 15.0 },
+    $simple_uuid: UUID,
+    
+    efficient_data: rand_process::{
+        $arrival: HomogeneousPoisson:: { interarrival: seconds::1 },
+        $data: {
+            // Reuse expensive distribution
+            score1: $expensive_distribution,
+            score2: $expensive_distribution,
+            score3: $expensive_distribution,
+            
+            // Simple generators are fast
+            id: $simple_uuid,
+            active: Bool,
+            count: UniformI32::{ low: 1, high: 1000 }
+        }
+    }
+}
+</code></pre>
+<h3 id="testing-commands"><a class="header" href="#testing-commands">Testing Commands</a></h3>
+<pre><code class="language-bash"># Test with small samples first
+target/release/beamline gen data \
+  --seed 1 \
+  --start-auto \
+  --script-path new_script.ion \
+  --sample-count 5 \
+  --output-format text
+
+# Scale up after validation
+target/release/beamline gen data \
+  --seed 1 \
+  --start-auto \
+  --script-path new_script.ion \
+  --sample-count 10000 \
+  --output-format ion-binary
+</code></pre>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand real Ion scripts and stochastic processes, you’re ready to dive deeper into the <a href="../data-generation/overview.html">Data Generation</a> section, where you’ll learn about specific generator types, output formats, and advanced data modeling techniques using the actual Beamline syntax.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../basics/reproducible-generation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../data-generation/overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../basics/reproducible-generation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../data-generation/overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

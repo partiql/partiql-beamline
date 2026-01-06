@@ -1,0 +1,370 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>What is Beamline? - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/getting-started/what-is-beamline.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="what-is-beamline"><a class="header" href="#what-is-beamline">What is Beamline?</a></h1>
+<p>Beamline is a tool designed for <strong>fast data generation</strong>. At its core, it generates <strong>reproducible pseudo-random data</strong>
+using a <strong><a href="https://en.wikipedia.org/wiki/Stochastic_process">stochastic approach</a></strong> that models real-world data patterns.</p>
+<h2 id="the-problem-it-solves"><a class="header" href="#the-problem-it-solves">The Problem It Solves</a></h2>
+<p>Some of the common software engineering problems that most developers, data scientists, and researchers often face are:</p>
+<ul>
+<li><strong>Lack of Test Data</strong>: Creating realistic test datasets manually is time-consuming and error-prone</li>
+<li><strong>Inconsistent Testing</strong>: Different test runs with different data make it hard to reproduce bugs</li>
+<li><strong>Query Testing</strong>: Writing queries that match your data structures requires understanding both the data shape and query patterns</li>
+<li><strong>Performance Benchmarking</strong>: Consistent, scalable datasets are needed for meaningful performance comparisons and AI inferences evaluations</li>
+<li><strong>Schema Evolution</strong>: As data structures change, maintaining test data becomes increasingly complex</li>
+</ul>
+<p>Beamline addresses all these challenges with a unified approach to synthetic data generation.</p>
+<h2 id="core-components"><a class="header" href="#core-components">Core Components</a></h2>
+<p>Beamline consists of three main components that work together:</p>
+<h3 id="1-data-generator"><a class="header" href="#1-data-generator">1. Data Generator</a></h3>
+<p>The <strong>Data Generator</strong> creates reproducible pseudo-random data based on mathematical distributions and stochastic processes.
+It can generate:</p>
+<ul>
+<li>Simple scalar values (numbers, strings, booleans, dates)</li>
+<li>Complex nested structures (structs, arrays, mixed types)</li>
+<li>Time-series data with realistic temporal patterns</li>
+<li>Sharing data across multiple datasets</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li><strong>Reproducible</strong>: Same seed always produces the same data no matter how nested that data is</li>
+<li><strong>Configurable</strong>: Highly customizable through scripts</li>
+<li><strong>Realistic</strong>: Uses statistical distributions to model real-world patterns</li>
+<li><strong>Scalable</strong>: Can generate datasets from small samples to millions of records</li>
+</ul>
+<h3 id="2-query-generator"><a class="header" href="#2-query-generator">2. Query Generator</a></h3>
+<p>The <strong>Query Generator</strong> creates SQL-like queries (starting from <a href="https://partiql.org">PartiQL</a> support) that match the shapes
+and types of your generated data. It can produce:</p>
+<ul>
+<li><code>SELECT * FROM ... WHERE ...</code> queries with various predicates</li>
+<li><code>SELECT ... FROM ... WHERE ...</code> queries with custom projections</li>
+<li><code>SELECT ... EXCLUDE ... FROM ... WHERE ...</code> queries with exclusions</li>
+<li>Complex nested queries with deep path expressions</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li><strong>Datatype-Aware</strong>: Generates queries that match your data types</li>
+<li><strong>Parameterizable</strong>: Control query complexity, depth, and patterns</li>
+<li><strong>Reproducible</strong>: Same seed produces the same query patterns</li>
+</ul>
+<h3 id="3-cli-interface"><a class="header" href="#3-cli-interface">3. CLI Interface</a></h3>
+<p>The <strong>Command Line Interface</strong> provides easy access to all functionality with comprehensive options for:</p>
+<ul>
+<li>Data generation with various output formats</li>
+<li>Query generation with extensive parameterization</li>
+<li>Schema inference and export</li>
+<li>Local data file creation with both data and schemas</li>
+</ul>
+<h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
+<h3 id="stochastic-processes"><a class="header" href="#stochastic-processes">Stochastic Processes</a></h3>
+<p>Beamline models data generation as <strong>stochastic processes</strong> — mathematical models that describe systems that
+appear to vary randomly over time. This approach allows it to:</p>
+<ul>
+<li>Generate data that follows realistic patterns</li>
+<li>Model temporal relationships (like arrival times)</li>
+<li>Simulate real-world variability while maintaining reproducibility</li>
+</ul>
+<h3 id="scripts-and-configuration"><a class="header" href="#scripts-and-configuration">Scripts and Configuration</a></h3>
+<p>Data generation is controlled through <strong>scripts</strong> that define:</p>
+<ul>
+<li><strong>Random Processes</strong>: How data arrives and is generated over time</li>
+<li><strong>Data Generators</strong>: What types of data to create and their distributions</li>
+<li><strong>Relationships</strong>: How different data elements relate to each other</li>
+<li><strong>Constraints</strong>: Rules and patterns the data should follow</li>
+</ul>
+<h3 id="reproducibility"><a class="header" href="#reproducibility">Reproducibility</a></h3>
+<p>One of Beamline’s key strengths is <strong>reproducibility</strong>:</p>
+<ul>
+<li><strong>Seeds</strong>: Control the random data generation for consistent results</li>
+<li><strong>Timestamps</strong>: Control the starting time for temporal data</li>
+<li><strong>Deterministic</strong>: Same inputs always produce the same outputs</li>
+<li><strong>Debuggable</strong>: Reproduce exact datasets for debugging and validation</li>
+</ul>
+<h2 id="use-cases"><a class="header" href="#use-cases">Use Cases</a></h2>
+<h3 id="ai-model-training-and-inference"><a class="header" href="#ai-model-training-and-inference">AI Model Training and Inference</a></h3>
+<ul>
+<li><strong>Training Data Generation</strong>: Generate datasets that follow specific statistical distributions for machine learning model training</li>
+<li><strong>Distribution-Based Modeling</strong>: Create training data that matches target population distributions for more representative models</li>
+<li><strong>Synthetic Data Augmentation</strong>: Expand training datasets while preserving underlying statistical distributions</li>
+<li><strong>Edge Case Generation</strong>: Generate rare statistical scenarios for robust model validation</li>
+</ul>
+<h3 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h3>
+<ul>
+<li><strong>Unit Testing</strong>: Generate consistent test data for implementations</li>
+<li><strong>Integration Testing</strong>: Create realistic datasets for end-to-end testing</li>
+<li><strong>Regression Testing</strong>: Ensure changes don’t break existing functionality</li>
+<li><strong>Edge Case Testing</strong>: Generate data that exercises boundary conditions</li>
+</ul>
+<h3 id="performance-and-benchmarking"><a class="header" href="#performance-and-benchmarking">Performance and Benchmarking</a></h3>
+<ul>
+<li><strong>Load Testing</strong>: Generate large datasets for performance evaluation</li>
+<li><strong>Scalability Testing</strong>: Test how systems perform with growing data sizes</li>
+<li><strong>Query Optimization</strong>: Generate queries to test optimization strategies</li>
+</ul>
+<h3 id="research-and-education"><a class="header" href="#research-and-education">Research and Education</a></h3>
+<ul>
+<li><strong>Algorithm Research</strong>: Generate datasets for testing new features</li>
+<li><strong>Query Pattern Analysis</strong>: Study how different query patterns perform</li>
+<li><strong>Educational Examples</strong>: Create realistic examples for learning PartiQL</li>
+<li><strong>Prototyping</strong>: Quickly generate data for proof-of-concept implementations</li>
+</ul>
+<h2 id="what-makes-it-special"><a class="header" href="#what-makes-it-special">What Makes It Special</a></h2>
+<h3 id="mathematical-foundation"><a class="header" href="#mathematical-foundation">Mathematical Foundation</a></h3>
+<p>Unlike simple random data generators, Beamline is built on solid mathematical foundations:</p>
+<ul>
+<li><strong>Probability Distributions</strong>: Uses proper statistical distributions for realistic data</li>
+<li><strong>Stochastic Modeling</strong>: Models real-world processes mathematically</li>
+<li><strong>Temporal Modeling</strong>: Handles time-based data generation correctly</li>
+<li><strong>Correlation Modeling</strong>: Can generate related data across multiple dimensions</li>
+</ul>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand what Beamline is and why it’s useful, let’s get it installed and running on your system. In the next section, we’ll walk through the installation process and verify that everything is working correctly.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../getting-started/installation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../getting-started/installation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

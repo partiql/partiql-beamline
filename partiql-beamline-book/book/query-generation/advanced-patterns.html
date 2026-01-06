@@ -1,0 +1,849 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Advanced Patterns - PartiQL Beamline</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="A comprehensive guide to using PartiQL Beamline for synthetic data and query generation">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PartiQL Beamline</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/partiql/partiql-beamline/edit/main/docs/src/query-generation/advanced-patterns.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="advanced-query-patterns"><a class="header" href="#advanced-query-patterns">Advanced Query Patterns</a></h1>
+<p>This section covers advanced query generation using all four query strategies: <code>rand-sfw</code> (projections), <code>rand-select-all-efw</code> (exclusions), and <code>rand-sefw</code> (projections + exclusions). These strategies generate more sophisticated PartiQL queries that test complex language features.</p>
+<h2 id="query-strategy-overview"><a class="header" href="#query-strategy-overview">Query Strategy Overview</a></h2>
+<h3 id="available-strategies"><a class="header" href="#available-strategies">Available Strategies</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Strategy</th><th>Query Pattern</th><th>Features</th></tr></thead><tbody>
+<tr><td><code>rand-select-all-fw</code></td><td><code>SELECT * FROM WHERE</code></td><td>Basic queries with WHERE clauses</td></tr>
+<tr><td><code>rand-sfw</code></td><td><code>SELECT fields FROM WHERE</code></td><td>Custom projections + WHERE</td></tr>
+<tr><td><code>rand-select-all-efw</code></td><td><code>SELECT * EXCLUDE FROM WHERE</code></td><td>Exclusions + WHERE</td></tr>
+<tr><td><code>rand-sefw</code></td><td><code>SELECT EXCLUDE FROM WHERE</code></td><td>Projections + Exclusions + WHERE</td></tr>
+</tbody></table>
+</div>
+<h2 id="select-with-projections-rand-sfw"><a class="header" href="#select-with-projections-rand-sfw">SELECT with Projections (rand-sfw)</a></h2>
+<h3 id="basic-projection-queries"><a class="header" href="#basic-projection-queries">Basic Projection Queries</a></h3>
+<p>Generate queries with specific field selections:</p>
+<pre><code class="language-bash">beamline query basic \
+    --seed 1234 \
+    --start-auto \
+    --script-path simple_transactions.ion \
+    --sample-count 3 \
+    rand-sfw \
+        --project-rand-min 2 \
+        --project-rand-max 5 \
+        --project-path-depth-min 1 \
+        --project-path-depth-max 1 \
+        --project-pathstep-internal-all \
+        --project-pathstep-final-all \
+        --project-type-final-all \
+        --tbl-flt-rand-min 2 \
+        --tbl-flt-rand-max 5 \
+        --tbl-flt-path-depth-max 1 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-project \
+        --tbl-flt-type-final-scalar \
+        --pred-all
+</code></pre>
+<p><strong>Example Output from README:</strong></p>
+<pre><code class="language-sql">SELECT test_data.completed, test_data.completed FROM test_data AS test_data
+WHERE (NOT (test_data.completed) OR NOT ((test_data.created_at IS MISSING)))
+
+SELECT test_data.completed, test_data.marketplace_id, test_data.created_at
+FROM test_data AS test_data WHERE (NOT ((test_data.transaction_id IS NULL)) OR
+  (((test_data.transaction_id IN [
+            'Iam in.',
+            'Se.',
+            'Sine amicitia firmam.',
+            'Notae sunt.'
+          ] OR (test_data.transaction_id IS NULL)) OR
+      NOT ((test_data.description IS NULL))) OR
+    (test_data.marketplace_id &gt;= 28)))
+
+SELECT test_data, test_data.description FROM test_data AS test_data
+WHERE (test_data.completed IN [ false, false ] AND
+  (((test_data.price &lt;= 5.761136291521325) AND
+      NOT ((test_data.transaction_id IS MISSING))) AND
+    (NOT ((test_data.created_at IS MISSING)) AND
+      (test_data.created_at IS NULL))))
+</code></pre>
+<h3 id="understanding-projection-parameters"><a class="header" href="#understanding-projection-parameters">Understanding Projection Parameters</a></h3>
+<ul>
+<li><code>--project-rand-min 2 --project-rand-max 5</code>: Select 2-5 fields in SELECT clause</li>
+<li><code>--project-path-depth-max 1</code>: Use simple field names (no deep nesting)</li>
+<li><code>--project-pathstep-final-all</code>: Allow all path types (<code>.field</code>, <code>[*]</code>, <code>.*</code>)</li>
+<li><code>--project-type-final-all</code>: Project all types (scalars, structs, sequences)</li>
+</ul>
+<h2 id="select--exclude-rand-select-all-efw"><a class="header" href="#select--exclude-rand-select-all-efw">SELECT * EXCLUDE (rand-select-all-efw)</a></h2>
+<h3 id="basic-exclusion-queries"><a class="header" href="#basic-exclusion-queries">Basic Exclusion Queries</a></h3>
+<p>Generate <code>SELECT *</code> queries that exclude specific fields:</p>
+<pre><code class="language-bash">beamline query basic \
+    --seed 1234 \
+    --start-auto \
+    --script-path simple_transactions.ion \
+    --sample-count 3 \
+    rand-select-all-efw \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 1 \
+        --tbl-flt-path-depth-max 1 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-project \
+        --tbl-flt-type-final-scalar \
+        --pred-lt \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 3 \
+        --exclude-path-depth-min 1 \
+        --exclude-path-depth-max 1 \
+        --exclude-pathstep-internal-all \
+        --exclude-pathstep-final-all \
+        --exclude-type-final-all
+</code></pre>
+<p><strong>Example Output from README:</strong></p>
+<pre><code class="language-sql">SELECT * EXCLUDE test_data.marketplace_id, test_data.*, test_data.completed
+FROM test_data AS test_data WHERE (test_data.marketplace_id &lt; -5)
+
+SELECT * EXCLUDE test_data.completed FROM test_data AS test_data
+WHERE (test_data.price &lt; 18.418581624952935)
+
+SELECT * EXCLUDE test_data.marketplace_id, test_data.completed,
+  test_data.marketplace_id
+FROM test_data AS test_data WHERE (test_data.price &lt; 15.495327785402296)
+</code></pre>
+<h3 id="understanding-exclusion-parameters"><a class="header" href="#understanding-exclusion-parameters">Understanding Exclusion Parameters</a></h3>
+<ul>
+<li><code>--exclude-rand-min 1 --exclude-rand-max 3</code>: Exclude 1-3 fields</li>
+<li><code>--exclude-path-depth-max 1</code>: Use simple field exclusions</li>
+<li><code>--exclude-pathstep-final-all</code>: Allow all exclusion path types</li>
+<li><code>--exclude-type-final-all</code>: Exclude all types (scalars, structs, arrays)</li>
+</ul>
+<h2 id="select-exclude-from-where-rand-sefw"><a class="header" href="#select-exclude-from-where-rand-sefw">SELECT EXCLUDE FROM WHERE (rand-sefw)</a></h2>
+<h3 id="complete-query-generation"><a class="header" href="#complete-query-generation">Complete Query Generation</a></h3>
+<p>The most sophisticated strategy combines projections, exclusions, and WHERE clauses:</p>
+<pre><code class="language-bash">beamline query basic \
+    --seed 1234 \
+    --start-auto \
+    --script-path simple_transactions.ion \
+    --sample-count 3 \
+    rand-sefw \
+        --project-rand-min 2 \
+        --project-rand-max 5 \
+        --project-path-depth-min 1 \
+        --project-path-depth-max 1 \
+        --project-pathstep-internal-all \
+        --project-pathstep-final-all \
+        --project-type-final-all \
+        --tbl-flt-rand-min 2 \
+        --tbl-flt-rand-max 5 \
+        --tbl-flt-path-depth-max 1 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-project \
+        --tbl-flt-type-final-scalar \
+        --pred-all \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 3 \
+        --exclude-path-depth-min 1 \
+        --exclude-path-depth-max 1 \
+        --exclude-pathstep-internal-all \
+        --exclude-pathstep-final-all \
+        --exclude-type-final-all
+</code></pre>
+<p><strong>Example Output from README:</strong></p>
+<pre><code class="language-sql">SELECT test_data.completed, test_data.completed
+EXCLUDE test_data.marketplace_id, test_data.*, test_data.completed
+FROM test_data AS test_data 
+WHERE (NOT (test_data.completed) OR
+  NOT ((test_data.created_at IS MISSING)))
+
+SELECT test_data.completed, test_data.marketplace_id, test_data.created_at
+EXCLUDE test_data.completed 
+FROM test_data AS test_data
+WHERE (NOT ((test_data.transaction_id IS NULL)) OR
+  (((test_data.transaction_id IN [
+            'Iam in.',
+            'Se.',
+            'Sine amicitia firmam.',
+            'Notae sunt.'
+          ] OR (test_data.transaction_id IS NULL)) OR
+      NOT ((test_data.description IS NULL))) OR
+    (test_data.marketplace_id &gt;= 28)))
+
+SELECT test_data, test_data.description 
+EXCLUDE test_data.marketplace_id, test_data.completed, test_data.marketplace_id
+FROM test_data AS test_data 
+WHERE (test_data.completed IN [ false, false ] AND
+  (((test_data.price &lt;= 5.761136291521325) AND
+      NOT ((test_data.transaction_id IS MISSING))) AND
+    (NOT ((test_data.created_at IS MISSING)) AND
+      (test_data.created_at IS NULL))))
+</code></pre>
+<h2 id="deep-path-generation"><a class="header" href="#deep-path-generation">Deep Path Generation</a></h2>
+<h3 id="complex-nested-structures"><a class="header" href="#complex-nested-structures">Complex Nested Structures</a></h3>
+<p>For deeply nested data structures, use higher path depth limits:</p>
+<pre><code class="language-bash">beamline query basic \
+    --seed 1234 \
+    --start-auto \
+    --script-path transactions.ion \
+    --sample-count 3 \
+    rand-sefw \
+        --project-rand-min 2 \
+        --project-rand-max 5 \
+        --project-path-depth-min 1 \
+        --project-path-depth-max 10 \
+        --project-pathstep-internal-all \
+        --project-pathstep-final-all \
+        --project-type-final-all \
+        --tbl-flt-rand-min 2 \
+        --tbl-flt-rand-max 5 \
+        --tbl-flt-path-depth-max 10 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-project \
+        --tbl-flt-type-final-scalar \
+        --pred-all \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 2 \
+        --exclude-path-depth-min 3 \
+        --exclude-path-depth-max 4 \
+        --exclude-pathstep-internal-all \
+        --exclude-pathstep-final-unpivot \
+        --exclude-type-final-all
+</code></pre>
+<p><strong>Generated Deep Nested Queries from README:</strong></p>
+<pre><code class="language-sql">SELECT test_data.*.nested_struct.nested_struct.nested_struct.nested_struct.nested_struct.*,
+  test_data.test_nest_struct.*.*.nested_struct.nested_struct
+EXCLUDE test_data.*.*.*.*, test_data.price.* FROM test_data AS test_data
+WHERE ((test_data.test_nest_struct.*.*.*.nested_struct.*.test_int &lt;&gt; 19) OR
+  (test_data.test_nest_struct.*.*.nested_struct.*.*.test_int &gt; 35))
+
+SELECT test_data.test_nest_struct.*.nested_struct.*.*.nested_struct.*,
+  test_data.test_nest_struct.*.*.nested_struct.nested_struct.*.*,
+  test_data.test_nest_struct.nested_struct.*.nested_struct.*,
+  test_data.test_nest_struct.*.nested_struct.nested_struct.nested_struct.*
+EXCLUDE test_data.test_nest_struct.*.*, test_data.test_nest_struct.*.*.*
+FROM test_data AS test_data
+WHERE ((test_data.*.*.nested_struct.*.*.*.test_int &lt; 40) OR
+  (test_data.*.*.nested_struct.nested_struct.*.nested_struct.test_int &gt;= -9))
+
+SELECT test_data.*.nested_struct.nested_struct.nested_struct.nested_struct.*,
+  test_data.*.nested_struct.nested_struct.nested_struct.*.*.test_int
+EXCLUDE test_data.*.nested_struct.*.*,
+  test_data.test_nest_struct.nested_struct.*.*
+FROM test_data AS test_data
+WHERE ((((test_data.price.value &lt;= 6.206304713037888) OR
+      (test_data.*.nested_struct.nested_struct.*.nested_struct.*.test_int &lt;&gt; -29))
+    AND
+    (test_data.test_nest_struct.*.nested_struct.*.nested_struct.nested_struct.test_int &lt; 6))
+  AND ((test_data.price &gt; -44.666855950508584) OR
+    (test_data.*.*.*.nested_struct.*.*.test_int &gt; -42)))
+</code></pre>
+<h3 id="controlling-path-depth"><a class="header" href="#controlling-path-depth">Controlling Path Depth</a></h3>
+<pre><code class="language-bash"># Moderate depth for readability
+beamline query basic \
+    --seed 1234 \
+    --start-auto \
+    --script-path transactions.ion \
+    --sample-count 3 \
+    rand-sefw \
+        --project-rand-min 2 \
+        --project-rand-max 5 \
+        --project-path-depth-min 1 \
+        --project-path-depth-max 3 \
+        --project-pathstep-internal-all \
+        --project-pathstep-final-all \
+        --project-type-final-all \
+        --tbl-flt-rand-min 2 \
+        --tbl-flt-rand-max 5 \
+        --tbl-flt-path-depth-max 10 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-project \
+        --tbl-flt-type-final-scalar \
+        --pred-all \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 2 \
+        --exclude-path-depth-min 3 \
+        --exclude-path-depth-max 4 \
+        --exclude-pathstep-internal-all \
+        --exclude-pathstep-final-unpivot \
+        --exclude-type-final-all
+</code></pre>
+<p><strong>More Manageable Output:</strong></p>
+<pre><code class="language-sql">SELECT test_data.price, test_data.*.*.nested_struct EXCLUDE test_data.*.*.*.*,
+  test_data.price.*
+FROM test_data AS test_data
+WHERE ((test_data.test_nest_struct.*.*.*.nested_struct.*.test_int &lt;&gt; 19) OR
+  (test_data.test_nest_struct.*.*.nested_struct.*.*.test_int &gt; 35))
+
+SELECT test_data.price, test_data.*.*.nested_struct, test_data.test_struct,
+  test_data.*.*.*
+EXCLUDE test_data.test_nest_struct.*.*, test_data.test_nest_struct.*.*.*
+FROM test_data AS test_data
+WHERE ((test_data.*.*.nested_struct.*.*.*.test_int &lt; 40) OR
+  (test_data.*.*.nested_struct.nested_struct.*.nested_struct.test_int &gt;= -9))
+
+SELECT test_data.transaction_id, test_data.*.nested_struct
+EXCLUDE test_data.*.nested_struct.*.*,
+  test_data.test_nest_struct.nested_struct.*.*
+FROM test_data AS test_data
+WHERE ((((test_data.price.value &lt;= 6.206304713037888) OR
+      (test_data.*.nested_struct.nested_struct.*.nested_struct.*.test_int &lt;&gt; -29))
+    AND
+    (test_data.test_nest_struct.*.nested_struct.*.nested_struct.nested_struct.test_int &lt; 6))
+  AND ((test_data.price &gt; -44.666855950508584) OR
+    (test_data.*.*.*.nested_struct.*.*.test_int &gt; -42)))
+</code></pre>
+<h2 id="path-expression-types"><a class="header" href="#path-expression-types">Path Expression Types</a></h2>
+<h3 id="path-step-types"><a class="header" href="#path-step-types">Path Step Types</a></h3>
+<p>Beamline can generate different path step types:</p>
+<h4 id="projection-steps-field"><a class="header" href="#projection-steps-field">Projection Steps (<code>.field</code>)</a></h4>
+<pre><code class="language-sql">SELECT test_data.transaction_id, test_data.customer.name
+FROM test_data AS test_data
+</code></pre>
+<h4 id="index-steps-n"><a class="header" href="#index-steps-n">Index Steps (<code>[N]</code>)</a></h4>
+<pre><code class="language-sql">SELECT test_data.items[0], test_data.scores[5]
+FROM test_data AS test_data
+</code></pre>
+<h4 id="wildcard-steps-"><a class="header" href="#wildcard-steps-">Wildcard Steps (<code>[*]</code>)</a></h4>
+<pre><code class="language-sql">SELECT test_data.items[*].price, test_data.users[*].name
+FROM test_data AS test_data
+</code></pre>
+<h4 id="unpivot-steps-"><a class="header" href="#unpivot-steps-">Unpivot Steps (<code>.*</code>)</a></h4>
+<pre><code class="language-sql">SELECT test_data.metadata.*, test_data.settings.*
+FROM test_data AS test_data
+</code></pre>
+<h3 id="path-configuration-examples"><a class="header" href="#path-configuration-examples">Path Configuration Examples</a></h3>
+<h4 id="simple-projections-only"><a class="header" href="#simple-projections-only">Simple Projections Only</a></h4>
+<pre><code class="language-bash"># Only use projection steps
+beamline query basic \
+    --seed 100 \
+    --start-auto \
+    --script-path nested_data.ion \
+    --sample-count 5 \
+    rand-sfw \
+        --project-rand-min 3 \
+        --project-rand-max 5 \
+        --project-path-depth-max 3 \
+        --project-pathstep-internal-project \
+        --project-pathstep-final-project \
+        --pred-all
+</code></pre>
+<h4 id="include-wildcards"><a class="header" href="#include-wildcards">Include Wildcards</a></h4>
+<pre><code class="language-bash"># Add wildcard and unpivot paths
+beamline query basic \
+    --seed 200 \
+    --start-auto \
+    --script-path array_data.ion \
+    --sample-count 5 \
+    rand-sfw \
+        --project-rand-min 2 \
+        --project-rand-max 4 \
+        --project-path-depth-max 2 \
+        --project-pathstep-internal-all \
+        --project-pathstep-final-foreach \
+        --project-pathstep-final-unpivot \
+        --pred-all
+</code></pre>
+<h2 id="complex-query-combinations"><a class="header" href="#complex-query-combinations">Complex Query Combinations</a></h2>
+<h3 id="full-feature-queries"><a class="header" href="#full-feature-queries">Full Feature Queries</a></h3>
+<p>Use all query features together for comprehensive PartiQL testing:</p>
+<pre><code class="language-bash">beamline query basic \
+    --seed 2000 \
+    --start-auto \
+    --script-path comprehensive_schema.ion \
+    --sample-count 5 \
+    rand-sefw \
+        --project-rand-min 3 \
+        --project-rand-max 8 \
+        --project-path-depth-min 1 \
+        --project-path-depth-max 5 \
+        --project-pathstep-internal-all \
+        --project-pathstep-final-all \
+        --project-type-final-all \
+        --tbl-flt-rand-min 2 \
+        --tbl-flt-rand-max 6 \
+        --tbl-flt-path-depth-max 4 \
+        --tbl-flt-pathstep-internal-all \
+        --tbl-flt-pathstep-final-all \
+        --tbl-flt-type-final-all \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 4 \
+        --exclude-path-depth-min 1 \
+        --exclude-path-depth-max 3 \
+        --exclude-pathstep-internal-all \
+        --exclude-pathstep-final-all \
+        --exclude-type-final-all \
+        --pred-all
+</code></pre>
+<p>This generates very complex queries testing the full range of PartiQL features.</p>
+<h2 id="type-specific-query-generation"><a class="header" href="#type-specific-query-generation">Type-Specific Query Generation</a></h2>
+<h3 id="scalar-type-focus"><a class="header" href="#scalar-type-focus">Scalar Type Focus</a></h3>
+<p>Generate queries that only work with scalar values:</p>
+<pre><code class="language-bash">beamline query basic \
+    --seed 300 \
+    --start-auto \
+    --script-path mixed_types.ion \
+    --sample-count 8 \
+    rand-sfw \
+        --project-rand-min 2 \
+        --project-rand-max 4 \
+        --project-type-final-scalar \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 3 \
+        --tbl-flt-type-final-scalar \
+        --pred-comparison
+</code></pre>
+<p><strong>Results focus on scalar fields:</strong></p>
+<pre><code class="language-sql">SELECT test_data.price, test_data.completed, test_data.marketplace_id
+FROM test_data AS test_data
+WHERE (test_data.transaction_id = 'some-uuid' AND test_data.price &gt; 100.0)
+</code></pre>
+<h3 id="structure-type-queries"><a class="header" href="#structure-type-queries">Structure Type Queries</a></h3>
+<p>Generate queries that work with complex structures:</p>
+<pre><code class="language-bash">beamline query basic \
+    --seed 400 \
+    --start-auto \
+    --script-path nested_objects.ion \
+    --sample-count 5 \
+    rand-sfw \
+        --project-rand-min 2 \
+        --project-rand-max 3 \
+        --project-type-final-struct \
+        --tbl-flt-type-final-struct \
+        --pred-absent --pred-eq
+</code></pre>
+<h2 id="advanced-testing-patterns"><a class="header" href="#advanced-testing-patterns">Advanced Testing Patterns</a></h2>
+<h3 id="edge-case-query-generation"><a class="header" href="#edge-case-query-generation">Edge Case Query Generation</a></h3>
+<p>Test PartiQL edge cases and complex scenarios:</p>
+<pre><code class="language-bash"># Generate edge case queries
+beamline query basic \
+    --seed 500 \
+    --start-auto \
+    --script-path edge_case_schema.ion \
+    --sample-count 10 \
+    rand-sefw \
+        --project-path-depth-min 4 \
+        --project-path-depth-max 8 \
+        --project-pathstep-internal-foreach \
+        --project-pathstep-final-unpivot \
+        --tbl-flt-path-depth-max 6 \
+        --tbl-flt-pathstep-internal-unpivot \
+        --tbl-flt-pathstep-final-foreach \
+        --exclude-path-depth-min 2 \
+        --exclude-path-depth-max 5 \
+        --exclude-pathstep-final-unpivot \
+        --pred-all
+</code></pre>
+<h3 id="performance-stress-testing"><a class="header" href="#performance-stress-testing">Performance Stress Testing</a></h3>
+<p>Generate computationally expensive queries:</p>
+<pre><code class="language-bash"># Create performance stress test queries
+beamline query basic \
+    --seed 600 \
+    --start-auto \
+    --script-path large_schema.ion \
+    --sample-count 20 \
+    rand-sefw \
+        --project-rand-min 5 \
+        --project-rand-max 15 \
+        --project-path-depth-max 6 \
+        --tbl-flt-rand-min 3 \
+        --tbl-flt-rand-max 10 \
+        --tbl-flt-path-depth-max 5 \
+        --exclude-rand-min 2 \
+        --exclude-rand-max 8 \
+        --pred-all &gt; stress_test_queries.sql
+</code></pre>
+<h2 id="integration-workflows"><a class="header" href="#integration-workflows">Integration Workflows</a></h2>
+<h3 id="multi-strategy-testing"><a class="header" href="#multi-strategy-testing">Multi-Strategy Testing</a></h3>
+<p>Generate different query types for comprehensive testing:</p>
+<pre><code class="language-bash">#!/bin/bash
+# Generate complete query test suite
+
+SCRIPT="test_schema.ion"
+SEED=12345
+SAMPLE_COUNT=10
+
+echo "Generating comprehensive query test suite..."
+
+# Basic SELECT * queries
+beamline query basic \
+    --seed $SEED \
+    --start-auto \
+    --script-path $SCRIPT \
+    --sample-count $SAMPLE_COUNT \
+    rand-select-all-fw \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 3 \
+        --pred-all &gt; select_star.sql
+
+# Projection queries
+beamline query basic \
+    --seed $((SEED + 1)) \
+    --start-auto \
+    --script-path $SCRIPT \
+    --sample-count $SAMPLE_COUNT \
+    rand-sfw \
+        --project-rand-min 2 \
+        --project-rand-max 5 \
+        --project-path-depth-max 2 \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 3 \
+        --pred-all &gt; projections.sql
+
+# Exclusion queries  
+beamline query basic \
+    --seed $((SEED + 2)) \
+    --start-auto \
+    --script-path $SCRIPT \
+    --sample-count $SAMPLE_COUNT \
+    rand-select-all-efw \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 2 \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 3 \
+        --pred-all &gt; exclusions.sql
+
+# Complex combined queries
+beamline query basic \
+    --seed $((SEED + 3)) \
+    --start-auto \
+    --script-path $SCRIPT \
+    --sample-count $SAMPLE_COUNT \
+    rand-sefw \
+        --project-rand-min 2 \
+        --project-rand-max 4 \
+        --tbl-flt-rand-min 1 \
+        --tbl-flt-rand-max 3 \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 2 \
+        --pred-all &gt; combined.sql
+
+echo "Query test suite generated:"
+echo "- select_star.sql: $(wc -l &lt; select_star.sql) queries"
+echo "- projections.sql: $(wc -l &lt; projections.sql) queries"
+echo "- exclusions.sql: $(wc -l &lt; exclusions.sql) queries"  
+echo "- combined.sql: $(wc -l &lt; combined.sql) queries"
+echo "Total: $(($(wc -l &lt; select_star.sql) + $(wc -l &lt; projections.sql) + $(wc -l &lt; exclusions.sql) + $(wc -l &lt; combined.sql))) queries"
+</code></pre>
+<h3 id="query-complexity-progression"><a class="header" href="#query-complexity-progression">Query Complexity Progression</a></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Generate queries with increasing complexity
+
+SCRIPT="complex_data.ion"
+BASE_SEED=1000
+
+for complexity_level in 1 2 3 5; do
+    echo "Generating complexity level $complexity_level queries..."
+    
+    beamline query basic \
+        --seed $((BASE_SEED + complexity_level)) \
+        --start-auto \
+        --script-path $SCRIPT \
+        --sample-count 10 \
+        rand-sefw \
+            --project-rand-min $complexity_level \
+            --project-rand-max $((complexity_level * 2)) \
+            --project-path-depth-max $complexity_level \
+            --tbl-flt-rand-min $complexity_level \
+            --tbl-flt-rand-max $((complexity_level * 2)) \
+            --tbl-flt-path-depth-max $complexity_level \
+            --exclude-rand-min 1 \
+            --exclude-rand-max $complexity_level \
+            --pred-all &gt; "complexity_${complexity_level}.sql"
+            
+    echo "  Generated: $(wc -l &lt; complexity_${complexity_level}.sql) queries"
+done
+
+echo "Query complexity suite completed"
+</code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<h3 id="1-match-complexity-to-use-case"><a class="header" href="#1-match-complexity-to-use-case">1. Match Complexity to Use Case</a></h3>
+<pre><code class="language-bash"># Simple testing - basic patterns
+--project-path-depth-max 2 --tbl-flt-path-depth-max 2
+
+# Comprehensive testing - complex patterns
+--project-path-depth-max 5 --tbl-flt-path-depth-max 5
+
+# Edge case testing - maximum complexity
+--project-path-depth-max 10 --tbl-flt-path-depth-max 10
+</code></pre>
+<h3 id="2-balance-query-features"><a class="header" href="#2-balance-query-features">2. Balance Query Features</a></h3>
+<pre><code class="language-bash"># Don't overload with too many features at once
+--project-rand-min 2 --project-rand-max 4    # Moderate projections
+--exclude-rand-min 1 --exclude-rand-max 2    # Few exclusions
+--tbl-flt-rand-min 1 --tbl-flt-rand-max 3   # Simple WHERE clauses
+</code></pre>
+<h3 id="3-test-incrementally"><a class="header" href="#3-test-incrementally">3. Test Incrementally</a></h3>
+<pre><code class="language-bash"># Start simple
+beamline query basic --script-path data.ion --sample-count 3 rand-select-all-fw --pred-eq
+
+# Add projections
+beamline query basic --script-path data.ion --sample-count 3 rand-sfw --project-rand-min 2 --project-rand-max 3 --pred-eq
+
+# Add exclusions
+beamline query basic --script-path data.ion --sample-count 3 rand-sefw --project-rand-min 2 --exclude-rand-min 1 --pred-eq
+
+# Full complexity
+beamline query basic --script-path data.ion --sample-count 5 rand-sefw --project-rand-min 3 --exclude-rand-min 2 --tbl-flt-rand-min 2 --pred-all
+</code></pre>
+<h3 id="4-validate-complex-queries"><a class="header" href="#4-validate-complex-queries">4. Validate Complex Queries</a></h3>
+<pre><code class="language-bash"># Generate and validate complex queries
+beamline query basic \
+    --seed 700 \
+    --start-auto \
+    --script-path validation_schema.ion \
+    --sample-count 15 \
+    rand-sefw \
+        --project-rand-min 2 \
+        --project-rand-max 6 \
+        --exclude-rand-min 1 \
+        --exclude-rand-max 3 \
+        --pred-all &gt; complex_validation.sql
+
+# Check each query
+# your-partiql-parser --check-syntax complex_validation.sql
+</code></pre>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Now that you understand advanced query patterns:</p>
+<ul>
+<li><a href="./parameterization.html">Parameterization</a> - Complete reference for all query generation parameters</li>
+<li><a href="../cli/query-commands.html">CLI Query Commands</a> - Detailed CLI usage with all options</li>
+<li><a href="../examples/sensors.html">Examples</a> - See query generation in complete workflows</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../query-generation/basic-queries.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../query-generation/parameterization.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../query-generation/basic-queries.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../query-generation/parameterization.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
