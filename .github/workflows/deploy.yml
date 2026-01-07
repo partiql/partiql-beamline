@@ -17,10 +17,18 @@ jobs:
           fetch-depth: 0
       - name: Install latest mdbook
         run: |
-          tag=$(curl 'https://api.github.com/repos/rust-lang/mdbook/releases/latest' | jq -r '.tag_name')
+          set -euo pipefail
+          tag=$(curl -fsSL 'https://api.github.com/repos/rust-lang/mdbook/releases/latest' | jq -er '.tag_name') || {
+            echo "Error: Failed to fetch latest mdBook release tag from GitHub API" >&2
+            exit 1
+          }
+          if [ -z "$tag" ]; then
+            echo "Error: Received empty mdBook release tag from GitHub API" >&2
+            exit 1
+          fi
           url="https://github.com/rust-lang/mdbook/releases/download/${tag}/mdbook-${tag}-x86_64-unknown-linux-gnu.tar.gz"
           mkdir mdbook
-          curl -sSL $url | tar -xz --directory=./mdbook
+          curl -fsSL "$url" | tar -xz --directory=./mdbook
           echo "$(pwd)/mdbook" >> "$GITHUB_PATH"
       - name: Build Book
         run: |
