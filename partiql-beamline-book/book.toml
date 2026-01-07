@@ -1,7 +1,6 @@
 [book]
 authors = ["PartiQL Beamline Contributors"]
 language = "en"
-multilingual = false
 src = "src"
 title = "PartiQL Beamline"
 description = "A comprehensive guide to using PartiQL Beamline for synthetic data and query generation"
