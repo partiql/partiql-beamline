@@ -1,12 +1,12 @@
 [workspace.package]
 authors = ["PartiQL Team <partiql-team@amazon.com>"]
 description = "PartiQL Beamline"
-#homepage = TODO
-#repository = TODO
+homepage = "https://partiql.org/partiql-beamline/"
+repository = "https://github.com/partiql/partiql-beamline"
 license = "Apache-2.0"
 readme = "../README.md"
-#keywords = TODO
-#categories = TODO
+keywords = ["partiql", "data-generation", "sql", "testing", "synthetic-data"]
+categories = ["development-tools", "database"]
 exclude = [
   "**/.git/**",
   "**/.github/**",
