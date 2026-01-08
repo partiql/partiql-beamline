@@ -123,7 +123,7 @@ beamline query basic \
         --pred-all
 ```
 
-**Output (from README examples):**
+**Output:**
 ```sql
 SELECT * FROM test_data AS test_data WHERE (test_data.country_code IN [
       'Graecos quidem legendos.',
@@ -341,7 +341,7 @@ beamline query basic \
         --pred-all
 ```
 
-## Real Examples from README
+## Examples
 
 ### Single Predicate Queries
 

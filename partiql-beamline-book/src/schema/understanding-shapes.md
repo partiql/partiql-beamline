@@ -47,7 +47,7 @@ beamline infer-shape \
     --script-path sensors.ion
 ```
 
-**Example Output from README:**
+**Example Output:**
 ```
 Seed: 17685918364143248531
 Start: 2022-12-12T19:52:29.000000000Z
@@ -126,7 +126,7 @@ beamline infer-shape \
     --output-format basic-ddl
 ```
 
-**Example Output from README:**
+**Example OutputE:**
 ```sql
 -- Seed: 7844265201457918498
 -- Start: 2024-01-01T06:53:06.000000000Z
@@ -156,7 +156,7 @@ beamline infer-shape \
     --output-format beamline-json
 ```
 
-**Example Output from README:**
+**Example Output:**
 ```json
 {
   seed: -3711181901898679775,
