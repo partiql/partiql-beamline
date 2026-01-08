@@ -42,7 +42,7 @@ beamline query basic \
         --pred-all
 ```
 
-**Example Output from README:**
+**Example Output:**
 ```sql
 SELECT test_data.completed, test_data.completed FROM test_data AS test_data
 WHERE (NOT (test_data.completed) OR NOT ((test_data.created_at IS MISSING)))
@@ -102,7 +102,7 @@ beamline query basic \
         --exclude-type-final-all
 ```
 
-**Example Output from README:**
+**Example Output:**
 ```sql
 SELECT * EXCLUDE test_data.marketplace_id, test_data.*, test_data.completed
 FROM test_data AS test_data WHERE (test_data.marketplace_id < -5)
@@ -158,7 +158,7 @@ beamline query basic \
         --exclude-type-final-all
 ```
 
-**Example Output from README:**
+**Example Output:**
 ```sql
 SELECT test_data.completed, test_data.completed
 EXCLUDE test_data.marketplace_id, test_data.*, test_data.completed
@@ -225,7 +225,7 @@ beamline query basic \
         --exclude-type-final-all
 ```
 
-**Generated Deep Nested Queries from README:**
+**Generated Deep Nested Queries:**
 ```sql
 SELECT test_data.*.nested_struct.nested_struct.nested_struct.nested_struct.nested_struct.*,
   test_data.test_nest_struct.*.*.nested_struct.nested_struct
