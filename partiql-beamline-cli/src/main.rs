@@ -2,8 +2,7 @@ mod beamlinelite_db;
 mod writer;
 
 use crate::beamlinelite_db::{
-    catalog_full_path, create_catalog_dir, create_db, create_manifest_file,
-    create_script_file,
+    catalog_full_path, create_catalog_dir, create_db, create_manifest_file, create_script_file,
 };
 use crate::writer::{
     DataSetFiltersBuilder, SimSamplesBuilder, WriterIonBinaryBuilder, WriterIonCompactBuilder,

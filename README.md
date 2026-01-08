@@ -1340,12 +1340,51 @@ WHERE ((((test_data.price.value <= 6.206304713037888) OR
 
 ### CLI Build
 
-Run the following for building the library which also generates the CLI binary: // TODO add a `MAKE` file or similar
+Run the following for building the library which also generates the CLI binary:
+
+```bash
+# Using Makefile (recommended)
+make build
+
+# Or using cargo directly
+cargo build
 ```
-$ cargo build
+
+For a release build with optimizations:
+
+```bash
+# Using Makefile
+make build-release
+
+# Or using cargo directly
+cargo build --release
 ```
 
 Once ran successfully the CLI binary will be under `./target/debug/partiql-beamline-cli`.
+
+### Using the Makefile
+
+The project includes a comprehensive Makefile with common development tasks:
+
+```bash
+# Show all available commands
+make help
+
+# Build the project
+make build
+
+# Run tests
+make test
+
+# Format code and run linter
+make dev
+
+# Run examples
+make examples
+
+# Install the CLI
+make install
+```
 
 ### CLI options
 
