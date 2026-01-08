@@ -1,11 +1,11 @@
-# PartiQL Beamline Makefile
-# This Makefile provides convenient commands for building, testing, and managing the PartiQL Beamline project.
+# Beamline Makefile
+# This Makefile provides convenient commands for building, testing, and managing the Beamline project.
 
 .PHONY: help build build-release test test-all clean fmt check clippy doc install run examples bench coverage
 
 # Default target
 help: ## Show this help message
-	@echo "PartiQL Beamline - Available commands:"
+	@echo "Beamline available commands:"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
@@ -139,7 +139,7 @@ hooks: ## Set up git hooks
 
 # Show project info
 info: ## Show project information
-	@echo "PartiQL Beamline Project Information:"
+	@echo "Beamline Project Information:"
 	@echo "======================================"
 	@echo "Rust version: $$(rustc --version)"
 	@echo "Cargo version: $$(cargo --version)"
