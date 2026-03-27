@@ -1,4 +1,5 @@
 use clap::Args;
+use partiql_beamline::ddl_to_script::ddl_to_script;
 use partiql_beamline::sim::{SimConfig, SimConfigBuildResult, SimConfigBuilder};
 use partiql_beamline::source::{SimSource, SimSourceResult};
 use std::num::ParseIntError;
@@ -87,20 +88,53 @@ pub struct Optionality {
 #[derive(Args, Debug, Clone, PartialEq, Eq)]
 #[group(required = true, multiple = false)]
 pub struct Script {
-    /// Provde the path to the script file
+    /// Provide the path to the script file
     #[arg(long, value_name = "PATH/TO/SCRIPT")]
     pub script_path: Option<PathBuf>,
 
-    /// Provde the script inline
+    /// Provide the script inline
     #[arg(long, value_name = "SCRIPT_DATA")]
     pub script: Option<String>,
+
+    /// Provide the path to a DDL file (column definitions format)
+    #[arg(long, value_name = "PATH/TO/DDL")]
+    pub ddl_path: Option<PathBuf>,
+
+    /// Provide DDL column definitions inline
+    #[arg(long, value_name = "DDL_DATA")]
+    pub ddl: Option<String>,
+}
+
+/// Dataset name for DDL-based generation.
+#[derive(Args, Debug, Clone, PartialEq, Eq)]
+#[group(required = false, multiple = false)]
+pub struct DdlDatasetName {
+    /// Dataset name to use when generating data from DDL (defaults to "data")
+    #[arg(long, value_name = "DATASET_NAME", default_value = "data")]
+    pub dataset_name: String,
 }
 
 impl Script {
-    pub fn extract(self) -> SimSourceResult<SimSource> {
-        match (self.script_path, self.script) {
-            (None, Some(data)) => SimSource::new("<stdin>", data),
-            (Some(path), None) => SimSource::from_path(path),
+    pub fn extract(self, dataset_name: &str) -> SimSourceResult<SimSource> {
+        match (self.script_path, self.script, self.ddl_path, self.ddl) {
+            (Some(path), None, None, None) => SimSource::from_path(path),
+            (None, Some(data), None, None) => SimSource::new("<stdin>", data),
+            (None, None, Some(ddl_path), None) => {
+                let ddl_content = std::fs::read_to_string(&ddl_path)
+                    .map_err(|e| partiql_beamline::source::SimSourceError::ReadError(e))?;
+                let script = ddl_to_script(&ddl_content, dataset_name)
+                    .map_err(|e| {
+                        partiql_beamline::source::SimSourceError::UnknownError(Box::new(e))
+                    })?;
+                SimSource::new(ddl_path.to_string_lossy(), script)
+            }
+            (None, None, None, Some(ddl_data)) => {
+                let script = ddl_to_script(&ddl_data, dataset_name)
+                    .map_err(|e| {
+                        partiql_beamline::source::SimSourceError::UnknownError(Box::new(e))
+                    })?;
+                SimSource::new("<ddl>", script)
+            }
             _ => unreachable!(),
         }
     }
@@ -119,6 +153,9 @@ pub struct SimSpec {
     pub script: Script,
 
     #[command(flatten)]
+    pub ddl_dataset_name: DdlDatasetName,
+
+    #[command(flatten)]
     pub nullability: Nullability,
 
     #[command(flatten)]
@@ -133,11 +170,12 @@ impl SimSpec {
             seed,
             start_time,
             script,
+            ddl_dataset_name,
             nullability,
             optionality,
         } = self;
 
-        let script = script.extract();
+        let script = script.extract(&ddl_dataset_name.dataset_name);
         let mut cfg = SimConfigBuilder::default();
 
         if let Some(seed) = seed.extract() {
