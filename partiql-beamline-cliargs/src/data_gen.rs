@@ -8,6 +8,7 @@ pub enum DataOutputFormat {
     IonPretty,
     IonBinary,
     Text,
+    Parquet,
 }
 
 /// Output format for the generated shape of data

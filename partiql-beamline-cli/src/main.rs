@@ -1,12 +1,13 @@
 mod beamlinelite_db;
+mod parquet_writer;
 mod writer;
 
 use crate::beamlinelite_db::{
     catalog_full_path, create_catalog_dir, create_db, create_manifest_file, create_script_file,
 };
 use crate::writer::{
-    DataSetFiltersBuilder, SimSamplesBuilder, WriterIonBinaryBuilder, WriterIonCompactBuilder,
-    WriterIonPrettyBuilder, WriterSimBuilder, WriterTextBuilder,
+    DataSetFiltersBuilder, SimSamplesBuilder, SimWriter, WriterIonBinaryBuilder,
+    WriterIonCompactBuilder, WriterIonPrettyBuilder, WriterSimBuilder, WriterTextBuilder,
 };
 use clap::{Args, Parser, Subcommand};
 use ion_rs::element::writer::TextKind;
@@ -75,6 +76,9 @@ pub struct Data {
 
     #[clap(short = 'd', long = "dataset")]
     datasets: Vec<String>,
+
+    #[clap(short = 'o', long = "output-path", value_name = "OUTPUT_PATH")]
+    output_path: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -130,6 +134,7 @@ fn handle_gen_data(
         sample_count,
         output_format,
         datasets,
+        output_path,
     }: Data,
 ) -> miette::Result<()> {
     let (script, cfg) = spec.to_script_and_config();
@@ -145,6 +150,17 @@ fn handle_gen_data(
         .samples(samples)
         .dataset_filters(filters)
         .build()?;
+
+    if output_format == DataOutputFormat::Parquet {
+        let output_dir = output_path.unwrap_or_else(|| ".".to_string());
+        let sampler = wspec.to_sampler().into_diagnostic()?;
+        let mut writer = parquet_writer::SimWriterParquet {
+            sampler,
+            output_path: output_dir,
+        };
+        writer.write()?;
+        return Ok(());
+    }
 
     let out = stdout().lock();
     let mut writer = match output_format {
@@ -164,6 +180,7 @@ fn handle_gen_data(
             .spec(wspec)
             .build()?
             .to_writer(out)?,
+        DataOutputFormat::Parquet => unreachable!(),
     };
 
     writer.write()?;
@@ -362,6 +379,15 @@ mod tests {
                         --script-path ./partiql-beamline-sim/tests/scripts/orders.ion
                         --sample-count 30
                         --output-format text"##,
+        );
+        assert_cmdline(
+            r##"partiql-beamline gen data
+                        --seed 1234
+                        --start-iso 2024-01-01T00:00:00.000000000Z
+                        --script-path ./partiql-beamline-sim/tests/scripts/sensors.ion
+                        --sample-count 5
+                        --output-format parquet
+                        --output-path ./test-output"##,
         );
     }
 

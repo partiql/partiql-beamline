@@ -24,12 +24,16 @@ partiql-beamline-query = { path = "../partiql-beamline-query", version = "0.1" }
 
 partiql-extension-ddl = "0.10"
 partiql-extension-ion = "0.10"
+partiql-types = "0.10"
 partiql-value = "0.10"
 
 clap = { version = "4.4", features = ["derive", "wrap_help", "help", "usage", "error-context"] }
 miette = { version = "7.2", features = ["fancy"] }
 
 ion-rs = "0.18.1"
+
+arrow = { version = "53", features = ["prettyprint"] }
+parquet = { version = "53", features = ["arrow"] }
 
 time = { version = "0.3", features = ["formatting", "parsing", "serde"] }
 

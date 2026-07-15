@@ -44,6 +44,10 @@ impl DataSetSampler {
     pub fn new(sim: MultiSim, filter: DataSetFilter, limit: SampleLimit) -> Self {
         DataSetSampler { sim, filter, limit }
     }
+    pub fn sim(&self) -> &MultiSim {
+        &self.sim
+    }
+
     pub fn seed(&self) -> u64 {
         self.sim.config().seed
     }
