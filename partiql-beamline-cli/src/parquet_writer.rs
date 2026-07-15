@@ -1,5 +1,5 @@
 use arrow::array::{
-    ArrayRef, BooleanBuilder, Float64Builder, Int64Builder, StringBuilder,
+    ArrayRef, BooleanBuilder, Float64Builder, Int64Builder, ListBuilder, StringBuilder,
     TimestampMillisecondBuilder,
 };
 use arrow::datatypes::{DataType, Field, Schema, TimeUnit};
@@ -28,6 +28,8 @@ pub enum ParquetError {
     Io(#[from] std::io::Error),
     #[error("Schema error: {0}")]
     Schema(String),
+    #[error("Unsupported type for Parquet: {0}")]
+    UnsupportedType(String),
 }
 
 impl From<ParquetError> for SimWriterError {
@@ -98,13 +100,11 @@ fn shape_to_fields(shape: &PartiqlShape) -> SimWriterResult<Vec<Field>> {
     match shape {
         PartiqlShape::Static(stype) => match stype.ty() {
             Static::Struct(s) => {
-                let fields: Vec<Field> = s
-                    .fields()
-                    .map(|f| {
-                        let dt = partiql_type_to_arrow(f.ty());
-                        Field::new(f.name(), dt, true)
-                    })
-                    .collect();
+                let mut fields = Vec::new();
+                for f in s.fields() {
+                    let dt = partiql_type_to_arrow(f.ty())?;
+                    fields.push(Field::new(f.name(), dt, true));
+                }
                 Ok(fields)
             }
             Static::Bag(b) => shape_to_fields(b.element_type()),
@@ -113,47 +113,60 @@ fn shape_to_fields(shape: &PartiqlShape) -> SimWriterResult<Vec<Field>> {
             )
             .into()),
         },
-        PartiqlShape::AnyOf(any_of) => {
-            for t in any_of.types() {
-                if let Ok(fields) = shape_to_fields(t) {
-                    return Ok(fields);
-                }
-            }
-            Err(
-                ParquetError::Schema("could not resolve union to struct fields".to_string())
-                    .into(),
-            )
-        }
+        PartiqlShape::AnyOf(_) => Err(ParquetError::UnsupportedType(
+            "AnyOf (union) types are not supported in Parquet output; \
+             all fields must have a single concrete type"
+                .to_string(),
+        )
+        .into()),
         _ => Err(
             ParquetError::Schema(format!("unsupported top-level shape: {shape}")).into(),
         ),
     }
 }
 
-fn partiql_type_to_arrow(shape: &PartiqlShape) -> DataType {
+fn partiql_type_to_arrow(shape: &PartiqlShape) -> Result<DataType, ParquetError> {
     match shape {
         PartiqlShape::Static(stype) => match stype.ty() {
-            Static::Bool => DataType::Boolean,
-            Static::Int | Static::Int64 => DataType::Int64,
-            Static::Int8 => DataType::Int64,
-            Static::Int16 => DataType::Int64,
-            Static::Int32 => DataType::Int64,
-            Static::Float32 | Static::Float64 => DataType::Float64,
-            Static::Decimal | Static::DecimalP(_, _) => DataType::Utf8,
-            Static::String | Static::StringFixed(_) | Static::StringVarying(_) => DataType::Utf8,
-            Static::DateTime => DataType::Timestamp(TimeUnit::Millisecond, Some("UTC".into())),
-            Static::Struct(s) => {
-                let fields: Vec<Field> = s
-                    .fields()
-                    .map(|f| Field::new(f.name(), partiql_type_to_arrow(f.ty()), true))
-                    .collect();
-                DataType::Struct(fields.into())
+            Static::Bool => Ok(DataType::Boolean),
+            Static::Int | Static::Int64 => Ok(DataType::Int64),
+            Static::Int8 => Ok(DataType::Int64),
+            Static::Int16 => Ok(DataType::Int64),
+            Static::Int32 => Ok(DataType::Int64),
+            Static::Float32 | Static::Float64 => Ok(DataType::Float64),
+            Static::Decimal | Static::DecimalP(_, _) => Ok(DataType::Utf8),
+            Static::String | Static::StringFixed(_) | Static::StringVarying(_) => Ok(DataType::Utf8),
+            Static::DateTime => {
+                Ok(DataType::Timestamp(TimeUnit::Millisecond, Some("UTC".into())))
             }
-            Static::Array(_) | Static::Bag(_) => DataType::Utf8,
+            Static::Struct(s) => {
+                let mut fields = Vec::new();
+                for f in s.fields() {
+                    let dt = partiql_type_to_arrow(f.ty())?;
+                    fields.push(Field::new(f.name(), dt, true));
+                }
+                Ok(DataType::Struct(fields.into()))
+            }
+            Static::Array(a) => {
+                let elem_type = partiql_type_to_arrow(a.element_type())?;
+                Ok(DataType::List(Arc::new(Field::new("item", elem_type, true))))
+            }
+            Static::Bag(b) => {
+                let elem_type = partiql_type_to_arrow(b.element_type())?;
+                Ok(DataType::List(Arc::new(Field::new("item", elem_type, true))))
+            }
         },
-        PartiqlShape::AnyOf(_) => DataType::Utf8,
-        PartiqlShape::Dynamic => DataType::Utf8,
-        PartiqlShape::Undefined => DataType::Utf8,
+        PartiqlShape::AnyOf(_) => Err(ParquetError::UnsupportedType(
+            "AnyOf (union) types are not supported in Parquet output; \
+             all fields must have a single concrete type"
+                .to_string(),
+        )),
+        PartiqlShape::Dynamic => Err(ParquetError::UnsupportedType(
+            "Dynamic types are not supported in Parquet output".to_string(),
+        )),
+        PartiqlShape::Undefined => Err(ParquetError::UnsupportedType(
+            "Undefined types are not supported in Parquet output".to_string(),
+        )),
     }
 }
 
@@ -182,8 +195,14 @@ fn infer_arrow_type(val: &Value) -> DataType {
         Value::String(_) => DataType::Utf8,
         Value::DateTime(_) => DataType::Timestamp(TimeUnit::Millisecond, Some("UTC".into())),
         Value::Tuple(_) => DataType::Utf8,
-        Value::List(_) => DataType::Utf8,
-        Value::Bag(_) => DataType::Utf8,
+        Value::List(l) => {
+            let elem_type = l.iter().next().map(infer_arrow_type).unwrap_or(DataType::Utf8);
+            DataType::List(Arc::new(Field::new("item", elem_type, true)))
+        }
+        Value::Bag(b) => {
+            let elem_type = b.iter().next().map(infer_arrow_type).unwrap_or(DataType::Utf8);
+            DataType::List(Arc::new(Field::new("item", elem_type, true)))
+        }
         Value::Blob(_) => DataType::Binary,
         Value::Null | Value::Missing => DataType::Utf8,
     }
@@ -240,12 +259,6 @@ fn build_column(name: &str, data_type: &DataType, rows: &[Value]) -> SimWriterRe
                 match get_field(row, name) {
                     Some(Value::String(s)) => builder.append_value(s.as_str()),
                     Some(Value::Decimal(d)) => builder.append_value(d.to_string()),
-                    Some(Value::List(l)) => {
-                        builder.append_value(format!("{l:?}"));
-                    }
-                    Some(Value::Bag(b)) => {
-                        builder.append_value(format!("{b:?}"));
-                    }
                     Some(Value::Null) | Some(Value::Missing) | None => builder.append_null(),
                     Some(other) => builder.append_value(format!("{other:?}")),
                 }
@@ -276,6 +289,9 @@ fn build_column(name: &str, data_type: &DataType, rows: &[Value]) -> SimWriterRe
                     .map_err(ParquetError::Arrow)?;
             Ok(Arc::new(struct_array))
         }
+        DataType::List(inner_field) => {
+            build_list_column(name, inner_field.data_type(), rows)
+        }
         _ => {
             let mut builder = StringBuilder::new();
             for row in rows {
@@ -283,6 +299,168 @@ fn build_column(name: &str, data_type: &DataType, rows: &[Value]) -> SimWriterRe
                     Some(Value::String(s)) => builder.append_value(s.as_str()),
                     Some(Value::Null) | Some(Value::Missing) | None => builder.append_null(),
                     Some(v) => builder.append_value(format!("{v:?}")),
+                }
+            }
+            Ok(Arc::new(builder.finish()))
+        }
+    }
+}
+
+fn build_list_column(
+    name: &str,
+    elem_type: &DataType,
+    rows: &[Value],
+) -> SimWriterResult<ArrayRef> {
+    match elem_type {
+        DataType::Int64 => {
+            let mut builder = ListBuilder::new(Int64Builder::new());
+            for row in rows {
+                match get_field(row, name) {
+                    Some(Value::List(l)) => {
+                        for item in l.iter() {
+                            match item {
+                                Value::Integer(i) => builder.values().append_value(*i),
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    Some(Value::Bag(b)) => {
+                        for item in b.iter() {
+                            match item {
+                                Value::Integer(i) => builder.values().append_value(*i),
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    _ => builder.append(false),
+                }
+            }
+            Ok(Arc::new(builder.finish()))
+        }
+        DataType::Float64 => {
+            let mut builder = ListBuilder::new(Float64Builder::new());
+            for row in rows {
+                match get_field(row, name) {
+                    Some(Value::List(l)) => {
+                        for item in l.iter() {
+                            match item {
+                                Value::Real(f) => builder.values().append_value(f.0),
+                                Value::Integer(i) => builder.values().append_value(*i as f64),
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    Some(Value::Bag(b)) => {
+                        for item in b.iter() {
+                            match item {
+                                Value::Real(f) => builder.values().append_value(f.0),
+                                Value::Integer(i) => builder.values().append_value(*i as f64),
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    _ => builder.append(false),
+                }
+            }
+            Ok(Arc::new(builder.finish()))
+        }
+        DataType::Boolean => {
+            let mut builder = ListBuilder::new(BooleanBuilder::new());
+            for row in rows {
+                match get_field(row, name) {
+                    Some(Value::List(l)) => {
+                        for item in l.iter() {
+                            match item {
+                                Value::Boolean(b) => builder.values().append_value(*b),
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    Some(Value::Bag(b)) => {
+                        for item in b.iter() {
+                            match item {
+                                Value::Boolean(v) => builder.values().append_value(*v),
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    _ => builder.append(false),
+                }
+            }
+            Ok(Arc::new(builder.finish()))
+        }
+        DataType::Timestamp(TimeUnit::Millisecond, _) => {
+            let mut builder = ListBuilder::new(TimestampMillisecondBuilder::new());
+            for row in rows {
+                match get_field(row, name) {
+                    Some(Value::List(l)) => {
+                        for item in l.iter() {
+                            match item {
+                                Value::DateTime(dt) => {
+                                    builder.values().append_value(datetime_to_epoch_millis(dt));
+                                }
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    Some(Value::Bag(b)) => {
+                        for item in b.iter() {
+                            match item {
+                                Value::DateTime(dt) => {
+                                    builder.values().append_value(datetime_to_epoch_millis(dt));
+                                }
+                                _ => builder.values().append_null(),
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    _ => builder.append(false),
+                }
+            }
+            Ok(Arc::new(builder.finish()))
+        }
+        _ => {
+            let mut builder = ListBuilder::new(StringBuilder::new());
+            for row in rows {
+                match get_field(row, name) {
+                    Some(Value::List(l)) => {
+                        for item in l.iter() {
+                            match item {
+                                Value::String(s) => builder.values().append_value(s.as_str()),
+                                Value::Decimal(d) => {
+                                    builder.values().append_value(d.to_string());
+                                }
+                                Value::Null | Value::Missing => builder.values().append_null(),
+                                other => {
+                                    builder.values().append_value(format!("{other:?}"));
+                                }
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    Some(Value::Bag(b)) => {
+                        for item in b.iter() {
+                            match item {
+                                Value::String(s) => builder.values().append_value(s.as_str()),
+                                Value::Decimal(d) => {
+                                    builder.values().append_value(d.to_string());
+                                }
+                                Value::Null | Value::Missing => builder.values().append_null(),
+                                other => {
+                                    builder.values().append_value(format!("{other:?}"));
+                                }
+                            }
+                        }
+                        builder.append(true);
+                    }
+                    _ => builder.append(false),
                 }
             }
             Ok(Arc::new(builder.finish()))
