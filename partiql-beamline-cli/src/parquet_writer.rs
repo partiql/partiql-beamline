@@ -34,7 +34,10 @@ pub enum ParquetError {
 
 impl From<ParquetError> for SimWriterError {
     fn from(e: ParquetError) -> Self {
-        SimWriterError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
+        SimWriterError::IoError(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            Box::new(e) as Box<dyn std::error::Error + Send + Sync>,
+        ))
     }
 }
 
@@ -56,10 +59,11 @@ impl SimWriter for SimWriterParquet {
             let dataset_name = &dataset.0;
             let shape = shapes.get_shape(dataset_name);
 
-            let rows: Vec<Value> = samples
-                .filter_map(|s| s.ok())
-                .map(|Sample { value, .. }| value)
-                .collect();
+            let mut rows: Vec<Value> = Vec::new();
+            for sample in samples {
+                let Sample { value, .. } = sample?;
+                rows.push(value);
+            }
 
             if rows.is_empty() {
                 continue;
@@ -72,7 +76,8 @@ impl SimWriter for SimWriterParquet {
 
             let batch = values_to_record_batch(&rows, &arrow_schema)?;
 
-            let file_path = output_dir.join(format!("{dataset_name}.parquet"));
+            let sanitized_name = sanitize_filename(dataset_name);
+            let file_path = output_dir.join(format!("{sanitized_name}.parquet"));
             let file = File::create(&file_path)?;
             let props = WriterProperties::builder().build();
             let mut writer = ArrowWriter::try_new(file, Arc::new(arrow_schema), Some(props))
@@ -89,6 +94,15 @@ impl SimWriter for SimWriterParquet {
 
         Ok(())
     }
+}
+
+fn sanitize_filename(name: &str) -> String {
+    name.chars()
+        .map(|c| match c {
+            '/' | '\\' | '\0' => '_',
+            _ => c,
+        })
+        .collect()
 }
 
 fn shape_to_arrow_schema(shape: &PartiqlShape) -> SimWriterResult<Schema> {
@@ -281,7 +295,7 @@ fn build_column(name: &str, data_type: &DataType, rows: &[Value]) -> SimWriterRe
         DataType::Struct(fields) => {
             let child_arrays: Vec<ArrayRef> = fields
                 .iter()
-                .map(|f| build_nested_column(name, f.name(), f.data_type(), rows))
+                .map(|f| build_struct_child(name, f.name(), f.data_type(), rows))
                 .collect::<SimWriterResult<Vec<_>>>()?;
 
             let struct_array =
@@ -289,9 +303,7 @@ fn build_column(name: &str, data_type: &DataType, rows: &[Value]) -> SimWriterRe
                     .map_err(ParquetError::Arrow)?;
             Ok(Arc::new(struct_array))
         }
-        DataType::List(inner_field) => {
-            build_list_column(name, inner_field.data_type(), rows)
-        }
+        DataType::List(inner_field) => build_list_column(name, inner_field.data_type(), rows),
         _ => {
             let mut builder = StringBuilder::new();
             for row in rows {
@@ -468,17 +480,28 @@ fn build_list_column(
     }
 }
 
-fn build_nested_column(
+/// Builds a child column for a struct field. Recursively handles nested structs and lists.
+fn build_struct_child(
     parent_name: &str,
     child_name: &str,
     data_type: &DataType,
     rows: &[Value],
 ) -> SimWriterResult<ArrayRef> {
+    let child_values: Vec<Option<&Value>> = rows
+        .iter()
+        .map(|row| get_nested_field(row, parent_name, child_name))
+        .collect();
+
+    build_from_values(data_type, &child_values)
+}
+
+/// Builds an Arrow array from a slice of optional values, dispatching on the target data type.
+fn build_from_values(data_type: &DataType, values: &[Option<&Value>]) -> SimWriterResult<ArrayRef> {
     match data_type {
         DataType::Boolean => {
-            let mut builder = BooleanBuilder::with_capacity(rows.len());
-            for row in rows {
-                match get_nested_field(row, parent_name, child_name) {
+            let mut builder = BooleanBuilder::with_capacity(values.len());
+            for val in values {
+                match val {
                     Some(Value::Boolean(b)) => builder.append_value(*b),
                     _ => builder.append_null(),
                 }
@@ -486,9 +509,9 @@ fn build_nested_column(
             Ok(Arc::new(builder.finish()))
         }
         DataType::Int64 => {
-            let mut builder = Int64Builder::with_capacity(rows.len());
-            for row in rows {
-                match get_nested_field(row, parent_name, child_name) {
+            let mut builder = Int64Builder::with_capacity(values.len());
+            for val in values {
+                match val {
                     Some(Value::Integer(i)) => builder.append_value(*i),
                     _ => builder.append_null(),
                 }
@@ -496,9 +519,9 @@ fn build_nested_column(
             Ok(Arc::new(builder.finish()))
         }
         DataType::Float64 => {
-            let mut builder = Float64Builder::with_capacity(rows.len());
-            for row in rows {
-                match get_nested_field(row, parent_name, child_name) {
+            let mut builder = Float64Builder::with_capacity(values.len());
+            for val in values {
+                match val {
                     Some(Value::Real(f)) => builder.append_value(f.0),
                     Some(Value::Integer(i)) => builder.append_value(*i as f64),
                     _ => builder.append_null(),
@@ -506,10 +529,22 @@ fn build_nested_column(
             }
             Ok(Arc::new(builder.finish()))
         }
+        DataType::Utf8 => {
+            let mut builder = StringBuilder::new();
+            for val in values {
+                match val {
+                    Some(Value::String(s)) => builder.append_value(s.as_str()),
+                    Some(Value::Decimal(d)) => builder.append_value(d.to_string()),
+                    Some(Value::Null) | Some(Value::Missing) | None => builder.append_null(),
+                    Some(other) => builder.append_value(format!("{other:?}")),
+                }
+            }
+            Ok(Arc::new(builder.finish()))
+        }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let mut builder = TimestampMillisecondBuilder::with_capacity(rows.len());
-            for row in rows {
-                match get_nested_field(row, parent_name, child_name) {
+            let mut builder = TimestampMillisecondBuilder::with_capacity(values.len());
+            for val in values {
+                match val {
                     Some(Value::DateTime(dt)) => {
                         builder.append_value(datetime_to_epoch_millis(dt));
                     }
@@ -518,18 +553,84 @@ fn build_nested_column(
             }
             Ok(Arc::new(builder.finish().with_timezone("UTC")))
         }
+        DataType::Struct(fields) => {
+            let child_arrays: Vec<ArrayRef> = fields
+                .iter()
+                .map(|f| {
+                    let nested: Vec<Option<&Value>> = values
+                        .iter()
+                        .map(|v| match v {
+                            Some(Value::Tuple(t)) => {
+                                let binding =
+                                    BindingsName::CaseInsensitive(Cow::Borrowed(f.name().as_str()));
+                                t.get(&binding)
+                            }
+                            _ => None,
+                        })
+                        .collect();
+                    build_from_values(f.data_type(), &nested)
+                })
+                .collect::<SimWriterResult<Vec<_>>>()?;
+
+            let struct_array =
+                arrow::array::StructArray::try_new(fields.clone(), child_arrays, None)
+                    .map_err(ParquetError::Arrow)?;
+            Ok(Arc::new(struct_array))
+        }
+        DataType::List(inner_field) => {
+            build_list_from_values(inner_field.data_type(), values)
+        }
         _ => {
             let mut builder = StringBuilder::new();
-            for row in rows {
-                match get_nested_field(row, parent_name, child_name) {
-                    Some(Value::String(s)) => builder.append_value(s.as_str()),
-                    Some(Value::Decimal(d)) => builder.append_value(d.to_string()),
+            for val in values {
+                match val {
                     Some(Value::Null) | Some(Value::Missing) | None => builder.append_null(),
                     Some(v) => builder.append_value(format!("{v:?}")),
                 }
             }
             Ok(Arc::new(builder.finish()))
         }
+    }
+}
+
+fn build_list_from_values(
+    elem_type: &DataType,
+    values: &[Option<&Value>],
+) -> SimWriterResult<ArrayRef> {
+    let mut builder = ListBuilder::new(StringBuilder::new());
+    for val in values {
+        match val {
+            Some(Value::List(l)) => {
+                for item in l.iter() {
+                    builder
+                        .values()
+                        .append_value(value_to_string_for_list(item, elem_type));
+                }
+                builder.append(true);
+            }
+            Some(Value::Bag(b)) => {
+                for item in b.iter() {
+                    builder
+                        .values()
+                        .append_value(value_to_string_for_list(item, elem_type));
+                }
+                builder.append(true);
+            }
+            _ => builder.append(false),
+        }
+    }
+    Ok(Arc::new(builder.finish()))
+}
+
+fn value_to_string_for_list(val: &Value, _elem_type: &DataType) -> String {
+    match val {
+        Value::String(s) => s.as_str().to_string(),
+        Value::Integer(i) => i.to_string(),
+        Value::Real(f) => f.0.to_string(),
+        Value::Decimal(d) => d.to_string(),
+        Value::Boolean(b) => b.to_string(),
+        Value::Null | Value::Missing => String::new(),
+        other => format!("{other:?}"),
     }
 }
 
@@ -574,5 +675,115 @@ fn datetime_to_epoch_millis(dt: &DateTime) -> i64 {
             duration.whole_milliseconds() as i64
         }
         DateTime::Time(_) | DateTime::TimeWithTz(_, _) => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use partiql_beamline::sim::{SimBuilder, SimConfigBuilder};
+    use partiql_beamline::source::SimSource;
+    use std::path::PathBuf;
+    use tempfile::TempDir;
+
+    fn make_sampler(script_path: &str, sample_count: u64) -> DataSetSampler {
+        let path = format!("../{script_path}");
+        let source = SimSource::from_path(&path)
+            .or_else(|_| SimSource::from_path(script_path))
+            .expect("read script");
+        let cfg = SimConfigBuilder::default()
+            .seed(1234u64)
+            .t0(time::OffsetDateTime::UNIX_EPOCH)
+            .build()
+            .expect("config");
+        let sim = SimBuilder::from_config(cfg, source)
+            .expect("sim builder")
+            .build_multi_dataset()
+            .expect("multi sim");
+
+        let filter =
+            partiql_beamline::sim::DataSetFilter::from_iter(std::iter::empty::<String>());
+        let limit = partiql_beamline::sim::SampleLimit::Constant(sample_count);
+        DataSetSampler::new(sim, filter, limit)
+    }
+
+    fn run_parquet_gen(script_path: &str, sample_count: u64) -> (TempDir, Vec<PathBuf>) {
+        let sampler = make_sampler(script_path, sample_count);
+        let tmp_dir = TempDir::new().expect("temp dir");
+
+        let mut writer = SimWriterParquet {
+            sampler,
+            output_path: tmp_dir.path().to_str().unwrap().to_string(),
+        };
+        writer.write().expect("parquet write");
+
+        let parquet_files: Vec<PathBuf> = std::fs::read_dir(tmp_dir.path())
+            .expect("read dir")
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.extension().map(|e| e == "parquet").unwrap_or(false))
+            .collect();
+
+        (tmp_dir, parquet_files)
+    }
+
+    #[test]
+    fn parquet_gen_sensors_nested() {
+        let (_tmp, files) = run_parquet_gen(
+            "partiql-beamline-sim/tests/scripts/sensors-nested.ion",
+            5,
+        );
+        assert!(!files.is_empty(), "should produce at least one parquet file");
+
+        for file in &files {
+            let file_reader = File::open(file).expect("open parquet");
+            let reader =
+                parquet::arrow::arrow_reader::ParquetRecordBatchReader::try_new(file_reader, 1024)
+                    .expect("parquet reader");
+            let batches: Vec<_> = reader.into_iter().collect::<Result<Vec<_>, _>>().unwrap();
+            let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+            assert_eq!(total_rows, 5);
+        }
+    }
+
+    #[test]
+    fn parquet_gen_simple_transactions() {
+        let (_tmp, files) = run_parquet_gen(
+            "partiql-beamline-sim/tests/scripts/simple_transactions.ion",
+            10,
+        );
+        assert_eq!(files.len(), 1);
+
+        let file_reader = File::open(&files[0]).expect("open parquet");
+        let reader =
+            parquet::arrow::arrow_reader::ParquetRecordBatchReader::try_new(file_reader, 1024)
+                .expect("parquet reader");
+        let batches: Vec<_> = reader.into_iter().collect::<Result<Vec<_>, _>>().unwrap();
+        let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+        assert_eq!(total_rows, 10);
+
+        let schema = batches[0].schema();
+        assert!(schema.field_with_name("transaction_id").is_ok());
+        assert!(schema.field_with_name("marketplace_id").is_ok());
+        assert!(schema.field_with_name("completed").is_ok());
+    }
+
+    #[test]
+    fn parquet_gen_rejects_anyof() {
+        let sampler = make_sampler("partiql-beamline-sim/tests/scripts/sensors.ion", 3);
+        let tmp_dir = TempDir::new().expect("temp dir");
+
+        let mut writer = SimWriterParquet {
+            sampler,
+            output_path: tmp_dir.path().to_str().unwrap().to_string(),
+        };
+
+        let result = writer.write();
+        assert!(result.is_err());
+        let err_msg = format!("{}", result.unwrap_err());
+        assert!(
+            err_msg.contains("AnyOf"),
+            "error should mention AnyOf: {err_msg}"
+        );
     }
 }

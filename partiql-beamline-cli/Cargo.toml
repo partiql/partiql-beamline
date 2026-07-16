@@ -41,3 +41,6 @@ itertools = "0.13"
 
 derive_builder = "0.20"
 thiserror = "1"
+
+[dev-dependencies]
+tempfile = "3"
