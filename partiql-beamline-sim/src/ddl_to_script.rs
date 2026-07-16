@@ -434,20 +434,10 @@ fn skip_whitespace(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {
 fn skip_prefix_modifiers(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {
     loop {
         skip_whitespace(chars);
-        let remaining: String = chars.clone().collect();
-        let remaining_upper = remaining.to_uppercase();
-
-        if remaining_upper.starts_with("OPTIONAL") {
-            let after = remaining.get(8..9).and_then(|s| s.chars().next());
-            if after.is_none() || !after.unwrap().is_alphanumeric() {
-                for _ in 0..8 {
-                    chars.next();
-                }
-                skip_whitespace(chars);
-                continue;
-            }
+        if try_skip_keyword(chars, "OPTIONAL") {
+            skip_whitespace(chars);
+            continue;
         }
-
         break;
     }
 }
@@ -457,55 +447,44 @@ fn skip_modifiers(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {
     loop {
         skip_whitespace(chars);
 
-        // Peek ahead to see if we have a modifier keyword
-        let remaining: String = chars.clone().collect();
-        let remaining_upper = remaining.to_uppercase();
-
-        if remaining_upper.starts_with("NOT NULL") {
-            // Check it's followed by a word boundary
-            let after = remaining.get(8..8 + 1).map(|s| s.chars().next()).flatten();
-            if after.is_none() || !after.unwrap().is_alphanumeric() {
-                for _ in 0..8 {
-                    chars.next();
-                }
-                continue;
-            }
+        if try_skip_keyword(chars, "NOT") {
+            skip_whitespace(chars);
+            try_skip_keyword(chars, "NULL");
+            continue;
         }
 
-        if remaining_upper.starts_with("OPTIONAL") {
-            let after = remaining.get(8..8 + 1).map(|s| s.chars().next()).flatten();
-            if after.is_none() || !after.unwrap().is_alphanumeric() {
-                for _ in 0..8 {
-                    chars.next();
-                }
-                continue;
-            }
-        }
-
-        if remaining_upper.starts_with("NOT") {
-            let after = remaining.get(3..3 + 1).map(|s| s.chars().next()).flatten();
-            if after.is_none() || !after.unwrap().is_alphanumeric() {
-                // Just "NOT" alone - skip it
-                for _ in 0..3 {
-                    chars.next();
-                }
-                skip_whitespace(chars);
-                // Check for NULL after NOT
-                let remaining2: String = chars.clone().collect();
-                if remaining2.to_uppercase().starts_with("NULL") {
-                    let after2 = remaining2.get(4..4 + 1).map(|s| s.chars().next()).flatten();
-                    if after2.is_none() || !after2.unwrap().is_alphanumeric() {
-                        for _ in 0..4 {
-                            chars.next();
-                        }
-                    }
-                }
-                continue;
-            }
+        if try_skip_keyword(chars, "OPTIONAL") {
+            continue;
         }
 
         break;
     }
+}
+
+/// Tries to skip a keyword at the current position (case-insensitive).
+/// Only skips if the keyword is followed by a non-alphanumeric character (word boundary).
+/// Returns true if the keyword was skipped.
+fn try_skip_keyword(
+    chars: &mut std::iter::Peekable<std::str::Chars<'_>>,
+    keyword: &str,
+) -> bool {
+    let mut lookahead = chars.clone();
+    for expected in keyword.chars() {
+        match lookahead.next() {
+            Some(c) if c.to_ascii_uppercase() == expected.to_ascii_uppercase() => {}
+            _ => return false,
+        }
+    }
+    // Check word boundary
+    if let Some(&next_ch) = lookahead.peek() {
+        if next_ch.is_alphanumeric() || next_ch == '_' {
+            return false;
+        }
+    }
+    for _ in 0..keyword.len() {
+        chars.next();
+    }
+    true
 }
 
 /// Generates a Beamline Ion script from parsed column definitions.
@@ -513,7 +492,7 @@ fn generate_script(columns: &[ColumnDef], dataset_name: &str) -> DdlConversionRe
     let mut script = String::new();
 
     writeln!(script, "rand_processes::{{").unwrap();
-    writeln!(script, "    {dataset_name}: rand_process::{{").unwrap();
+    writeln!(script, "    {}: rand_process::{{", quote_ion_symbol(dataset_name)).unwrap();
     writeln!(
         script,
         "        $r: Uniform::{{ choices: [5, 10] }},"
@@ -532,7 +511,7 @@ fn generate_script(columns: &[ColumnDef], dataset_name: &str) -> DdlConversionRe
         writeln!(
             script,
             "            {}: {gen}{trailing_comma}",
-            col.name
+            quote_ion_symbol(&col.name)
         )
         .unwrap();
     }
@@ -542,6 +521,19 @@ fn generate_script(columns: &[ColumnDef], dataset_name: &str) -> DdlConversionRe
     writeln!(script, "}}").unwrap();
 
     Ok(script)
+}
+
+/// Quotes an identifier as an Ion symbol if it contains characters that are not
+/// valid in bare Ion symbols (i.e., not alphanumeric or underscore, or starts with a digit).
+fn quote_ion_symbol(name: &str) -> String {
+    let needs_quoting = name.is_empty()
+        || name.starts_with(|c: char| c.is_ascii_digit())
+        || name.contains(|c: char| !(c.is_alphanumeric() || c == '_'));
+    if needs_quoting {
+        format!("'{}'", name.replace('\\', "\\\\").replace('\'', "\\'"))
+    } else {
+        name.to_string()
+    }
 }
 
 /// Converts a DDL type to its corresponding Beamline generator expression.
@@ -555,9 +547,11 @@ fn type_to_generator(ddl_type: &DdlType, indent: usize) -> DdlConversionResult<S
         DdlType::Double => Ok("UniformF64".to_string()),
         DdlType::Decimal(params) => {
             if let Some((p, s)) = params {
-                // Generate a decimal with appropriate range based on precision and scale
                 let max_int_digits = if *p > *s { p - s } else { 0 };
-                let max_val = 10f64.powi(max_int_digits as i32);
+                // max value is (10^int_digits - 1) + fractional part
+                // e.g., DECIMAL(5,2) -> max_int_digits=3 -> max = 999.99
+                let max_val = 10f64.powi(max_int_digits as i32)
+                    - 10f64.powi(-(*s as i32));
                 let min_val = -max_val;
                 Ok(format!(
                     "UniformDecimal::{{ low: {min_val}, high: {max_val} }}"
@@ -578,7 +572,7 @@ fn type_to_generator(ddl_type: &DdlType, indent: usize) -> DdlConversionResult<S
                     s,
                     "\n{:width$}{}: {gen}{trailing_comma}",
                     "",
-                    field.name,
+                    quote_ion_symbol(&field.name),
                     width = indent + 4
                 )
                 .unwrap();

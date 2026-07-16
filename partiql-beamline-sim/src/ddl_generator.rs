@@ -55,6 +55,10 @@ pub enum DdlGeneratorError {
     /// Missing required field.
     #[error("Missing required field: {0}")]
     MissingField(&'static str),
+
+    /// Invalid parameter value.
+    #[error("Invalid parameter: {0}")]
+    InvalidParameter(String),
 }
 
 pub type DdlGeneratorResult<T> = Result<T, DdlGeneratorError>;
@@ -155,12 +159,28 @@ impl DdlDataGeneratorBuilder {
     /// # Errors
     /// Returns an error if:
     /// - `ddl` was not set
+    /// - `nullability` or `optionality` is not in `0.0..=1.0`
     /// - The DDL cannot be parsed
     /// - The simulation cannot be configured
     pub fn build(self) -> DdlGeneratorResult<DdlDataGenerator> {
         let ddl = self
             .ddl
             .ok_or(DdlGeneratorError::MissingField("ddl"))?;
+
+        if let Some(pct) = self.nullability {
+            if !(0.0..=1.0).contains(&pct) {
+                return Err(DdlGeneratorError::InvalidParameter(format!(
+                    "nullability must be between 0.0 and 1.0, got {pct}"
+                )));
+            }
+        }
+        if let Some(pct) = self.optionality {
+            if !(0.0..=1.0).contains(&pct) {
+                return Err(DdlGeneratorError::InvalidParameter(format!(
+                    "optionality must be between 0.0 and 1.0, got {pct}"
+                )));
+            }
+        }
 
         // Convert DDL to Ion script
         let script = ddl_to_script(&ddl, &self.dataset_name)?;
@@ -244,7 +264,6 @@ impl DdlDataGenerator {
 
     /// Get the shape (type mapping) of the generated datasets.
     pub fn shape(&self) -> crate::sim::DatasetTypeMapping {
-        use crate::sim::ISim;
         self.sim.shape()
     }
 }
