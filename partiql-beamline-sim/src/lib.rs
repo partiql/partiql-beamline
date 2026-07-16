@@ -2,6 +2,8 @@
 
 pub mod sim;
 
+pub mod ddl_generator;
+pub mod ddl_to_script;
 pub mod gen;
 pub mod primitives;
 pub mod reader;
