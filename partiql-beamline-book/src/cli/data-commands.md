@@ -29,6 +29,13 @@ All data generation requires these three configuration groups (exactly one optio
 ```bash
 --script-path <PATH>           # Path to Ion script file
 --script <SCRIPT_DATA>         # Inline Ion script content
+--ddl-path <PATH>              # Path to a DDL file (column definitions)
+--ddl <DDL_DATA>               # Inline DDL column definitions
+```
+
+### DDL Dataset Name
+```bash
+--dataset-name <NAME>          # Dataset name for DDL-based generation (default: "data")
 ```
 
 ## Optional Parameters
@@ -48,6 +55,12 @@ Available formats:
 - `ion` - Compact Amazon Ion format  
 - `ion-pretty` - Pretty-printed Ion text format
 - `ion-binary` - Binary Ion format (most compact)
+- `parquet` - Apache Parquet columnar format (requires `--output-path`)
+
+### Output Path (for file-based formats)
+```bash
+--output-path <OUTPUT_PATH>    # Output directory for Parquet files
+```
 
 ### Dataset Filtering
 ```bash
@@ -110,6 +123,37 @@ beamline gen data \
   --start-auto \
   --script-path data.ion \
   --output-format ion-binary
+
+# Parquet format (writes to files)
+beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path data.ion \
+  --output-format parquet \
+  --output-path ./output
+```
+
+### DDL-Based Generation
+
+```bash
+# Generate data from inline DDL
+beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --ddl '"id" VARCHAR, "temperature" DOUBLE, "active" BOOL' \
+  --dataset-name sensors \
+  --sample-count 100 \
+  --output-format ion-pretty
+
+# Generate from a DDL file
+beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --ddl-path schema.ddl \
+  --dataset-name products \
+  --sample-count 1000 \
+  --output-format parquet \
+  --output-path ./output
 ```
 
 ### Dataset Filtering
