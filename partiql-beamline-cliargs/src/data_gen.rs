@@ -9,6 +9,8 @@ pub enum DataOutputFormat {
     IonBinary,
     Text,
     Parquet,
+    Json,
+    JsonPretty,
 }
 
 /// Output format for the generated shape of data
