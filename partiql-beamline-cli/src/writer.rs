@@ -108,7 +108,7 @@ impl WriterSim {
         Ok((sim.build_multi_dataset()?, filter, limit))
     }
 
-    fn to_sampler(self) -> SimResult<DataSetSampler> {
+    pub fn to_sampler(self) -> SimResult<DataSetSampler> {
         let (sim, filter, limit) = self.to_multi_sim()?;
         Ok(DataSetSampler::new(sim, filter, limit))
     }
