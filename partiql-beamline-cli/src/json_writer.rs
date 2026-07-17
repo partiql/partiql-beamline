@@ -135,3 +135,115 @@ fn unsupported_error(type_name: &str, hint: &str) -> SimWriterError {
         format!("JSON output does not natively support {type_name} values; {hint}"),
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use partiql_beamline::sim::{DataSetFilter, SampleLimit, SimBuilder, SimConfigBuilder};
+    use partiql_beamline::source::SimSource;
+
+    fn make_sampler(script_path: &str, sample_count: u64) -> DataSetSampler {
+        let path = format!("../{script_path}");
+        let source = SimSource::from_path(&path)
+            .or_else(|_| SimSource::from_path(script_path))
+            .expect("read script");
+        let cfg = SimConfigBuilder::default()
+            .seed(1234u64)
+            .t0(time::OffsetDateTime::UNIX_EPOCH)
+            .build()
+            .expect("config");
+        let sim = SimBuilder::from_config(cfg, source)
+            .expect("sim builder")
+            .build_multi_dataset()
+            .expect("multi sim");
+
+        let filter = DataSetFilter::from_iter(std::iter::empty::<String>());
+        let limit = SampleLimit::Constant(sample_count);
+        DataSetSampler::new(sim, filter, limit)
+    }
+
+    fn run_json(script_path: &str, sample_count: u64, pretty: bool, coerce: bool) -> String {
+        let sampler = make_sampler(script_path, sample_count);
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJson {
+            sampler,
+            out: &mut buf,
+            pretty,
+            coerce_unsupported: coerce,
+        };
+        writer.write().expect("json write");
+        String::from_utf8(buf).expect("valid utf-8")
+    }
+
+    #[test]
+    fn json_gen_nested_struct() {
+        let output = run_json(
+            "partiql-beamline-sim/tests/scripts/sensors-nested.ion",
+            3,
+            false,
+            false,
+        );
+        let parsed: JsonValue = serde_json::from_str(&output).expect("valid JSON");
+        assert!(parsed["seed"].is_number());
+        assert!(parsed["start"].is_string());
+        assert!(parsed["data"]["sensors"].is_array());
+        let rows = parsed["data"]["sensors"].as_array().unwrap();
+        assert_eq!(rows.len(), 3);
+        assert!(rows[0]["sub"].is_object());
+        assert!(rows[0]["sub"]["o"].is_number());
+    }
+
+    #[test]
+    fn json_gen_pretty_is_valid() {
+        let output = run_json(
+            "partiql-beamline-sim/tests/scripts/sensors-nested.ion",
+            2,
+            true,
+            false,
+        );
+        let parsed: JsonValue = serde_json::from_str(&output).expect("valid pretty JSON");
+        assert!(parsed["data"]["sensors"].is_array());
+        assert!(output.contains('\n'));
+    }
+
+    #[test]
+    fn json_gen_errors_on_datetime_without_coerce() {
+        let sampler = make_sampler(
+            "partiql-beamline-sim/tests/scripts/simple_transactions.ion",
+            2,
+        );
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJson {
+            sampler,
+            out: &mut buf,
+            pretty: false,
+            coerce_unsupported: false,
+        };
+        let result = writer.write();
+        assert!(result.is_err());
+        let err_msg = format!("{}", result.unwrap_err());
+        assert!(err_msg.contains("DateTime"));
+        assert!(err_msg.contains("--coerce-unsupported"));
+    }
+
+    #[test]
+    fn json_gen_coerces_datetime_and_decimal() {
+        let output = run_json(
+            "partiql-beamline-sim/tests/scripts/simple_transactions.ion",
+            3,
+            false,
+            true,
+        );
+        let parsed: JsonValue = serde_json::from_str(&output).expect("valid JSON");
+        let rows = parsed["data"]["test_data"].as_array().unwrap();
+        assert_eq!(rows.len(), 3);
+        // DateTime coerced to string
+        assert!(rows[0]["created_at"].is_string());
+        // Decimal coerced to string
+        assert!(rows[0]["price"].is_string());
+        // Native types preserved
+        assert!(rows[0]["marketplace_id"].is_number());
+        assert!(rows[0]["completed"].is_boolean());
+        assert!(rows[0]["transaction_id"].is_string());
+    }
+}
