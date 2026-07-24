@@ -1,7 +1,10 @@
+use base64::Engine;
 use partiql_beamline::primitives::Sample;
-use partiql_beamline::sim::DataSetSampler;
+use partiql_beamline::sim::{DataSetSampler, SimResult};
 use partiql_value::{DateTime, Value};
+use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use serde_json::{Map, Number, Value as JsonValue};
+use std::cell::RefCell;
 use std::io::Write;
 
 use crate::writer::{SimWriter, SimWriterError, SimWriterResult};
@@ -15,43 +18,116 @@ pub struct SimWriterJson<W: Write> {
 
 impl<W: Write> SimWriter for SimWriterJson<W> {
     fn write(&mut self) -> SimWriterResult<()> {
-        let seed = self.sampler.seed();
-        let t0_str = self
-            .sampler
+        // Borrow the fields disjointly so the serializer (holding `out`) and the
+        // sampler can be borrowed mutably at the same time.
+        let SimWriterJson {
+            sampler,
+            out,
+            pretty,
+            coerce_unsupported,
+        } = self;
+
+        let seed = sampler.seed();
+        let start = sampler
             .t0()
-            .format(&partiql_beamline::sim::DATETIME_FORMAT)?;
+            .format(&partiql_beamline::sim::DATETIME_FORMAT)?
+            .to_string();
 
-        let mut root = Map::new();
-        root.insert("seed".to_string(), JsonValue::Number(Number::from(seed)));
-        root.insert("start".to_string(), JsonValue::String(t0_str.to_string()));
+        // Stream the document straight to `out` so we never materialize the full
+        // JSON string, and only one row is held in memory at a time.
+        let root = RootSer {
+            seed,
+            start: &start,
+            coerce: *coerce_unsupported,
+            sampler: RefCell::new(sampler),
+        };
 
-        let mut data = Map::new();
-        for (dataset, samples) in self.sampler.iter_mut() {
-            let dataset_name = dataset.0.clone();
-            let mut rows = Vec::new();
-            for sample in samples {
-                let Sample { value, .. } = sample?;
-                let json_val = value_to_json(&value, self.coerce_unsupported)?;
-                rows.push(json_val);
-            }
-            data.insert(dataset_name, JsonValue::Array(rows));
-        }
-
-        root.insert("data".to_string(), JsonValue::Object(data));
-
-        let output = if self.pretty {
-            serde_json::to_string_pretty(&root)
+        if *pretty {
+            let mut ser = serde_json::Serializer::pretty(&mut *out);
+            root.serialize(&mut ser).map_err(map_serde_err)?;
         } else {
-            serde_json::to_string(&root)
+            let mut ser = serde_json::Serializer::new(&mut *out);
+            root.serialize(&mut ser).map_err(map_serde_err)?;
         }
-        .map_err(|e| {
-            SimWriterError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
-        })?;
 
-        writeln!(self.out, "{output}")?;
-        self.out.flush()?;
+        writeln!(out)?;
+        out.flush()?;
         Ok(())
     }
+}
+
+/// Serializes the top-level `{ seed, start, data }` document, streaming datasets
+/// and rows on demand rather than buffering them.
+struct RootSer<'a> {
+    seed: u64,
+    start: &'a str,
+    coerce: bool,
+    sampler: RefCell<&'a mut DataSetSampler>,
+}
+
+impl Serialize for RootSer<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(Some(3))?;
+        map.serialize_entry("seed", &self.seed)?;
+        map.serialize_entry("start", self.start)?;
+        map.serialize_entry(
+            "data",
+            &DataSer {
+                coerce: self.coerce,
+                sampler: &self.sampler,
+            },
+        )?;
+        map.end()
+    }
+}
+
+/// Serializes the `data` object as `{ <dataset>: [rows...] }`, one dataset at a time.
+struct DataSer<'r, 'a> {
+    coerce: bool,
+    sampler: &'r RefCell<&'a mut DataSetSampler>,
+}
+
+impl Serialize for DataSer<'_, '_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut sampler = self.sampler.borrow_mut();
+        let mut map = serializer.serialize_map(None)?;
+        for (dataset, samples) in sampler.iter_mut() {
+            map.serialize_entry(
+                dataset.0.as_str(),
+                &RowsSer {
+                    coerce: self.coerce,
+                    rows: RefCell::new(samples),
+                },
+            )?;
+        }
+        map.end()
+    }
+}
+
+/// Serializes a dataset's rows as a JSON array, writing each row as it is sampled.
+struct RowsSer<I> {
+    coerce: bool,
+    rows: RefCell<I>,
+}
+
+impl<I> Serialize for RowsSer<I>
+where
+    I: Iterator<Item = SimResult<Sample>>,
+{
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut rows = self.rows.borrow_mut();
+        let mut seq = serializer.serialize_seq(None)?;
+        for sample in &mut *rows {
+            let Sample { value, .. } = sample.map_err(serde::ser::Error::custom)?;
+            let json_val = value_to_json(&value, self.coerce).map_err(serde::ser::Error::custom)?;
+            seq.serialize_element(&json_val)?;
+        }
+        seq.end()
+    }
+}
+
+fn map_serde_err(e: serde_json::Error) -> SimWriterError {
+    SimWriterError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
 }
 
 fn value_to_json(value: &Value, coerce: bool) -> SimWriterResult<JsonValue> {
@@ -93,11 +169,15 @@ fn value_to_json(value: &Value, coerce: bool) -> SimWriterResult<JsonValue> {
         }
         Value::Blob(b) => {
             if coerce {
-                Ok(JsonValue::String(format!("<blob:{} bytes>", b.len())))
+                // Preserve the bytes by base64-encoding them rather than dropping
+                // them behind a placeholder.
+                Ok(JsonValue::String(
+                    base64::engine::general_purpose::STANDARD.encode(b.as_slice()),
+                ))
             } else {
                 Err(unsupported_error(
                     "Blob",
-                    "use --coerce-unsupported to represent as string",
+                    "use --coerce-unsupported to represent as a base64 string",
                 ))
             }
         }
@@ -245,5 +325,22 @@ mod tests {
         assert!(rows[0]["marketplace_id"].is_number());
         assert!(rows[0]["completed"].is_boolean());
         assert!(rows[0]["transaction_id"].is_string());
+    }
+
+    #[test]
+    fn blob_coerces_to_base64() {
+        let blob = Value::Blob(Box::new(b"hello".to_vec()));
+        let json = value_to_json(&blob, true).expect("coerced blob");
+        // "hello" base64-encoded round-trips back to the original bytes.
+        assert_eq!(json, JsonValue::String("aGVsbG8=".to_string()));
+    }
+
+    #[test]
+    fn blob_errors_without_coerce() {
+        let blob = Value::Blob(Box::new(b"hello".to_vec()));
+        let err = value_to_json(&blob, false).expect_err("blob without coerce errors");
+        let msg = format!("{err}");
+        assert!(msg.contains("Blob"));
+        assert!(msg.contains("--coerce-unsupported"));
     }
 }
