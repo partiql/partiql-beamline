@@ -343,4 +343,24 @@ mod tests {
         assert!(msg.contains("Blob"));
         assert!(msg.contains("--coerce-unsupported"));
     }
+
+    #[test]
+    fn special_chars_in_keys_and_strings_are_escaped() {
+        use partiql_value::Tuple;
+
+        // Keys and string values with characters that must be JSON-escaped:
+        // double quote, backslash, tab, newline, and braces.
+        let tuple = Tuple::from([
+            ("a \"b\" {c}", Value::from("he said \"hi\"\t{x}")),
+            ("back\\slash", Value::from("line1\nline2")),
+        ]);
+        let json = value_to_json(&Value::Tuple(Box::new(tuple)), false).expect("serialize tuple");
+
+        // Serialize through serde and confirm it round-trips to the same values,
+        // which is only possible if the output is valid, properly-escaped JSON.
+        let s = serde_json::to_string(&json).expect("valid JSON string");
+        let reparsed: JsonValue = serde_json::from_str(&s).expect("re-parse escaped JSON");
+        assert_eq!(reparsed["a \"b\" {c}"], JsonValue::String("he said \"hi\"\t{x}".into()));
+        assert_eq!(reparsed["back\\slash"], JsonValue::String("line1\nline2".into()));
+    }
 }
