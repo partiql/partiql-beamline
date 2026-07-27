@@ -286,7 +286,7 @@ mod tests {
         );
         let parsed: JsonValue = serde_json::from_str(&output).expect("valid pretty JSON");
         assert!(parsed["data"]["sensors"].is_array());
-        assert!(output.contains('\n'));
+        assert!(output.contains("\n  \"data\""));
     }
 
     #[test]
