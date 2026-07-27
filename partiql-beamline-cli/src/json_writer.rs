@@ -195,6 +195,9 @@ fn value_to_json(value: &Value, coerce: bool) -> SimWriterResult<JsonValue> {
         Value::Tuple(t) => {
             let mut obj = Map::new();
             for (key, val) in t.pairs() {
+                if matches!(val, Value::Missing) {
+                    continue;
+                }
                 obj.insert(key.clone(), value_to_json(val, coerce)?);
             }
             Ok(JsonValue::Object(obj))
