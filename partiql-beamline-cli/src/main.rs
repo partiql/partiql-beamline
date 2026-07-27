@@ -83,7 +83,7 @@ pub struct Data {
 
     /// Coerce unsupported types (DateTime, Decimal, Blob) to strings instead of erroring.
     /// Only affects JSON output formats; has no effect on Ion/Text/Parquet.
-    #[clap(long = "coerce-unsupported", default_value = "false")]
+    #[clap(long = "coerce-unsupported")]
     coerce_unsupported: bool,
 }
 
