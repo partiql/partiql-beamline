@@ -9,6 +9,9 @@ use std::io::Write;
 
 use crate::writer::{SimWriter, SimWriterError, SimWriterResult};
 
+/// Number of top-level fields in the root document: `seed`, `start`, and `data`.
+const ROOT_FIELD_COUNT: usize = 3;
+
 pub struct SimWriterJson<W: Write> {
     pub sampler: DataSetSampler,
     pub out: W,
@@ -67,7 +70,7 @@ struct RootSer<'a> {
 
 impl Serialize for RootSer<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut map = serializer.serialize_map(Some(3))?;
+        let mut map = serializer.serialize_map(Some(ROOT_FIELD_COUNT))?;
         map.serialize_entry("seed", &self.seed)?;
         map.serialize_entry("start", self.start)?;
         map.serialize_entry(
