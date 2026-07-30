@@ -1,0 +1,17 @@
+// Regression fixture: a struct that declares the same field name twice.
+// Ion structs permit duplicate field names and the reader iterates every
+// occurrence, but the sim funnels fields through an IndexMap<String, _>
+// (last-write-wins) before building the Tuple, so generated tuples are
+// always unique-keyed. Deterministic single-choice generators let the test
+// assert that the *last* declaration wins.
+rand_processes::{
+    $r: Uniform::{ choices: [1] },
+    dupes: rand_process::{
+        $arrival: HomogeneousPoisson::{ interarrival: minutes::$r },
+        $data: {
+            dup: Uniform::{ choices: [1] },
+            other: Uniform::{ choices: [2] },
+            dup: Uniform::{ choices: [9] },
+        }
+    },
+}

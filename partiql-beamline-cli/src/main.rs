@@ -1,4 +1,5 @@
 mod beamlinelite_db;
+mod json_writer;
 mod parquet_writer;
 mod writer;
 
@@ -79,6 +80,11 @@ pub struct Data {
 
     #[clap(short = 'o', long = "output-path", value_name = "OUTPUT_PATH")]
     output_path: Option<String>,
+
+    /// Coerce unsupported types (DateTime, Decimal, Blob) to strings instead of erroring.
+    /// Only affects JSON output formats; has no effect on Ion/Text/Parquet.
+    #[clap(long = "coerce-unsupported")]
+    coerce_unsupported: bool,
 }
 
 #[derive(Subcommand)]
@@ -135,6 +141,7 @@ fn handle_gen_data(
         output_format,
         datasets,
         output_path,
+        coerce_unsupported,
     }: Data,
 ) -> miette::Result<()> {
     let (script, cfg) = spec.to_script_and_config();
@@ -162,6 +169,19 @@ fn handle_gen_data(
         return Ok(());
     }
 
+    if matches!(output_format, DataOutputFormat::Json | DataOutputFormat::JsonPretty) {
+        let sampler = wspec.to_sampler().into_diagnostic()?;
+        let out = stdout().lock();
+        let mut writer = json_writer::SimWriterJson {
+            sampler,
+            out,
+            pretty: output_format == DataOutputFormat::JsonPretty,
+            coerce_unsupported,
+        };
+        writer.write()?;
+        return Ok(());
+    }
+
     let out = stdout().lock();
     let mut writer = match output_format {
         DataOutputFormat::Text => WriterTextBuilder::default()
@@ -180,7 +200,9 @@ fn handle_gen_data(
             .spec(wspec)
             .build()?
             .to_writer(out)?,
-        DataOutputFormat::Parquet => unreachable!(),
+        DataOutputFormat::Parquet | DataOutputFormat::Json | DataOutputFormat::JsonPretty => {
+            unreachable!()
+        }
     };
 
     writer.write()?;
