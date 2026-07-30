@@ -222,6 +222,64 @@ fn unsupported_error(type_name: &str, hint: &str) -> SimWriterError {
     ))
 }
 
+/// Writer for `--output-format jsonl`. Emits one compact JSON value per row
+/// (usually an object, but rows can be scalars when the script produces
+/// non-tuple values). Rows from multiple datasets are concatenated in
+/// `iter_mut()` order.
+pub struct SimWriterJsonl<W: Write> {
+    pub sampler: DataSetSampler,
+    pub out: W,
+    pub coerce_unsupported: bool,
+}
+
+impl<W: Write> SimWriter for SimWriterJsonl<W> {
+    fn write(&mut self) -> SimWriterResult<()> {
+        let SimWriterJsonl { sampler, out, coerce_unsupported } = self;
+        for (_dataset, samples) in sampler.iter_mut() {
+            for sample in samples {
+                let Sample { value, .. } = sample?;
+                let json = value_to_json(&value, *coerce_unsupported)?;
+                serde_json::to_writer(&mut *out, &json).map_err(map_serde_err)?;
+                writeln!(out)?;
+            }
+        }
+        out.flush()?;
+        Ok(())
+    }
+}
+
+/// Writer for `--output-format json-array`. Emits a single top-level JSON
+/// array of row values (objects or scalars, depending on what the script
+/// produces). Rows from multiple datasets are flattened into one array in
+/// `iter_mut()` order.
+pub struct SimWriterJsonArray<W: Write> {
+    pub sampler: DataSetSampler,
+    pub out: W,
+    pub coerce_unsupported: bool,
+}
+
+impl<W: Write> SimWriter for SimWriterJsonArray<W> {
+    fn write(&mut self) -> SimWriterResult<()> {
+        let SimWriterJsonArray { sampler, out, coerce_unsupported } = self;
+        write!(out, "[")?;
+        let mut first = true;
+        for (_dataset, samples) in sampler.iter_mut() {
+            for sample in samples {
+                let Sample { value, .. } = sample?;
+                let json = value_to_json(&value, *coerce_unsupported)?;
+                if !first {
+                    write!(out, ",")?;
+                }
+                first = false;
+                serde_json::to_writer(&mut *out, &json).map_err(map_serde_err)?;
+            }
+        }
+        writeln!(out, "]")?;
+        out.flush()?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -411,5 +469,57 @@ mod tests {
         let obj = json.as_object().expect("json object");
         assert_eq!(obj.len(), 1);
         assert_eq!(obj["k"], JsonValue::Number(2.into()));
+    }
+
+    #[test]
+    fn jsonl_emits_one_value_per_line_no_envelope() {
+        let sampler = make_sampler(
+            "partiql-beamline-sim/tests/scripts/sensors-nested.ion",
+            3,
+        );
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJsonl {
+            sampler,
+            out: &mut buf,
+            coerce_unsupported: false,
+        };
+        writer.write().expect("jsonl write");
+        let out = String::from_utf8(buf).expect("valid utf-8");
+        for line in out.lines().filter(|l| !l.is_empty()) {
+            let v: JsonValue =
+                serde_json::from_str(line).unwrap_or_else(|e| panic!("bad line {e}: {line}"));
+            // Rows may be objects OR scalars depending on the script; only
+            // check envelope keys when the row is an object.
+            if let Some(obj) = v.as_object() {
+                assert!(obj.get("seed").is_none(), "envelope leaked: {line}");
+                assert!(obj.get("start").is_none(), "envelope leaked: {line}");
+                assert!(obj.get("data").is_none(), "envelope leaked: {line}");
+            }
+        }
+    }
+
+    #[test]
+    fn json_array_emits_bare_array_no_envelope() {
+        let sampler = make_sampler(
+            "partiql-beamline-sim/tests/scripts/sensors-nested.ion",
+            2,
+        );
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJsonArray {
+            sampler,
+            out: &mut buf,
+            coerce_unsupported: false,
+        };
+        writer.write().expect("json-array write");
+        let out = String::from_utf8(buf).expect("valid utf-8");
+        let parsed: JsonValue = serde_json::from_str(&out).expect("valid JSON");
+        let arr = parsed.as_array().expect("top-level array");
+        for row in arr {
+            if let Some(obj) = row.as_object() {
+                assert!(obj.get("seed").is_none(), "envelope leaked: {row}");
+                assert!(obj.get("start").is_none(), "envelope leaked: {row}");
+                assert!(obj.get("data").is_none(), "envelope leaked: {row}");
+            }
+        }
     }
 }

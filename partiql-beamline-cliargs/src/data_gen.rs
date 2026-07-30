@@ -11,6 +11,14 @@ pub enum DataOutputFormat {
     Parquet,
     Json,
     JsonPretty,
+    /// One compact JSON value per line, no envelope. Row data only.
+    /// `seed`, `start`, and the `data` wrapper are omitted. Use `json` or
+    /// `json-pretty` if you need the run metadata. The invoking `--seed`
+    /// and `--start-iso` remain the reproducibility source.
+    Jsonl,
+    /// A single top-level JSON array of row values, no envelope. Same
+    /// row-only contract as `jsonl`. `seed`, `start`, and `data` are omitted.
+    JsonArray,
 }
 
 /// Output format for the generated shape of data

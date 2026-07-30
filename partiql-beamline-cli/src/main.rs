@@ -182,6 +182,31 @@ fn handle_gen_data(
         return Ok(());
     }
 
+    if matches!(output_format, DataOutputFormat::Jsonl | DataOutputFormat::JsonArray) {
+        let sampler = wspec.to_sampler().into_diagnostic()?;
+        let out = stdout().lock();
+        match output_format {
+            DataOutputFormat::Jsonl => {
+                let mut writer = json_writer::SimWriterJsonl {
+                    sampler,
+                    out,
+                    coerce_unsupported,
+                };
+                writer.write()?;
+            }
+            DataOutputFormat::JsonArray => {
+                let mut writer = json_writer::SimWriterJsonArray {
+                    sampler,
+                    out,
+                    coerce_unsupported,
+                };
+                writer.write()?;
+            }
+            _ => unreachable!(),
+        }
+        return Ok(());
+    }
+
     let out = stdout().lock();
     let mut writer = match output_format {
         DataOutputFormat::Text => WriterTextBuilder::default()
@@ -200,7 +225,11 @@ fn handle_gen_data(
             .spec(wspec)
             .build()?
             .to_writer(out)?,
-        DataOutputFormat::Parquet | DataOutputFormat::Json | DataOutputFormat::JsonPretty => {
+        DataOutputFormat::Parquet
+        | DataOutputFormat::Json
+        | DataOutputFormat::JsonPretty
+        | DataOutputFormat::Jsonl
+        | DataOutputFormat::JsonArray => {
             unreachable!()
         }
     };
