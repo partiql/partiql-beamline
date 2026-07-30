@@ -369,4 +369,47 @@ mod tests {
         assert_eq!(reparsed["a \"b\" {c}"], JsonValue::String("he said \"hi\"\t{x}".into()));
         assert_eq!(reparsed["back\\slash"], JsonValue::String("line1\nline2".into()));
     }
+
+    /// Test that JSON generated end-to-end from a script with a duplicated struct
+    /// field name has a single, unique key. The dedup itself happens upstream in
+    /// the sim reader (see the sim crate's `duplicate_struct_field_names_dedupe`
+    /// test); this asserts the whole parse -> generate -> JSON pipeline preserves
+    /// that invariant, emitting one `dup` key with the last declaration's value.
+    #[test]
+    fn json_gen_emits_unique_keys_for_duplicate_fields() {
+        let output = run_json(
+            "partiql-beamline-sim/tests/scripts/duplicate_keys.ion",
+            2,
+            false,
+            false,
+        );
+        let parsed: JsonValue = serde_json::from_str(&output).expect("valid JSON");
+        let rows = parsed["data"]["dupes"].as_array().unwrap();
+        assert_eq!(rows.len(), 2);
+        for row in rows {
+            let obj = row.as_object().unwrap();
+            // Only one `dup` entry survives; the sibling `other` is untouched.
+            assert_eq!(obj.len(), 2);
+            // The last declaration (`choices: [9]`) wins over the first (`[1]`).
+            assert_eq!(obj["dup"], JsonValue::Number(9.into()));
+            assert_eq!(obj["other"], JsonValue::Number(2.into()));
+        }
+    }
+
+    /// Documents the writer's behavior if a duplicate-keyed `Tuple` ever reached it
+    /// directly (bypassing the generator's dedup): `serde_json::Map::insert` is
+    /// last-write-wins, so the entries collapse to one. This is not reachable via
+    /// normal generation (see `json_gen_deduplicates_struct_field_names`) but pins
+    /// the writer's contract in case a future value source changes the invariant.
+    #[test]
+    fn duplicate_tuple_keys_collapse_last_wins() {
+        use partiql_value::Tuple;
+
+        let tuple = Tuple::from([("k", Value::from(1)), ("k", Value::from(2))]);
+        let json =
+            value_to_json(&Value::Tuple(Box::new(tuple)), false).expect("serialize tuple");
+        let obj = json.as_object().expect("json object");
+        assert_eq!(obj.len(), 1);
+        assert_eq!(obj["k"], JsonValue::Number(2.into()));
+    }
 }

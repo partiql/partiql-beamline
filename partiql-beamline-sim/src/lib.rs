@@ -141,4 +141,56 @@ mod tests {
             .expect("sensors shape");
         insta::assert_debug_snapshot!("sensors_shape_decimals", sensors_shape);
     }
+
+    /// Ion structs permit duplicate field names and the reader iterates every
+    /// occurrence, but the reader funnels fields through an `IndexMap<String, _>`
+    /// (last-write-wins) before a `Tuple` is ever built. So a `$data` struct that
+    /// declares `dup` twice generates a tuple with a single `dup` attribute
+    /// carrying the last declaration's value. The deterministic single-choice
+    /// generators make the surviving value assertable.
+    #[test]
+    fn duplicate_struct_field_names_dedupe() {
+        use partiql_value::BindingsName;
+        use std::borrow::Cow;
+
+        let script = r#"
+            rand_processes::{
+                $r: Uniform::{ choices: [1] },
+                dupes: rand_process::{
+                    $arrival: HomogeneousPoisson::{ interarrival: minutes::$r },
+                    $data: {
+                        dup: Uniform::{ choices: [1] },
+                        other: Uniform::{ choices: [2] },
+                        dup: Uniform::{ choices: [9] },
+                    }
+                },
+            }
+        "#;
+
+        let mut sim = sim_from_script(script).expect("sim creation");
+        let Sample { value, .. } = sim
+            .next_sample()
+            .expect("a sample")
+            .expect("sample without error");
+
+        let tuple = match value {
+            Value::Tuple(t) => t,
+            other => panic!("expected a tuple, got {other:?}"),
+        };
+
+        // Exactly one `dup` and one `other` — the duplicate collapsed.
+        assert_eq!(tuple.len(), 2);
+        let dup_count = tuple.pairs().filter(|(k, _)| *k == "dup").count();
+        assert_eq!(dup_count, 1, "duplicate field name was not deduplicated");
+
+        // Last declaration (`choices: [9]`) wins over the first (`[1]`).
+        let dup = tuple
+            .get(&BindingsName::CaseSensitive(Cow::Borrowed("dup")))
+            .expect("dup attribute");
+        assert_eq!(*dup, Value::from(9));
+        let other = tuple
+            .get(&BindingsName::CaseSensitive(Cow::Borrowed("other")))
+            .expect("other attribute");
+        assert_eq!(*other, Value::from(2));
+    }
 }
