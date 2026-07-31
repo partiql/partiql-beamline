@@ -485,7 +485,12 @@ mod tests {
         };
         writer.write().expect("jsonl write");
         let out = String::from_utf8(buf).expect("valid utf-8");
-        for line in out.lines().filter(|l| !l.is_empty()) {
+        let lines: Vec<&str> = out.lines().filter(|l| !l.is_empty()).collect();
+        // Guard against a vacuous pass if the writer emitted zero rows.
+        // Exact count depends on how many datasets the script produces at
+        // this seed, so assert non-empty rather than a fixed length.
+        assert!(!lines.is_empty(), "expected at least one row, got:\n{out}");
+        for line in &lines {
             let v: JsonValue =
                 serde_json::from_str(line).unwrap_or_else(|e| panic!("bad line {e}: {line}"));
             // Rows may be objects OR scalars depending on the script; only
@@ -514,6 +519,8 @@ mod tests {
         let out = String::from_utf8(buf).expect("valid utf-8");
         let parsed: JsonValue = serde_json::from_str(&out).expect("valid JSON");
         let arr = parsed.as_array().expect("top-level array");
+        // Guard against a vacuous pass if the writer emitted zero rows.
+        assert!(!arr.is_empty(), "expected at least one row, got: {out}");
         for row in arr {
             if let Some(obj) = row.as_object() {
                 assert!(obj.get("seed").is_none(), "envelope leaked: {row}");
