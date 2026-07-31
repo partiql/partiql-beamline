@@ -522,4 +522,90 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn jsonl_errors_on_unsupported_type_without_coerce() {
+        // simple_transactions.ion contains a DateTime, which is unsupported in
+        // JSON output unless --coerce-unsupported is set.
+        let sampler = make_sampler(
+            "partiql-beamline-sim/tests/scripts/simple_transactions.ion",
+            2,
+        );
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJsonl {
+            sampler,
+            out: &mut buf,
+            coerce_unsupported: false,
+        };
+        let err = writer.write().expect_err("must error on DateTime");
+        let msg = format!("{err}");
+        assert!(msg.contains("DateTime"), "msg: {msg}");
+        assert!(msg.contains("--coerce-unsupported"), "msg: {msg}");
+    }
+
+    #[test]
+    fn jsonl_coerces_unsupported_types_to_strings() {
+        let sampler = make_sampler(
+            "partiql-beamline-sim/tests/scripts/simple_transactions.ion",
+            2,
+        );
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJsonl {
+            sampler,
+            out: &mut buf,
+            coerce_unsupported: true,
+        };
+        writer.write().expect("jsonl write with coerce");
+        let out = String::from_utf8(buf).expect("valid utf-8");
+        let lines: Vec<&str> = out.lines().filter(|l| !l.is_empty()).collect();
+        assert_eq!(lines.len(), 2, "expected 2 rows, got:\n{out}");
+        for line in &lines {
+            let v: JsonValue = serde_json::from_str(line).expect("valid JSON");
+            let obj = v.as_object().expect("row is object");
+            assert!(obj["created_at"].is_string(), "DateTime coerced to string");
+            assert!(obj["price"].is_string(), "Decimal coerced to string");
+        }
+    }
+
+    #[test]
+    fn json_array_errors_on_unsupported_type_without_coerce() {
+        let sampler = make_sampler(
+            "partiql-beamline-sim/tests/scripts/simple_transactions.ion",
+            2,
+        );
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJsonArray {
+            sampler,
+            out: &mut buf,
+            coerce_unsupported: false,
+        };
+        let err = writer.write().expect_err("must error on DateTime");
+        let msg = format!("{err}");
+        assert!(msg.contains("DateTime"), "msg: {msg}");
+        assert!(msg.contains("--coerce-unsupported"), "msg: {msg}");
+    }
+
+    #[test]
+    fn json_array_coerces_unsupported_types_to_strings() {
+        let sampler = make_sampler(
+            "partiql-beamline-sim/tests/scripts/simple_transactions.ion",
+            2,
+        );
+        let mut buf = Vec::new();
+        let mut writer = SimWriterJsonArray {
+            sampler,
+            out: &mut buf,
+            coerce_unsupported: true,
+        };
+        writer.write().expect("json-array write with coerce");
+        let out = String::from_utf8(buf).expect("valid utf-8");
+        let parsed: JsonValue = serde_json::from_str(&out).expect("valid JSON");
+        let arr = parsed.as_array().expect("top-level array");
+        assert_eq!(arr.len(), 2);
+        for row in arr {
+            let obj = row.as_object().expect("row is object");
+            assert!(obj["created_at"].is_string(), "DateTime coerced to string");
+            assert!(obj["price"].is_string(), "Decimal coerced to string");
+        }
+    }
 }
