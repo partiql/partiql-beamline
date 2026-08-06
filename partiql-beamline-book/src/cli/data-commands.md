@@ -59,8 +59,10 @@ Available formats:
 - `ion` - Compact Amazon Ion format  
 - `ion-pretty` - Pretty-printed Ion text format
 - `ion-binary` - Binary Ion format (most compact)
-- `json` - Compact JSON
-- `json-pretty` - Pretty-printed JSON
+- `json` - Compact JSON (with `seed`/`start`/`data` envelope)
+- `json-pretty` - Pretty-printed JSON (same envelope, indented)
+- `jsonl` - One JSON object per line, no envelope (NDJSON)
+- `json-array` - A top-level JSON array of rows, no envelope
 - `parquet` - Columnar Apache Parquet files (written to `--output-path`)
 
 See [Output Formats](../data-generation/output-formats.md) for details, including
@@ -484,7 +486,7 @@ generate_test_data 12346 50 "test_orders.ion" > test_orders.ion
 ### Output Format Performance
 
 1. `ion-binary` - Fastest and most compact
-2. `ion` / `json` - Fast, compact text formats
+2. `ion` / `json` / `jsonl` / `json-array` - Fast, compact text formats
 3. `parquet` - Fast; columnar files written to disk
 4. `text` - Moderate performance, human-readable
 5. `ion-pretty` / `json-pretty` - Slowest due to formatting overhead

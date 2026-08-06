@@ -1552,7 +1552,7 @@ Options:
       --default-optional <DEFAULT_OPTIONAL>  If true, value types will be optional by default; Else if false, not-optional by default [possible values: true, false]
       --pct-optional <PCT_OPTIONAL>          If specified, value types are optional by default and will generate `MISSING` at the given percentage
       --sample-count <SAMPLE_COUNT>          Value for the number of samples [default: 10]
-  -f, --output-format <OUTPUT_FORMAT>        [default: text] [possible values: ion, ion-pretty, ion-binary, text, parquet, json, json-pretty]
+  -f, --output-format <OUTPUT_FORMAT>        [default: text] [possible values: ion, ion-pretty, ion-binary, text, parquet, json, json-pretty, jsonl, json-array]
   -d, --dataset <DATASETS>
   -o, --output-path <OUTPUT_PATH>
       --coerce-unsupported                   Coerce unsupported types (DateTime, Decimal, Blob) to strings instead of erroring. Only affects JSON output formats; has no effect on Ion/Text/Parquet

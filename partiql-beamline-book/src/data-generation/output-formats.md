@@ -14,6 +14,8 @@ The CLI supports these output formats via `--output-format`:
 | `ion-binary`  | Binary Ion format                 | High-performance storage          | Fastest     |
 | `json`        | Compact JSON                      | Interop with JSON tooling         | Fast        |
 | `json-pretty` | Pretty-printed JSON               | Human-readable JSON, documentation| Slower      |
+| `jsonl`       | One JSON object per line (NDJSON) | Streaming pipelines, log ingest   | Fast        |
+| `json-array`  | Top-level JSON array of rows      | Batch import, test fixtures       | Fast        |
 | `parquet`     | Columnar Parquet files            | Analytics, data lakes, warehouses | Fast        |
 
 ## Text Format (Default)
@@ -266,6 +268,74 @@ $ beamline gen data \
 - **Web and API workflows**: Directly consumable payloads
 - **JSON-native pipelines**: Feed `jq`, log stores, or JS/Python tooling
 - **Documentation and fixtures**: `json-pretty` for readable test fixtures
+
+## JSONL Format (Newline-Delimited JSON)
+
+The `jsonl` format emits **one compact JSON object per line** with no envelope.
+Unlike `json`/`json-pretty`, it omits `seed`, `start`, and the `data` wrapper -
+you get raw row data only, one object per line.
+
+### Characteristics
+
+- **Streaming-friendly**: Each line is a self-contained JSON value; ideal for
+  pipes and tools that process records one at a time
+- **No envelope**: No `seed`/`start` metadata; suitable when you only need the
+  generated rows
+- **NDJSON-compatible**: Consumable by `jq -c`, Kafka, Kinesis, or line-oriented
+  log ingest
+
+### Example Output
+
+```bash
+$ beamline gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --ddl '"id" VARCHAR, "age" INT' \
+    --dataset-name users \
+    --sample-count 2 \
+    --output-format jsonl
+
+{"age":-1171422941,"id":"ee9a694c-0c16-4712-ab7b-788887ad520b"}
+{"age":-1454245423,"id":"6a2e17fd-1f70-4dfb-8280-bebb751e2393"}
+```
+
+### Use Cases
+
+- **Log pipelines**: Feed directly into Kinesis, Kafka, or any NDJSON sink
+- **Shell processing**: Pipe into `jq`, `grep`, `wc -l`, or `xargs`
+- **Large-scale streaming**: No need to parse an enclosing structure
+
+## JSON-Array Format
+
+The `json-array` format emits a single top-level JSON array of row values, with
+no envelope. Like `jsonl`, `seed`/`start`/`data` are omitted - you get only the
+generated rows, wrapped in `[...]`.
+
+### Characteristics
+
+- **Single valid JSON value**: The entire output is one JSON array
+- **No envelope**: Same row-only contract as `jsonl`
+- **Batch-oriented**: Ideal when the consumer expects a JSON array
+
+### Example Output
+
+```bash
+$ beamline gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --ddl '"id" VARCHAR, "age" INT' \
+    --dataset-name users \
+    --sample-count 2 \
+    --output-format json-array
+
+[{"age":-1171422941,"id":"ee9a694c-0c16-4712-ab7b-788887ad520b"},{"age":-1454245423,"id":"6a2e17fd-1f70-4dfb-8280-bebb751e2393"}]
+```
+
+### Use Cases
+
+- **Batch import**: Load a JSON array directly into a datastore or API
+- **Test fixtures**: Drop-in replacement for hand-written fixture arrays
+- **Tooling that expects arrays**: Feed into `JSON.parse()`, Python `json.load()`, etc.
 
 ## Parquet Format
 
