@@ -11,6 +11,9 @@ training scenarios where you need synthetic data that resembles specific populat
 Beamline can generate both random data and SQL-like (PartiQL) queries. For the random data, it gives you the capability to generate (or infer)
 schemas for the generated data. In addition, it allows local (file-system) catalog generation for the generated data along with its schema.
 
+Data can be defined either with Ion scripts or directly from DDL column definitions, and emitted in a range of output
+formats including Ion (text and binary), JSON, and columnar Apache Parquet.
+
 Read more in the [Beamline mdbook](https://partiql.org/partiql-beamline/).
 
 # Beamline 101
@@ -906,6 +909,112 @@ Start: 2019-08-01T00:00:01.000000000-07:00
 [2019-11-07 15:33:31.942 -07:00:00] : "orders" { 'Customer': '5e39c6eb-0bc1-7040-cf52-6e69cdf386e0', 'Order': 'c20ecc3b-f3dd-5977-0cec-ed542ccb7ff7' }
 ```
 
+### Example 7 — Generating data from DDL
+
+Besides Ion scripts, Beamline can generate data directly from **DDL column
+definitions** using `--ddl` (inline) or `--ddl-path` (file). Each DDL type is
+mapped to a `Uniform` generator, so you can go from a table schema to data without
+writing a script. Use `--dataset-name` to name the resulting dataset.
+
+```
+$ cargo run gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --ddl '"id" VARCHAR, "age" INT, "score" DOUBLE, "active" BOOL' \
+    --dataset-name users \
+    --sample-count 2 \
+    --output-format text
+
+Seed: 42
+Start: 2024-01-01T00:00:00.000000000Z
+[2024-01-01 0:00:00.0 +00:00:00] : DataSetName("users") { 'id': 'ee9a694c-0c16-4712-ab7b-788887ad520b', 'age': -1171422941, 'score': -79.32350957762677, 'active': true }
+[2024-01-01 0:00:00.001 +00:00:00] : DataSetName("users") { 'id': '6a2e17fd-1f70-4dfb-8280-bebb751e2393', 'age': -1454245423, 'score': -0.3236575911005275, 'active': false }
+```
+
+Supported DDL types include `VARCHAR`/`STRING`, the integer widths
+(`TINYINT`/`INT8` … `BIGINT`/`INT64`), `DOUBLE`/`FLOAT`, `DECIMAL`, `BOOL`,
+`TIMESTAMP`, and the nested `STRUCT<...>`, `ARRAY<...>`, and `UNION<...>` forms.
+This pairs naturally with `infer-shape --output-format basic-ddl`: infer a DDL
+schema from existing data, then feed it back to `gen data` to produce more data of
+the same shape.
+
+### Example 8 — JSON output
+
+Beamline can emit data as JSON with `--output-format json` (compact) or
+`json-pretty`. The document has the same `{ seed, start, data }` shape as the Ion
+formats and is streamed row-by-row.
+
+```
+$ cargo run gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --ddl '"id" VARCHAR, "age" INT, "score" DOUBLE, "active" BOOL' \
+    --dataset-name users \
+    --sample-count 2 \
+    --output-format json-pretty
+
+{
+  "seed": 42,
+  "start": "2024-01-01T00:00:00.000000000Z",
+  "data": {
+    "users": [
+      {
+        "active": true,
+        "age": -1171422941,
+        "id": "ee9a694c-0c16-4712-ab7b-788887ad520b",
+        "score": -79.32350957762677
+      },
+      {
+        "active": false,
+        "age": -1454245423,
+        "id": "6a2e17fd-1f70-4dfb-8280-bebb751e2393",
+        "score": -0.3236575911005275
+      }
+    ]
+  }
+}
+```
+
+JSON has no native representation for `Decimal`, `DateTime`, or `Blob`. By default
+Beamline errors on these so output is never silently lossy; pass
+`--coerce-unsupported` to emit them as strings instead (Decimal/DateTime as
+strings, Blob as base64). The flag only affects JSON output.
+
+```
+$ cargo run gen data \
+    --seed 1234 \
+    --start-iso "2019-08-01T00:00:01Z" \
+    --script-path partiql-beamline-sim/tests/scripts/sensors.ion \
+    --sample-count 2 \
+    --output-format json-pretty \
+    --coerce-unsupported
+```
+
+### Example 9 — Parquet output
+
+Beamline can also write columnar [Apache Parquet](https://parquet.apache.org/)
+files with `--output-format parquet`. Parquet is written to disk rather than
+stdout; use `--output-path` to select the directory, and Beamline writes one
+`<dataset-name>.parquet` file per dataset.
+
+```
+$ cargo run gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --ddl '"id" VARCHAR, "age" INT, "score" DOUBLE, "active" BOOL' \
+    --dataset-name users \
+    --sample-count 100 \
+    --output-format parquet \
+    --output-path ./out
+
+wrote 100 row(s) to ./out/users.parquet
+```
+
+The file carries a typed schema (`id: string, age: int64, score: double,
+active: bool`). Because Parquet columns must have a single concrete type, fields
+declared with a union (`UniformAnyOf` / `UNION<...>`) are not supported for Parquet
+output; give such fields a single concrete generator to emit Parquet.
+
 ## Query Generation
 Query Generator creates reproducible PartiQL queries that match the shapes and types (and soon some of the value
 aspects) of data defined for the data generator. Let's unpack this with an example:
@@ -1390,27 +1499,27 @@ make install
 
 Here is the snapshot of the current command-line options:
 ```
-$ target/debug/partiql-beamline-cli --help    
+$ beamline --help
 PartiQL Beamline CLI
 
-Usage: partiql-beamline-cli <COMMAND>
+Usage: beamline <COMMAND>
 
 Commands:
   gen          Run the generator
   infer-shape  Run the script shape inference
+  query        Run the query generator
   help         Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
   -V, --version  Print version
-
 ```
 
 ```
-$ target/debug/partiql-beamline-cli gen --help
+$ beamline gen --help
 Run the generator
 
-Usage: partiql-beamline-cli gen <COMMAND>
+Usage: beamline gen <COMMAND>
 
 Commands:
   data  Run the data generator
@@ -1422,10 +1531,10 @@ Options:
 ```
 
 ```
-$ target/debug/partiql-beamline-cli gen data --help
+$ beamline gen data --help
 Run the data generator
 
-Usage: partiql-beamline-cli gen data [OPTIONS] <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>>
+Usage: beamline gen data [OPTIONS] <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>|--ddl-path <PATH/TO/DDL>|--ddl <DDL_DATA>>
 
 Options:
       --seed-auto                            Use the local machine's entropy to generate a 'random' seed
@@ -1433,14 +1542,19 @@ Options:
       --start-auto                           Use the local machine's entropy to generate a 'random' start time
       --start-epoch-ms <EPOCH_MS>            (Re)play from a specified start time (specified in ms since the unix epoch)
       --start-iso <ISO_8601>                 (Re)play from a specified start time (specified in ms since the unix epoch)
-      --script-path <PATH/TO/SCRIPT>
-      --script <SCRIPT_DATA>                 (Re)play from a specified seed
+      --script-path <PATH/TO/SCRIPT>         Provide the path to the script file
+      --script <SCRIPT_DATA>                 Provide the script inline
+      --ddl-path <PATH/TO/DDL>               Provide the path to a DDL file (column definitions format)
+      --ddl <DDL_DATA>                       Provide DDL column definitions inline
+      --dataset-name <DATASET_NAME>          Dataset name to use when generating data from DDL (defaults to "data") [default: data]
       --default-nullable <DEFAULT_NULLABLE>  If true, value types will be nullable by default; Else if false, not-nullable by default [possible values: true, false]
       --pct-null <PCT_NULL>                  If specified, value types are nullable by default and will generate `NULL` at the given percentage
       --default-optional <DEFAULT_OPTIONAL>  If true, value types will be optional by default; Else if false, not-optional by default [possible values: true, false]
       --pct-optional <PCT_OPTIONAL>          If specified, value types are optional by default and will generate `MISSING` at the given percentage
       --sample-count <SAMPLE_COUNT>          Value for the number of samples [default: 10]
-  -f, --output-format <OUTPUT_FORMAT>        [default: text] [possible values: ion, ion-pretty, text]
+  -f, --output-format <OUTPUT_FORMAT>        [default: text] [possible values: ion, ion-pretty, ion-binary, text, parquet, json, json-pretty]
   -d, --dataset <DATASETS>
+  -o, --output-path <OUTPUT_PATH>
+      --coerce-unsupported                   Coerce unsupported types (DateTime, Decimal, Blob) to strings instead of erroring. Only affects JSON output formats; has no effect on Ion/Text/Parquet
   -h, --help                                 Print help
 ```

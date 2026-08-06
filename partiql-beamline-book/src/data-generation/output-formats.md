@@ -4,14 +4,17 @@ Beamline supports multiple output formats for generated data, each optimized for
 
 ## Available Formats
 
-The CLI supports four main output formats via `--output-format`:
+The CLI supports these output formats via `--output-format`:
 
-| Format       | Description                       | Use Case                     | Performance |
-|--------------|-----------------------------------|------------------------------|-------------|
-| `text`       | Human-readable timestamped format | Debugging, inspection        | Moderate    |
-| `ion`        | Compact Ion text format           | Data processing              | Fast        |
-| `ion-pretty` | Pretty-printed Ion with metadata  | Configuration, documentation | Slower      |
-| `ion-binary` | Binary Ion format                 | High-performance storage     | Fastest     |
+| Format        | Description                       | Use Case                          | Performance |
+|---------------|-----------------------------------|-----------------------------------|-------------|
+| `text`        | Human-readable timestamped format | Debugging, inspection             | Moderate    |
+| `ion`         | Compact Ion text format           | Data processing                   | Fast        |
+| `ion-pretty`  | Pretty-printed Ion with metadata  | Configuration, documentation      | Slower      |
+| `ion-binary`  | Binary Ion format                 | High-performance storage          | Fastest     |
+| `json`        | Compact JSON                      | Interop with JSON tooling         | Fast        |
+| `json-pretty` | Pretty-printed JSON               | Human-readable JSON, documentation| Slower      |
+| `parquet`     | Columnar Parquet files            | Analytics, data lakes, warehouses | Fast        |
 
 ## Text Format (Default)
 
@@ -183,6 +186,145 @@ $ beamline gen data \
 - **High-performance applications**: Minimal parsing overhead
 - **Storage optimization**: Smallest possible file sizes
 - **Data transmission**: Efficient network transfer
+
+## JSON Formats
+
+Beamline can emit generated data as standard JSON, either compact (`json`) or
+pretty-printed (`json-pretty`). The document has the same `{ seed, start, data }`
+shape as the Ion formats. Output is streamed row-by-row, so memory stays constant
+regardless of sample count.
+
+### Characteristics
+
+- **Interoperable**: Consumable by any JSON tooling (`jq`, browsers, most languages)
+- **Streaming**: Rows are written as they are generated
+- **Two variants**: `json` (compact, one line) and `json-pretty` (indented)
+
+### Unsupported Types and `--coerce-unsupported`
+
+JSON has no native representation for some PartiQL/Ion types. By default, Beamline
+**errors** if it encounters one of these so you never get silently lossy output:
+
+| Type       | Behavior without flag | Behavior with `--coerce-unsupported`     |
+|------------|-----------------------|------------------------------------------|
+| `Decimal`  | Error                 | Emitted as a JSON string                 |
+| `DateTime` | Error                 | Emitted as an ISO-8601 JSON string       |
+| `Blob`     | Error                 | Emitted as a base64-encoded JSON string  |
+
+`--coerce-unsupported` only affects JSON output; it has no effect on Ion, text, or
+Parquet. Non-finite floats (`NaN`, `Infinity`) are emitted as JSON `null`, and
+`MISSING` fields are omitted.
+
+### Example Output
+
+```bash
+$ beamline gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --ddl '"id" VARCHAR, "age" INT, "score" DOUBLE, "active" BOOL' \
+    --dataset-name users \
+    --sample-count 2 \
+    --output-format json-pretty
+
+{
+  "seed": 42,
+  "start": "2024-01-01T00:00:00.000000000Z",
+  "data": {
+    "users": [
+      {
+        "active": true,
+        "age": -1171422941,
+        "id": "ee9a694c-0c16-4712-ab7b-788887ad520b",
+        "score": -79.32350957762677
+      },
+      {
+        "active": false,
+        "age": -1454245423,
+        "id": "6a2e17fd-1f70-4dfb-8280-bebb751e2393",
+        "score": -0.3236575911005275
+      }
+    ]
+  }
+}
+```
+
+If a script produces `Decimal`, `DateTime`, or `Blob` values, add
+`--coerce-unsupported`:
+
+```bash
+$ beamline gen data \
+    --seed 1234 \
+    --start-iso "2019-08-01T00:00:01Z" \
+    --script-path sensors.ion \
+    --sample-count 2 \
+    --output-format json-pretty \
+    --coerce-unsupported
+```
+
+### Use Cases
+
+- **Web and API workflows**: Directly consumable payloads
+- **JSON-native pipelines**: Feed `jq`, log stores, or JS/Python tooling
+- **Documentation and fixtures**: `json-pretty` for readable test fixtures
+
+## Parquet Format
+
+The `parquet` format writes generated data as columnar
+[Apache Parquet](https://parquet.apache.org/) files, ideal for analytics engines,
+data lakes, and warehouses.
+
+### Characteristics
+
+- **Columnar**: Efficient for analytical scans and compression
+- **Typed schema**: Beamline derives a Parquet schema from the data's shape
+- **File output**: Writes one `.parquet` file per dataset
+
+### Output Path
+
+Parquet is written to files rather than stdout. Use `--output-path` to choose the
+destination directory; each dataset becomes `<dataset-name>.parquet`. If
+`--output-path` is omitted, files are written to the current directory.
+
+```bash
+$ beamline gen data \
+    --seed 42 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --ddl '"id" VARCHAR, "age" INT, "score" DOUBLE, "active" BOOL' \
+    --dataset-name users \
+    --sample-count 100 \
+    --output-format parquet \
+    --output-path ./out
+
+wrote 100 row(s) to ./out/users.parquet
+```
+
+The resulting file carries a typed schema:
+
+```text
+id: string
+age: int64
+score: double
+active: bool
+```
+
+### Type Constraints
+
+Because Parquet columns must have a single concrete type, fields whose type is a
+union are not supported. A script (or DDL) that uses `UniformAnyOf` / `UNION<...>`
+for a field will produce an error:
+
+```text
+Unsupported type for Parquet: AnyOf (union) types are not supported in Parquet
+output; all fields must have a single concrete type
+```
+
+Give such fields a single concrete generator to emit Parquet.
+
+### Use Cases
+
+- **Analytics**: Query with engines like Spark, Trino, DuckDB, or Athena
+- **Data lakes / warehouses**: Load columnar files directly
+- **Large synthetic datasets**: Compact, compressed, columnar storage
 
 ## Format Comparison
 
