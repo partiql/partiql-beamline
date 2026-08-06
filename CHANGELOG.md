@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed references of Kollider to Beamline JSON and DB.
 - Changed the command line hierarchy to separate data generation and shape inference.
 ### Added
+- Added `jsonl` and `json-array` output formats, emitting row data with no `seed`/`start`/`data` envelope.
+- Added `json` and `json-pretty` output formats, along with `--coerce-unsupported` to emit `Decimal`/`DateTime` as strings and `Blob` as base64 instead of erroring.
+- Added `parquet` output format, writing one `<dataset-name>.parquet` file per dataset to `--output-path`.
+- Added data generation from DDL column definitions via `--ddl` and `--ddl-path`, with `--dataset-name` to name the resulting dataset.
 - Added Weibull, Normal, LogNormal, Exponential distributions
 - Added timestamp generators
 - Added generation of queries based on the shape of the data generator data
@@ -32,3 +36,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CLI
 
 ### Fixes
+- Fixed DDL parsing to skip `--` line comments, so `infer-shape --output-format basic-ddl` output can be fed back into `gen data --ddl`/`--ddl-path`.
