@@ -443,15 +443,24 @@ fn skip_whitespace(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {
 ///
 /// Returns `true` if a comment was consumed.
 fn try_skip_line_comment(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> bool {
+    // Fast path: only clone to look ahead for the second `-` once the first is
+    // confirmed, so the common non-comment case costs a single `peek`.
+    if chars.peek() != Some(&'-') {
+        return false;
+    }
+
     let mut lookahead = chars.clone();
-    if lookahead.next() != Some('-') || lookahead.next() != Some('-') {
+    lookahead.next();
+    if lookahead.next() != Some('-') {
         return false;
     }
 
     chars.next();
     chars.next();
+    // Terminate on either line-ending style so a lone `\r` does not swallow the
+    // rest of the input.
     for c in chars.by_ref() {
-        if c == '\n' {
+        if c == '\n' || c == '\r' {
             break;
         }
     }
@@ -668,6 +677,21 @@ mod tests {
         assert!(script.contains("id: UUID"));
         assert!(script.contains("age: UniformI32"));
         assert!(script.contains("active: Bool"));
+    }
+
+    #[test]
+    fn test_skips_line_comments_with_cr_line_endings() {
+        // A comment terminated by `\r` (or `\r\n`) must not swallow the rest of
+        // the input.
+        let crlf = "-- Dataset: users\r\n\"id\" VARCHAR,\r\n\"age\" INTEGER";
+        let script = ddl_to_script(crlf, "users").unwrap();
+        assert!(script.contains("id: UUID"));
+        assert!(script.contains("age: UniformI32"));
+
+        let cr_only = "-- Dataset: users\r\"id\" VARCHAR,\r\"age\" INTEGER";
+        let script = ddl_to_script(cr_only, "users").unwrap();
+        assert!(script.contains("id: UUID"));
+        assert!(script.contains("age: UniformI32"));
     }
 
     #[test]
