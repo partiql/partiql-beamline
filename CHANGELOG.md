@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed references of Kollider to Beamline JSON and DB.
 - Changed the command line hierarchy to separate data generation and shape inference.
 ### Added
+- Added Parquet output format (`--output-format parquet --output-path <dir>`) for columnar data generation; supports scalars, nested structs, and native List columns for arrays with scalar elements.
+- Added DDL-based data generation (`--ddl` / `--ddl-path`) allowing data generation directly from SQL-like column definitions without writing Ion scripts.
+- Added `DdlDataGenerator` programmatic API for DDL-based generation from Rust code.
 - Added Weibull, Normal, LogNormal, Exponential distributions
 - Added timestamp generators
 - Added generation of queries based on the shape of the data generator data

@@ -1425,7 +1425,7 @@ Options:
 $ target/debug/partiql-beamline-cli gen data --help
 Run the data generator
 
-Usage: partiql-beamline-cli gen data [OPTIONS] <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>>
+Usage: partiql-beamline-cli gen data [OPTIONS] <--seed-auto|--seed <SEED>> <--start-auto|--start-epoch-ms <EPOCH_MS>|--start-iso <ISO_8601>> <--script-path <PATH/TO/SCRIPT>|--script <SCRIPT_DATA>|--ddl-path <PATH/TO/DDL>|--ddl <DDL_DATA>>
 
 Options:
       --seed-auto                            Use the local machine's entropy to generate a 'random' seed
@@ -1435,12 +1435,81 @@ Options:
       --start-iso <ISO_8601>                 (Re)play from a specified start time (specified in ms since the unix epoch)
       --script-path <PATH/TO/SCRIPT>
       --script <SCRIPT_DATA>                 (Re)play from a specified seed
+      --ddl-path <PATH/TO/DDL>              Path to a DDL file (column definitions format)
+      --ddl <DDL_DATA>                      DDL column definitions inline
+      --dataset-name <DATASET_NAME>         Dataset name for DDL-based generation [default: data]
       --default-nullable <DEFAULT_NULLABLE>  If true, value types will be nullable by default; Else if false, not-nullable by default [possible values: true, false]
       --pct-null <PCT_NULL>                  If specified, value types are nullable by default and will generate `NULL` at the given percentage
       --default-optional <DEFAULT_OPTIONAL>  If true, value types will be optional by default; Else if false, not-optional by default [possible values: true, false]
       --pct-optional <PCT_OPTIONAL>          If specified, value types are optional by default and will generate `MISSING` at the given percentage
       --sample-count <SAMPLE_COUNT>          Value for the number of samples [default: 10]
-  -f, --output-format <OUTPUT_FORMAT>        [default: text] [possible values: ion, ion-pretty, text]
+  -f, --output-format <OUTPUT_FORMAT>        [default: text] [possible values: ion, ion-pretty, ion-binary, text, parquet]
+  -o, --output-path <OUTPUT_PATH>           Output directory for file-based formats (e.g., parquet)
   -d, --dataset <DATASETS>
   -h, --help                                 Print help
 ```
+
+### Parquet Output
+
+Beamline supports outputting generated data in [Apache Parquet](https://parquet.apache.org/) format - a columnar
+storage format widely used in data analytics and ML pipelines.
+
+```
+$ cargo run gen data \
+    --seed 1234 \
+    --start-iso "2024-01-01T00:00:00.000000000Z" \
+    --sample-count 100 \
+    --script-path partiql-beamline-sim/tests/scripts/sensors-nested.ion \
+    --output-format parquet \
+    --output-path ./my-output
+
+wrote 100 row(s) to ./my-output/sensors.parquet
+```
+
+Each dataset produces its own `.parquet` file. The Parquet schema is derived from the script's type
+information:
+- Scalars (bool, int, float, string, decimal, timestamp) map to native Parquet types
+- Nested structs are preserved as Parquet struct columns
+- Arrays with scalar elements produce native Parquet List columns
+- `Value::Null` and `Value::Missing` both map to Parquet's optional (absent) representation
+
+Note: Scripts containing `AnyOf` (union) types will produce an error when using Parquet output,
+since Parquet requires a single concrete type per column.
+
+### DDL-Based Data Generation
+
+In addition to Ion scripts, Beamline can generate data directly from SQL-like DDL column definitions:
+
+```
+$ cargo run gen data \
+    --seed 42 \
+    --start-auto \
+    --ddl '"sensor_id" VARCHAR, "temperature" DOUBLE, "is_active" BOOL, "reading_time" TIMESTAMP' \
+    --dataset-name sensors \
+    --sample-count 5 \
+    --output-format ion-pretty
+```
+
+Or from a DDL file:
+
+```
+$ cat schema.ddl
+"id" VARCHAR,
+"name" VARCHAR,
+"price" DECIMAL(10,2),
+"created_at" TIMESTAMP,
+"metadata" STRUCT<"key": VARCHAR, "value": VARCHAR>
+
+$ cargo run gen data \
+    --seed 100 \
+    --start-auto \
+    --ddl-path schema.ddl \
+    --dataset-name products \
+    --sample-count 10 \
+    --output-format parquet \
+    --output-path ./output
+```
+
+Supported DDL types: `VARCHAR`, `TINYINT`/`INT8`, `SMALLINT`/`INT16`, `INT`/`INT32`/`INTEGER`,
+`BIGINT`/`INT64`, `DOUBLE`/`FLOAT`/`FLOAT64`, `DECIMAL(p,s)`, `BOOL`/`BOOLEAN`,
+`TIMESTAMP`/`DATETIME`, `STRUCT<...>`, `ARRAY<T>`, `UNION<T1, T2, ...>`.

@@ -4,14 +4,15 @@ Beamline supports multiple output formats for generated data, each optimized for
 
 ## Available Formats
 
-The CLI supports four main output formats via `--output-format`:
+The CLI supports five output formats via `--output-format`:
 
-| Format       | Description                       | Use Case                     | Performance |
-|--------------|-----------------------------------|------------------------------|-------------|
-| `text`       | Human-readable timestamped format | Debugging, inspection        | Moderate    |
-| `ion`        | Compact Ion text format           | Data processing              | Fast        |
-| `ion-pretty` | Pretty-printed Ion with metadata  | Configuration, documentation | Slower      |
-| `ion-binary` | Binary Ion format                 | High-performance storage     | Fastest     |
+| Format       | Description                       | Use Case                         | Performance |
+|--------------|-----------------------------------|----------------------------------|-------------|
+| `text`       | Human-readable timestamped format | Debugging, inspection            | Moderate    |
+| `ion`        | Compact Ion text format           | Data processing                  | Fast        |
+| `ion-pretty` | Pretty-printed Ion with metadata  | Configuration, documentation     | Slower      |
+| `ion-binary` | Binary Ion format                 | High-performance storage         | Fastest     |
+| `parquet`    | Apache Parquet columnar format    | Analytics, ML pipelines, big data| Fast        |
 
 ## Text Format (Default)
 
@@ -183,6 +184,57 @@ $ beamline gen data \
 - **High-performance applications**: Minimal parsing overhead
 - **Storage optimization**: Smallest possible file sizes
 - **Data transmission**: Efficient network transfer
+
+## Parquet Format
+
+### Characteristics
+
+- **Columnar**: Data stored by column for efficient analytics queries
+- **Typed schema**: Full Arrow/Parquet schema derived from script types
+- **File-based**: Each dataset produces a separate `.parquet` file
+- **Industry standard**: Compatible with Spark, DuckDB, Pandas, Polars, etc.
+
+### Example Usage
+
+```bash
+$ beamline gen data \
+    --seed 1234 \
+    --start-iso "2024-01-01T00:00:00Z" \
+    --script-path sensors-nested.ion \
+    --sample-count 1000 \
+    --output-format parquet \
+    --output-path ./output
+
+wrote 1000 row(s) to ./output/sensors.parquet
+```
+
+### Output Structure
+
+Each dataset in the script produces a separate `.parquet` file in the output directory. The Parquet schema is derived from the script's `PartiqlShape`:
+
+| PartiQL Type | Parquet/Arrow Type |
+|---|---|
+| Bool | Boolean |
+| Int8, Int16, Int32, Int64, Int | Int64 |
+| Float32, Float64 | Float64 |
+| String, Varchar | Utf8 (String) |
+| Decimal(p,s) | Utf8 (String representation) |
+| Timestamp/DateTime | Timestamp(Millisecond, UTC) |
+| Struct | Struct (nested) |
+| Array/Bag (scalar elements) | List |
+
+### Limitations
+
+- **Requires `--output-path`**: Parquet writes to files, not stdout
+- **No AnyOf support**: Union types are not representable in Parquet; scripts with `AnyOf` fields will produce an error
+- **Null/Missing collapse**: Both `NULL` and `MISSING` map to Parquet's "absent" (optional field not present); the distinction is lost
+
+### Use Cases
+
+- **ML/AI training data**: Generate Parquet datasets for model training
+- **Analytics pipelines**: Feed data into Spark, DuckDB, Athena, etc.
+- **Data lake integration**: Store generated data in S3/HDFS-based lakes
+- **Performance testing**: Generate large typed datasets for query engine benchmarks
 
 ## Format Comparison
 
@@ -462,10 +514,11 @@ $ cat beamline-catalog/sensors.shape.sql
 |----------|-------------------|-----------|
 | **Quick debugging** | `text` | Timestamps and human readability |
 | **Data inspection** | `ion-pretty` | Structure visibility with metadata |
-| **Large dataset generation** | `ion-binary` | Maximum performance and compression |
+| **Large dataset generation** | `ion-binary` or `parquet` | Maximum performance |
 | **Data processing** | `ion` | Good balance of efficiency and readability |
+| **ML/Analytics pipelines** | `parquet` | Industry-standard columnar format |
 | **Documentation** | `ion-pretty` | Clear structure for examples |
-| **Long-term storage** | `ion-binary` | Most compact and preserves all types |
+| **Long-term storage** | `ion-binary` or `parquet` | Compact and preserves types |
 
 ### By Dataset Size
 

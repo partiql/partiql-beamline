@@ -20,6 +20,7 @@
 - [Generator Types](./data-generation/generator-types.md)
 - [Datasets](./data-generation/datasets.md)
 - [Scripts](./data-generation/scripts.md)
+- [DDL-Based Generation](./data-generation/ddl-based-generation.md)
 - [Static Data](./data-generation/static-data.md)
 - [Output Formats](./data-generation/output-formats.md)
 - [Nullability](./data-generation/nullability.md)
