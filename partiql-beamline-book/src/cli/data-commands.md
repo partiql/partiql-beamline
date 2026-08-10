@@ -25,11 +25,22 @@ All data generation requires these three configuration groups (exactly one optio
 --start-iso <ISO_8601>         # Use ISO 8601 format (e.g., 2024-01-01T00:00:00Z)
 ```
 
-### Script Configuration (Required - choose one)
+### Input Configuration (Required - choose one)
 ```bash
 --script-path <PATH>           # Path to Ion script file
 --script <SCRIPT_DATA>         # Inline Ion script content
+--ddl-path <PATH>              # Path to a DDL file (column definitions format)
+--ddl <DDL_DATA>               # Inline DDL column definitions
 ```
+
+When generating from DDL, use `--dataset-name` to name the resulting dataset:
+
+```bash
+--dataset-name <NAME>          # Dataset name for DDL-based generation (default: "data")
+```
+
+See [Generating Data from DDL](../data-generation/ddl-generation.md) for the DDL
+format and type mapping.
 
 ## Optional Parameters
 
@@ -48,6 +59,30 @@ Available formats:
 - `ion` - Compact Amazon Ion format  
 - `ion-pretty` - Pretty-printed Ion text format
 - `ion-binary` - Binary Ion format (most compact)
+- `json` - Compact JSON (with `seed`/`start`/`data` envelope)
+- `json-pretty` - Pretty-printed JSON (same envelope, indented)
+- `jsonl` - One JSON object per line, no envelope (NDJSON)
+- `json-array` - A top-level JSON array of rows, no envelope
+- `parquet` - Columnar Apache Parquet files (written to `--output-path`)
+
+See [Output Formats](../data-generation/output-formats.md) for details, including
+`--coerce-unsupported` for JSON and the type constraints of Parquet.
+
+### Output Path
+```bash
+--output-path <PATH>           # Output directory for parquet files
+-o <PATH>                      # Short form
+```
+
+Only used by the `parquet` format, which writes one `<dataset-name>.parquet` file
+per dataset into this directory. Defaults to the current directory. The other
+formats write to stdout.
+
+### Coerce Unsupported Types (JSON only)
+```bash
+--coerce-unsupported           # Emit Decimal/DateTime/Blob as JSON strings
+                               # instead of erroring (JSON formats only)
+```
 
 ### Dataset Filtering
 ```bash
@@ -110,6 +145,37 @@ beamline gen data \
   --start-auto \
   --script-path data.ion \
   --output-format ion-binary
+
+# Pretty JSON (use --coerce-unsupported for Decimal/DateTime/Blob)
+beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path data.ion \
+  --output-format json-pretty \
+  --coerce-unsupported
+
+# Parquet files (written to --output-path, one file per dataset)
+beamline gen data \
+  --seed 42 \
+  --start-auto \
+  --script-path data.ion \
+  --sample-count 1000 \
+  --output-format parquet \
+  --output-path ./out
+```
+
+### Generating from DDL
+
+Generate data directly from column definitions instead of a script:
+
+```bash
+beamline gen data \
+  --seed 42 \
+  --start-iso "2024-01-01T00:00:00Z" \
+  --ddl '"id" VARCHAR, "age" INT, "score" DOUBLE, "active" BOOL' \
+  --dataset-name users \
+  --sample-count 100 \
+  --output-format json
 ```
 
 ### Dataset Filtering
@@ -419,14 +485,15 @@ generate_test_data 12346 50 "test_orders.ion" > test_orders.ion
 
 ### Output Format Performance
 
-1. `text` - Moderate performance, human-readable
-2. `ion-binary` - Fastest and most compact
-3. `ion` - Fast, compact text format
-4. `ion-pretty` - Slowest due to formatting overhead
+1. `ion-binary` - Fastest and most compact
+2. `ion` / `json` / `jsonl` / `json-array` - Fast, compact text formats
+3. `parquet` - Fast; columnar files written to disk
+4. `text` - Moderate performance, human-readable
+5. `ion-pretty` / `json-pretty` - Slowest due to formatting overhead
 
 ### Memory Usage
 
-Beamline streams data generation, so memory usage stays constant regardless of sample count. Large datasets are processed incrementally.
+Beamline streams data generation, so memory usage stays constant regardless of sample count. Large datasets are processed incrementally. The `json` and `json-pretty` formats also stream row-by-row.
 
 ## Best Practices
 

@@ -421,13 +421,50 @@ fn expect_char(
 
 /// Skips whitespace characters.
 fn skip_whitespace(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {
-    while let Some(&c) = chars.peek() {
-        if c.is_whitespace() {
-            chars.next();
-        } else {
+    loop {
+        while let Some(&c) = chars.peek() {
+            if c.is_whitespace() {
+                chars.next();
+            } else {
+                break;
+            }
+        }
+
+        // Also skip `--` line comments, so that `infer-shape --output-format
+        // basic-ddl` output (which carries a `-- Seed: ...` header) can be fed
+        // straight back into `--ddl`/`--ddl-path`.
+        if !try_skip_line_comment(chars) {
             break;
         }
     }
+}
+
+/// Skips a `--` line comment (through end of line) if one is next.
+///
+/// Returns `true` if a comment was consumed.
+fn try_skip_line_comment(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> bool {
+    // Fast path: only clone to look ahead for the second `-` once the first is
+    // confirmed, so the common non-comment case costs a single `peek`.
+    if chars.peek() != Some(&'-') {
+        return false;
+    }
+
+    let mut lookahead = chars.clone();
+    lookahead.next();
+    if lookahead.next() != Some('-') {
+        return false;
+    }
+
+    chars.next();
+    chars.next();
+    // Terminate on either line-ending style so a lone `\r` does not swallow the
+    // rest of the input.
+    for c in chars.by_ref() {
+        if c == '\n' || c == '\r' {
+            break;
+        }
+    }
+    true
 }
 
 /// Skips prefix modifiers like `OPTIONAL` that appear before a type name.
@@ -623,6 +660,38 @@ mod tests {
         assert!(script.contains("c: UniformI32"));
         assert!(script.contains("d: UniformI64"));
         assert!(script.contains("e: UniformF64"));
+    }
+
+    #[test]
+    fn test_skips_line_comments() {
+        // `infer-shape --output-format basic-ddl` emits a `--` header; that output
+        // must be feedable straight back into DDL generation.
+        let ddl = "-- Seed: 1\n\
+                   -- Start: 2024-01-01T00:00:00.000000000Z\n\
+                   -- Syntax: partiql_datatype_syntax-0.1\n\
+                   -- Dataset: users\n\
+                   \"id\" VARCHAR,\n\
+                   \"age\" INTEGER, -- trailing comment\n\
+                   \"active\" BOOL";
+        let script = ddl_to_script(ddl, "users").unwrap();
+        assert!(script.contains("id: UUID"));
+        assert!(script.contains("age: UniformI32"));
+        assert!(script.contains("active: Bool"));
+    }
+
+    #[test]
+    fn test_skips_line_comments_with_cr_line_endings() {
+        // A comment terminated by `\r` (or `\r\n`) must not swallow the rest of
+        // the input.
+        let crlf = "-- Dataset: users\r\n\"id\" VARCHAR,\r\n\"age\" INTEGER";
+        let script = ddl_to_script(crlf, "users").unwrap();
+        assert!(script.contains("id: UUID"));
+        assert!(script.contains("age: UniformI32"));
+
+        let cr_only = "-- Dataset: users\r\"id\" VARCHAR,\r\"age\" INTEGER";
+        let script = ddl_to_script(cr_only, "users").unwrap();
+        assert!(script.contains("id: UUID"));
+        assert!(script.contains("age: UniformI32"));
     }
 
     #[test]
