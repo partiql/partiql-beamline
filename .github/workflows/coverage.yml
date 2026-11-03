@@ -9,41 +9,30 @@ env:
 jobs:
   build:
     name: Build and Test
-    runs-on: ${{ matrix.os }}
+    runs-on: codebuild-partiql-beamline-${{ github.run_id }}-${{ github.run_attempt }}
     # We want to run on external PRs, but not on internal ones as push automatically builds
     # H/T: https://github.com/Dart-Code/Dart-Code/commit/612732d5879730608baa9622bf7f5e5b7b51ae65
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'partiql/partiql-tpc'
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
 
     steps:
       - name: Git Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Rust Toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          # Coverage requires the nightly toolchain because it uses the presently unstable `-Z profile` feature
-          # See: https://github.com/rust-lang/rust/issues/42524
-          # See also: https://github.com/actions-rs/grcov#usage
-          # nightly can be very volatile--pin this to a version we know works well...
-          toolchain: nightly-2024-10-17
-      - name: Cargo Test
-        run: cargo test --verbose --workspace
-        env:
-          CARGO_INCREMENTAL: '0'
-          # https://github.com/marketplace/actions/rust-grcov
-          # For some reason the panic=abort modes don't work for build script...
-          #RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          #RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
-          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off'
-          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off'
-      - id: coverage
-        name: Code Coverage
-        uses: actions-rs/grcov@v0.1
+          toolchain: stable
+          # Source-based coverage on stable; replaces the removed nightly `-Z profile` + grcov setup.
+          components: llvm-tools-preview
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Cargo Test w/ Coverage
+        run: cargo llvm-cov --verbose --workspace --codecov --output-path codecov.json
       - name: Codecov Upload
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v5
         with:
-          files: ${{ steps.coverage.outputs.report }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: codecov.json
+          # Without a token (fork PRs, or if the secret is unset) the upload may be rejected; don't fail the job on it.
+          fail_ci_if_error: false
