@@ -5,7 +5,8 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build and Test
-    runs-on: ${{ matrix.os }}
+    # Linux runs on the CodeBuild-hosted runner; Windows and macOS stay on GitHub-hosted runners.
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && format('codebuild-partiql-beamline-{0}-{1}', github.run_id, github.run_attempt) || matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
